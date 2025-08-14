@@ -25,6 +25,7 @@ import downloadBlob from '../lib/download-blob';
 import log from '../lib/log';
 import {placeInViewport} from '../lib/backpack/code-payload.js';
 
+
 class TargetPane extends React.Component {
     constructor (props) {
         super(props);
@@ -117,13 +118,34 @@ class TargetPane extends React.Component {
             .then(this.handleActivateBlocksTab);
     }
     handlePaintSpriteClick () {
+
+        
+
+function base64ToUint8Array(base64String) {
+　　　　const padding = '='.repeat((4 - base64String.length % 4) % 4);
+       const base64 = (base64String + padding)
+                    .replace(/\-/g, '+')
+                    .replace(/_/g, '/');
+
+       const rawData = window.atob(base64);
+       const outputArray = new Uint8Array(rawData.length);
+
+       for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+       }
+       return outputArray;
+}
+        /*
         const formatMessage = this.props.intl.formatMessage;
         const emptyItem = emptySprite(
             formatMessage(sharedMessages.sprite, {index: 1}),
             formatMessage(sharedMessages.pop),
             formatMessage(sharedMessages.costume, {index: 1})
         );
-        this.props.vm.addSprite(JSON.stringify(emptyItem)).then(() => {
+        */
+        //this.props.vm.addSprite(JSON.stringify(emptyItem)).then(() => {
+        const empt="UEsDBAoAAAAIAM1jC1uBqxBiJgEAAM8BAAALAAAAc3ByaXRlLmpzb26Nkb9OwzAQxl8F3RzR/CGlyVqBxEoXEGI4x05k4cTIdqKWKBIrYuMBEBs774RU3oJzmqhiY/u+88/+7s49SLtxWAnIS1RWBNBgTQbC+KKpZCMWi/3n2/7lK4IAOjQSmRIW8n4IQEnrJsmMRl7g0StdPEy60HUtmvmkaI0ht9bWtT4o9MCoCbjr5/if54/v91cfyqSr8fFaWK1aJ3UDeRQAR4eX2tToiLVdRRxaK9wVJ58kSYZxliaYsHIZM7YKRXpWlul5ylkhOME1T8XW/YM9PTxutEMfvqbWhbkZ2/5bu6XacB+A1W3D/SikO2rZTxOFhHfSStod5M60tOYt5MkygB3k8YpuyaeZ49KI4jBo5q3BqsLx4vRBc+7G7XwVUKkTND4Whl9QSwMECgAAAAgAzWMLW2/EAsGSAAAAyAAAACQAAAAzMzM5YTI5NTNhM2JmNjJiYjgwZTU0ZmY1NzVkYmNlZC5zdmdtjk0OgjAUhPec4vn2/UFXEGBB4gk8gdKGNgIl7bOttxfBpZnNZOZLZpoQR8jztIQWDdFaC5FS4unCnR/FWUopNgIPpM6TXZ7/wLKqKrG3CFH7YN3SYslLhGQVmRYlgtF2NLTbaHXqXd487MKuAGhOjME1r86TVvB4w23wdxoMMPgNhiPgsyWu1UsAY13RfA92H1BLAQIUAAoAAAAIAM1jC1uBqxBiJgEAAM8BAAALAAAAAAAAAAAAAAAAAAAAAABzcHJpdGUuanNvblBLAQIUAAoAAAAIAM1jC1tvxALBkgAAAMgAAAAkAAAAAAAAAAAAAAAAAE8BAAAzMzM5YTI5NTNhM2JmNjJiYjgwZTU0ZmY1NzVkYmNlZC5zdmdQSwUGAAAAAAIAAgCLAAAAIwIAAAAA";
+        this.props.vm.addSprite(base64ToUint8Array(empt)).then(() => {
             setTimeout(() => { // Wait for targets update to propagate before tab switching
                 this.props.onActivateTab(COSTUMES_TAB_INDEX);
             });

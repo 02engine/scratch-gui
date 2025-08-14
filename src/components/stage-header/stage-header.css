@@ -99,3 +99,6 @@
     border: 1px solid rgb(61, 61, 61);
     border-radius: 5px;
 }
+.btn:not(.droppable):dragover {
+  display: none; /* 隐藏元素 */
+}

@@ -170,7 +170,7 @@ const StageHeaderComponent = function (props) {
                     <div>
                         <button className={styles.btn} onClick={onTriggerCoordinate}>{isShowCoordinate ? '关闭坐标' : '开启坐标'}</button>
                         {
-                            isShowCoordinate ? (
+                            isShowCoordinate&&stageSizeMode!==STAGE_SIZE_MODES.small ? (
                                 <>
                                     <button className={styles.btn} onClick={onZoomOutCoordinateFontSize}>缩小字体</button>
                                     <button className={styles.btn} onClick={onZoomInCoordinateFontSize}>放大字体</button>

@@ -162,11 +162,83 @@ class CostumeTab extends React.Component {
             return this.props.vm.addCostume(c.md5, c, targetId);
         }));
     }
-    handleNewBlankCostume () {
+    async handleNewBlankCostume () {
+        console.log("addcostume");
+        function base64ToUint8Array(base64String) {
+        　　　　const padding = '='.repeat((4 - base64String.length % 4) % 4);
+               const base64 = (base64String + padding)
+                            .replace(/\-/g, '+')
+                            .replace(/_/g, '/');
+        
+               const rawData = window.atob(base64);
+               const outputArray = new Uint8Array(rawData.length);
+        
+               for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+               }
+               return outputArray;
+        }
+
+const vm=this.props.vm;
+const runtime=vm.runtime;
+
+const targetId = vm.runtime.getEditingTarget().id;
+      const assetName = this.props.vm.editingTarget.isStage ?
+            this.props.intl.formatMessage(messages.backdrop, {index: 1}) :
+            this.props.intl.formatMessage(messages.costume, {index: 1});
+
+      //const res =base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4=');
+      //const blob = await res.blob();
+
+      /*if (!(this._typeIsBitmap(blob.type) || blob.type === "image/svg+xml")) {
+        console.error(`Invalid MIME type: ${blob.type}`);
+        return;
+      }*/
+      const assetType =runtime.storage.AssetType.ImageVector;
+
+      // Bitmap data format is not actually enforced, but setting it to something that isn't in scratch-parser's
+      // known format list will throw an error when someone tries to load the project.
+      // (https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L51)
+      const dataType =runtime.storage.DataFormat.SVG
+
+      /*const arrayBuffer = await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = () =>
+          reject(new Error(`Failed to read as array buffer: ${fr.error}`));
+        fr.readAsArrayBuffer(blob);
+      });*/
+
+      const asset = runtime.storage.createAsset(
+        assetType,
+        dataType,
+        base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4='),
+        null,
+        true
+      );
+      const md5ext = `${asset.assetId}.${asset.dataFormat}`;
+
+      try {
+        
+        await vm.addCostume(
+          md5ext,
+          {
+            asset,
+            md5ext,
+            name: assetName,
+          },
+          targetId
+        );
+      } catch (e) {
+        console.error(e);
+      }
+         
+      /*
+        
         const name = this.props.vm.editingTarget.isStage ?
             this.props.intl.formatMessage(messages.backdrop, {index: 1}) :
             this.props.intl.formatMessage(messages.costume, {index: 1});
-        this.handleNewCostume(emptyCostume(name));
+        this.handleNewCostume(emptyCostume(name));*/
     }
     async handleSurpriseCostume () {
         const costumeLibraryContent = await getCostumeLibrary();
