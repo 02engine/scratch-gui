@@ -7,7 +7,7 @@
   "homepage": "https://github.com/LLK/scratch-gui#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LLK/scratch-gui.git"
+    "url": "https://github.com/02engine/scratch-gui.git"
   },
   "main": "./dist/scratch-gui.js",
   "scripts": {
