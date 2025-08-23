@@ -42,10 +42,4 @@ jobs:
         path: files.zip
         retention-days: 7
 
-    - name: Deploy 💥
-      uses: JamesIves/github-pages-deploy-action@v2
-      with:
-        folder: build
-        branch: gh-pages
-
 
