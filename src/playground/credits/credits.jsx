@@ -69,7 +69,7 @@ const Credits = () => (
             <section>
                 <h2>02Engine</h2>
                 <p>
-                    {APP_NAME} is based on <a href="https://web.02engine.02studio.xyz/">02Engine</a>.
+                    {APP_NAME} is based on <a href="https://editor.02engine.02studio.xyz/">02Engine</a>.
                 </p>
             </section>
         )}
