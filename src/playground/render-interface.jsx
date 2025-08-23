@@ -88,7 +88,7 @@ const Footer = () => (
                 <FormattedMessage
                     // eslint-disable-next-line max-len
                     defaultMessage="{APP_NAME} is not affiliated with Scratch, the Scratch Team, or the Scratch Foundation."
-                    description="Disclaimer that TurboWarp is not connected to Scratch"
+                    description="Disclaimer that 02Engine is not connected to Scratch"
                     id="tw.footer.disclaimer"
                     values={{
                         APP_NAME
@@ -127,13 +127,13 @@ const Footer = () => (
                     </a>
                 </div>
                 <div className={styles.footerSection}>
-                    <a href="https://desktop.turbowarp.org/">
+                    <a href="https://02engine.02studio.xyz/">
                         {/* Do not translate */}
-                        {'TurboWarp Desktop'}
+                        {'02Engine Desktop'}
                     </a>
-                    <a href="https://packager.turbowarp.org/">
+                    <a href="https://packager.02engine.02studio.xyz/">
                         {/* Do not translate */}
-                        {'TurboWarp Packager'}
+                        {'02Engine Packager'}
                     </a>
                     <a href="https://docs.turbowarp.org/embedding">
                         <FormattedMessage
@@ -165,7 +165,7 @@ const Footer = () => (
                             id="tw.feedback"
                         />
                     </a>
-                    <a href="https://github.com/TurboWarp/">
+                    <a href="https://github.com/02engine/">
                         <FormattedMessage
                             defaultMessage="Source Code"
                             description="Link to source code"

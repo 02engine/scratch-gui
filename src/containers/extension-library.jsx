@@ -178,7 +178,7 @@ const fetchLibrary = async () => {
     },
     {
         name: "Boxed Physics",
-        description: "Implements the Box2D physics engine into PenguinMod, adding joints, springs, etc. This is different from TurboWarp's implementation.",
+        description: "Implements the Box2D physics engine into PenguinMod, adding joints, springs, etc. This is different from 02Engine's implementation.",
         code: "pooiod/Box2D.js",
         banner: "pooiod/B2Dimg.svg",
         creator: "pooiod7",

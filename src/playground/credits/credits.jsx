@@ -64,12 +64,12 @@ const Credits = () => (
                 The {APP_NAME} project is made possible by the work of many volunteers.
             </p>
         </section>
-        {APP_NAME !== 'TurboWarp' && (
+        {APP_NAME !== '02Engine' && (
             // Be kind and considerate. Don't remove this :)
             <section>
-                <h2>TurboWarp</h2>
+                <h2>02Engine</h2>
                 <p>
-                    {APP_NAME} is based on <a href="https://turbowarp.org/">TurboWarp</a>.
+                    {APP_NAME} is based on <a href="https://web.02engine.02studio.xyz/">02Engine</a>.
                 </p>
             </section>
         )}

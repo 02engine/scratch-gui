@@ -361,7 +361,7 @@ export default [
         name: (
             <FormattedMessage
                 defaultMessage="{APP_NAME} Blocks"
-                description="Name of the strange 'TurboWarp Blocks' extension"
+                description="Name of the strange '02Engine Blocks' extension"
                 id="tw.twExtension.name"
                 values={{
                     APP_NAME
@@ -373,7 +373,7 @@ export default [
         description: (
             <FormattedMessage
                 defaultMessage="Weird new blocks."
-                description="Description of the strange 'TurboWarp Blocks' extension"
+                description="Description of the strange '02Engine Blocks' extension"
                 id="tw.twExtension.description"
             />
         ),

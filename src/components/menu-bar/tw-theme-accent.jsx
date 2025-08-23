@@ -22,7 +22,7 @@ const options = defineMessages({
     },
     [ACCENT_RED]: {
         defaultMessage: 'Red',
-        description: 'Name of the red color scheme, used by TurboWarp by default.',
+        description: 'Name of the red color scheme, used by 02Engine by default.',
         id: 'tw.accent.red'
     },
     [ACCENT_PURPLE]: {
@@ -109,7 +109,7 @@ const AccentThemeMenu = ({
             <span className={styles.submenuLabel}>
                 <FormattedMessage
                     defaultMessage="Accent"
-                    description="Label for menu to choose accent color (eg. TurboWarp's red, Scratch's purple)"
+                    description="Label for menu to choose accent color (eg. 02Engine's red, Scratch's purple)"
                     id="tw.menuBar.accent"
                 />
             </span>

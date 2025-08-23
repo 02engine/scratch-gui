@@ -58,7 +58,7 @@ const InvalidProjectModal = props => (
                         values={{
                             reportIt: (
                                 <a
-                                    href="https://github.com/TurboWarp/sb3fix/issues"
+                                    href="https://vika.cn/share/shr6Uhr7tP2PyykJ2vD5G"
                                     target="_blank"
                                     rel="noreferrer"
                                 >
