@@ -35,16 +35,15 @@ jobs:
     - name: Zip dist
       run: zip -r files.zip ./
 
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: files
-        path: files.zip
-        retention-days: 7
+        path: ./build
 
     - name: Deploy 💥
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        folder: build
-        branch: gh-pages
+      id: deployment
+      uses: actions/deploy-pages@v4
 
