@@ -184,7 +184,7 @@ module.exports = [
             new HtmlWebpackPlugin({
                 chunks: ['editor'],
                 template: 'src/playground/index.ejs',
-                filename: 'editor.html',
+                filename: 'index.html',
                 title: `${APP_NAME} - Run Scratch projects faster`,
                 isEditor: true,
                 ...htmlWebpackPluginCommon
@@ -192,7 +192,7 @@ module.exports = [
             new HtmlWebpackPlugin({
                 chunks: ['player'],
                 template: 'src/playground/index.ejs',
-                filename: 'index.html',
+                filename: 'indexold.html',
                 title: `${APP_NAME} - Run Scratch projects faster`,
                 ...htmlWebpackPluginCommon
             }),

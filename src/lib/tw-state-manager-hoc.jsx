@@ -99,7 +99,7 @@ class FileHashRouter extends HashRouter {
     constructor (callbacks) {
         super(callbacks);
         this.playerPath = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
-        this.editorPath = `${this.playerPath}editor.html`;
+        this.editorPath = `${this.playerPath}index.html`;
         this.fullscreenPath = `${this.playerPath}fullscreen.html`;
     }
 
