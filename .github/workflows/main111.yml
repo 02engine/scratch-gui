@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm i --skip-scripts
+
+    - name: Install dependencies111
+      run: npm i cross-fetch
+
+    - name: Install dependencies222
+      run: npm i
+
+      
+    - name: Build
+      run: npm run build
+
+    - name: Zip dist
+      run: zip -r fuck_you_turbowarp.zip ./
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: fuck_you_turbowarp
+        path: fuck_you_turbowarp.zip
+        retention-days: 7
