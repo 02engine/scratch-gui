@@ -1,7 +1,8 @@
 name: Build
 
 on:
-  workflow_dispatch:
+  push:
+  pull_request:
 
 jobs:
   build:
@@ -17,13 +18,13 @@ jobs:
         node-version: '20'
         cache: 'npm'
 
-    - name: Install dependencies
+    - name: Skip Scripts Install 
       run: npm i --skip-scripts
 
-    - name: Install dependencies111
+    - name: Install cross-fetch
       run: npm i cross-fetch
 
-    - name: Install dependencies222
+    - name: Install dependencies
       run: npm i
 
       
@@ -31,11 +32,19 @@ jobs:
       run: npm run build
 
     - name: Zip dist
-      run: zip -r fuck_you_turbowarp.zip ./
+      run: zip -r files.zip ./
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: fuck_you_turbowarp
-        path: fuck_you_turbowarp.zip
+        name: files
+        path: files.zip
         retention-days: 7
+
+    - name: Deploy 💥
+      uses: JamesIves/github-pages-deploy-action@v2
+      with:
+        folder: build # 构建输出的文件夹（根据你的项目配置调整，例如可能是 build 或 public）
+        branch: gh-pages # 部署到的分支
+
+
