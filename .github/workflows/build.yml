@@ -1,4 +1,4 @@
-name: Build and Deploy to GitHub Pages
+name: Build and Deploy to cf-page Branch
 
 on:
   push:
@@ -10,11 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pages: write
       id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout code 🛎️
@@ -38,14 +34,18 @@ jobs:
       - name: Build 🏗️
         run: npm run build
 
-      - name: Setup Pages 📄
-        uses: actions/configure-pages@v5
+      - name: Zip build folder 📦
+        run: zip -r build.zip ./build
 
-      - name: Upload artifact 📤
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload build artifact 📤
+        uses: actions/upload-artifact@v4
         with:
-          path: ./build
+          name: build-artifact
+          path: ./build.zip
 
-      - name: Deploy to GitHub Pages 🚀
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Deploy to cf-page branch 🚀
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: cf-page
