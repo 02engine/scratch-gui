@@ -23,13 +23,13 @@ jobs:
           cache: 'npm'
 
       - name: Skip Scripts Install 📦
-        run: npm i --skip-scripts
+        run: npm i --skip-scripts  --loglevel=info
 
       - name: Install cross-fetch 📦
-        run: npm i cross-fetch
+        run: npm i cross-fetch  --loglevel=info
 
       - name: Install dependencies 📦
-        run: npm i
+        run: npm i  --loglevel=info
 
       - name: Build 🏗️
         run: npm run build
