@@ -41997,7 +41997,7 @@ __webpack_require__.r(__webpack_exports__);
   featured: true
 }, {
   name: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
-    defaultMessage: "{APP_NAME} Blocks",
+    defaultMessage: "TurboWarp Blocks",
     id: "tw.twExtension.name",
     values: {
       APP_NAME: _brand__WEBPACK_IMPORTED_MODULE_35__["APP_NAME"]
@@ -42029,7 +42029,7 @@ __webpack_require__.r(__webpack_exports__);
 }]);
 const galleryLoading = {
   name: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
-    defaultMessage: "{APP_NAME} Extension Gallery",
+    defaultMessage: "TurboWarp Extension Gallery",
     id: "tw.extensionGallery.name",
     values: {
       APP_NAME: _brand__WEBPACK_IMPORTED_MODULE_35__["APP_NAME"]
@@ -42049,7 +42049,7 @@ const galleryLoading = {
 };
 const galleryMore = {
   name: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
-    defaultMessage: "{APP_NAME} Extension Gallery",
+    defaultMessage: "TurboWarp Extension Gallery",
     id: "tw.extensionGallery.name",
     values: {
       APP_NAME: _brand__WEBPACK_IMPORTED_MODULE_35__["APP_NAME"]
@@ -42069,7 +42069,7 @@ const galleryMore = {
 };
 const galleryError = {
   name: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
-    defaultMessage: "{APP_NAME} Extension Gallery",
+    defaultMessage: "TurboWarp Extension Gallery",
     id: "tw.extensionGallery.name",
     values: {
       APP_NAME: _brand__WEBPACK_IMPORTED_MODULE_35__["APP_NAME"]
@@ -42586,7 +42586,7 @@ __webpack_require__.r(__webpack_exports__);
   intlLabel: 'Scratch'
 }, {
   tag: 'tw',
-  intlLabel: _brand__WEBPACK_IMPORTED_MODULE_0__["APP_NAME"]
+  intlLabel: 'TurboWarp'
 }, {
   tag: 'ztengine',
   intlLabel: '02Engine'
