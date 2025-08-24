@@ -165,7 +165,7 @@ module.exports = "data:image/svg+xml;base64,PCEtLSBodHRwczovL2FrYXJpY29ucy5jb20v
 // Legacy export format because this is used by some build-time scripts stuck in the past.
 // eslint-disable-next-line import/no-commonjs
 module.exports = {
-  APP_NAME: 'TurboWarp'
+  APP_NAME: '02Engine'
 };
 
 /***/ }),
