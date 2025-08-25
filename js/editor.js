@@ -28812,6 +28812,40 @@ const fetchLibrary = async () => {
     incompatibleWithScratch: !extension.scratchCompatible,
     featured: true
   }));
+  /*Mist*/
+  res = await fetch('https://extensions.mistium.com/generated-metadata/extensions-v0.json');
+  if (!res.ok) {
+    throw new Error("HTTP status ".concat(res.status));
+  }
+  data = await res.json();
+  const mistdata = data.extensions.map(extension => ({
+    name: extension.name,
+    nameTranslations: extension.nameTranslations || {},
+    description: extension.description,
+    descriptionTranslations: extension.descriptionTranslations || {},
+    extensionId: extension.id,
+    extensionURL: "https://extensions.mistium.com/featured/".concat(extension.name, ".js"),
+    iconURL: "https://extensions.mistium.com/".concat(extension.image || 'images/unknown.svg'),
+    tags: ['mist'],
+    credits: [...(extension.original || []), ...(extension.by || [])].map(credit => {
+      if (credit.link) {
+        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
+          href: credit.link,
+          target: "_blank",
+          rel: "noreferrer",
+          key: credit.name
+        }, credit.name);
+      }
+      return credit.name;
+    }),
+    docsURI: extension.docs ? "https://extensions.turbowarp.org/".concat(extension.slug) : null,
+    samples: extension.samples ? extension.samples.map(sample => ({
+      href: "".concat("", "editor?project_url=https://extensions.turbowarp.org/samples/").concat(encodeURIComponent(sample), ".sb3"),
+      text: sample
+    })) : null,
+    incompatibleWithScratch: !extension.scratchCompatible,
+    featured: true
+  }));
 
   /*pm*/
   data = {
@@ -29244,7 +29278,7 @@ const fetchLibrary = async () => {
     incompatibleWithScratch: !extension.scratchCompatible,
     featured: true
   }));
-  return ztdata.concat(twdata, pmdata);
+  return ztdata.concat(twdata, pmdata, mistdata);
 };
 class ExtensionLibrary extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComponent {
   constructor(props) {
@@ -34945,7 +34979,7 @@ class TargetPane extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component 
     );
     */
     //this.props.vm.addSprite(JSON.stringify(emptyItem)).then(() => {
-    const empt = "UEsDBAoAAAAIAM1jC1uBqxBiJgEAAM8BAAALAAAAc3ByaXRlLmpzb26Nkb9OwzAQxl8F3RzR/CGlyVqBxEoXEGI4x05k4cTIdqKWKBIrYuMBEBs774RU3oJzmqhiY/u+88/+7s49SLtxWAnIS1RWBNBgTQbC+KKpZCMWi/3n2/7lK4IAOjQSmRIW8n4IQEnrJsmMRl7g0StdPEy60HUtmvmkaI0ht9bWtT4o9MCoCbjr5/if54/v91cfyqSr8fFaWK1aJ3UDeRQAR4eX2tToiLVdRRxaK9wVJ58kSYZxliaYsHIZM7YKRXpWlul5ylkhOME1T8XW/YM9PTxutEMfvqbWhbkZ2/5bu6XacB+A1W3D/SikO2rZTxOFhHfSStod5M60tOYt5MkygB3k8YpuyaeZ49KI4jBo5q3BqsLx4vRBc+7G7XwVUKkTND4Whl9QSwMECgAAAAgAzWMLW2/EAsGSAAAAyAAAACQAAAAzMzM5YTI5NTNhM2JmNjJiYjgwZTU0ZmY1NzVkYmNlZC5zdmdtjk0OgjAUhPec4vn2/UFXEGBB4gk8gdKGNgIl7bOttxfBpZnNZOZLZpoQR8jztIQWDdFaC5FS4unCnR/FWUopNgIPpM6TXZ7/wLKqKrG3CFH7YN3SYslLhGQVmRYlgtF2NLTbaHXqXd487MKuAGhOjME1r86TVvB4w23wdxoMMPgNhiPgsyWu1UsAY13RfA92H1BLAQIUAAoAAAAIAM1jC1uBqxBiJgEAAM8BAAALAAAAAAAAAAAAAAAAAAAAAABzcHJpdGUuanNvblBLAQIUAAoAAAAIAM1jC1tvxALBkgAAAMgAAAAkAAAAAAAAAAAAAAAAAE8BAAAzMzM5YTI5NTNhM2JmNjJiYjgwZTU0ZmY1NzVkYmNlZC5zdmdQSwUGAAAAAAIAAgCLAAAAIwIAAAAA";
+    const empt = "UEsDBAoAAAAIAPtDEFvpQGoKHgEAAMUBAAALAAAAc3ByaXRlLmpzb26NkcFKxDAQhl9F5lykbey67XVB8OpeFPEwadISTBtJ0rJrKXgVbz6AePPuOwnrWzjptog3b/NPvpl/ZjKAcluPtYSiQu1kBC02JODw8Xp4/kwggh6tQq6lg2IYI9DK+Tnk1qAo8VdrU97PcWmaRrbLS9lZS2pjnO9C+zgAU0zA7bCYfj+9f729BFOufIMPV9IZ3XllWiiSCAR6vDC2QU+s62vi0DnpLwVpxliOaZ4xZLxapZyvY5mdVVV2ngleSkFwIzK58/9gT4/NrfEYzDc0urTX09h/czeUG+8icKZrRViF4p5GDtskMeG9copuB4W3HR13BwVbRbCHIl1TlXpcOKGsLI+L5kFarGucCudvWXy3fh+ygFqfoA22MP4AUEsDBAoAAAAIAPtDEFtvxALBkgAAAMgAAAAkAAAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnbY5NDoIwFIT3nOL59v1BVxBgQeIJPIHShjYCJe2zrbcXwaWZzWTmS2aaEEfI87SEFg3RWguRUuLpwp0fxVlKKTYCD6TOk12e/8CyqiqxtwhR+2Dd0mLJS4RkFZkWJYLRdjS022h16l3ePOzCrgBoTozBNa/Ok1bweMNt8HcaDDD4DYYj4LMlrtVLAGNd0XwPdh9QSwECFAAKAAAACAD7QxBb6UBqCh4BAADFAQAACwAAAAAAAAAAAAAAAAAAAAAAc3ByaXRlLmpzb25QSwECFAAKAAAACAD7QxBbb8QCwZIAAADIAAAAJAAAAAAAAAAAAAAAAABHAQAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnUEsFBgAAAAACAAIAiwAAABsCAAAAAA==";
     this.props.vm.addSprite(base64ToUint8Array(empt)).then(() => {
       setTimeout(() => {
         // Wait for targets update to propagate before tab switching
@@ -41997,7 +42031,7 @@ __webpack_require__.r(__webpack_exports__);
   featured: true
 }, {
   name: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
-    defaultMessage: "TurboWarp Blocks",
+    defaultMessage: "{APP_NAME} Blocks",
     id: "tw.twExtension.name",
     values: {
       APP_NAME: _brand__WEBPACK_IMPORTED_MODULE_35__["APP_NAME"]
@@ -42029,7 +42063,7 @@ __webpack_require__.r(__webpack_exports__);
 }]);
 const galleryLoading = {
   name: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
-    defaultMessage: "TurboWarp Extension Gallery",
+    defaultMessage: "{APP_NAME} Extension Gallery",
     id: "tw.extensionGallery.name",
     values: {
       APP_NAME: _brand__WEBPACK_IMPORTED_MODULE_35__["APP_NAME"]
@@ -42049,7 +42083,7 @@ const galleryLoading = {
 };
 const galleryMore = {
   name: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
-    defaultMessage: "TurboWarp Extension Gallery",
+    defaultMessage: "{APP_NAME} Extension Gallery",
     id: "tw.extensionGallery.name",
     values: {
       APP_NAME: _brand__WEBPACK_IMPORTED_MODULE_35__["APP_NAME"]
@@ -42069,7 +42103,7 @@ const galleryMore = {
 };
 const galleryError = {
   name: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
-    defaultMessage: "TurboWarp Extension Gallery",
+    defaultMessage: "{APP_NAME} Extension Gallery",
     id: "tw.extensionGallery.name",
     values: {
       APP_NAME: _brand__WEBPACK_IMPORTED_MODULE_35__["APP_NAME"]
@@ -42586,13 +42620,16 @@ __webpack_require__.r(__webpack_exports__);
   intlLabel: 'Scratch'
 }, {
   tag: 'tw',
-  intlLabel: 'TurboWarp'
+  intlLabel: 'Turbowarp'
 }, {
   tag: 'ztengine',
   intlLabel: '02Engine'
 }, {
   tag: 'pm',
   intlLabel: 'PenguinMod'
+}, {
+  tag: 'mist',
+  intlLabel: 'Mistium Extensions'
 }]);
 
 /***/ }),
