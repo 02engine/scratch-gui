@@ -1,0 +1,77 @@
+[
+  {
+    "id": "tw.guiDefaultTitle",
+    "description": "Title of homepage",
+    "defaultMessage": "Run Scratch projects faster"
+  },
+  {
+    "id": "tw.footer.disclaimer",
+    "description": "Disclaimer that 02Engine is not connected to Scratch",
+    "defaultMessage": "{APP_NAME} is not affiliated with Scratch, the Scratch Team, or the Scratch Foundation."
+  },
+  {
+    "id": "tw.footer.scratchDisclaimer",
+    "description": "A disclaimer that Scratch requires when referring to Scratch. {scratchDotOrg} is a link with text 'https://scratch.org/'",
+    "defaultMessage": "Scratch is a project of the Scratch Foundation. It is available for free at {scratchDotOrg}."
+  },
+  {
+    "id": "tw.footer.credits",
+    "description": "Credits link in footer",
+    "defaultMessage": "Credits"
+  },
+  {
+    "id": "tw.footer.embed",
+    "description": "Link in footer to embedding documentation for embedding link",
+    "defaultMessage": "Embedding"
+  },
+  {
+    "id": "tw.footer.parameters",
+    "description": "Link in footer to URL parameters documentation",
+    "defaultMessage": "URL Parameters"
+  },
+  {
+    "id": "tw.footer.documentation",
+    "description": "Link in footer to additional documentation",
+    "defaultMessage": "Documentation"
+  },
+  {
+    "id": "tw.feedback",
+    "description": "Link to feedback/bugs page",
+    "defaultMessage": "Feedback & Bugs"
+  },
+  {
+    "id": "tw.code",
+    "description": "Link to source code",
+    "defaultMessage": "Source Code"
+  },
+  {
+    "id": "tw.privacy",
+    "description": "Link to privacy policy",
+    "defaultMessage": "Privacy Policy"
+  },
+  {
+    "id": "tw.unshared2.1",
+    "description": "Appears on unshared projects",
+    "defaultMessage": "Unshared projects are no longer visible."
+  },
+  {
+    "id": "tw.unshared.2",
+    "description": "Appears on unshared projects",
+    "defaultMessage": "For more information, visit: {link}"
+  },
+  {
+    "id": "tw.unshared.cache",
+    "description": "Appears on unshared projects",
+    "defaultMessage": "If the project was shared recently, this message may appear incorrectly for a few minutes."
+  },
+  {
+    "id": "tw.unshared.bug",
+    "description": "Appears on unshared projects",
+    "defaultMessage": "If this project is actually shared, please report a bug."
+  },
+  {
+    "id": "tw.home.description",
+    "description": "Description of TurboWarp on the homepage",
+    "defaultMessage": "{APP_NAME} is a Scratch mod that compiles projects to JavaScript to make them run really fast. Try it out by inputting a project ID or URL above or choosing a featured project below."
+  }
+]

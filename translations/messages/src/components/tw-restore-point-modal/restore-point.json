@@ -1,0 +1,7 @@
+[
+  {
+    "id": "tw.restorePoints.assets",
+    "description": "Describes how many assets (costumes and images) are in a restore point. {n} is replaced with a number like 406",
+    "defaultMessage": "{n} assets"
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tw.geolocate.title",
+    "description": "Part of modal that appears when a project tries to geolocate the user using an extension",
+    "defaultMessage": "The project wants to know your location."
+  },
+  {
+    "id": "tw.geolocate.permission",
+    "description": "Part of modal that appears when a project tries to geolocate the user using an extension",
+    "defaultMessage": "If allowed, you may be prompted to allow location access by your browser."
+  }
+]

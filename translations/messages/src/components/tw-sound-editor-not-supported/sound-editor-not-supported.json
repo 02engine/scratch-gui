@@ -1,0 +1,7 @@
+[
+  {
+    "id": "tw.soundEditorNotSupported",
+    "description": "Appears when opening the sound editor in some weird browsers that don't support the proper APIs.",
+    "defaultMessage": "Sound editor is not supported in this browser."
+  }
+]

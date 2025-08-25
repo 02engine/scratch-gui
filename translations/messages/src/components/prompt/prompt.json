@@ -1,0 +1,52 @@
+[
+  {
+    "id": "gui.gui.variableScopeOptionAllSprites",
+    "description": "Option message when creating a variable for making it available to all sprites",
+    "defaultMessage": "For all sprites"
+  },
+  {
+    "id": "gui.gui.variableScopeOptionSpriteOnly",
+    "description": "Option message when creating a varaible for making it only available to the current sprite",
+    "defaultMessage": "For this sprite only"
+  },
+  {
+    "id": "gui.gui.cloudVariableOption",
+    "description": "Option message when creating a variable for making it a cloud variable, a variable that is stored on the server",
+    "defaultMessage": "Cloud variable (stored on server)"
+  },
+  {
+    "id": "gui.gui.variablePromptAllSpritesMessage",
+    "description": "A message that displays in a variable modal when the stage is selected indicating that the variable being created will available to all sprites.",
+    "defaultMessage": "This variable will be available to all sprites."
+  },
+  {
+    "id": "gui.gui.listPromptAllSpritesMessage",
+    "description": "A message that displays in a list modal when the stage is selected indicating that the list being created will available to all sprites.",
+    "defaultMessage": "This list will be available to all sprites."
+  },
+  {
+    "id": "tw.scratchUnsafeCloud",
+    "description": "Warning that appears when adding a new cloud variable will make it exceeded Scratch's cloud variable limit. number will be 10.",
+    "defaultMessage": "If you make this cloud variable, the project will exceed Scratch's limit of {number} variables, and some variables will not function if you upload the project to Scratch."
+  },
+  {
+    "id": "tw.desktopCloud",
+    "description": "Appears when creating a cloud variable in the desktop app",
+    "defaultMessage": "In the desktop app, cloud variables sync between all desktop app windows on this computer. Upload the project to Scratch or use a tool like the {packager} for them to sync globally."
+  },
+  {
+    "id": "tw.cantUseCloud",
+    "description": "Reminder that cloud variables may not work when the editor is open. {packager} is replaced with a link to open the 02Engine Packager, always English.",
+    "defaultMessage": "Although you can create cloud variables, they won't work unless this project is uploaded to Scratch or converted using a tool like the {packager}."
+  },
+  {
+    "id": "gui.prompt.cancel",
+    "description": "Button in prompt for cancelling the dialog",
+    "defaultMessage": "Cancel"
+  },
+  {
+    "id": "gui.prompt.ok",
+    "description": "Button in prompt for confirming the dialog",
+    "defaultMessage": "OK"
+  }
+]

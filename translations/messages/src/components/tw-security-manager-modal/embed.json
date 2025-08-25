@@ -1,0 +1,22 @@
+[
+  {
+    "id": "tw.embed.title1",
+    "description": "Part of modal when a project attempts to embed another page over the stage",
+    "defaultMessage": "The project wants to embed HTML content over the stage:"
+  },
+  {
+    "id": "tw.embed.title2",
+    "description": "Part of modal when a project attempts to embed another page over the stage",
+    "defaultMessage": "The project wants to embed remote content over the stage:"
+  },
+  {
+    "id": "tw.embed.risks",
+    "description": "Part of modal when a project attempts to embed another page over the stage",
+    "defaultMessage": "While the embed will be sandboxed, it will still have access to information about your device such as your IP and general location."
+  },
+  {
+    "id": "tw.embed.persistent",
+    "description": "Part of modal when a project attempts to embed another page over the stage",
+    "defaultMessage": "If allowed, further embeds to the same site will be automatically allowed."
+  }
+]

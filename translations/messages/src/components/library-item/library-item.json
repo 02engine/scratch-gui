@@ -1,0 +1,42 @@
+[
+  {
+    "id": "tw.favorite",
+    "description": "Alt text of icon in costume, sound, and extension libraries to mark an item as favorite.",
+    "defaultMessage": "Favorite"
+  },
+  {
+    "id": "tw.unfavorite",
+    "description": "Alt text of icon in costume, sound, and extension libraries to unmark an item as favorite.",
+    "defaultMessage": "Unfavorite"
+  },
+  {
+    "id": "gui.extensionLibrary.comingSoon",
+    "description": "Label for extensions that are not yet implemented",
+    "defaultMessage": "Coming Soon"
+  },
+  {
+    "id": "tw.documentation",
+    "description": "Appears in the extension list. Links to additional extension documentation.",
+    "defaultMessage": "Documentation"
+  },
+  {
+    "id": "tw.sample",
+    "description": "Appears in the extension list. Links to a sample project for an extension.",
+    "defaultMessage": "Sample project"
+  },
+  {
+    "id": "tw.createdBy",
+    "description": "Appears in the extension list. Followed by a list of names.",
+    "defaultMessage": "Created by:"
+  },
+  {
+    "id": "gui.extensionLibrary.requires",
+    "description": "Label for extension hardware requirements",
+    "defaultMessage": "Requires"
+  },
+  {
+    "id": "gui.extensionLibrary.collaboration",
+    "description": "Label for extension collaboration",
+    "defaultMessage": "Collaboration with"
+  }
+]

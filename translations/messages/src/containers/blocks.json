@@ -1,0 +1,22 @@
+[
+  {
+    "id": "tw.blocks.PROCEDURES_RETURN",
+    "description": "The name of the \"return\" block from the Custom Reporters extension. {v} is replaced with a slot to insert a value.",
+    "defaultMessage": "return {v}"
+  },
+  {
+    "id": "tw.blocks.PROCEDURES_TO_REPORTER",
+    "description": "Context menu item to change a command-shaped custom block into a reporter. Part of the Custom Reporters extension.",
+    "defaultMessage": "Change To Reporter"
+  },
+  {
+    "id": "tw.blocks.PROCEDURES_TO_STATEMENT",
+    "description": "Context menu item to change a reporter-shaped custom block into a statement/command. Part of the Custom Reporters extension.",
+    "defaultMessage": "Change To Statement"
+  },
+  {
+    "id": "tw.blocks.PROCEDURES_DOCS",
+    "description": "Button in extension list to learn how to use the \"return\" block from the Custom Reporters extension.",
+    "defaultMessage": "How to use return"
+  }
+]

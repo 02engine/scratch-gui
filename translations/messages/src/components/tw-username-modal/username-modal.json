@@ -1,0 +1,47 @@
+[
+  {
+    "id": "tw.usernameModal.title",
+    "description": "Title change username modal",
+    "defaultMessage": "Change Username"
+  },
+  {
+    "id": "tw.usernameModal.mustChange",
+    "description": "Text in change username modal",
+    "defaultMessage": "Sorry, the cloud variable server thinks your username may be unsafe. Please change it to something else or {resetIt}."
+  },
+  {
+    "id": "tw.usernameModal.mustChange.resetIt",
+    "description": "link to reset username",
+    "defaultMessage": "reset it (recommended)"
+  },
+  {
+    "id": "tw.usernameModal.new",
+    "description": "Appears in the username changing modal in the desktop app",
+    "defaultMessage": "New username:"
+  },
+  {
+    "id": "tw.usernameModal.help",
+    "description": "Text in change username modal",
+    "defaultMessage": "This value will be stored in your browser's storage. It may be logged when you interact with projects that contain cloud variables."
+  },
+  {
+    "id": "tw.usernameModal.help2",
+    "description": "Text in change username modal",
+    "defaultMessage": "Values that do not correspond to a valid Scratch account will typically be rejected by the cloud variable server. We recommend leaving it as-is or changing it to your Scratch username."
+  },
+  {
+    "id": "tw.usernameModal.reset",
+    "description": "Button in username modal to reset username to random",
+    "defaultMessage": "Reset"
+  },
+  {
+    "id": "gui.prompt.cancel",
+    "description": "Button in prompt for cancelling the dialog",
+    "defaultMessage": "Cancel"
+  },
+  {
+    "id": "gui.prompt.ok",
+    "description": "Button in prompt for confirming the dialog",
+    "defaultMessage": "OK"
+  }
+]

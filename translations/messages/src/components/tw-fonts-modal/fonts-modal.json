@@ -1,0 +1,37 @@
+[
+  {
+    "id": "tw.fonts.title",
+    "description": "Title of custom font management modal",
+    "defaultMessage": "Fonts"
+  },
+  {
+    "id": "tw.fonts.system1",
+    "description": "Part of font management modal",
+    "defaultMessage": "Add a system font"
+  },
+  {
+    "id": "tw.fonts.system2",
+    "description": "Part of font management modal",
+    "defaultMessage": "May work in Scratch, but will not appear correctly for everyone."
+  },
+  {
+    "id": "tw.fonts.custom1",
+    "description": "Part of font management modal",
+    "defaultMessage": "Add font from a file"
+  },
+  {
+    "id": "tw.fonts.custom2",
+    "description": "Part of font management modal. Appears under option to add a font from a local file. {formats} is replace with a comma-separated list of file formats like '.ttf, .otf'",
+    "defaultMessage": "Usually will not work in Scratch. Supported formats: {formats}."
+  },
+  {
+    "id": "tw.fonts.list",
+    "description": "Part of font management modal",
+    "defaultMessage": "Installed fonts:"
+  },
+  {
+    "id": "tw.fonts.none",
+    "description": "Part of font management modal",
+    "defaultMessage": "No fonts added yet."
+  }
+]

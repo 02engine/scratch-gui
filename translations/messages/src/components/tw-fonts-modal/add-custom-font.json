@@ -1,0 +1,17 @@
+[
+  {
+    "id": "tw.fonts.readError",
+    "description": "Part of font management modal. Appears when a font from a local file could not be read.",
+    "defaultMessage": "Failed to read font file: {error}"
+  },
+  {
+    "id": "tw.fonts.custom.file",
+    "description": "Part of font management modal.",
+    "defaultMessage": "Select a font file from your computer:"
+  },
+  {
+    "id": "tw.fonts.custom.name",
+    "description": "Part of font management modal.",
+    "defaultMessage": "Give the font a name:"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "tw.studioview.authorAttribution",
+    "description": "Displayed in StudioView under project title to credit creator",
+    "defaultMessage": "by {author}"
+  },
+  {
+    "id": "tw.studioview.hoverText",
+    "description": "Displayed in StudioView when hovering on a project",
+    "defaultMessage": "{title} by {author}"
+  },
+  {
+    "id": "tw.studioview.error",
+    "description": "Displayed in StudioView when an error occurs",
+    "defaultMessage": "There was an error loading the next page of projects."
+  }
+]

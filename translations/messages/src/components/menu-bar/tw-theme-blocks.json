@@ -1,0 +1,27 @@
+[
+  {
+    "id": "tw.blockColors.three",
+    "description": "Name of normal Scratch block colors.",
+    "defaultMessage": "Original"
+  },
+  {
+    "id": "tw.blockColors.highContrast",
+    "description": "Name of the high contrast block colors.",
+    "defaultMessage": "High Contrast"
+  },
+  {
+    "id": "tw.blockColors.dark",
+    "description": "Name of the dark block colors",
+    "defaultMessage": "Dark (Beta)"
+  },
+  {
+    "id": "tw.blockColors.custom",
+    "description": "Link in block color list to open addon settings for more customization",
+    "defaultMessage": "Customize in Addon Settings"
+  },
+  {
+    "id": "tw.menuBar.blockColors",
+    "description": "Label for to choose what color blocks should be, eg. original or high contrast",
+    "defaultMessage": "Block Colors"
+  }
+]

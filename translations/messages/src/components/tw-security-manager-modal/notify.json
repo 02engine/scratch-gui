@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tw.notify.title",
+    "description": "Part of modal that appears when a project tries to display notifications using an extension",
+    "defaultMessage": "The project wants to display notifications."
+  },
+  {
+    "id": "tw.notify.permission",
+    "description": "Part of modal that appears when a project tries to display notifications using an extension",
+    "defaultMessage": "If allowed, you may be prompted to enable notifications by your browser, and further notifications will be automatically allowed."
+  }
+]

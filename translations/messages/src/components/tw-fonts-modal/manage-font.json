@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tw.fonts.delete",
+    "description": "Part of font management modal. {font} is replaced with the name of a font like \"Arial\"",
+    "defaultMessage": "Are you sure you want to delete \"{font}\"? Any vector costumes will use the fallback font instead."
+  },
+  {
+    "id": "tw.fonts.system",
+    "description": "Part of font management modal",
+    "defaultMessage": "System font"
+  }
+]

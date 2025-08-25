@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tw.viewFeaturedProjects",
+    "description": "Text to view featured projects",
+    "defaultMessage": "Click to view featured projects."
+  },
+  {
+    "id": "tw.featuredProjectsStudio",
+    "description": "Link to turbowarp featured projects studio",
+    "defaultMessage": "View studio on Scratch."
+  }
+]

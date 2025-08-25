@@ -1,0 +1,7 @@
+[
+  {
+    "id": "gui.defaultProject.variable",
+    "description": "Name for the default variable",
+    "defaultMessage": "my variable"
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tw.fileInput.selected",
+    "description": "Appears in a file selector when a file is selected. {names} could be a string like 'fetch.js, network.js'",
+    "defaultMessage": "Selected: {names}"
+  },
+  {
+    "id": "tw.fileInput.none",
+    "description": "Appears in a file selector when no file is selected.",
+    "defaultMessage": "No files selected."
+  }
+]

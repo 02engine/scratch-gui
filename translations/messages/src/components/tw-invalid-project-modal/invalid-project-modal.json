@@ -1,0 +1,32 @@
+[
+  {
+    "id": "tw.invalidProject.title",
+    "description": "Title of modal that appears when a project could not be loaded",
+    "defaultMessage": "Error"
+  },
+  {
+    "id": "tw.invalidProject.error",
+    "description": "Part of modal that appears when a project could not be loaded. Followed by error message.",
+    "defaultMessage": "Could not load project:"
+  },
+  {
+    "id": "tw.invalidProject.validationError",
+    "description": "Part of modal that appears when a project could not be loaded. {reportIt} becomes a link 'report it'.",
+    "defaultMessage": "This error often means that a small part of the project has been corrupted, but that it is otherwise valid. This can be easy to fix, so please {reportIt}."
+  },
+  {
+    "id": "tw.invalidProject.reportIt",
+    "description": "Part of modal that appears when a project could not be loaded. Used in context 'Please report this as this is ...'",
+    "defaultMessage": "report it"
+  },
+  {
+    "id": "tw.invalidProject.options",
+    "description": "Part of modal that appears when a project could not be loaded.",
+    "defaultMessage": "You may be able to recover an older version of the project from automatic restore points or other backups."
+  },
+  {
+    "id": "tw.invalidProject.restorePoints",
+    "description": "Part of modal that appears when a project could not be loaded. This is a button that opens the restore point menu.",
+    "defaultMessage": "View Restore Points"
+  }
+]

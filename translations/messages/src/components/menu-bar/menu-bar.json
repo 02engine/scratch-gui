@@ -1,0 +1,182 @@
+[
+  {
+    "id": "gui.menuBar.tutorialsLibrary",
+    "description": "accessibility text for the tutorials button",
+    "defaultMessage": "Tutorials"
+  },
+  {
+    "id": "tw.menuBar.compileError",
+    "description": "Error message in error menu",
+    "defaultMessage": "{sprite}: {error}"
+  },
+  {
+    "id": "gui.menuBar.restoreSprite",
+    "description": "Menu bar item for restoring the last deleted sprite.",
+    "defaultMessage": "Restore Sprite"
+  },
+  {
+    "id": "gui.menuBar.restoreSound",
+    "description": "Menu bar item for restoring the last deleted sound.",
+    "defaultMessage": "Restore Sound"
+  },
+  {
+    "id": "gui.menuBar.restoreCostume",
+    "description": "Menu bar item for restoring the last deleted costume.",
+    "defaultMessage": "Restore Costume"
+  },
+  {
+    "id": "gui.menuBar.restore",
+    "description": "Menu bar item for restoring the last deleted item in its disabled state.",
+    "defaultMessage": "Restore"
+  },
+  {
+    "id": "gui.menuBar.saveNow",
+    "description": "Menu bar item for saving now",
+    "defaultMessage": "Save now"
+  },
+  {
+    "id": "gui.menuBar.saveAsCopy",
+    "description": "Menu bar item for saving as a copy",
+    "defaultMessage": "Save as a copy"
+  },
+  {
+    "id": "gui.menuBar.remix",
+    "description": "Menu bar item for remixing",
+    "defaultMessage": "Remix"
+  },
+  {
+    "id": "gui.menuBar.new",
+    "description": "Menu bar item for creating a new project",
+    "defaultMessage": "New"
+  },
+  {
+    "id": "tw.menuBar.reportError1",
+    "description": "Link in error menu",
+    "defaultMessage": "Some scripts encountered errors."
+  },
+  {
+    "id": "tw.menuBar.reportError2",
+    "description": "Link in error menu",
+    "defaultMessage": "This is a bug. Please report it."
+  },
+  {
+    "id": "gui.menuBar.file",
+    "description": "Text for file dropdown menu",
+    "defaultMessage": "File"
+  },
+  {
+    "id": "tw.menuBar.newWindow",
+    "description": "Part of desktop app. Menu bar item that creates a new window.",
+    "defaultMessage": "New window"
+  },
+  {
+    "id": "tw.saveTo",
+    "description": "Menu bar item to save project to an existing file on the user's computer",
+    "defaultMessage": "Save to {file}"
+  },
+  {
+    "id": "tw.saveAs",
+    "description": "Menu bar item to select a new file to save the project as",
+    "defaultMessage": "Save as..."
+  },
+  {
+    "id": "tw.oldDownload",
+    "description": "Download the project once, without being able to easily save to the same spot",
+    "defaultMessage": "Save to separate file..."
+  },
+  {
+    "id": "gui.menuBar.downloadToComputer",
+    "description": "Menu bar item for downloading a project to your computer",
+    "defaultMessage": "Save to your computer"
+  },
+  {
+    "id": "tw.menuBar.package",
+    "description": "Menu bar item to open the current project in the packager",
+    "defaultMessage": "Package project"
+  },
+  {
+    "id": "tw.menuBar.restorePoints",
+    "description": "Menu bar item to manage restore points",
+    "defaultMessage": "Restore points"
+  },
+  {
+    "id": "gui.menuBar.edit",
+    "description": "Text for edit dropdown menu",
+    "defaultMessage": "Edit"
+  },
+  {
+    "id": "gui.menuBar.turboModeOff",
+    "description": "Menu bar item for turning off turbo mode",
+    "defaultMessage": "Turn off Turbo Mode"
+  },
+  {
+    "id": "gui.menuBar.turboModeOn",
+    "description": "Menu bar item for turning on turbo mode",
+    "defaultMessage": "Turn on Turbo Mode"
+  },
+  {
+    "id": "tw.menuBar.60off",
+    "description": "Menu bar item for turning off 60 FPS mode",
+    "defaultMessage": "Turn off 60 FPS Mode"
+  },
+  {
+    "id": "tw.menuBar.60on",
+    "description": "Menu bar item for turning on 60 FPS mode",
+    "defaultMessage": "Turn on 60 FPS Mode"
+  },
+  {
+    "id": "tw.menuBar.changeUsername",
+    "description": "Menu bar item for changing the username",
+    "defaultMessage": "Change Username"
+  },
+  {
+    "id": "tw.menuBar.cloudOff",
+    "description": "Menu bar item for disabling cloud variables",
+    "defaultMessage": "Disable Cloud Variables"
+  },
+  {
+    "id": "tw.menuBar.cloudOn",
+    "description": "Menu bar item for enabling cloud variables",
+    "defaultMessage": "Enable Cloud Variables"
+  },
+  {
+    "id": "tw.menuBar.cloudUnavailable",
+    "description": "Menu bar item for when cloud variables are not available",
+    "defaultMessage": "Cloud Variables are not Available"
+  },
+  {
+    "id": "tw.menuBar.moreSettings",
+    "description": "Menu bar item for advanced settings",
+    "defaultMessage": "Advanced Settings"
+  },
+  {
+    "id": "gui.menuBar.modeMenu",
+    "description": "Mode menu item in the menu bar",
+    "defaultMessage": "Mode"
+  },
+  {
+    "id": "gui.menuBar.normalMode",
+    "description": "April fools: resets editor to not have any pranks",
+    "defaultMessage": "Normal mode"
+  },
+  {
+    "id": "gui.menuBar.caturdayMode",
+    "description": "April fools: Cat blocks mode",
+    "defaultMessage": "Caturday mode"
+  },
+  {
+    "id": "tw.menuBar.addons",
+    "description": "Button to open addon settings",
+    "defaultMessage": "Addons"
+  },
+  {
+    "id": "tw.menuBar.advanced",
+    "description": "Button to open advanced settings menu",
+    "defaultMessage": "Advanced"
+  },
+  {
+    "id": "zt.tools",
+    "description": "Button to use 02tools in the menu bar",
+    "defaultMessage": "Tools"
+  }
+]

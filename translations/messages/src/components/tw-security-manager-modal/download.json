@@ -1,0 +1,17 @@
+[
+  {
+    "id": "tw.download.file",
+    "description": "Part of modal when a project attempts to save a file to someone's downloads folder",
+    "defaultMessage": "The project wants to download a file to your computer. It will be saved as {name} in your downloads folder."
+  },
+  {
+    "id": "tw.download.danger",
+    "description": "Part of modal when a project attempts to save a file to someone's downloads folder.",
+    "defaultMessage": "This file has not been reviewed by the {APP_NAME} developers."
+  },
+  {
+    "id": "tw.download.executable",
+    "description": "Part of modal when a project attempts to save a file to someone's downloads folder.",
+    "defaultMessage": "This is an executable file format that may contain malicious code if you run it."
+  }
+]

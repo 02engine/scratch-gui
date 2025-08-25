@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tw.invalidParameters.fps",
+    "description": "Alert displayed when fps URL parameter is invalid",
+    "defaultMessage": "\"fps\" URL parameter is invalid"
+  },
+  {
+    "id": "tw.invalidParameters.clones",
+    "description": "Alert displayed when clones URL parameter is invalid",
+    "defaultMessage": "\"clone\" URL parameter is invalid"
+  }
+]

@@ -1,0 +1,7 @@
+[
+  {
+    "id": "tw.confirmIncompatibleExtension",
+    "description": "Confirm loading Scratch-incompatible extension",
+    "defaultMessage": "This extension is incompatible with Scratch. Projects made with it cannot be uploaded to the Scratch website. Are you sure you want to enable it?"
+  }
+]

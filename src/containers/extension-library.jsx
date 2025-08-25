@@ -165,6 +165,47 @@ const fetchLibrary = async () => {
         incompatibleWithScratch: !extension.scratchCompatible,
         featured: true
     }));
+    /*Mist*/
+    res = await fetch('https://extensions.mistium.com/generated-metadata/extensions-v0.json');
+    if (!res.ok) {
+        throw new Error(`HTTP status ${res.status}`);
+    }
+    data = await res.json();
+    const mistdata=data.extensions.map(extension => ({
+        name: extension.name,
+        nameTranslations: extension.nameTranslations || {},
+        description: extension.description,
+        descriptionTranslations: extension.descriptionTranslations || {},
+        extensionId: extension.id,
+        extensionURL: `https://extensions.mistium.com/featured/${extension.name}.js`,
+        iconURL: `https://extensions.mistium.com/${extension.image || 'images/unknown.svg'}`,
+        tags: ['mist'],
+        credits: [
+            ...(extension.original || []),
+            ...(extension.by || [])
+        ].map(credit => {
+            if (credit.link) {
+                return (
+                    <a
+                        href={credit.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        key={credit.name}
+                    >
+                        {credit.name}
+                    </a>
+                );
+            }
+            return credit.name;
+        }),
+        docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
+        samples: extension.samples ? extension.samples.map(sample => ({
+            href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
+            text: sample
+        })) : null,
+        incompatibleWithScratch: !extension.scratchCompatible,
+        featured: true
+    }));
 
     /*pm*/
     data = {
@@ -658,7 +699,7 @@ const fetchLibrary = async () => {
         featured: true
     }));
 
-    return ztdata.concat(twdata,pmdata); 
+    return ztdata.concat(twdata,pmdata,mistdata); 
 };
 
 class ExtensionLibrary extends React.PureComponent {

@@ -1,0 +1,66 @@
+[
+  {
+    "id": "tw.restorePoints.title",
+    "description": "Title of restore point management modal",
+    "defaultMessage": "Restore Points"
+  },
+  {
+    "id": "tw.restorePoints.never",
+    "description": "Part of restore point modal. Appears as dropdown in context \"Restore points are created [never]\"",
+    "defaultMessage": "never"
+  },
+  {
+    "id": "tw.restorePoints.1minute",
+    "description": "Part of restore point modal. Appears as dropdown in context \"Restore points are created [every minute]\"",
+    "defaultMessage": "every minute"
+  },
+  {
+    "id": "tw.restorePoints.minutes",
+    "description": "Part of restore point modal. Appears as dropdown in context \"Restore points are created [every 5 minutes]\". {n} will be replaced with a number greater than 1.",
+    "defaultMessage": "every {n} minutes"
+  },
+  {
+    "id": "tw.restorePoints.description",
+    "defaultMessage": "{APP_NAME} periodically saves restore points on your computer to help recover your project if you forget to save. This is intended as a last resort for recovery. Your computer may silently delete these restore points at any time. DO NOT rely on this feature."
+  },
+  {
+    "id": "tw.restorePoints.intervalOption",
+    "description": "{time} will be replaced with a dropdown with values such as [every 5 minutes] and [never]",
+    "defaultMessage": "Restore points are created {time}."
+  },
+  {
+    "id": "tw.restorePoints.off",
+    "description": "Warning that appears in restore point modal when the user has disabled restore points.",
+    "defaultMessage": "Disabling restore points is dangerous."
+  },
+  {
+    "id": "tw.restorePoints.error",
+    "description": "Error message in restore point manager when the list of restore points cannot be loaded. Followed by an error message.",
+    "defaultMessage": "Restore points are not available due to an error:"
+  },
+  {
+    "id": "tw.restorePoints.loading",
+    "description": "Loading message in restore point manager",
+    "defaultMessage": "Loading..."
+  },
+  {
+    "id": "tw.restorePoints.empty",
+    "description": "Message that appears when no restore points exist yet",
+    "defaultMessage": "No restore points found."
+  },
+  {
+    "id": "tw.restorePoints.size",
+    "description": "Part of restore point modal describing amount of disk space used",
+    "defaultMessage": "Estimated storage used: {size}"
+  },
+  {
+    "id": "tw.restorePoints.size2",
+    "description": "Part of the restore point modal that explains why the total storage used is less than may be expected.",
+    "defaultMessage": "Costumes or sounds used by multiple restore points are only stored once."
+  },
+  {
+    "id": "tw.restorePoints.deleteAll",
+    "description": "Button to delete all restore points",
+    "defaultMessage": "Delete All"
+  }
+]

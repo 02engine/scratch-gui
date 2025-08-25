@@ -1,0 +1,17 @@
+[
+  {
+    "id": "tw.viewOnScratch",
+    "description": "Link to view project on Scratch",
+    "defaultMessage": "View project on Scratch"
+  },
+  {
+    "id": "tw.home.instructions",
+    "description": "Header for instructions section of description",
+    "defaultMessage": "Instructions"
+  },
+  {
+    "id": "tw.home.credit",
+    "description": "Header for notes and credits section of description",
+    "defaultMessage": "Notes and Credits"
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "tw.usesCloudVariables",
+    "description": "Cloud variable information shown under projects with cloud variables",
+    "defaultMessage": "This project uses cloud variables."
+  },
+  {
+    "id": "tw.usesCloudVariables2",
+    "description": "Cloud variable information shown under projects with cloud variables. {changeTheirUsername} will be replaced with a link with text 'change their username' (translated)",
+    "defaultMessage": "{APP_NAME}'s cloud variables are not connected to Scratch's. Anyone can {changeTheirUsername} to anything, so beware of impersonation."
+  },
+  {
+    "id": "tw.usesCloudVariables2.change",
+    "description": "Link that opens modal to change one's username. Used in the context 'Anyone can change their username'",
+    "defaultMessage": "change their username"
+  },
+  {
+    "id": "tw.cloudServers",
+    "description": "Appears before a list of cloud variable servers in different countries",
+    "defaultMessage": "Pick a server near you:"
+  },
+  {
+    "id": "tw.customCloudServer",
+    "description": "Appears when using a non-TurboWarp provided cloud variable server. {server} is replaced with the server's URL, eg. wss://clouddata.turbowarp.org",
+    "defaultMessage": "Using a custom cloud variable server: {server}"
+  },
+  {
+    "id": "tw.cloudProvider",
+    "description": "Link to person/company who provided this cloud variable server",
+    "defaultMessage": "Server provided by {name}."
+  },
+  {
+    "id": "tw.moreCloud",
+    "description": "Link for more information about cloud variables",
+    "defaultMessage": "Learn more about cloud variables."
+  }
+]

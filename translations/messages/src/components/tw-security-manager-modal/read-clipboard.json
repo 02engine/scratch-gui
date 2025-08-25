@@ -1,0 +1,17 @@
+[
+  {
+    "id": "tw.clipboard.title",
+    "description": "Part of modal that appears when a project tries to access the clipboard using an extension",
+    "defaultMessage": "The project wants to read data from your clipboard."
+  },
+  {
+    "id": "tw.clipboard.danger",
+    "description": "Part of modal that appears when a project tries to access the clipboard using an extension",
+    "defaultMessage": "If your clipboard contains things like passwords, the project may be able to share those with other users or servers."
+  },
+  {
+    "id": "tw.clipboard.permission",
+    "description": "Part of modal that appears when a project tries to access the clipboard using an extension",
+    "defaultMessage": "Clipboard access may not work in some browsers. If allowed, further clipboard reads will be automatically allowed."
+  }
+]

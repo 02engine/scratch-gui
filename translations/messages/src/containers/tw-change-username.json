@@ -1,0 +1,7 @@
+[
+  {
+    "id": "tw.changeUsername.cannotChangeWhileRunning",
+    "description": "Alert that appears when trying to change username while project is running",
+    "defaultMessage": "Username cannot be changed while the project is running."
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "tw.restorePoints.confirmLoad",
+    "description": "Confirmation that appears when loading a restore point to confirm overwriting unsaved changes.",
+    "defaultMessage": "You have unsaved changes. Replace existing project?"
+  },
+  {
+    "id": "tw.restorePoints.confirmDelete",
+    "description": "Confirmation that appears when deleting a restore poinnt",
+    "defaultMessage": "Are you sure you want to delete \"{projectTitle}\"? This cannot be undone."
+  },
+  {
+    "id": "tw.restorePoints.confirmDeleteAll",
+    "description": "Confirmation that appears when deleting ALL restore points.",
+    "defaultMessage": "Are you sure you want to delete ALL restore points? This cannot be undone."
+  },
+  {
+    "id": "tw.restorePoints.error",
+    "description": "Error message when a restore point could not be loaded",
+    "defaultMessage": "Error loading restore point: {error}"
+  },
+  {
+    "id": "tw.restorePoints.exportError",
+    "description": "Error message when a restore point could not be exported",
+    "defaultMessage": "Error exporting restore point: {error}"
+  }
+]

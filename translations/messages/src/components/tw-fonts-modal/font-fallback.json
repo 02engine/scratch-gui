@@ -1,0 +1,7 @@
+[
+  {
+    "id": "tw.fonts.fallback",
+    "description": "Part of font management modal.",
+    "defaultMessage": "Choose a fallback font to use if the font fails to load or is deleted:"
+  }
+]

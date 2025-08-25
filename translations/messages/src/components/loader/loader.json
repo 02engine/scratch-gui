@@ -1,0 +1,27 @@
+[
+  {
+    "id": "gui.loader.headline",
+    "description": "Main loading message",
+    "defaultMessage": "Loading Project"
+  },
+  {
+    "id": "gui.loader.creating",
+    "description": "Main creating message",
+    "defaultMessage": "Creating Project"
+  },
+  {
+    "id": "tw.loader.projectData",
+    "description": "Appears when loading project data, but not assets yet",
+    "defaultMessage": "Loading project …"
+  },
+  {
+    "id": "tw.loader.downloadingAssets",
+    "description": "Appears when loading project assets from a project on a remote website",
+    "defaultMessage": "Downloading assets ({complete}/{total}) …"
+  },
+  {
+    "id": "tw.loader.loadingAssets",
+    "description": "Appears when loading project assets from a project file on the user's computer",
+    "defaultMessage": "Loading assets ({complete}/{total}) …"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "tw.accent.ztengine",
+    "description": "used by 02Engine by default.",
+    "defaultMessage": "02Engine"
+  },
+  {
+    "id": "tw.accent.red",
+    "description": "Name of the red color scheme, used by 02Engine by default.",
+    "defaultMessage": "Red"
+  },
+  {
+    "id": "tw.accent.purple",
+    "description": "Name of the purple color scheme. Matches modern Scratch.",
+    "defaultMessage": "Purple"
+  },
+  {
+    "id": "tw.accent.blue",
+    "description": "Name of the blue color scheme. Matches Scratch before the high contrast update.",
+    "defaultMessage": "Blue"
+  },
+  {
+    "id": "tw.accent.rainbow",
+    "description": "Name of color scheme that uses a rainbow.",
+    "defaultMessage": "Rainbow"
+  },
+  {
+    "id": "tw.menuBar.accent",
+    "description": "Label for menu to choose accent color (eg. 02Engine's red, Scratch's purple)",
+    "defaultMessage": "Accent"
+  }
+]

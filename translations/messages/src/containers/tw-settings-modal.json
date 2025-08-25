@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tw.menuBar.newFramerate",
+    "description": "Prompt shown to choose a new framerate",
+    "defaultMessage": "New framerate:"
+  },
+  {
+    "id": "tw.menuBar.newOpsPerFrame",
+    "description": "Prompt shown to choose a new OpsPerFrame",
+    "defaultMessage": "New OpsPerFrame:"
+  }
+]

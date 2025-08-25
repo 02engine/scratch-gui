@@ -1,0 +1,17 @@
+[
+  {
+    "id": "tw.securityManager.title",
+    "description": "Title of modal thats asks the user for permission to let the project load an extension, fetch a resource, open a window, etc.",
+    "defaultMessage": "Extension Security"
+  },
+  {
+    "id": "tw.securityManager.deny",
+    "description": "Button in modal asking user for permission to load extension, access file, etc.",
+    "defaultMessage": "Deny"
+  },
+  {
+    "id": "tw.securityManager.allow",
+    "description": "Button in modal asking user for permission to load extension, access file, etc.",
+    "defaultMessage": "Allow"
+  }
+]

@@ -1,0 +1,31 @@
+[
+  {
+    "id": "gui.unsupportedBrowser.label",
+    "defaultMessage": "Browser is not supported"
+  },
+  {
+    "id": "tw.browserModal.desktopTitle",
+    "description": "Title of error message in desktop app when system does not support required API, such as WebGL",
+    "defaultMessage": "System is not supported"
+  },
+  {
+    "id": "tw.browserModal.webgl1",
+    "description": "Error message when browser does not support WebGL.",
+    "defaultMessage": "{APP_NAME} requires WebGL, however your computer does not seem to support it. This is often a temporary error that can be fixed by restarting your computer."
+  },
+  {
+    "id": "tw.browserModal.webglDesktop",
+    "description": "Error message when browser does not support WebGL (desktop app version). Consider seeing how Chrome translates 'graphics acceleration' into your language.",
+    "defaultMessage": "You can also try toggling the \"graphics acceleration\" option in desktop settings:"
+  },
+  {
+    "id": "tw.browserModal.desktopSettings",
+    "description": "Button in unsupported system modal to open desktop settings",
+    "defaultMessage": "Open Desktop Settings"
+  },
+  {
+    "id": "tw.browserModal.webglBrowser",
+    "description": "Error message when browser does not support WebGL (browser version). Chrome calls it graphics acceleration and Firefox calls it hardware acceleration; consider seeing how they actually translate these",
+    "defaultMessage": "Use a recent version of Chrome, Firefox, or Safari, and ensure your graphics drivers are up to date. You can also try toggling the \"graphics acceleration\" or \"hardware acceleration\" option in your browser's settings."
+  }
+]

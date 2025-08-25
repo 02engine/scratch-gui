@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tw.recordVideo.title",
+    "description": "Part of modal that appears when a project tries to record video using an extension",
+    "defaultMessage": "The project wants to record video from your camera. The project may be able to share images with other users or servers."
+  },
+  {
+    "id": "tw.recordVideo.permission",
+    "description": "Part of modal that appears when a project tries to record audio using an extension",
+    "defaultMessage": "If allowed, you may be prompted to enable camera access by your browser, and further camera access will be automatically allowed."
+  }
+]

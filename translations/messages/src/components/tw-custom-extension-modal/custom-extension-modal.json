@@ -1,0 +1,67 @@
+[
+  {
+    "id": "tw.customExtensionModal.title",
+    "description": "Title of custom extension menu",
+    "defaultMessage": "Load Custom Extension"
+  },
+  {
+    "id": "tw.customExtensionModal.url",
+    "description": "Button to choose to load an extension from a remote URL. Not much space, so keep this short.",
+    "defaultMessage": "URL"
+  },
+  {
+    "id": "tw.customExtensionModal.file",
+    "description": "Button to choose to load an extension from one or more local files. Not much space, so keep this short.",
+    "defaultMessage": "Files"
+  },
+  {
+    "id": "tw.customExtensionModal.text",
+    "description": "Button to choose to load an extension from a text input. Not much space, so keep this short.",
+    "defaultMessage": "Text"
+  },
+  {
+    "id": "tw.customExtensionModal.promptURL",
+    "description": "Label that appears when loading a custom extension from a URL",
+    "defaultMessage": "Enter the extension's URL:"
+  },
+  {
+    "id": "tw.customExtensionModal.promptFile",
+    "description": "Label that appears when loading a custom extension from one or more files",
+    "defaultMessage": "Select or drop extension JavaScript files:"
+  },
+  {
+    "id": "tw.customExtensionModal.promptText",
+    "description": "Label that appears when loading a custom extension from a text input",
+    "defaultMessage": "Paste the extension's JavaScript source code:"
+  },
+  {
+    "id": "tw.customExtensionModal.unsandboxed",
+    "description": "Message that appears in custom extension prompt",
+    "defaultMessage": "Run without sandbox"
+  },
+  {
+    "id": "tw.customExtensionModal.unsandboxedWarning1",
+    "description": "Warning that appears when disabling extension security sandbox",
+    "defaultMessage": "Loading extensions without the sandbox is dangerous and should not be enabled if you don't know what you're doing."
+  },
+  {
+    "id": "tw.customExtensionModal.unsandboxedWarning2",
+    "description": "Warning that appears when disabling extension security sandbox",
+    "defaultMessage": "Unsandboxed extensions can corrupt your project, delete your settings, phish for passwords, and other bad things. The {APP_NAME} developers are not responsible for any resulting issues."
+  },
+  {
+    "id": "tw.customExtensionModal.trusted",
+    "description": "Message that appears in custom extension prompt",
+    "defaultMessage": "This extension will be loaded without the sandbox because it is from a trusted source."
+  },
+  {
+    "id": "tw.customExtensionModal.untrusted",
+    "description": "Message that appears in custom extension prompt",
+    "defaultMessage": "Extensions from untrusted URLs will always be loaded with the sandbox for security."
+  },
+  {
+    "id": "tw.customExtensionModal.load",
+    "description": "Button that loads the given custom extension",
+    "defaultMessage": "Load"
+  }
+]

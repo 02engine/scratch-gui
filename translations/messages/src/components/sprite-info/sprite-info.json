@@ -1,0 +1,32 @@
+[
+  {
+    "id": "gui.SpriteInfo.spritePlaceholder",
+    "description": "Placeholder text for sprite name",
+    "defaultMessage": "Name"
+  },
+  {
+    "id": "gui.SpriteInfo.showSpriteAction",
+    "description": "Tooltip for show sprite button",
+    "defaultMessage": "Show sprite"
+  },
+  {
+    "id": "gui.SpriteInfo.hideSpriteAction",
+    "description": "Tooltip for hide sprite button",
+    "defaultMessage": "Hide sprite"
+  },
+  {
+    "id": "gui.SpriteInfo.sprite",
+    "description": "Sprite info label",
+    "defaultMessage": "Sprite"
+  },
+  {
+    "id": "gui.SpriteInfo.show",
+    "description": "Sprite info show label",
+    "defaultMessage": "Show"
+  },
+  {
+    "id": "gui.SpriteInfo.size",
+    "description": "Sprite info size label",
+    "defaultMessage": "Size"
+  }
+]

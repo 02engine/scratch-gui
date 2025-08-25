@@ -1,0 +1,156 @@
+[
+  {
+    "id": "tw.settingsModal.title",
+    "description": "Title of settings modal",
+    "defaultMessage": "Advanced Settings"
+  },
+  {
+    "id": "tw.settingsModal.help",
+    "description": "Hover text of help icon in settings",
+    "defaultMessage": "Click for help"
+  },
+  {
+    "id": "gui.alerts.cloudInfoLearnMore",
+    "defaultMessage": "Learn more."
+  },
+  {
+    "id": "tw.settingsModal.highQualityPen",
+    "description": "High quality pen setting",
+    "defaultMessage": "High Quality Pen"
+  },
+  {
+    "id": "tw.settingsModal.highQualityPenHelp",
+    "description": "High quality pen setting help",
+    "defaultMessage": "Allows pen projects to render at higher resolutions and disables some coordinate rounding in the editor. Not all projects benefit from this setting and it may impact performance."
+  },
+  {
+    "id": "tw.settingsModal.fps",
+    "description": "FPS setting",
+    "defaultMessage": "60 FPS (Custom FPS)"
+  },
+  {
+    "id": "tw.settingsModal.fpsHelp",
+    "description": "FPS setting help",
+    "defaultMessage": "Runs scripts 60 times per second instead of 30. Most projects will not work properly with this enabled. You should try Interpolation with 60 FPS mode disabled if that is the case. {customFramerate}."
+  },
+  {
+    "id": "tw.settingsModal.fpsHelp.customFramerate",
+    "description": "FPS settings help",
+    "defaultMessage": "Click to use a framerate other than 30 or 60"
+  },
+  {
+    "id": "tw.settingsModal.opf",
+    "description": "OPF setting",
+    "defaultMessage": "2 OpsPerFrame (Custom OpsPerFrame)"
+  },
+  {
+    "id": "tw.settingsModal.opfHelp",
+    "description": "OPF setting help",
+    "defaultMessage": "Run the code multiple times within a frame.Open TurboMob will be better. {customOpsPerFrame}."
+  },
+  {
+    "id": "tw.settingsModal.opfHelp.customOpsPerFrame",
+    "description": "OPF settings help",
+    "defaultMessage": "Click to use a OpsPerFrame other than 1 or 2"
+  },
+  {
+    "id": "tw.settingsModal.interpolation",
+    "description": "Interpolation setting",
+    "defaultMessage": "Interpolation"
+  },
+  {
+    "id": "tw.settingsModal.interpolationHelp",
+    "description": "Interpolation setting help",
+    "defaultMessage": "Makes projects appear smoother by interpolating sprite motion. Interpolation should not be used on 3D projects, raytracers, pen projects, and laggy projects as interpolation will make them run slower without making them appear smoother."
+  },
+  {
+    "id": "tw.settingsModal.infiniteClones",
+    "description": "Infinite Clones setting",
+    "defaultMessage": "Infinite Clones"
+  },
+  {
+    "id": "tw.settingsModal.infiniteClonesHelp",
+    "description": "Infinite Clones setting help",
+    "defaultMessage": "Disables Scratch's 300 clone limit."
+  },
+  {
+    "id": "tw.settingsModal.removeFencing",
+    "description": "Remove Fencing setting",
+    "defaultMessage": "Remove Fencing"
+  },
+  {
+    "id": "tw.settingsModal.removeFencingHelp",
+    "description": "Remove Fencing setting help",
+    "defaultMessage": "Allows sprites to move offscreen, become as large or as small as they want, and makes touching blocks work offscreen."
+  },
+  {
+    "id": "tw.settingsModal.removeMiscLimits",
+    "description": "Remove Miscellaneous Limits setting",
+    "defaultMessage": "Remove Miscellaneous Limits"
+  },
+  {
+    "id": "tw.settingsModal.removeMiscLimitsHelp",
+    "description": "Remove Miscellaneous Limits setting help",
+    "defaultMessage": "Removes sound effect limits and pen size limits."
+  },
+  {
+    "id": "tw.settingsModal.warpTimer",
+    "description": "Warp Timer setting",
+    "defaultMessage": "Warp Timer"
+  },
+  {
+    "id": "tw.settingsModal.warpTimerHelp",
+    "description": "Warp Timer help",
+    "defaultMessage": "Makes scripts check if they are stuck in a long or infinite loop and run at a low framerate instead of getting stuck until the loop finishes. This fixes most crashes but has a significant performance impact, so it's only enabled by default in the editor."
+  },
+  {
+    "id": "tw.settingsModal.disableCompiler",
+    "description": "Disable Compiler setting",
+    "defaultMessage": "Disable Compiler"
+  },
+  {
+    "id": "tw.settingsModal.disableCompilerHelp",
+    "description": "Disable Compiler help",
+    "defaultMessage": "Disables the {APP_NAME} compiler. You may want to enable this while editing projects so that scripts update immediately. Otherwise, you should never enable this."
+  },
+  {
+    "id": "tw.settingsModal.customStageSize",
+    "description": "Custom Stage Size option",
+    "defaultMessage": "Custom Stage Size:"
+  },
+  {
+    "id": "tw.settingsModal.largeStageWarning",
+    "description": "Warning about using stages that are too large in settings modal",
+    "defaultMessage": "Using a custom stage size this large is not recommended! Instead, use a lower size with the same aspect ratio and let fullscreen mode upscale it to match the user's display."
+  },
+  {
+    "id": "tw.settingsModal.customStageSizeHelp",
+    "description": "Custom Stage Size option",
+    "defaultMessage": "Changes the size of the Scratch stage from 480x360 to something else. Try 640x360 to make the stage widescreen. Very few projects will handle this properly."
+  },
+  {
+    "id": "tw.settingsModal.storeProjectOptions",
+    "description": "Button in settings modal",
+    "defaultMessage": "Store settings in project"
+  },
+  {
+    "id": "tw.settingsModal.storeProjectOptionsHelp",
+    "description": "Help text for the store settings in project button",
+    "defaultMessage": "Stores the selected settings in the project so they will be automatically applied when 02Engine loads this project. Warp timer and disable compiler will not be saved."
+  },
+  {
+    "id": "tw.settingsModal.featured",
+    "description": "Settings modal section",
+    "defaultMessage": "Featured"
+  },
+  {
+    "id": "tw.settingsModal.removeLimits",
+    "description": "Settings modal section",
+    "defaultMessage": "Remove Limits"
+  },
+  {
+    "id": "tw.settingsModal.dangerZone",
+    "description": "Settings modal section",
+    "defaultMessage": "Danger Zone"
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tw.darkMode",
+    "description": "Menu item to change color scheme to light (it is currently dark)",
+    "defaultMessage": "Switch To Light Mode"
+  },
+  {
+    "id": "tw.lightMode",
+    "description": "Menu item to change color scheme to dark (it is currently light)",
+    "defaultMessage": "Switch To Dark Mode"
+  }
+]

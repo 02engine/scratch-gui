@@ -1,0 +1,7 @@
+[
+  {
+    "id": "tw.menuBar.newFramerate",
+    "description": "Prompt shown to choose a new framerate",
+    "defaultMessage": "New framerate:"
+  }
+]

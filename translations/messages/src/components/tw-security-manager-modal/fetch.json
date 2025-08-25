@@ -1,0 +1,17 @@
+[
+  {
+    "id": "tw.fetch.title",
+    "description": "Part of modal shown when a project asks for permission to fetch a URL using an extension",
+    "defaultMessage": "The project wants to connect to the website:"
+  },
+  {
+    "id": "tw.securityManager.why",
+    "description": "Part of modal shown when a project asks for permission to fetch a URL using an extension",
+    "defaultMessage": "This could be used to download images or sounds, implement multiplayer, access an API, or for malicious purposes. This will share your IP address, general location, and possibly other data with the website."
+  },
+  {
+    "id": "tw.securityManager.trust",
+    "description": "Part of modal shown when a project asks for permission to fetch a URL using an extension",
+    "defaultMessage": "If allowed, further requests to the same website will be automatically allowed."
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "gui.connection.updatePeripheral.microBitConnect",
+    "description": "Instructions to connect the micro:bit to the computer for the update process",
+    "defaultMessage": "Connect your {extensionName} to this device using a USB cable."
+  },
+  {
+    "id": "gui.connection.updatePeripheral.pressUpdate",
+    "description": "Instructions to press the button to begin the update process",
+    "defaultMessage": "Press \"Do Update\" and allow the update to complete."
+  },
+  {
+    "id": "gui.connection.updatePeripheral.progress",
+    "description": "Progress message while updating the peripheral",
+    "defaultMessage": "Updating {progressPercentage}%"
+  },
+  {
+    "id": "gui.connection.updatePeripheral.updateSuccessful",
+    "description": "Message to indicate that the peripheral update was successful",
+    "defaultMessage": "Update successful!"
+  },
+  {
+    "id": "gui.connection.updatePeripheral.updateFailed",
+    "description": "Message to indicate that the peripheral update failed",
+    "defaultMessage": "Update failed."
+  },
+  {
+    "id": "gui.connection.updatePeripheral.goBackButton",
+    "description": "Button to leave the peripheral update process",
+    "defaultMessage": "Go Back"
+  },
+  {
+    "id": "gui.connection.updatePeripheral.updateNowButton",
+    "description": "Button to start the peripheral update",
+    "defaultMessage": "Do Update"
+  },
+  {
+    "id": "gui.connection.updatePeripheral.updateAgainButton",
+    "description": "Button to try the peripheral update again",
+    "defaultMessage": "Try Again"
+  }
+]

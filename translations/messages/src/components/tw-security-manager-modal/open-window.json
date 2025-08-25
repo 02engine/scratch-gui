@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tw.openWindow.title",
+    "description": "Part of modal when a project attempts to open a window using an extension",
+    "defaultMessage": "The project wants to open a new window or tab with the URL:"
+  },
+  {
+    "id": "tw.openWindow.dangerous",
+    "description": "Part of modal when a project attempts to open a window using an extension",
+    "defaultMessage": "This website has not been reviewed by the {APP_NAME} developers. It may contain dangerous or malicious code."
+  }
+]

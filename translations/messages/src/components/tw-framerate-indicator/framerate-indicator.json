@@ -1,0 +1,14 @@
+[
+  {
+    "id": "tw.fps",
+    "defaultMessage": "{framerate} FPS"
+  },
+  {
+    "id": "tw.opf",
+    "defaultMessage": "{opsPerFrame} OPF"
+  },
+  {
+    "id": "tw.interpolationEnabled",
+    "defaultMessage": "Interpolation"
+  }
+]
