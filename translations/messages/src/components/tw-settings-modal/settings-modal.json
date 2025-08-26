@@ -46,7 +46,7 @@
   {
     "id": "tw.settingsModal.opfHelp",
     "description": "OPF setting help",
-    "defaultMessage": "Run the code multiple times within a frame.Open TurboMob will be better. {customOpsPerFrame}."
+    "defaultMessage": "Run the code multiple times within a frame.Open TurboMode will be better. {customOpsPerFrame}."
   },
   {
     "id": "tw.settingsModal.opfHelp.customOpsPerFrame",

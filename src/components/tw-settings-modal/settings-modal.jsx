@@ -207,7 +207,7 @@ const CustomOPF = props => (
         help={
             <FormattedMessage
                 // eslint-disable-next-line max-len
-                defaultMessage="Run the code multiple times within a frame.Open TurboMob will be better. {customOpsPerFrame}."
+                defaultMessage="Run the code multiple times within a frame.Open TurboMode will be better. {customOpsPerFrame}."
                 description="OPF setting help"
                 id="tw.settingsModal.opfHelp"
                 values={{

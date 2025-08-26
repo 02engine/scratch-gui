@@ -43,172 +43,180 @@ const translateGalleryItem = (extension, locale) => ({
 let cachedGallery = null;
 
 const fetchLibrary = async () => {
-    /*const res = await fetch('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json');
-    if (!res.ok) {
-        throw new Error(`HTTP status ${res.status}`);
-    }
-    const data = await res.json();
-    return data.extensions.map(extension => ({
-        name: extension.name,
-        nameTranslations: extension.nameTranslations || {},
-        description: extension.description,
-        descriptionTranslations: extension.descriptionTranslations || {},
-        extensionId: extension.id,
-        extensionURL: `https://extensions.turbowarp.org/${extension.slug}.js`,
-        iconURL: `https://extensions.turbowarp.org/${extension.image || 'images/unknown.svg'}`,
-        tags: ['tw'],
-        credits: [
-            ...(extension.original || []),
-            ...(extension.by || [])
-        ].map(credit => {
-            if (credit.link) {
-                return (
-                    <a
-                        href={credit.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        key={credit.name}
-                    >
-                        {credit.name}
-                    </a>
-                );
+    // 辅助函数：安全获取数据
+    const safeFetch = async (url, processor, defaultData = []) => {
+        try {
+            const res = await fetch(url);
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
             }
-            return credit.name;
-        }),
-        docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
-        samples: extension.samples ? extension.samples.map(sample => ({
-            href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
-            text: sample
-        })) : null,
-        incompatibleWithScratch: !extension.scratchCompatible,
-        featured: true
-    }));*/
-    /*02engine*/
-    let res = await fetch('https://extensions.02engine.02studio.xyz/extensions.json');
-    if (!res.ok) {
-        throw new Error(`HTTP status ${res.status}`);
-    }
-    let data = await res.json();
-    const ztdata=data.extensions.map(extension => ({
-        name: extension.name,
-        nameTranslations: extension.nameTranslations || {},
-        description: extension.description,
-        descriptionTranslations: extension.descriptionTranslations || {},
-        extensionId: extension.id,
-        extensionURL: `https://extensions.02engine.02studio.xyz/extension/${extension.slug}.js`,
-        iconURL: `https://extensions.02engine.02studio.xyz/image/${extension.image || 'images/unknown.svg'}`,
-        tags: ['ztengine'],
-        credits: [
-            ...(extension.original || []),
-            ...(extension.by || [])
-        ].map(credit => {
-            if (credit.link) {
-                return (
-                    <a
-                        href={credit.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        key={credit.name}
-                    >
-                        {credit.name}
-                    </a>
-                );
-            }
-            return credit.name;
-        }),
-        docsURI: extension.docs ? `https://extensions.02engine.02studio.xyz/doc/${extension.slug}` : null,
-        samples: extension.samples ? extension.samples.map(sample => ({
-            href: `${process.env.ROOT}editor?project_url=https://extensions.02engine.02studio.xyz/samples/${encodeURIComponent(sample)}.sb3`,
-            text: sample
-        })) : null,
-        incompatibleWithScratch: !extension.scratchCompatible,
-        featured: true
-    }));
-    /*turbowarp*/
-    res = await fetch('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json');
-    if (!res.ok) {
-        throw new Error(`HTTP status ${res.status}`);
-    }
-    data = await res.json();
-    const twdata=data.extensions.map(extension => ({
-        name: extension.name,
-        nameTranslations: extension.nameTranslations || {},
-        description: extension.description,
-        descriptionTranslations: extension.descriptionTranslations || {},
-        extensionId: extension.id,
-        extensionURL: `https://extensions.turbowarp.org/${extension.slug}.js`,
-        iconURL: `https://extensions.turbowarp.org/${extension.image || 'images/unknown.svg'}`,
-        tags: ['tw'],
-        credits: [
-            ...(extension.original || []),
-            ...(extension.by || [])
-        ].map(credit => {
-            if (credit.link) {
-                return (
-                    <a
-                        href={credit.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        key={credit.name}
-                    >
-                        {credit.name}
-                    </a>
-                );
-            }
-            return credit.name;
-        }),
-        docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
-        samples: extension.samples ? extension.samples.map(sample => ({
-            href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
-            text: sample
-        })) : null,
-        incompatibleWithScratch: !extension.scratchCompatible,
-        featured: true
-    }));
-    /*Mist*/
-    res = await fetch('https://extensions.mistium.com/generated-metadata/extensions-v0.json');
-    if (!res.ok) {
-        throw new Error(`HTTP status ${res.status}`);
-    }
-    data = await res.json();
-    const mistdata=data.extensions.map(extension => ({
-        name: extension.name,
-        nameTranslations: extension.nameTranslations || {},
-        description: extension.description,
-        descriptionTranslations: extension.descriptionTranslations || {},
-        extensionId: extension.id,
-        extensionURL: `https://extensions.mistium.com/featured/${extension.name}.js`,
-        iconURL: `https://extensions.mistium.com/${extension.image || 'images/unknown.svg'}`,
-        tags: ['mist'],
-        credits: [
-            ...(extension.original || []),
-            ...(extension.by || [])
-        ].map(credit => {
-            if (credit.link) {
-                return (
-                    <a
-                        href={credit.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        key={credit.name}
-                    >
-                        {credit.name}
-                    </a>
-                );
-            }
-            return credit.name;
-        }),
-        docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
-        samples: extension.samples ? extension.samples.map(sample => ({
-            href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
-            text: sample
-        })) : null,
-        incompatibleWithScratch: !extension.scratchCompatible,
-        featured: true
-    }));
+            const data = await res.json();
+            return processor(data);
+        } catch (error) {
+            console.error(`Failed to fetch from ${url}:`, error);
+            return defaultData;
+        }
+    };
 
-    /*pm*/
-    data = {
+    // 并行执行所有fetch请求
+    const [ztdata, twdata, mistdata, spdata, pmdata] = await Promise.all([
+        // 02engine
+        safeFetch(
+            'https://extensions.02engine.02studio.xyz/extensions.json',
+            data => data.extensions.map(extension => ({
+                name: extension.name,
+                nameTranslations: extension.nameTranslations || {},
+                description: extension.description,
+                descriptionTranslations: extension.descriptionTranslations || {},
+                extensionId: extension.id,
+                extensionURL: `https://extensions.02engine.02studio.xyz/extension/${extension.slug}.js`,
+                iconURL: `https://extensions.02engine.02studio.xyz/image/${extension.image || 'images/unknown.svg'}`,
+                tags: ['ztengine'],
+                credits: [
+                    ...(extension.original || []),
+                    ...(extension.by || [])
+                ].map(credit => {
+                    if (credit.link) {
+                        return (
+                            <a
+                                href={credit.link}
+                                target="_blank"
+                                rel="noreferrer"
+                                key={credit.name}
+                            >
+                                {credit.name}
+                            </a>
+                        );
+                    }
+                    return credit.name;
+                }),
+                docsURI: extension.docs ? `https://extensions.02engine.02studio.xyz/doc/${extension.slug}` : null,
+                samples: extension.samples ? extension.samples.map(sample => ({
+                    href: `${process.env.ROOT}editor?project_url=https://extensions.02engine.02studio.xyz/samples/${encodeURIComponent(sample)}.sb3`,
+                    text: sample
+                })) : null,
+                incompatibleWithScratch: !extension.scratchCompatible,
+                featured: true
+            })),
+            []
+        ),
+
+        // turbowarp
+        safeFetch(
+            'https://extensions.turbowarp.org/generated-metadata/extensions-v0.json',
+            data => data.extensions.map(extension => ({
+                name: extension.name,
+                nameTranslations: extension.nameTranslations || {},
+                description: extension.description,
+                descriptionTranslations: extension.descriptionTranslations || {},
+                extensionId: extension.id,
+                extensionURL: `https://extensions.turbowarp.org/${extension.slug}.js`,
+                iconURL: `https://extensions.turbowarp.org/${extension.image || 'images/unknown.svg'}`,
+                tags: ['tw'],
+                credits: [
+                    ...(extension.original || []),
+                    ...(extension.by || [])
+                ].map(credit => {
+                    if (credit.link) {
+                        return (
+                            <a
+                                href={credit.link}
+                                target="_blank"
+                                rel="noreferrer"
+                                key={credit.name}
+                            >
+                                {credit.name}
+                            </a>
+                        );
+                    }
+                    return credit.name;
+                }),
+                docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
+                samples: extension.samples ? extension.samples.map(sample => ({
+                    href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
+                    text: sample
+                })) : null,
+                incompatibleWithScratch: !extension.scratchCompatible,
+                featured: true
+            })),
+            []
+        ),
+
+        // Mist
+        safeFetch(
+            'https://mistiumextensions.02studio.xyz/generated-metadata/extensions-v0.json',
+            data => data.extensions.map(extension => ({
+                name: extension.name,
+                nameTranslations: extension.nameTranslations || {},
+                description: extension.description,
+                descriptionTranslations: extension.descriptionTranslations || {},
+                extensionId: extension.id,
+                extensionURL: `https://mistiumextensions.02studio.xyz/featured/${extension.name}.js`,
+                iconURL: `https://mistiumextensions.02studio.xyz/${extension.image || 'images/unknown.svg'}`,
+                tags: ['mist'],
+                credits: [
+                    ...(extension.original || []),
+                    ...(extension.by || [])
+                ].map(credit => {
+                    if (credit.link) {
+                        return (
+                            <a
+                                href={credit.link}
+                                target="_blank"
+                                rel="noreferrer"
+                                key={credit.name}
+                            >
+                                {credit.name}
+                            </a>
+                        );
+                    }
+                    return credit.name;
+                }),
+                docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
+                samples: extension.samples ? extension.samples.map(sample => ({
+                    href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
+                    text: sample
+                })) : null,
+                incompatibleWithScratch: !extension.scratchCompatible,
+                featured: true
+            })),
+            []
+        ),
+
+        // sharkpool
+        safeFetch(
+            'https://sharkpoolextensions.02studio.xyz/Gallery%20Files/Extension-Keys.json',
+            data => Object.entries(data.extensions).map(([slug, extension]) => ({
+                name: slug,
+                nameTranslations: {},
+                description: extension.desc,
+                descriptionTranslations: {},
+                extensionId: slug,
+                extensionURL: `https://sharkpoolextensions.02studio.xyz/${extension.url}`,
+                iconURL: `https://sharkpoolextensions.02studio.xyz/${extension.banner || 'images/unknown.svg'}`,
+                tags: [...extension.tags, 'sp'],
+                credits: extension.creator.split(', ').map(creator => {
+                    const match = creator.match(/(.+?)(?:\s*\((.+)\))?$/);
+                    const name = match[1];
+                    const role = match[2] || '';
+                    return role ? `${name} (${role})` : name;
+                }),
+                docsURI: null,
+                samples: null,
+                incompatibleWithScratch: false,
+                featured: true,
+                originalData: {
+                    creator: extension.creator,
+                    status: extension.status,
+                    date: extension.date
+                }
+            })),
+            []
+        ),
+
+        // PenguinMod (本地数据，不需要fetch)
+        Promise.resolve((() => {
+    const data = {
     "extensions":[
     {
         name: "Pen+",
@@ -666,40 +674,27 @@ const fetchLibrary = async () => {
         creatorAlias: "gaimerI17",
         note: "Extension thumbnail made by Dillon."
     }]};
-    const pmdata=data.extensions.map(extension => ({
-        name: extension.name,
-        nameTranslations: {},
-        description: extension.description,
-        descriptionTranslations: {},
-        extensionId: extension.name,
-        extensionURL: `https://extensions.penguinmod.com/extensions/${extension.code}`,
-        iconURL: `https://extensions.penguinmod.com/images/${extension.banner || 'images/unknown.svg'}`,
-        tags: ['pm'],
-        credits: [
-            ...(extension.original || []),
-            ...(extension.by || [])
-        ].map(credit => {
-            if (credit.link) {
-                return (
-                    <a
-                        href={credit.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        key={credit.name}
-                    >
-                        {credit.name}
-                    </a>
-                );
-            }
-            return credit.name;
-        }),
-        docsURI: null,
-        samples:null,
-        incompatibleWithScratch: !extension.scratchCompatible,
-        featured: true
-    }));
+            
+            return data.extensions.map(extension => ({
+                name: extension.name,
+                nameTranslations: {},
+                description: extension.description,
+                descriptionTranslations: {},
+                extensionId: extension.name,
+                extensionURL: `https://extensions.penguinmod.com/extensions/${extension.code}`,
+                iconURL: `https://extensions.penguinmod.com/images/${extension.banner || 'images/unknown.svg'}`,
+                tags: ['pm'],
+                credits: [extension.creator].map(creator => creator),
+                docsURI: null,
+                samples: null,
+                incompatibleWithScratch: false,
+                featured: true
+            }));
+        })())
+    ]);
 
-    return ztdata.concat(twdata,pmdata,mistdata); 
+    // 合并所有数据
+    return [...ztdata, ...twdata, ...pmdata, ...mistdata, ...spdata];
 };
 
 class ExtensionLibrary extends React.PureComponent {
