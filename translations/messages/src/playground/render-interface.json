@@ -68,10 +68,5 @@
     "id": "tw.unshared.bug",
     "description": "Appears on unshared projects",
     "defaultMessage": "If this project is actually shared, please report a bug."
-  },
-  {
-    "id": "tw.home.description",
-    "description": "Description of TurboWarp on the homepage",
-    "defaultMessage": "{APP_NAME} is a Scratch mod that compiles projects to JavaScript to make them run really fast. Try it out by inputting a project ID or URL above or choosing a featured project below."
   }
 ]

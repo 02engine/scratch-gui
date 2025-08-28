@@ -1,7 +1,7 @@
 [
   {
-    "id": "tw.input.tooltip",
+    "id": "tw.input.tooltip2",
     "description": "Project ID input tooltip",
-    "defaultMessage": "Copy and paste a Scratch project link here!"
+    "defaultMessage": "Copy and paste a link to a sb3 file here."
   }
 ]

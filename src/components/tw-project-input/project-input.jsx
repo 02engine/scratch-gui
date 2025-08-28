@@ -12,9 +12,9 @@ const PROJECT_BASE = 'https://scratch.mit.edu/projects/';
 
 const messages = defineMessages({
     tooltip: {
-        defaultMessage: 'Copy and paste a Scratch project link here!',
+        defaultMessage: 'Copy and paste a link to a sb3 file here.',
         description: 'Project ID input tooltip',
-        id: 'tw.input.tooltip'
+        id: 'tw.input.tooltip2'
     }
 });
 
@@ -48,8 +48,9 @@ class ProjectInput extends React.Component {
         }
     }
     extractProjectId (text) {
-        const numberMatch = text.match(/\d+/);
-        return numberMatch ? numberMatch[0] : null;
+        //const numberMatch = text.match(/\d+/);
+        //return numberMatch ? numberMatch[0] : null;
+        return text;
     }
     readProjectId (e) {
         const id = this.extractProjectId(e.target.value);
@@ -98,7 +99,8 @@ class ProjectInput extends React.Component {
                     ref={this.inputRef}
                     spellCheck="false"
                     type="text"
-                    value={`${PROJECT_BASE}${projectId}`}
+                    
+                    placeholder="A link to a sb3 file"
                     className={styles.input}
                     onKeyDown={this.handleKeyDown}
                     onChange={this.handleChange}
