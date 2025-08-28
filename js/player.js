@@ -22463,8 +22463,8 @@ __webpack_require__.r(__webpack_exports__);
 const PROJECT_BASE = 'https://scratch.mit.edu/projects/';
 const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_5__["defineMessages"])({
   tooltip: {
-    "id": "tw.input.tooltip",
-    "defaultMessage": "Copy and paste a Scratch project link here!"
+    "id": "tw.input.tooltip2",
+    "defaultMessage": "Copy and paste a link to a sb3 file here."
   }
 });
 class ProjectInput extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component {
@@ -22490,8 +22490,9 @@ class ProjectInput extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Componen
     }
   }
   extractProjectId(text) {
-    const numberMatch = text.match(/\d+/);
-    return numberMatch ? numberMatch[0] : null;
+    //const numberMatch = text.match(/\d+/);
+    //return numberMatch ? numberMatch[0] : null;
+    return text;
   }
   readProjectId(e) {
     const id = this.extractProjectId(e.target.value);
@@ -22537,7 +22538,7 @@ class ProjectInput extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Componen
       ref: this.inputRef,
       spellCheck: "false",
       type: "text",
-      value: "".concat(PROJECT_BASE).concat(projectId),
+      placeholder: "A link to a sb3 file",
       className: _project_input_css__WEBPACK_IMPORTED_MODULE_7___default.a.input,
       onKeyDown: this.handleKeyDown,
       onChange: this.handleChange,
@@ -43567,10 +43568,26 @@ const ProjectFetcherHOC = function ProjectFetcherHOC(WrappedComponent) {
         }));
       } else {
         // TW: Temporary hack for project tokens
-        assetPromise = fetchProjectToken(projectId).then(token => {
-          _storage__WEBPACK_IMPORTED_MODULE_9__["default"].setProjectToken(token);
-          return _storage__WEBPACK_IMPORTED_MODULE_9__["default"].load(_storage__WEBPACK_IMPORTED_MODULE_9__["default"].AssetType.Project, projectId, _storage__WEBPACK_IMPORTED_MODULE_9__["default"].DataFormat.JSON);
-        });
+        if (/^\d+$/.test(projectId)) {
+          assetPromise = fetchProjectToken(projectId).then(token => {
+            _storage__WEBPACK_IMPORTED_MODULE_9__["default"].setProjectToken(token);
+            return _storage__WEBPACK_IMPORTED_MODULE_9__["default"].load(_storage__WEBPACK_IMPORTED_MODULE_9__["default"].AssetType.Project, projectId, _storage__WEBPACK_IMPORTED_MODULE_9__["default"].DataFormat.JSON);
+          });
+        } else {
+          projectUrl = projectId;
+          if (!projectUrl.startsWith('http:') && !projectUrl.startsWith('https:') && !projectUrl.startsWith('data:')) {
+            projectUrl = "https://".concat(projectUrl);
+          }
+          assetPromise = fetch(projectUrl).then(r => {
+            if (!r.ok) {
+              throw new Error("Request returned status ".concat(r.status));
+            }
+            return r.arrayBuffer();
+          }).then(buffer => ({
+            data: buffer
+          }));
+        }
+        console.log("project", projectId);
       }
       return assetPromise.then(projectAsset => {
         if (projectAsset) {
@@ -50008,27 +50025,11 @@ class Interface extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Component {
       id: "tw.unshared.bug"
     }))), hasCloudVariables && projectId !== '0' && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: _interface_css__WEBPACK_IMPORTED_MODULE_28___default.a.section
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_containers_tw_cloud_variable_badge_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], null)), description.instructions || description.credits ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_containers_tw_cloud_variable_badge_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: _interface_css__WEBPACK_IMPORTED_MODULE_28___default.a.section
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_components_tw_description_description_jsx__WEBPACK_IMPORTED_MODULE_19__["default"], {
-      instructions: description.instructions,
-      credits: description.credits,
-      projectId: projectId
-    })) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("p", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: _interface_css__WEBPACK_IMPORTED_MODULE_28___default.a.section
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"]
-    // eslint-disable-next-line max-len
-    , {
-      defaultMessage: "{APP_NAME} is a Scratch mod that compiles projects to JavaScript to make them run really fast. Try it out by inputting a project ID or URL above or choosing a featured project below.",
-      id: "tw.home.description",
-      values: {
-        APP_NAME: _lib_brand_js__WEBPACK_IMPORTED_MODULE_27__["APP_NAME"]
-      }
-    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
-      className: _interface_css__WEBPACK_IMPORTED_MODULE_28___default.a.section
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_components_tw_featured_projects_featured_projects_jsx__WEBPACK_IMPORTED_MODULE_18__["default"], {
-      studio: "27205657"
-    }))) : null), isHomepage && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(Footer, null));
+    })) : null), isHomepage && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(Footer, null));
   }
 }
 Interface.propTypes = {

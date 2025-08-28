@@ -41194,10 +41194,26 @@ const ProjectFetcherHOC = function ProjectFetcherHOC(WrappedComponent) {
         }));
       } else {
         // TW: Temporary hack for project tokens
-        assetPromise = fetchProjectToken(projectId).then(token => {
-          _storage__WEBPACK_IMPORTED_MODULE_9__["default"].setProjectToken(token);
-          return _storage__WEBPACK_IMPORTED_MODULE_9__["default"].load(_storage__WEBPACK_IMPORTED_MODULE_9__["default"].AssetType.Project, projectId, _storage__WEBPACK_IMPORTED_MODULE_9__["default"].DataFormat.JSON);
-        });
+        if (/^\d+$/.test(projectId)) {
+          assetPromise = fetchProjectToken(projectId).then(token => {
+            _storage__WEBPACK_IMPORTED_MODULE_9__["default"].setProjectToken(token);
+            return _storage__WEBPACK_IMPORTED_MODULE_9__["default"].load(_storage__WEBPACK_IMPORTED_MODULE_9__["default"].AssetType.Project, projectId, _storage__WEBPACK_IMPORTED_MODULE_9__["default"].DataFormat.JSON);
+          });
+        } else {
+          projectUrl = projectId;
+          if (!projectUrl.startsWith('http:') && !projectUrl.startsWith('https:') && !projectUrl.startsWith('data:')) {
+            projectUrl = "https://".concat(projectUrl);
+          }
+          assetPromise = fetch(projectUrl).then(r => {
+            if (!r.ok) {
+              throw new Error("Request returned status ".concat(r.status));
+            }
+            return r.arrayBuffer();
+          }).then(buffer => ({
+            data: buffer
+          }));
+        }
+        console.log("project", projectId);
       }
       return assetPromise.then(projectAsset => {
         if (projectAsset) {
