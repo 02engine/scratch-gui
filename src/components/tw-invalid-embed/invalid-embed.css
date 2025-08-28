@@ -10,7 +10,7 @@
 
     /* this is an error, so we want it to stand out and always be readable regardless of what the site */
     /* embedding us looks like */
-    background-color: #ff4c4c;
+    background-color: #00baad;
     color: white;
 
     box-sizing: border-box;
