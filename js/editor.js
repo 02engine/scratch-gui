@@ -2964,7 +2964,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "/* don't use colors.css and friends as the theme system is not set up when this is used */\n\n.invalid-embed_container_335w5 {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    overflow: auto;\n\n    /* this is an error, so we want it to stand out and always be readable regardless of what the site */\n    /* embedding us looks like */\n    background-color: #ff4c4c;\n    color: white;\n\n    box-sizing: border-box;\n    padding: 8px;\n\n    display: flex;\n    flex-direction: column;\n    gap: 12px;\n}\n\n.invalid-embed_code_1tJw- {\n    font-family: monospace;\n}\n\n.invalid-embed_emphasis_G99Xb {\n    text-decoration: underline;\n    font-weight: bold;\n}\n", ""]);
+exports.push([module.i, "/* don't use colors.css and friends as the theme system is not set up when this is used */\n\n.invalid-embed_container_335w5 {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    overflow: auto;\n\n    /* this is an error, so we want it to stand out and always be readable regardless of what the site */\n    /* embedding us looks like */\n    background-color: #00baad;\n    color: white;\n\n    box-sizing: border-box;\n    padding: 8px;\n\n    display: flex;\n    flex-direction: column;\n    gap: 12px;\n}\n\n.invalid-embed_code_1tJw- {\n    font-family: monospace;\n}\n\n.invalid-embed_emphasis_G99Xb {\n    text-decoration: underline;\n    font-weight: bold;\n}\n", ""]);
 
 // exports
 exports.locals = {
