@@ -1490,7 +1490,7 @@ const manifest = {
     "id": "shiftKeysWarn"
   }, {
     "type": "warning",
-    "text": "The \"TurboWarp keys\" will only work in TurboWarp or 02Engine, not in Scratch.",
+    "text": "The \"TurboWarp keys\" will only work in TurboWarp, not in Scratch.",
     "id": "twKeysWarn"
   }],
   "settings": [{
@@ -2625,7 +2625,7 @@ const manifest = {
     "default": false
   }],
   "tags": ["recommended"],
-  "enabledByDefault": false
+  "enabledByDefault": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
