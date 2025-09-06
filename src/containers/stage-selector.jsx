@@ -101,43 +101,43 @@ class StageSelector extends React.Component {
     async handleEmptyBackdrop (e) {
         e.stopPropagation(); // Prevent click from falling through to stage selector, select it manually below
         this.props.vm.setEditingTarget(this.props.id);
-                console.log("add back");
-        function base64ToUint8Array(base64String) {
-        　　　　const padding = '='.repeat((4 - base64String.length % 4) % 4);
-               const base64 = (base64String + padding)
-                            .replace(/\-/g, '+')
-                            .replace(/_/g, '/');
+        console.log('add back');
+        function base64ToUint8Array (base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/\-/g, '+')
+                .replace(/_/g, '/');
         
-               const rawData = window.atob(base64);
-               const outputArray = new Uint8Array(rawData.length);
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
         
-               for (let i = 0; i < rawData.length; ++i) {
-                    outputArray[i] = rawData.charCodeAt(i);
-               }
-               return outputArray;
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
         }
 
-const vm=this.props.vm;
-const runtime=vm.runtime;
+        const vm = this.props.vm;
+        const runtime = vm.runtime;
 
-const targetId = vm.runtime.getEditingTarget().id;
-      const assetName = this.props.intl.formatMessage(sharedMessages.backdrop, {index: 1});
+        const targetId = vm.runtime.getEditingTarget().id;
+        const assetName = this.props.intl.formatMessage(sharedMessages.backdrop, {index: 1});
 
-      //const res =base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4=');
-      //const blob = await res.blob();
+        // const res =base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4=');
+        // const blob = await res.blob();
 
-      /*if (!(this._typeIsBitmap(blob.type) || blob.type === "image/svg+xml")) {
+        /* if (!(this._typeIsBitmap(blob.type) || blob.type === "image/svg+xml")) {
         console.error(`Invalid MIME type: ${blob.type}`);
         return;
       }*/
-      const assetType =runtime.storage.AssetType.ImageVector;
+        const assetType = runtime.storage.AssetType.ImageVector;
 
-      // Bitmap data format is not actually enforced, but setting it to something that isn't in scratch-parser's
-      // known format list will throw an error when someone tries to load the project.
-      // (https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L51)
-      const dataType =runtime.storage.DataFormat.SVG
+        // Bitmap data format is not actually enforced, but setting it to something that isn't in scratch-parser's
+        // known format list will throw an error when someone tries to load the project.
+        // (https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L51)
+        const dataType = runtime.storage.DataFormat.SVG;
 
-      /*const arrayBuffer = await new Promise((resolve, reject) => {
+        /* const arrayBuffer = await new Promise((resolve, reject) => {
         const fr = new FileReader();
         fr.onload = () => resolve(fr.result);
         fr.onerror = () =>
@@ -145,31 +145,31 @@ const targetId = vm.runtime.getEditingTarget().id;
         fr.readAsArrayBuffer(blob);
       });*/
 
-      const asset = runtime.storage.createAsset(
-        assetType,
-        dataType,
-        base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4='),
-        null,
-        true
-      );
-      const md5ext = `${asset.assetId}.${asset.dataFormat}`;
-
-      try {
-        
-        await vm.addBackdrop(
-          md5ext,
-          {
-            asset,
-            md5ext,
-            name: assetName,
-          },
-          targetId
+        const asset = runtime.storage.createAsset(
+            assetType,
+            dataType,
+            base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4='),
+            null,
+            true
         );
-      } catch (e) {
-        console.error(e);
-      }
+        const md5ext = `${asset.assetId}.${asset.dataFormat}`;
 
-        //this.handleNewBackdrop(emptyCostume(this.props.intl.formatMessage(sharedMessages.backdrop, {index: 1})));
+        try {
+        
+            await vm.addBackdrop(
+                md5ext,
+                {
+                    asset,
+                    md5ext,
+                    name: assetName
+                },
+                targetId
+            );
+        } catch (e) {
+            console.error(e);
+        }
+
+        // this.handleNewBackdrop(emptyCostume(this.props.intl.formatMessage(sharedMessages.backdrop, {index: 1})));
     }
     handleBackdropUpload (e) {
         const vm = this.props.vm;

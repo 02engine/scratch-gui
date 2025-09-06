@@ -118,23 +118,22 @@ class TargetPane extends React.Component {
             .then(this.handleActivateBlocksTab);
     }
     handlePaintSpriteClick () {
-
         
 
-function base64ToUint8Array(base64String) {
-　　　　const padding = '='.repeat((4 - base64String.length % 4) % 4);
-       const base64 = (base64String + padding)
-                    .replace(/\-/g, '+')
-                    .replace(/_/g, '/');
+        function base64ToUint8Array (base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/\-/g, '+')
+                .replace(/_/g, '/');
 
-       const rawData = window.atob(base64);
-       const outputArray = new Uint8Array(rawData.length);
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
 
-       for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-       }
-       return outputArray;
-}
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
         /*
         const formatMessage = this.props.intl.formatMessage;
         const emptyItem = emptySprite(
@@ -143,8 +142,8 @@ function base64ToUint8Array(base64String) {
             formatMessage(sharedMessages.costume, {index: 1})
         );
         */
-        //this.props.vm.addSprite(JSON.stringify(emptyItem)).then(() => {
-        const empt="UEsDBAoAAAAIAPtDEFvpQGoKHgEAAMUBAAALAAAAc3ByaXRlLmpzb26NkcFKxDAQhl9F5lykbey67XVB8OpeFPEwadISTBtJ0rJrKXgVbz6AePPuOwnrWzjptog3b/NPvpl/ZjKAcluPtYSiQu1kBC02JODw8Xp4/kwggh6tQq6lg2IYI9DK+Tnk1qAo8VdrU97PcWmaRrbLS9lZS2pjnO9C+zgAU0zA7bCYfj+9f729BFOufIMPV9IZ3XllWiiSCAR6vDC2QU+s62vi0DnpLwVpxliOaZ4xZLxapZyvY5mdVVV2ngleSkFwIzK58/9gT4/NrfEYzDc0urTX09h/czeUG+8icKZrRViF4p5GDtskMeG9copuB4W3HR13BwVbRbCHIl1TlXpcOKGsLI+L5kFarGucCudvWXy3fh+ygFqfoA22MP4AUEsDBAoAAAAIAPtDEFtvxALBkgAAAMgAAAAkAAAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnbY5NDoIwFIT3nOL59v1BVxBgQeIJPIHShjYCJe2zrbcXwaWZzWTmS2aaEEfI87SEFg3RWguRUuLpwp0fxVlKKTYCD6TOk12e/8CyqiqxtwhR+2Dd0mLJS4RkFZkWJYLRdjS022h16l3ePOzCrgBoTozBNa/Ok1bweMNt8HcaDDD4DYYj4LMlrtVLAGNd0XwPdh9QSwECFAAKAAAACAD7QxBb6UBqCh4BAADFAQAACwAAAAAAAAAAAAAAAAAAAAAAc3ByaXRlLmpzb25QSwECFAAKAAAACAD7QxBbb8QCwZIAAADIAAAAJAAAAAAAAAAAAAAAAABHAQAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnUEsFBgAAAAACAAIAiwAAABsCAAAAAA==";
+        // this.props.vm.addSprite(JSON.stringify(emptyItem)).then(() => {
+        const empt = 'UEsDBAoAAAAIAPtDEFvpQGoKHgEAAMUBAAALAAAAc3ByaXRlLmpzb26NkcFKxDAQhl9F5lykbey67XVB8OpeFPEwadISTBtJ0rJrKXgVbz6AePPuOwnrWzjptog3b/NPvpl/ZjKAcluPtYSiQu1kBC02JODw8Xp4/kwggh6tQq6lg2IYI9DK+Tnk1qAo8VdrU97PcWmaRrbLS9lZS2pjnO9C+zgAU0zA7bCYfj+9f729BFOufIMPV9IZ3XllWiiSCAR6vDC2QU+s62vi0DnpLwVpxliOaZ4xZLxapZyvY5mdVVV2ngleSkFwIzK58/9gT4/NrfEYzDc0urTX09h/czeUG+8icKZrRViF4p5GDtskMeG9copuB4W3HR13BwVbRbCHIl1TlXpcOKGsLI+L5kFarGucCudvWXy3fh+ygFqfoA22MP4AUEsDBAoAAAAIAPtDEFtvxALBkgAAAMgAAAAkAAAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnbY5NDoIwFIT3nOL59v1BVxBgQeIJPIHShjYCJe2zrbcXwaWZzWTmS2aaEEfI87SEFg3RWguRUuLpwp0fxVlKKTYCD6TOk12e/8CyqiqxtwhR+2Dd0mLJS4RkFZkWJYLRdjS022h16l3ePOzCrgBoTozBNa/Ok1bweMNt8HcaDDD4DYYj4LMlrtVLAGNd0XwPdh9QSwECFAAKAAAACAD7QxBb6UBqCh4BAADFAQAACwAAAAAAAAAAAAAAAAAAAAAAc3ByaXRlLmpzb25QSwECFAAKAAAACAD7QxBbb8QCwZIAAADIAAAAJAAAAAAAAAAAAAAAAABHAQAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnUEsFBgAAAAACAAIAiwAAABsCAAAAAA==';
         this.props.vm.addSprite(base64ToUint8Array(empt)).then(() => {
             setTimeout(() => { // Wait for targets update to propagate before tab switching
                 this.props.onActivateTab(COSTUMES_TAB_INDEX);

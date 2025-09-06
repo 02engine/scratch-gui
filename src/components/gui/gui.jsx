@@ -9,6 +9,8 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import tabStyles from 'react-tabs/style/react-tabs.css';
 import VM from 'scratch-vm';
 
+import DraggableWindow from '../draggable-window/draggable-window.jsx';
+
 import Blocks from '../../containers/blocks.jsx';
 import CostumeTab from '../../containers/costume-tab.jsx';
 import TargetPane from '../../containers/target-pane.jsx';
@@ -161,6 +163,14 @@ const GUIComponent = props => {
         vm,
         ...componentProps
     } = omit(props, 'dispatch');
+
+    const [stageWindowPosition, setStageWindowPosition] = React.useState({x: 100, y: 100});
+    const [stageWindowSize, setStageWindowSize] = React.useState({width: 480, height: 360});
+    const [stageWindowMinimized, setStageWindowMinimized] = React.useState(false);
+    const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({x: 600, y: 100});
+    const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({width: 240, height: 360});
+    const [targetPaneWindowMinimized, setTargetPaneWindowMinimized] = React.useState(false);
+
     if (children) {
         return <Box {...componentProps}>{children}</Box>;
     }
@@ -286,6 +296,7 @@ const GUIComponent = props => {
                         onRequestClose={onRequestCloseBackdropLibrary}
                     />
                 ) : null}
+                {!isFullScreen && (
                 <MenuBar
                     accountNavOpen={accountNavOpen}
                     authorId={authorId}
@@ -325,6 +336,7 @@ const GUIComponent = props => {
                     onStartSelectingFileUpload={onStartSelectingFileUpload}
                     onToggleLoginOpen={onToggleLoginOpen}
                 />
+                )}
                 <Box className={styles.bodyWrapper}>
                     <Box className={styles.flexWrapper}>
                         <Box className={styles.editorWrapper}>
@@ -432,21 +444,46 @@ const GUIComponent = props => {
                             ) : null}
                         </Box>
 
-                        <Box className={classNames(styles.stageAndTargetWrapper, styles[stageSize])}>
-                            <StageWrapper
-                                isFullScreen={isFullScreen}
-                                isRendererSupported={isRendererSupported()}
-                                isRtl={isRtl}
-                                stageSize={stageSize}
-                                vm={vm}
-                            />
-                            <Box className={styles.targetWrapper}>
+                        <>
+                            <DraggableWindow
+                                windowId="stage"
+                                title="Stage"
+                                defaultPosition={stageWindowPosition}
+                                defaultSize={stageWindowSize}
+                                minSize={{width: 200, height: 150}}
+                                maxSize={{width: window.innerWidth - 100, height: window.innerHeight - 100}}
+                                onDragStop={(id, position) => setStageWindowPosition(position)}
+                                onResizeStop={(id, size) => setStageWindowSize(size)}
+                                onMinimizeToggle={(id, minimized) => setStageWindowMinimized(minimized)}
+                                zIndex={100}
+                            >
+                                <StageWrapper
+                                    isFullScreen={isFullScreen}
+                                    isRendererSupported={isRendererSupported()}
+                                    isRtl={isRtl}
+                                    stageSize={stageSize}
+                                    vm={vm}
+                                />
+                            </DraggableWindow>
+
+                            <DraggableWindow
+                                windowId="targets"
+                                title="Sprites"
+                                defaultPosition={targetPaneWindowPosition}
+                                defaultSize={targetPaneWindowSize}
+                                minSize={{width: 200, height: 200}}
+                                maxSize={{width: 600, height: 800}}
+                                onDragStop={(id, position) => setTargetPaneWindowPosition(position)}
+                                onResizeStop={(id, size) => setTargetPaneWindowSize(size)}
+                                onMinimizeToggle={(id, minimized) => setTargetPaneWindowMinimized(minimized)}
+                                zIndex={90}
+                            >
                                 <TargetPane
                                     stageSize={stageSize}
                                     vm={vm}
                                 />
-                            </Box>
-                        </Box>
+                            </DraggableWindow>
+                        </>
                     </Box>
                 </Box>
                 <DragLayer />

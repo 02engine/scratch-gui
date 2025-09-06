@@ -748,7 +748,7 @@ const myBlocks = function (isInitialSetup, isStage, targetId, colors) {
 // eslint-disable-next-line max-len
 const extraTurboWarpBlocks = `
 <block type="argument_reporter_boolean"><field name="VALUE">is compiled?</field></block>
-<block type="argument_reporter_boolean"><field name="VALUE">is TurboWarp or 02Engine?</field></block>
+<block type="argument_reporter_boolean"><field name="VALUE">is TurboWarp?</field></block>
 `;
 /* eslint-enable no-unused-vars */
 

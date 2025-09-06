@@ -316,7 +316,7 @@ class Interface extends React.Component {
                                     <CloudVariableBadge />
                                 </div>
                             )}
-                            {/*description.instructions || description.credits ? (
+                            {/* description.instructions || description.credits ? (
                                 <div className={styles.section}>
                                     <Description
                                         instructions={description.instructions}
@@ -327,7 +327,7 @@ class Interface extends React.Component {
                             ) : null*/}
                             <div className={styles.section}>
                                 <p>
-                                    {/*<FormattedMessage
+                                    {/* <FormattedMessage
                                         // eslint-disable-next-line max-len
                                         defaultMessage="{APP_NAME} is a Scratch mod that compiles projects to JavaScript to make them run really fast. Try it out by inputting a project ID or URL above or choosing a featured project below."
                                         description="Description of TurboWarp on the homepage"
@@ -339,7 +339,7 @@ class Interface extends React.Component {
                                 </p>
                             </div>
                             <div className={styles.section}>
-                                {/*<FeaturedProjects studio="27205657" />*/}
+                                {/* <FeaturedProjects studio="27205657" />*/}
                             </div>
                         </React.Fragment>
                     ) : null}

@@ -14,7 +14,7 @@ import extensionTags from '../lib/libraries/tw-extension-tags';
 
 import LibraryComponent from '../components/library/library.jsx';
 import extensionIcon from '../components/action-menu/icon--sprite.svg';
-import { length } from 'file-loader';
+import {length} from 'file-loader';
 
 const messages = defineMessages({
     extensionTitle: {
@@ -216,464 +216,464 @@ const fetchLibrary = async () => {
 
         // PenguinMod (本地数据，不需要fetch)
         Promise.resolve((() => {
-    const data = {
-    "extensions":[
-    {
-        name: "Pen+",
-        description: "Extended pen section! Adds blocks for drawing triangles using textures and tints, drawing images and editing their pixels, etc.",
-        code: "ObviousAlexC/PenPlus.js",
-        banner: "ObviousAlexC/PenPlus.svg",
-        creator: "pinksheep2917",
-    },
-    {
-        name: "Boxed Physics",
-        description: "Implements the Box2D physics engine into PenguinMod, adding joints, springs, etc. This is different from TurboWarp's implementation.",
-        code: "pooiod/Box2D.js",
-        banner: "pooiod/B2Dimg.svg",
-        creator: "pooiod7",
-    },
-    {
-        name: "3D Math",
-        description: "A handful of utilities for making your own sprite-based 3D engine.",
-        code: "ObviousAlexC/3DMath.js",
-        banner: "ObviousAlexC/3DMath.svg",
-        creator: "pinksheep2917",
-    },
-    {
-        name: "GPU.sb3",
-        description: "Use WebGPU compute shaders to accelerate your projects.",
-        code: "derpygamer2142/gpusb3.js",
-        banner: "derpygamer2142/gpusb3.svg",
-        creator: "insanetaco2000",
-        creatorAlias: "derpygamer2142",
-        isGitHub: false,
-        unstable: true,
-        unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
-    },
-    {
-        name: "Object",
-        description: "Handle large JSON files at an extreme speed.",
-        code: "skyhigh173/object.js",
-        banner: "skyhigh173/object.svg",
-        creator: "skyhigh173",
-        isGitHub: true,
-    },
-    {
-        name: "Scope Variable",
-        description: "Manage your variables in a block-like structure.",
-        code: "0znzw/ScopeVars.js",
-        banner: "0znzw/ScopeVars.png",
-        creator: "yuri-kiss",
-        isGitHub: true,
-        unstable: true,
-        unstableReason: "This extension uses unstable techniques that may not always work.",
-    },
-    {
-        name: "Extra Timers",
-        description: "Allows for the creation and management of additional timer blocks.",
-        notes: "thumbnail by Dillon",
-        code: "steve0greatness/timers.js",
-        banner: "steve0greatness/timers.svg",
-        creator: "Steve0Greatness",
-        isGitHub: true, 
-    },
-    {
-        name: "Dictation",
-        description: "Convert your voice into text. (not supported in all browsers)",
-        code: "pooiod/Dictation.js",
-        banner: "pooiod/Dictation.svg",
-        creator: "pooiod7",
-    },
-    {
-        name: "Text To Speech: Redone",
-        description: "A better alternitive to the base text to speech extension. Powered by the TTStool API",
-        code: "PuzzlingGGG/ttsr.js",
-        banner: "PuzzlingGGG/TTSR.png",
-        creator: "PuzzlingGGG",
-        isGitHub: true,
-    },
-    {
-        name: "CloudLink",
-        description: "A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.",
-        code: "MikeDev101/cloudlink.js",
-        banner: "MikeDev101/cloudlink.svg",
-        creator: "MikeDev101",
-        isGitHub: true,
-    },
-    {
-        name: "E2EE",
-        description: "A general-purpose E2EE (End-to-End Encryption) extension for Scratch.",
-        code: "MikeDev101/e2ee.js",
-        banner: "MikeDev101/e2ee.svg",
-        creator: "MikeDev101",
-        isGitHub: true,
-    },
-    {
-        name: "WebRTC",
-        description: "A barebones WebRTC implementation.",
-        code: "MikeDev101/webrtc.js",
-        banner: "MikeDev101/webrtc.svg",
-        creator: "MikeDev101",
-        isGitHub: true,
-    },
-    {
-        name: "Spritesheeter",
-        description: "Load and manipulate spritesheets with customizable frames and XML support",
-        code: "MubiLop/spritesheeter.js",
-        banner: "MubiLop/spritesheeter.png",
-        creator: "cicerorph",
-        creatorAlias: "MubiLop",
-        isGitHub: true
-    },
-    {
-        name: "Background Remover",
-        description: "Removes background from images.",
-        code: "dumzdev/removebg.js",
-        banner: "dumzdev/removebgbanner.svg",
-        creator: "dumzdev",
-    },
-    {
-        name: "PenguinAI",
-        description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
-        code: "MubiLop/penguingpt.js",
-        banner: "MubiLop/penguingpt.png",
-        creator: "cicerorph",
-        creatorAlias: "MubiLop",
-        isGitHub: true,
-        unstable: true,
-        documentation: "PenguinAI",
-        unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
-    },
-    {
-        name: "Block AI",
-        description: "An AI powered chat bot to help you code in your projects.",
-        code: "TheShovel/blockAI.js",
-        banner: "TheShovel/thumbnail-blockAI.png",
-        creator: "TheShovel",
-        creatorAlias: "TheShovel",
-        isGitHub: true,
-        unstable: true,
-        unstableReason: "The AI model can generate inaccurate output and broken syntax!",
-    },
-    {
-        name: "PenguinHook",
-        description: "Send Webhook requests, that can be Discord or any type of webhook.",
-        code: "MubiLop/penguinhook.js",
-        banner: "MubiLop/penguinhook.png",
-        creator: "cicerorph",
-        creatorAlias: "MubiLop",
-        isGitHub: true,
-    },
-    {
-        name: "Number Utilities",
-        description: "Adds blocks for number formatting and manipulation.",
-        code: "MubiLop/numutils.js",
-        banner: "MubiLop/numutils.png",
-        creator: "cicerorph",
-        creatorAlias: "MubiLop",
-        notes: "Art made by hazel",
-        documentation: "NumberUtilities",
-        isGitHub: true,
-    },
-    {
-        name: "Mathematics",
-        description: "Complicated maths extension for nerds.",
-        code: "jwklong/mathematics.js",
-        banner: "jwklong/mathematics.png",
-        creator: "jwklong",
-        isGitHub: true,
-    },
-    {
-        name: "Big Decimal",
-        description: "High precision operations. (Support decimals)",
-        code: "qxsck/big-decimal.js",
-        banner: "qxsck/big-decimal.svg",
-        creator: "qxsck",
-        isGitHub: true,
-    },
-    {
-        name: "Format Numbers",
-        description: "Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.",
-        code: "DogeisCut/FormatNumbers.js",
-        banner: "DogeisCut/FormatNumbers.png",
-        creator: "DogeisCut",
-        isGitHub: true, 
-        notes: "Gallery banner by Dillon",
-    },
-    {
-        name: "Yet Another String Extension",
-        description: "A small collection of utilty blocks intended to make managing strings much, much easier.",
-        code: "DogeisCut/YetAnotherStringExtension.js",
-        banner: "DogeisCut/YetAnotherStringExtension.svg",
-        creator: "DogeisCut",
-        isGitHub: true, 
-    },
-    {
-        name: "Random Utilities",
-        description: "Many blocks related to generating random values, including seed-based number generation, true number generation, UUID's, random strings, etc.",
-        code: "Gen1x/random_utils.js",
-        banner: "Gen1x/randomutils.png",
-        creator: "G1nX",
-    },
-    {
-        name: "Toast Notifications",
-        description: "Did you want alerts? Notifications that are easily customizable? This is the only and best notification extension!",
-        code: "MubiLop/toastnotifs.js",
-        banner: "MubiLop/toastnotifs.png",
-        creator: "cicerorph",
-        creatorAlias: "MubiLop",
-        notes: "Additional code by themeatly2 and ddededodediamante",
-        isGitHub: true,
-    },
-    {
-        name: "Project Interfaces",
-        description: "Effortlessly create intuitive graphical user interfaces in your projects.",
-        code: "LordCat0/ProjectInterfaces.js",
-        banner: "LordCat0/ProjectInterfaces.png",
-        creator: "LordCat0",
-        creatorAlias: "Lord cat",
-        notes: "Gallery banner by Dillon",
-        isGitHub: true,
-    },
-    {
-        name: "Git Penguin",
-        description: "Make requests and control the files for your GitHub repository.",
-        code: "justablock/gitpenguin.js",
-        banner: "justablock/gitpenguin.png",
-        creator: "justablock",
-        isGitHub: false, 
-    },
-    {
-        name: "Pang API",
-        description: "Fetch information from the PenguinMod API.",
-        code: "SammerLOL/pangapi.js",
-        banner: "SammerLOL/pangapi.png",
-        creator: "oc9x97",
-        isGitHub: true,
-    },
-    {
-        name: "TurboWeather",
-        description: "Show weather and location data for any place in our world. Data that could be used for doxxing is deleted from results.",
-        code: "RubyDevs/turboweather.js",
-        banner: "RubyDevs/turboweather.webp",
-        documentation: "TurboWeather",
-        creator: "RubyDevs",
-    },
-    {
-        name: "Cockatiel Location",
-        description: "Fetch Users' IP Addresses and Location.",
-        code: "bruhbeast-pixel/CockatielLocation.js",
-        banner: "bruhbeast-pixel/CockatielLocation.svg",
-        creator: "bruhbeast-pixel",
-        isGitHub: true,
-    },
-    {
-        name: "CORS Proxy",
-        description: "Accessible CORS Proxies for fetching information with PenguinMod.",
-        code: "NamelessCat/corsproxy.js",
-        banner: "NamelessCat/corsproxy.png",
-        creator: "NamelessCat",
-    },
-    {
-        name: "Extension Exposer",
-        description: "Access the raw functions from other extensions.",
-        code: "TheShovel/extexp.js",
-        banner: "TheShovel/placeholder-extexp.png",
-        creator: "TheShovel",
-        isGitHub: true,
-        note: "Some contributions by yuri-kiss :P",
-    },
-    {
-        name: "Project Page",
-        description: "Modify and affect the studio project page from the code. How annoying can an extension possibly be?",
-        code: "jwklong/projectpage.js",
-        banner: "jwklong/projectpage.png",
-        creator: "jwklong",
-        isGitHub: true,
-    },
-    {
-        name: "All Menus",
-        description: "Every dropdown menu for each block, in one extension.",
-        code: "Lily/AllMenus.js",
-        banner: "Lily/AllMenus.svg",
-        creator: "LilyMakesThings",
-        isGitHub: false,
-    },
-    {
-        name: "More Fields",
-        description: "Custom Field Types",
-        code: "Ashime/MoreFields.js",
-        banner: "0znzw/MoreFields.png",
-        creator: "yuri-kiss",
-        isGitHub: true,
-    },
-    {
-        name: "Beepbox Player",
-        description: "Play, edit, and read songs from any BeepBox mod directly from the URL or JSON!",
-        code: "DogeisCut/BeepBoxPlayer.js",
-        banner: "DogeisCut/BeepBoxPlayer.svg",
-        creator: "DogeisCut",
-        isGitHub: true, 
-    },
-    {
-        name: "Update File (Direct Access)",
-        description: "A simple extension that uses the File System Access API to update files dynamically.",
-        code: "Anonymous_cat1/updateFile.js",
-        banner: "Anonymous_cat1/updateFile.svg",
-        creator: "Anonymous-cat1",
-        isGitHub: true,
-        unstable: true,
-        unstableReason: "File System Access is not supported by all browsers.\nProjects can maliciously edit files that you open.",
-    },
-    {
-        name: "File Upload",
-        description: "Upload files to the Network, can also used with Files extension.",
-        code: "Codefoxy/cfupload.js",
-        banner: "Codefoxy/cfupload.svg",
-        creator: "Codefoxy",
-        isGitHub: false,
-    },
-    {
-        name: "Video Sharing",
-        description: "Share your screen or camera to your projects!",
-        code: "pooiod/VideoSharing.js",
-        banner: "pooiod/VideoSharing.svg",
-        creator: "pooiod7",
-        isGitHub: false,
-    },
-    {
-        name: "WindowHasher",
-        description: "Interact with URL hash: the part of the URL after a hashtag",
-        code: "pooiod/WindowHasher.js",
-        banner: "pooiod/WindowHasher.png",
-        creator: "pooiod7",
-    },
-    {
-        name: "Scratchblocks",
-        description: "Generate blocks in the Scratch3, or Scratch2 format.",
-        code: "pooiod/Scratchblocks.js",
-        banner: "pooiod/Scratchblocks.svg",
-        creator: "pooiod7",
-    },
-    {
-        name: "AuthPenguin",
-        description: "Authenticate with anything and everything!",
-        code: "MubiLop/authpenguin.js",
-        banner: "MubiLop/authpenguin.png",
-        creator: "cicerorph",
-        creatorAlias: "MubiLop",
-        documentation: "AuthPenguin",
-        isGitHub: true,
-    },
-    {
-        name: "Google Auth",
-        description: "Login with Google to your projects. Allows getting a name, profile picture and email from the google account.",
-        code: "Ikelene/googleAuthExtension.js",
-        banner: "Ikelene/ExtensionBanner.png",
-        creator: "ikelene",
-        creatorAlias: "Ikelene",
-        isGitHub: true,
-    },
-    {
-        name: "Discord Auth",
-        description: "Login with discord to your projects. Identify users by ID and username in a secure and easy way!",
-        code: "NotHouse/DiscordAuth.js",
-        banner: "NotHouse/DiscordAuth-banner.png",
-        creator: "enderhacker",
-        isGitHub: true,
-    },
-    {
-        name: "Twitch",
-        description: "Communicate with your Twitch Chat on PenguinMod!\n\nPenguinMod is not affiliated with Twitch.",
-        code: "bop_tw/Twitch.js",
-        banner: "bop_tw/Twitch.png",
-        creator: "bop_tw",
-        isGitHub: false,
-    },
-    {
-        name: "Chess",
-        description: "A powerful extension about Chess. It allows to create a Chessboard, manage chess games, and use Stockfish 17 in your projects.",
-        code: "Gen1x/chess-ext.js",
-        banner: "Gen1x/chess-ext.png",
-        creator: "G1nX",
-        isGitHub: false,
-    },
-    {
-        name: "CATS",
-        description: "Blocks related to cats.",
-        code: "Gen1x/CATS.js",
-        banner: "Gen1x/cats.png",
-        creator: "G1nX",
-    },
-    {
-        name: "Free Servers",
-        description: "Here you can find a free server for your projects. And also check whether it is working now or not.\n\nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.",
-        code: "WAYLIVES/FreeServers.js",
-        banner: "WAYLIVES/FreeServersIMG.svg",
-        documentation: "FreeServers",
-        creator: "WAYLIVES",
-        isGitHub: false,
-    },
-    {
-        name: "More Types",
-        description: "Adds more value types to PenguinMod, implementing Functions, Objects, Arrays, Sets, Maps, Symbols and Nothing.",
-        code: "VeryGoodScratcher42/More-Types.js",
-        banner: "VeryGoodScratcher42/More-Types.png",
-        creator: "VeryGoodScratcher42",
-        isGitHub: false,
-    },
-    {
-        name: "oneko",
-        description: "Cute cat that follows you on the block area.",
-        code: "TheShovel/oneko.js",
-        banner: "TheShovel/thumbnail-oneko.png",
-        creator: "TheShovel",
-        isGitHub: true,
-    },
-    {
-        name: "Counter++",
-        description: "Count anything, at any time, in PenguinMod!",
-        code: "MrRedstonia/counterplusplus.js",
-        banner: "MrRedstonia/counterplusplus.png",
-        creator: "MrRedstonia",
-        isGitHub: true,
-    },
-    {
-        name: "How many lines?",
-        description: "Blocks to determine the amount of new lines in a piece of text.",
-        code: "Monochromasity/howmanylines.js",
-        banner: "Monochromasity/placeholder-howmanylines.png",
-        creator: "Monochromasity",
-        isGitHub: true,
-    },
-    {
-        name: "Paint Utils",
-        description: "A colour extension that lets you mix colours.",
-        code: "Fruits555000/PaintUtils.js",
-        banner: "Fruits555000/PaintUtils.svg",
-        creator: "Fruits555000",
-        isGitHub: true,
-    },
-    {
-        name: "Resolution",
-        description: "Provides utility blocks that simplify the creation of projects with dynamic resolution support.",
-        code: "DogeisCut/Resolution.js",
-        banner: "DogeisCut/Resolution.svg",
-        creator: "DogeisCut",
-        isGitHub: true, 
-        documentation: "Resolution",
-        notes: "Gallery banner by Dillon",
-    },
-    {
-        name: "Device Motion",
-        description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices. \n Thumbnail by Dillon. ",
-        code: "gaimerI17/DeviceMotion.js",
-        banner: "gaimerI17/DeviceMotion.png",
-        creator: "gaimerI",
-        isGitHub: true,
-        creatorAlias: "gaimerI17",
-        note: "Extension thumbnail made by Dillon."
-    }]};
+            const data = {
+                extensions: [
+                    {
+                        name: 'Pen+',
+                        description: 'Extended pen section! Adds blocks for drawing triangles using textures and tints, drawing images and editing their pixels, etc.',
+                        code: 'ObviousAlexC/PenPlus.js',
+                        banner: 'ObviousAlexC/PenPlus.svg',
+                        creator: 'pinksheep2917'
+                    },
+                    {
+                        name: 'Boxed Physics',
+                        description: "Implements the Box2D physics engine into PenguinMod, adding joints, springs, etc. This is different from TurboWarp's implementation.",
+                        code: 'pooiod/Box2D.js',
+                        banner: 'pooiod/B2Dimg.svg',
+                        creator: 'pooiod7'
+                    },
+                    {
+                        name: '3D Math',
+                        description: 'A handful of utilities for making your own sprite-based 3D engine.',
+                        code: 'ObviousAlexC/3DMath.js',
+                        banner: 'ObviousAlexC/3DMath.svg',
+                        creator: 'pinksheep2917'
+                    },
+                    {
+                        name: 'GPU.sb3',
+                        description: 'Use WebGPU compute shaders to accelerate your projects.',
+                        code: 'derpygamer2142/gpusb3.js',
+                        banner: 'derpygamer2142/gpusb3.svg',
+                        creator: 'insanetaco2000',
+                        creatorAlias: 'derpygamer2142',
+                        isGitHub: false,
+                        unstable: true,
+                        unstableReason: 'WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io.'
+                    },
+                    {
+                        name: 'Object',
+                        description: 'Handle large JSON files at an extreme speed.',
+                        code: 'skyhigh173/object.js',
+                        banner: 'skyhigh173/object.svg',
+                        creator: 'skyhigh173',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Scope Variable',
+                        description: 'Manage your variables in a block-like structure.',
+                        code: '0znzw/ScopeVars.js',
+                        banner: '0znzw/ScopeVars.png',
+                        creator: 'yuri-kiss',
+                        isGitHub: true,
+                        unstable: true,
+                        unstableReason: 'This extension uses unstable techniques that may not always work.'
+                    },
+                    {
+                        name: 'Extra Timers',
+                        description: 'Allows for the creation and management of additional timer blocks.',
+                        notes: 'thumbnail by Dillon',
+                        code: 'steve0greatness/timers.js',
+                        banner: 'steve0greatness/timers.svg',
+                        creator: 'Steve0Greatness',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Dictation',
+                        description: 'Convert your voice into text. (not supported in all browsers)',
+                        code: 'pooiod/Dictation.js',
+                        banner: 'pooiod/Dictation.svg',
+                        creator: 'pooiod7'
+                    },
+                    {
+                        name: 'Text To Speech: Redone',
+                        description: 'A better alternitive to the base text to speech extension. Powered by the TTStool API',
+                        code: 'PuzzlingGGG/ttsr.js',
+                        banner: 'PuzzlingGGG/TTSR.png',
+                        creator: 'PuzzlingGGG',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'CloudLink',
+                        description: 'A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.',
+                        code: 'MikeDev101/cloudlink.js',
+                        banner: 'MikeDev101/cloudlink.svg',
+                        creator: 'MikeDev101',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'E2EE',
+                        description: 'A general-purpose E2EE (End-to-End Encryption) extension for Scratch.',
+                        code: 'MikeDev101/e2ee.js',
+                        banner: 'MikeDev101/e2ee.svg',
+                        creator: 'MikeDev101',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'WebRTC',
+                        description: 'A barebones WebRTC implementation.',
+                        code: 'MikeDev101/webrtc.js',
+                        banner: 'MikeDev101/webrtc.svg',
+                        creator: 'MikeDev101',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Spritesheeter',
+                        description: 'Load and manipulate spritesheets with customizable frames and XML support',
+                        code: 'MubiLop/spritesheeter.js',
+                        banner: 'MubiLop/spritesheeter.png',
+                        creator: 'cicerorph',
+                        creatorAlias: 'MubiLop',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Background Remover',
+                        description: 'Removes background from images.',
+                        code: 'dumzdev/removebg.js',
+                        banner: 'dumzdev/removebgbanner.svg',
+                        creator: 'dumzdev'
+                    },
+                    {
+                        name: 'PenguinAI',
+                        description: 'Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!',
+                        code: 'MubiLop/penguingpt.js',
+                        banner: 'MubiLop/penguingpt.png',
+                        creator: 'cicerorph',
+                        creatorAlias: 'MubiLop',
+                        isGitHub: true,
+                        unstable: true,
+                        documentation: 'PenguinAI',
+                        unstableReason: 'AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.'
+                    },
+                    {
+                        name: 'Block AI',
+                        description: 'An AI powered chat bot to help you code in your projects.',
+                        code: 'TheShovel/blockAI.js',
+                        banner: 'TheShovel/thumbnail-blockAI.png',
+                        creator: 'TheShovel',
+                        creatorAlias: 'TheShovel',
+                        isGitHub: true,
+                        unstable: true,
+                        unstableReason: 'The AI model can generate inaccurate output and broken syntax!'
+                    },
+                    {
+                        name: 'PenguinHook',
+                        description: 'Send Webhook requests, that can be Discord or any type of webhook.',
+                        code: 'MubiLop/penguinhook.js',
+                        banner: 'MubiLop/penguinhook.png',
+                        creator: 'cicerorph',
+                        creatorAlias: 'MubiLop',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Number Utilities',
+                        description: 'Adds blocks for number formatting and manipulation.',
+                        code: 'MubiLop/numutils.js',
+                        banner: 'MubiLop/numutils.png',
+                        creator: 'cicerorph',
+                        creatorAlias: 'MubiLop',
+                        notes: 'Art made by hazel',
+                        documentation: 'NumberUtilities',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Mathematics',
+                        description: 'Complicated maths extension for nerds.',
+                        code: 'jwklong/mathematics.js',
+                        banner: 'jwklong/mathematics.png',
+                        creator: 'jwklong',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Big Decimal',
+                        description: 'High precision operations. (Support decimals)',
+                        code: 'qxsck/big-decimal.js',
+                        banner: 'qxsck/big-decimal.svg',
+                        creator: 'qxsck',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Format Numbers',
+                        description: 'Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.',
+                        code: 'DogeisCut/FormatNumbers.js',
+                        banner: 'DogeisCut/FormatNumbers.png',
+                        creator: 'DogeisCut',
+                        isGitHub: true,
+                        notes: 'Gallery banner by Dillon'
+                    },
+                    {
+                        name: 'Yet Another String Extension',
+                        description: 'A small collection of utilty blocks intended to make managing strings much, much easier.',
+                        code: 'DogeisCut/YetAnotherStringExtension.js',
+                        banner: 'DogeisCut/YetAnotherStringExtension.svg',
+                        creator: 'DogeisCut',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Random Utilities',
+                        description: "Many blocks related to generating random values, including seed-based number generation, true number generation, UUID's, random strings, etc.",
+                        code: 'Gen1x/random_utils.js',
+                        banner: 'Gen1x/randomutils.png',
+                        creator: 'G1nX'
+                    },
+                    {
+                        name: 'Toast Notifications',
+                        description: 'Did you want alerts? Notifications that are easily customizable? This is the only and best notification extension!',
+                        code: 'MubiLop/toastnotifs.js',
+                        banner: 'MubiLop/toastnotifs.png',
+                        creator: 'cicerorph',
+                        creatorAlias: 'MubiLop',
+                        notes: 'Additional code by themeatly2 and ddededodediamante',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Project Interfaces',
+                        description: 'Effortlessly create intuitive graphical user interfaces in your projects.',
+                        code: 'LordCat0/ProjectInterfaces.js',
+                        banner: 'LordCat0/ProjectInterfaces.png',
+                        creator: 'LordCat0',
+                        creatorAlias: 'Lord cat',
+                        notes: 'Gallery banner by Dillon',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Git Penguin',
+                        description: 'Make requests and control the files for your GitHub repository.',
+                        code: 'justablock/gitpenguin.js',
+                        banner: 'justablock/gitpenguin.png',
+                        creator: 'justablock',
+                        isGitHub: false
+                    },
+                    {
+                        name: 'Pang API',
+                        description: 'Fetch information from the PenguinMod API.',
+                        code: 'SammerLOL/pangapi.js',
+                        banner: 'SammerLOL/pangapi.png',
+                        creator: 'oc9x97',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'TurboWeather',
+                        description: 'Show weather and location data for any place in our world. Data that could be used for doxxing is deleted from results.',
+                        code: 'RubyDevs/turboweather.js',
+                        banner: 'RubyDevs/turboweather.webp',
+                        documentation: 'TurboWeather',
+                        creator: 'RubyDevs'
+                    },
+                    {
+                        name: 'Cockatiel Location',
+                        description: "Fetch Users' IP Addresses and Location.",
+                        code: 'bruhbeast-pixel/CockatielLocation.js',
+                        banner: 'bruhbeast-pixel/CockatielLocation.svg',
+                        creator: 'bruhbeast-pixel',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'CORS Proxy',
+                        description: 'Accessible CORS Proxies for fetching information with PenguinMod.',
+                        code: 'NamelessCat/corsproxy.js',
+                        banner: 'NamelessCat/corsproxy.png',
+                        creator: 'NamelessCat'
+                    },
+                    {
+                        name: 'Extension Exposer',
+                        description: 'Access the raw functions from other extensions.',
+                        code: 'TheShovel/extexp.js',
+                        banner: 'TheShovel/placeholder-extexp.png',
+                        creator: 'TheShovel',
+                        isGitHub: true,
+                        note: 'Some contributions by yuri-kiss :P'
+                    },
+                    {
+                        name: 'Project Page',
+                        description: 'Modify and affect the studio project page from the code. How annoying can an extension possibly be?',
+                        code: 'jwklong/projectpage.js',
+                        banner: 'jwklong/projectpage.png',
+                        creator: 'jwklong',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'All Menus',
+                        description: 'Every dropdown menu for each block, in one extension.',
+                        code: 'Lily/AllMenus.js',
+                        banner: 'Lily/AllMenus.svg',
+                        creator: 'LilyMakesThings',
+                        isGitHub: false
+                    },
+                    {
+                        name: 'More Fields',
+                        description: 'Custom Field Types',
+                        code: 'Ashime/MoreFields.js',
+                        banner: '0znzw/MoreFields.png',
+                        creator: 'yuri-kiss',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Beepbox Player',
+                        description: 'Play, edit, and read songs from any BeepBox mod directly from the URL or JSON!',
+                        code: 'DogeisCut/BeepBoxPlayer.js',
+                        banner: 'DogeisCut/BeepBoxPlayer.svg',
+                        creator: 'DogeisCut',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Update File (Direct Access)',
+                        description: 'A simple extension that uses the File System Access API to update files dynamically.',
+                        code: 'Anonymous_cat1/updateFile.js',
+                        banner: 'Anonymous_cat1/updateFile.svg',
+                        creator: 'Anonymous-cat1',
+                        isGitHub: true,
+                        unstable: true,
+                        unstableReason: 'File System Access is not supported by all browsers.\nProjects can maliciously edit files that you open.'
+                    },
+                    {
+                        name: 'File Upload',
+                        description: 'Upload files to the Network, can also used with Files extension.',
+                        code: 'Codefoxy/cfupload.js',
+                        banner: 'Codefoxy/cfupload.svg',
+                        creator: 'Codefoxy',
+                        isGitHub: false
+                    },
+                    {
+                        name: 'Video Sharing',
+                        description: 'Share your screen or camera to your projects!',
+                        code: 'pooiod/VideoSharing.js',
+                        banner: 'pooiod/VideoSharing.svg',
+                        creator: 'pooiod7',
+                        isGitHub: false
+                    },
+                    {
+                        name: 'WindowHasher',
+                        description: 'Interact with URL hash: the part of the URL after a hashtag',
+                        code: 'pooiod/WindowHasher.js',
+                        banner: 'pooiod/WindowHasher.png',
+                        creator: 'pooiod7'
+                    },
+                    {
+                        name: 'Scratchblocks',
+                        description: 'Generate blocks in the Scratch3, or Scratch2 format.',
+                        code: 'pooiod/Scratchblocks.js',
+                        banner: 'pooiod/Scratchblocks.svg',
+                        creator: 'pooiod7'
+                    },
+                    {
+                        name: 'AuthPenguin',
+                        description: 'Authenticate with anything and everything!',
+                        code: 'MubiLop/authpenguin.js',
+                        banner: 'MubiLop/authpenguin.png',
+                        creator: 'cicerorph',
+                        creatorAlias: 'MubiLop',
+                        documentation: 'AuthPenguin',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Google Auth',
+                        description: 'Login with Google to your projects. Allows getting a name, profile picture and email from the google account.',
+                        code: 'Ikelene/googleAuthExtension.js',
+                        banner: 'Ikelene/ExtensionBanner.png',
+                        creator: 'ikelene',
+                        creatorAlias: 'Ikelene',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Discord Auth',
+                        description: 'Login with discord to your projects. Identify users by ID and username in a secure and easy way!',
+                        code: 'NotHouse/DiscordAuth.js',
+                        banner: 'NotHouse/DiscordAuth-banner.png',
+                        creator: 'enderhacker',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Twitch',
+                        description: 'Communicate with your Twitch Chat on PenguinMod!\n\nPenguinMod is not affiliated with Twitch.',
+                        code: 'bop_tw/Twitch.js',
+                        banner: 'bop_tw/Twitch.png',
+                        creator: 'bop_tw',
+                        isGitHub: false
+                    },
+                    {
+                        name: 'Chess',
+                        description: 'A powerful extension about Chess. It allows to create a Chessboard, manage chess games, and use Stockfish 17 in your projects.',
+                        code: 'Gen1x/chess-ext.js',
+                        banner: 'Gen1x/chess-ext.png',
+                        creator: 'G1nX',
+                        isGitHub: false
+                    },
+                    {
+                        name: 'CATS',
+                        description: 'Blocks related to cats.',
+                        code: 'Gen1x/CATS.js',
+                        banner: 'Gen1x/cats.png',
+                        creator: 'G1nX'
+                    },
+                    {
+                        name: 'Free Servers',
+                        description: 'Here you can find a free server for your projects. And also check whether it is working now or not.\n\nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.',
+                        code: 'WAYLIVES/FreeServers.js',
+                        banner: 'WAYLIVES/FreeServersIMG.svg',
+                        documentation: 'FreeServers',
+                        creator: 'WAYLIVES',
+                        isGitHub: false
+                    },
+                    {
+                        name: 'More Types',
+                        description: 'Adds more value types to PenguinMod, implementing Functions, Objects, Arrays, Sets, Maps, Symbols and Nothing.',
+                        code: 'VeryGoodScratcher42/More-Types.js',
+                        banner: 'VeryGoodScratcher42/More-Types.png',
+                        creator: 'VeryGoodScratcher42',
+                        isGitHub: false
+                    },
+                    {
+                        name: 'oneko',
+                        description: 'Cute cat that follows you on the block area.',
+                        code: 'TheShovel/oneko.js',
+                        banner: 'TheShovel/thumbnail-oneko.png',
+                        creator: 'TheShovel',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Counter++',
+                        description: 'Count anything, at any time, in PenguinMod!',
+                        code: 'MrRedstonia/counterplusplus.js',
+                        banner: 'MrRedstonia/counterplusplus.png',
+                        creator: 'MrRedstonia',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'How many lines?',
+                        description: 'Blocks to determine the amount of new lines in a piece of text.',
+                        code: 'Monochromasity/howmanylines.js',
+                        banner: 'Monochromasity/placeholder-howmanylines.png',
+                        creator: 'Monochromasity',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Paint Utils',
+                        description: 'A colour extension that lets you mix colours.',
+                        code: 'Fruits555000/PaintUtils.js',
+                        banner: 'Fruits555000/PaintUtils.svg',
+                        creator: 'Fruits555000',
+                        isGitHub: true
+                    },
+                    {
+                        name: 'Resolution',
+                        description: 'Provides utility blocks that simplify the creation of projects with dynamic resolution support.',
+                        code: 'DogeisCut/Resolution.js',
+                        banner: 'DogeisCut/Resolution.svg',
+                        creator: 'DogeisCut',
+                        isGitHub: true,
+                        documentation: 'Resolution',
+                        notes: 'Gallery banner by Dillon'
+                    },
+                    {
+                        name: 'Device Motion',
+                        description: 'Use Device Motion API to get rotation or movement of the device. Works best on mobile devices. \n Thumbnail by Dillon. ',
+                        code: 'gaimerI17/DeviceMotion.js',
+                        banner: 'gaimerI17/DeviceMotion.png',
+                        creator: 'gaimerI',
+                        isGitHub: true,
+                        creatorAlias: 'gaimerI17',
+                        note: 'Extension thumbnail made by Dillon.'
+                    }]};
             
             return data.extensions.map(extension => ({
                 name: extension.name,

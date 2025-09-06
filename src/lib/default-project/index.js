@@ -14,7 +14,7 @@ const defaultProject = translator => {
             assetType: 'Project',
             dataFormat: 'JSON',
             data: overrideDefaultProject
-        }]; 
+        }];
     }
 
     let _TextEncoder;

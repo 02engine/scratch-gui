@@ -36,22 +36,22 @@ const HashParserHOC = function (WrappedComponent) {
         componentWillUnmount () {
             window.removeEventListener('hashchange', this.handleHashChange);
         }
-handleHashChange () {
-    const hashMatch = window.location.hash.match(/#([^?]+)/);
-    let hashProjectId;
+        handleHashChange () {
+            const hashMatch = window.location.hash.match(/#([^?]+)/);
+            let hashProjectId;
     
-    if (hashMatch === null) {
-        hashProjectId = defaultProjectId;
-    } else {
-        // 提取#后面的内容，但排除可能存在的查询参数部分
-        const hashContent = hashMatch[1];
-        // 如果包含问号，只取问号之前的部分
-        const projectIdPart = hashContent.split('?')[0];
-        hashProjectId = projectIdPart;
-    }
+            if (hashMatch === null) {
+                hashProjectId = defaultProjectId;
+            } else {
+                // 提取#后面的内容，但排除可能存在的查询参数部分
+                const hashContent = hashMatch[1];
+                // 如果包含问号，只取问号之前的部分
+                const projectIdPart = hashContent.split('?')[0];
+                hashProjectId = projectIdPart;
+            }
     
-    this.props.setProjectId(hashProjectId.toString());
-}
+            this.props.setProjectId(hashProjectId.toString());
+        }
         render () {
             const {
                 /* eslint-disable no-unused-vars */

@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+import React, {useEffect} from 'react';
 import PropTypes from 'prop-types';
 import {FormattedMessage} from 'react-intl';
 import {connect} from 'react-redux';
 import styles from './framerate-indicator.css';
 import VM from 'scratch-vm';
-import { setOpsPerFrameState } from '../../reducers/tw'; 
+import {setOpsPerFrameState} from '../../reducers/tw';
 
 const FramerateIndicator = ({
     framerate,
@@ -84,10 +84,10 @@ FramerateIndicator.propTypes = {
 };
 
 const mapDispatchToProps = dispatch => ({
-    setOpsPerFrame: (value) => dispatch(setOpsPerFrameState(value))
+    setOpsPerFrame: value => dispatch(setOpsPerFrameState(value))
 });
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = state => ({
     opsPerFrame: state.scratchGui.tw.opsPerFrame,
     framerate: state.scratchGui.tw.framerate,
     interpolation: state.scratchGui.tw.interpolation,

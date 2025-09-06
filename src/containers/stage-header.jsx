@@ -27,8 +27,8 @@ class StageHeader extends React.Component {
         this.coordinateFontSize = 14;
 
         this.state = {
-            isShowCoordinate: false, // 是否显示坐标网格
-           // stageNativeSizePopoverOpen: false,
+            isShowCoordinate: false // 是否显示坐标网格
+            // stageNativeSizePopoverOpen: false,
         };
     }
     componentDidMount () {
@@ -46,10 +46,10 @@ class StageHeader extends React.Component {
         }
     }
 
-/**
+    /**
      * 触发坐标网格的显示 or 隐藏
      */
-     handleTriggerCoordinate () {
+    handleTriggerCoordinate () {
         const visible = !this.state.isShowCoordinate;
 
         this.props.vm.runtime.triggerCoordinate(visible);
@@ -62,7 +62,7 @@ class StageHeader extends React.Component {
     /**
      * 缩小坐标系的字体
      */
-     handleZoomOutCoordinateFontSize () {
+    handleZoomOutCoordinateFontSize () {
         let temp = this.coordinateFontSize - 1;
 
         temp = temp >= this.minCoordinateFontSize ? temp : this.minCoordinateFontSize;
@@ -75,7 +75,7 @@ class StageHeader extends React.Component {
     /**
      * 放大坐标系的字体
      */
-     handleZoomInCoordinateFontSize () {
+    handleZoomInCoordinateFontSize () {
         let temp = this.coordinateFontSize + 1;
 
         temp = temp <= this.maxCoordinateFontSize ? temp : this.maxCoordinateFontSize;
@@ -83,7 +83,6 @@ class StageHeader extends React.Component {
         this.coordinateFontSize = temp;
         this.props.vm.runtime.setCoordinateFontSize(temp);
     }
-
 
 
     checkInvalidStageSizeMode () {

@@ -48,8 +48,8 @@ class ProjectInput extends React.Component {
         }
     }
     extractProjectId (text) {
-        //const numberMatch = text.match(/\d+/);
-        //return numberMatch ? numberMatch[0] : null;
+        // const numberMatch = text.match(/\d+/);
+        // return numberMatch ? numberMatch[0] : null;
         return text;
     }
     readProjectId (e) {

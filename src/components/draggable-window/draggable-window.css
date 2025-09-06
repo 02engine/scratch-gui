@@ -1,0 +1,119 @@
+.draggableWindow {
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+}
+
+.windowHeader {
+    background-color: #00BAAD;
+    color: white;
+    padding: 8px 12px;
+    cursor: move;
+    font-weight: bold;
+    font-size: 14px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+}
+
+.windowHeader:hover {
+    background-color: #00998d;
+}
+
+.windowTitle {
+    flex: 1;
+}
+
+.windowContent {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+}
+
+.resizeHandleE,
+.resizeHandleS,
+.resizeHandleSE {
+    position: absolute;
+    background: transparent;
+}
+
+.resizeHandleE {
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    cursor: ew-resize;
+}
+
+.resizeHandleS {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    cursor: ns-resize;
+}
+
+.resizeHandleSE {
+    right: 0;
+    bottom: 0;
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+}
+
+.resizeHandleE:hover,
+.resizeHandleS:hover,
+.resizeHandleSE:hover {
+    background-color: rgba(0, 186, 173, 0.3);
+}
+
+.windowControls {
+    display: flex;
+    gap: 4px;
+}
+
+.controlButton {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.controlButton:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.minimizedWindow {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: #00BAAD;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    user-select: none;
+}
+
+.minimizedWindow:hover {
+    background-color: #00998d;
+    transform: scale(1.1);
+}

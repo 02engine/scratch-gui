@@ -11,7 +11,7 @@
 const emptyCostume = name => ({
     name: name,
     md5: 'cd21514d0531fdffb22204e0ec5ed84a.svg',
-    //assetId:'cd21514d0531fdffb22204e0ec5ed84a.svg',
+    // assetId:'cd21514d0531fdffb22204e0ec5ed84a.svg',
     rotationCenterX: 0,
     rotationCenterY: 0,
     bitmapResolution: 1,
@@ -34,7 +34,7 @@ const emptySprite = (name, soundName, costumeName) => ({
             costumeName: costumeName,
             baseLayerID: -1,
             baseLayerMD5: 'cd21514d0531fdffb22204e0ec5ed84a.svg',
-            //assetId:'cd21514d0531fdffb22204e0ec5ed84a.svg',
+            // assetId:'cd21514d0531fdffb22204e0ec5ed84a.svg',
             bitmapResolution: 1,
             rotationCenterX: 0,
             rotationCenterY: 0

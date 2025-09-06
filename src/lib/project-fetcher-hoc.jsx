@@ -128,32 +128,31 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                     .then(buffer => ({data: buffer}));
             } else {
                 // TW: Temporary hack for project tokens
-                if(/^\d+$/.test(projectId)){
+                if (/^\d+$/.test(projectId)){
                     assetPromise = fetchProjectToken(projectId)
-                    .then(token => {
-                        storage.setProjectToken(token);
-                        return storage.load(storage.AssetType.Project, projectId, storage.DataFormat.JSON);
-                    });
-                }
-                else{
-                    projectUrl=projectId;
-                                    if (
-                    !projectUrl.startsWith('http:') &&
+                        .then(token => {
+                            storage.setProjectToken(token);
+                            return storage.load(storage.AssetType.Project, projectId, storage.DataFormat.JSON);
+                        });
+                } else {
+                    projectUrl = projectId;
+                    if (
+                        !projectUrl.startsWith('http:') &&
                     !projectUrl.startsWith('https:') &&
                     !projectUrl.startsWith('data:')
-                ) {
-                    projectUrl = `https://${projectUrl}`;
+                    ) {
+                        projectUrl = `https://${projectUrl}`;
+                    }
+                    assetPromise = fetch(projectUrl)
+                        .then(r => {
+                            if (!r.ok) {
+                                throw new Error(`Request returned status ${r.status}`);
+                            }
+                            return r.arrayBuffer();
+                        })
+                        .then(buffer => ({data: buffer}));
                 }
-                assetPromise = fetch(projectUrl)
-                    .then(r => {
-                        if (!r.ok) {
-                            throw new Error(`Request returned status ${r.status}`);
-                        }
-                        return r.arrayBuffer();
-                    })
-                    .then(buffer => ({data: buffer}));
-                }
-                    console.log("project",projectId);
+                console.log('project', projectId);
             }
 
             return assetPromise

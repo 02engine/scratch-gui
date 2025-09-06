@@ -117,7 +117,7 @@
   {
     "id": "tw.twExtension.name",
     "description": "Name of the strange 'TurboWarp Blocks' extension",
-    "defaultMessage": "TurboWarp Blocks"
+    "defaultMessage": "{APP_NAME} Blocks"
   },
   {
     "id": "tw.twExtension.description",
@@ -137,7 +137,7 @@
   {
     "id": "tw.extensionGallery.name",
     "description": "Name of extensions.turbowarp.org in extension library",
-    "defaultMessage": "TurboWarp Extension Gallery"
+    "defaultMessage": "{APP_NAME} Extension Gallery"
   },
   {
     "id": "tw.extensionGallery.loading",
