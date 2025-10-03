@@ -45,31 +45,80 @@ const DraggableWindow = props => {
 
     const handleMouseDown = React.useCallback(e => {
         if (!isDraggable) return;
+        if (!e.touches && e.button !== 0) return; // 只在非触摸事件时检查鼠标按钮
+        
+        // 检查是否是触摸事件
+        const touch = e.touches ? e.touches[0] : null;
+        const clientX = touch ? touch.clientX : e.clientX;
+        const clientY = touch ? touch.clientY : e.clientY;
         
         const rect = windowRef.current.getBoundingClientRect();
-        setDragOffset({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-        });
+        const offset = {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+        setDragOffset(offset);
         setIsDragging(true);
         onDragStart && onDragStart(windowId, position);
-        e.preventDefault();
-        e.stopPropagation();
-    }, [isDraggable, onDragStart, windowId, position]);
 
-    const handleMouseMove = React.useCallback(e => {
-        if (isDragging) {
-            const newX = e.clientX - dragOffset.x;
-            const newY = e.clientY - dragOffset.y;
+        const handleGlobalMove = (moveEvent) => {
+            moveEvent.preventDefault(); // 阻止默认滚动行为
             
-            // Constrain to viewport
-            const constrainedX = Math.max(0, Math.min(window.innerWidth - size.width, newX));
-            const constrainedY = Math.max(0, Math.min(window.innerHeight - size.height, newY));
+            const moveTouch = moveEvent.touches ? moveEvent.touches[0] : null;
+            const moveClientX = moveTouch ? moveTouch.clientX : moveEvent.clientX;
+            const moveClientY = moveTouch ? moveTouch.clientY : moveEvent.clientY;
             
-            const newPosition = {x: constrainedX, y: constrainedY};
+            const newX = moveClientX - offset.x;
+            const newY = moveClientY - offset.y;
+            
+            const targetX = Math.max(0, Math.min(window.innerWidth - size.width, newX));
+            const targetY = Math.max(0, Math.min(window.innerHeight - size.height, newY));
+            
+            const newPosition = {
+                x: targetX,
+                y: targetY
+            };
+            
             setPosition(newPosition);
             onDrag && onDrag(windowId, newPosition);
-        } else if (isResizing && resizeHandle) {
+        };
+
+        const handleGlobalEnd = (endEvent) => {
+            endEvent.preventDefault();
+            setIsDragging(false);
+            setIsDraggingMinimized(false);
+            
+            // 清理所有事件监听
+            document.removeEventListener('mousemove', handleGlobalMove);
+            document.removeEventListener('mouseup', handleGlobalEnd);
+            document.removeEventListener('touchmove', handleGlobalMove);
+            document.removeEventListener('touchend', handleGlobalEnd);
+            document.removeEventListener('touchcancel', handleGlobalEnd);
+            
+            onDragStop && onDragStop(windowId, position);
+        };
+
+        if (touch) {
+            // 触摸事件
+            document.addEventListener('touchmove', handleGlobalMove, { passive: false });
+            document.addEventListener('touchend', handleGlobalEnd, { passive: false });
+            document.addEventListener('touchcancel', handleGlobalEnd, { passive: false });
+        } else {
+            // 鼠标事件
+            document.addEventListener('mousemove', handleGlobalMove);
+            document.addEventListener('mouseup', handleGlobalEnd);
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+    }, [isDraggable, onDragStart, onDrag, onDragStop, windowId, position, size]);
+
+    const handleResizeMove = React.useCallback(e => {
+        if (isResizing && resizeHandle) {
+            const touch = e.touches ? e.touches[0] : null;
+            const clientX = touch ? touch.clientX : e.clientX;
+            const clientY = touch ? touch.clientY : e.clientY;
+            
             const rect = windowRef.current.getBoundingClientRect();
             let newWidth = size.width;
             let newHeight = size.height;
@@ -95,27 +144,87 @@ const DraggableWindow = props => {
         }
     }, [isDragging, isResizing, resizeHandle, dragOffset, size, minSize, maxSize, onDrag, onResize, windowId]);
 
-    const handleMouseUp = React.useCallback(() => {
-        if (isDragging) {
-            setIsDragging(false);
-            onDragStop && onDragStop(windowId, position);
-        }
+    const handleResizeUp = React.useCallback(() => {
         if (isResizing) {
             setIsResizing(false);
             setResizeHandle(null);
             onResizeStop && onResizeStop(windowId, size);
+            // 清除resize相关的事件监听器
+            document.removeEventListener('mousemove', handleResizeMove);
+            document.removeEventListener('mouseup', handleResizeUp);
+            document.removeEventListener('touchmove', handleResizeMove);
+            document.removeEventListener('touchend', handleResizeUp);
         }
-    }, [isDragging, isResizing, onDragStop, onResizeStop, windowId, position, size]);
+    }, [isResizing, onResizeStop, windowId, size, handleResizeMove]);
 
     const handleResizeMouseDown = React.useCallback((handle, e) => {
         if (!isResizable || isMinimized) return;
+        if (!e.touches && e.button !== 0) return; // 只在非触摸事件时检查鼠标按钮
         
+        const touch = e.touches ? e.touches[0] : null;
         setIsResizing(true);
         setResizeHandle(handle);
         onResizeStart && onResizeStart(windowId, size);
+
+        const handleResizeGlobalMove = (moveEvent) => {
+            moveEvent.preventDefault();
+            const moveTouch = moveEvent.touches ? moveEvent.touches[0] : null;
+            const moveClientX = moveTouch ? moveTouch.clientX : moveEvent.clientX;
+            const moveClientY = moveTouch ? moveTouch.clientY : moveEvent.clientY;
+
+            const rect = windowRef.current.getBoundingClientRect();
+            let newWidth = size.width;
+            let newHeight = size.height;
+            
+            switch (handle) {
+                case 'e':
+                    newWidth = Math.max(minSize.width, Math.min(maxSize.width, moveClientX - rect.left));
+                    break;
+                case 's':
+                    newHeight = Math.max(minSize.height, Math.min(maxSize.height, moveClientY - rect.top));
+                    break;
+                case 'se':
+                    newWidth = Math.max(minSize.width, Math.min(maxSize.width, moveClientX - rect.left));
+                    newHeight = Math.max(minSize.height, Math.min(maxSize.height, moveClientY - rect.top));
+                    break;
+                default:
+                    break;
+            }
+            
+            const newSize = {width: newWidth, height: newHeight};
+            setSize(newSize);
+            onResize && onResize(windowId, newSize);
+        };
+
+        const handleResizeGlobalEnd = (endEvent) => {
+            endEvent.preventDefault();
+            setIsResizing(false);
+            setResizeHandle(null);
+            
+            // 清理所有事件监听
+            document.removeEventListener('mousemove', handleResizeGlobalMove);
+            document.removeEventListener('mouseup', handleResizeGlobalEnd);
+            document.removeEventListener('touchmove', handleResizeGlobalMove);
+            document.removeEventListener('touchend', handleResizeGlobalEnd);
+            document.removeEventListener('touchcancel', handleResizeGlobalEnd);
+            
+            onResizeStop && onResizeStop(windowId, size);
+        };
+
+        if (touch) {
+            // 触摸事件
+            document.addEventListener('touchmove', handleResizeGlobalMove, { passive: false });
+            document.addEventListener('touchend', handleResizeGlobalEnd, { passive: false });
+            document.addEventListener('touchcancel', handleResizeGlobalEnd, { passive: false });
+        } else {
+            // 鼠标事件
+            document.addEventListener('mousemove', handleResizeGlobalMove);
+            document.addEventListener('mouseup', handleResizeGlobalEnd);
+        }
+
         e.preventDefault();
         e.stopPropagation();
-    }, [isResizable, isMinimized, onResizeStart, windowId, size]);
+    }, [isResizable, isMinimized, onResizeStart, onResize, onResizeStop, windowId, size, minSize, maxSize]);
 
     const handleToggleMinimize = React.useCallback(() => {
         if (!isDraggingMinimized) {
@@ -163,17 +272,6 @@ const DraggableWindow = props => {
         setIsFullScreen(false);
     }, []);
 
-    React.useEffect(() => {
-        if (isDragging || isResizing) {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-            return () => {
-                document.removeEventListener('mousemove', handleMouseMove);
-                document.removeEventListener('mouseup', handleMouseUp);
-            };
-        }
-    }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
-
     return (
         <div
             ref={windowRef}
@@ -192,13 +290,32 @@ const DraggableWindow = props => {
                     className={styles.minimizedWindow}
                     onClick={handleToggleMinimize}
                     onMouseDown={e => {
-                        setDragStartPosition({x: e.clientX, y: e.clientY});
+                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                        setDragStartPosition({x: clientX, y: clientY});
+                        handleMouseDown(e);
+                    }}
+                    onTouchStart={e => {
+                        const touch = e.touches[0];
+                        setDragStartPosition({x: touch.clientX, y: touch.clientY});
                         handleMouseDown(e);
                     }}
                     onMouseMove={e => {
                         if (isDragging) {
-                            const dx = Math.abs(e.clientX - dragStartPosition.x);
-                            const dy = Math.abs(e.clientY - dragStartPosition.y);
+                            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                            const dx = Math.abs(clientX - dragStartPosition.x);
+                            const dy = Math.abs(clientY - dragStartPosition.y);
+                            if (dx > 5 || dy > 5) {
+                                setIsDraggingMinimized(true);
+                            }
+                        }
+                    }}
+                    onTouchMove={e => {
+                        if (isDragging) {
+                            const touch = e.touches[0];
+                            const dx = Math.abs(touch.clientX - dragStartPosition.x);
+                            const dy = Math.abs(touch.clientY - dragStartPosition.y);
                             if (dx > 5 || dy > 5) {
                                 setIsDraggingMinimized(true);
                             }
@@ -227,6 +344,7 @@ const DraggableWindow = props => {
                         ref={headerRef}
                         className={styles.windowHeader}
                         onMouseDown={handleMouseDown}
+                        onTouchStart={handleMouseDown}
                         onDoubleClick={handleToggleMinimize}
                     >
                         <span className={styles.windowTitle}>{title}</span>
@@ -266,14 +384,17 @@ const DraggableWindow = props => {
                     <div
                         className={styles.resizeHandleE}
                         onMouseDown={e => handleResizeMouseDown('e', e)}
+                        onTouchStart={e => handleResizeMouseDown('e', e)}
                     />
                     <div
                         className={styles.resizeHandleS}
                         onMouseDown={e => handleResizeMouseDown('s', e)}
+                        onTouchStart={e => handleResizeMouseDown('s', e)}
                     />
                     <div
                         className={styles.resizeHandleSE}
                         onMouseDown={e => handleResizeMouseDown('se', e)}
+                        onTouchStart={e => handleResizeMouseDown('se', e)}
                     />
                 </>
             )}
