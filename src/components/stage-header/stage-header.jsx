@@ -150,11 +150,11 @@ const StageHeaderComponent = function (props) {
                     className={styles.stageMenuWrapper}
                     style={{width: stageDimensions.width}}
                 >
-                    <Controls vm={vm} />
                     <div
                         className={styles.fullscreenButtonsRow}
                         key="fullscreen" // addons require the HTML element to be not be re-used by in-editor buttons
                     >
+                        <Controls vm={vm} />
                         {settingsButton}
                         {fullscreenButton}
                     </div>
@@ -225,14 +225,14 @@ const StageHeaderComponent = function (props) {
                 style={{minWidth: `${stageDimensions.width + 2}px`}}
             >
                 <Box className={styles.stageMenuWrapper}>
-                    <Controls
-                        vm={vm}
-                        isSmall={stageSizeMode === STAGE_SIZE_MODES.small}
-                    />
                     <div
                         className={styles.stageSizeRow}
                         key="editor" // addons require the HTML element to be not be re-used by in-editor buttons
                     >
+                        <Controls
+                            vm={vm}
+                            isSmall={stageSizeMode === STAGE_SIZE_MODES.small}
+                        />
                         {stageControls}
                         <div>
                             <Button

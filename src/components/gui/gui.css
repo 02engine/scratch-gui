@@ -213,6 +213,9 @@
 
     /* this will only ever be as wide as the stage */
     flex-basis: 0;
+    
+    /* Center the stage and target wrapper */
+    align-items: center;
 }
 
 .target-wrapper {
