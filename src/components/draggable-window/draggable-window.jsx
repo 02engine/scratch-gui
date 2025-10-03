@@ -229,17 +229,15 @@ const DraggableWindow = props => {
     const handleToggleMinimize = React.useCallback(() => {
         if (!isDraggingMinimized) {
             if (isMinimized) {
-                // Restore window
+                // 恢复时回到原始位置和尺寸，避免重叠
+                setIsMinimized(false);
                 setPosition(originalPosition);
                 setSize(originalSize);
-                setIsMinimized(false);
                 onMinimizeToggle && onMinimizeToggle(windowId, false);
             } else {
-                // Minimize window
+                // 最小化时记录当前位置和尺寸
                 setOriginalPosition(position);
                 setOriginalSize(size);
-                setPosition({x: window.innerWidth - 60, y: window.innerHeight - 60});
-                setSize({width: 40, height: 40});
                 setIsMinimized(true);
                 setIsFullScreen(false);
                 onMinimizeToggle && onMinimizeToggle(windowId, true);
@@ -272,6 +270,10 @@ const DraggableWindow = props => {
         setIsFullScreen(false);
     }, []);
 
+    // 由父组件统一渲染最小化栏，最小化时本窗口不渲染内容
+    if (isMinimized) return null;
+
+    // 正常窗口
     return (
         <div
             ref={windowRef}
@@ -285,100 +287,34 @@ const DraggableWindow = props => {
             }}
             {...componentProps}
         >
-            {isMinimized ? (
-                <div
-                    className={styles.minimizedWindow}
-                    onClick={handleToggleMinimize}
-                    onMouseDown={e => {
-                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                        setDragStartPosition({x: clientX, y: clientY});
-                        handleMouseDown(e);
-                    }}
-                    onTouchStart={e => {
-                        const touch = e.touches[0];
-                        setDragStartPosition({x: touch.clientX, y: touch.clientY});
-                        handleMouseDown(e);
-                    }}
-                    onMouseMove={e => {
-                        if (isDragging) {
-                            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                            const dx = Math.abs(clientX - dragStartPosition.x);
-                            const dy = Math.abs(clientY - dragStartPosition.y);
-                            if (dx > 5 || dy > 5) {
-                                setIsDraggingMinimized(true);
-                            }
-                        }
-                    }}
-                    onTouchMove={e => {
-                        if (isDragging) {
-                            const touch = e.touches[0];
-                            const dx = Math.abs(touch.clientX - dragStartPosition.x);
-                            const dy = Math.abs(touch.clientY - dragStartPosition.y);
-                            if (dx > 5 || dy > 5) {
-                                setIsDraggingMinimized(true);
-                            }
-                        }
-                    }}
-                    title={`Restore ${title}`}
-                >
-                    {title === 'Stage' ? (
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
-                            <rect x="2" y="2" width="16" height="16" rx="2" stroke="white" strokeWidth="1" fill="none"/>
-                            <rect x="6" y="6" width="8" height="8" fill="white"/>
-                        </svg>
-                    ) : title === 'Sprites' ? (
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
-                            <circle cx="10" cy="6" r="3" fill="white"/>
-                            <circle cx="5" cy="12" r="2.5" fill="white"/>
-                            <circle cx="15" cy="12" r="2.5" fill="white"/>
-                        </svg>
-                    ) : (
-                        title.charAt(0)
-                    )}
-                </div>
-            ) : (
-                <React.Fragment>
-                    <div
-                        ref={headerRef}
-                        className={styles.windowHeader}
-                        onMouseDown={handleMouseDown}
-                        onTouchStart={handleMouseDown}
-                        onDoubleClick={handleToggleMinimize}
+            <div
+                ref={headerRef}
+                className={styles.windowHeader}
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleMouseDown}
+                onDoubleClick={handleToggleMinimize}
+            >
+                <span className={styles.windowTitle}>{title}</span>
+                <div className={styles.windowControls}>
+                    <button
+                        className={styles.controlButton}
+                        onClick={handleToggleMinimize}
+                        title="最小化"
                     >
-                        <span className={styles.windowTitle}>{title}</span>
-                        <div className={styles.windowControls}>
-                            <button
-                                className={styles.controlButton}
-                                onClick={handleToggleMinimize}
-                                title="Minimize"
-                            >
-                                −
-                            </button>
-                            <button
-                                className={styles.controlButton}
-                                onClick={handleToggleFullScreen}
-                                title="Full Screen"
-                            >
-                                □
-                            </button>
-                            {/*<button
-                                className={styles.controlButton}
-                                onClick={handleClose}
-                                title="Close"
-                            >
-                                ×
-                            </button>*/}
-                        </div>
-                    </div>
-            
-                    <div className={styles.windowContent}>
-                        {children}
-                    </div>
-                </React.Fragment>
-            )}
-            
+                        −
+                    </button>
+                    <button
+                        className={styles.controlButton}
+                        onClick={handleToggleFullScreen}
+                        title="全屏"
+                    >
+                        □
+                    </button>
+                </div>
+            </div>
+            <div className={styles.windowContent}>
+                {children}
+            </div>
             {isResizable && (
                 <>
                     <div

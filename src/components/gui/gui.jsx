@@ -10,6 +10,7 @@ import tabStyles from 'react-tabs/style/react-tabs.css';
 import VM from 'scratch-vm';
 
 import DraggableWindow from '../draggable-window/draggable-window.jsx';
+import MinimizedBar from '../draggable-window/minimized-bar.jsx';
 
 import Blocks from '../../containers/blocks.jsx';
 import CostumeTab from '../../containers/costume-tab.jsx';
@@ -173,6 +174,36 @@ const GUIComponent = props => {
 
     if (children) {
         return <Box {...componentProps}>{children}</Box>;
+    }
+
+    // 全局最小化窗口栏数据
+    const minimizedWindows = [];
+    if (stageWindowMinimized) {
+        minimizedWindows.push({
+            windowId: 'stage',
+            title: 'Stage',
+            icon: (
+                <svg width="22" height="22" viewBox="0 0 20 20" fill="white">
+                    <rect x="2" y="2" width="16" height="16" rx="2" stroke="white" strokeWidth="1" fill="none"/>
+                    <rect x="6" y="6" width="8" height="8" fill="white"/>
+                </svg>
+            ),
+            onRestore: () => setStageWindowMinimized(false)
+        });
+    }
+    if (targetPaneWindowMinimized) {
+        minimizedWindows.push({
+            windowId: 'targets',
+            title: 'Sprites',
+            icon: (
+                <svg width="22" height="22" viewBox="0 0 20 20" fill="white">
+                    <circle cx="10" cy="6" r="3" fill="white"/>
+                    <circle cx="5" cy="12" r="2.5" fill="white"/>
+                    <circle cx="15" cy="12" r="2.5" fill="white"/>
+                </svg>
+            ),
+            onRestore: () => setTargetPaneWindowMinimized(false)
+        });
     }
 
     const tabClassNames = {
@@ -445,44 +476,49 @@ const GUIComponent = props => {
                         </Box>
 
                         <>
-                            <DraggableWindow
-                                windowId="stage"
-                                title="Stage"
-                                defaultPosition={stageWindowPosition}
-                                defaultSize={stageWindowSize}
-                                minSize={{width: 200, height: 150}}
-                                maxSize={{width: window.innerWidth - 100, height: window.innerHeight - 100}}
-                                onDragStop={(id, position) => setStageWindowPosition(position)}
-                                onResizeStop={(id, size) => setStageWindowSize(size)}
-                                onMinimizeToggle={(id, minimized) => setStageWindowMinimized(minimized)}
-                                zIndex={100}
-                            >
-                                <StageWrapper
-                                    isFullScreen={isFullScreen}
-                                    isRendererSupported={isRendererSupported()}
-                                    isRtl={isRtl}
-                                    stageSize={stageSize}
-                                    vm={vm}
-                                />
-                            </DraggableWindow>
-
-                            <DraggableWindow
-                                windowId="targets"
-                                title="Sprites"
-                                defaultPosition={targetPaneWindowPosition}
-                                defaultSize={targetPaneWindowSize}
-                                minSize={{width: 200, height: 200}}
-                                maxSize={{width: 600, height: 800}}
-                                onDragStop={(id, position) => setTargetPaneWindowPosition(position)}
-                                onResizeStop={(id, size) => setTargetPaneWindowSize(size)}
-                                onMinimizeToggle={(id, minimized) => setTargetPaneWindowMinimized(minimized)}
-                                zIndex={90}
-                            >
-                                <TargetPane
-                                    stageSize={stageSize}
-                                    vm={vm}
-                                />
-                            </DraggableWindow>
+                            {!stageWindowMinimized && (
+                                <DraggableWindow
+                                    windowId="stage"
+                                    title="Stage"
+                                    defaultPosition={stageWindowPosition}
+                                    defaultSize={stageWindowSize}
+                                    minSize={{width: 200, height: 150}}
+                                    maxSize={{width: window.innerWidth - 100, height: window.innerHeight - 100}}
+                                    onDragStop={(id, position) => setStageWindowPosition(position)}
+                                    onResizeStop={(id, size) => setStageWindowSize(size)}
+                                    onMinimizeToggle={(id, minimized) => setStageWindowMinimized(minimized)}
+                                    zIndex={100}
+                                >
+                                    <StageWrapper
+                                        isFullScreen={isFullScreen}
+                                        isRendererSupported={isRendererSupported()}
+                                        isRtl={isRtl}
+                                        stageSize={stageSize}
+                                        vm={vm}
+                                    />
+                                </DraggableWindow>
+                            )}
+                            {!targetPaneWindowMinimized && (
+                                <DraggableWindow
+                                    windowId="targets"
+                                    title="Sprites"
+                                    defaultPosition={targetPaneWindowPosition}
+                                    defaultSize={targetPaneWindowSize}
+                                    minSize={{width: 200, height: 200}}
+                                    maxSize={{width: 600, height: 800}}
+                                    onDragStop={(id, position) => setTargetPaneWindowPosition(position)}
+                                    onResizeStop={(id, size) => setTargetPaneWindowSize(size)}
+                                    onMinimizeToggle={(id, minimized) => setTargetPaneWindowMinimized(minimized)}
+                                    zIndex={90}
+                                >
+                                    <TargetPane
+                                        stageSize={stageSize}
+                                        vm={vm}
+                                    />
+                                </DraggableWindow>
+                            )}
+                {/* 全局唯一最小化栏 */}
+                <MinimizedBar windows={minimizedWindows} />
                         </>
                     </Box>
                 </Box>
