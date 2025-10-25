@@ -24,6 +24,7 @@ export const initialState = {
     framerate: 30,
     opsPerFrame: 1,
     interpolation: false,
+    customUI: true,
     cloud: true,
     username: '',
     highQualityPen: false,

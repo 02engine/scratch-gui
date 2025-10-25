@@ -56,12 +56,12 @@
   {
     "id": "tw.settingsModal.customUI",
     "description": "Custom UI toggle",
-    "defaultMessage": "Use New UI (Separated Stage/Targets)"
+    "defaultMessage": "Use Custom UI (Separated Stage/Targets)"
   },
   {
     "id": "tw.settingsModal.customUIHelp",
     "description": "Help text for custom UI toggle",
-    "defaultMessage": "Switches to the new separated-window stage/targets UI (replaces the original single-window layout)."
+    "defaultMessage": "Switches between the custom separated-window stage/targets UI and the original single-window UI."
   },
   {
     "id": "tw.settingsModal.interpolation",

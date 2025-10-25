@@ -9,6 +9,7 @@ import {defineMessages, intlShape, injectIntl} from 'react-intl';
 import {
     setUsername
 } from '../reducers/tw';
+import {setCustomUIState} from '../reducers/tw';
 import {
     defaultProjectId,
     setProjectId
@@ -37,6 +38,7 @@ const messages = defineMessages({
 });
 
 const USERNAME_KEY = 'tw:username';
+const CUSTOM_UI_KEY = 'tw:customUI';
 
 /**
  * The State Manager is responsible for managing persistent state and the URL.
@@ -338,6 +340,16 @@ const TWStateManager = function (WrappedComponent) {
                 });
             }
 
+                // Load persisted custom UI preference from localStorage (if present)
+                try {
+                    const persistedCustomUI = getLocalStorage(CUSTOM_UI_KEY);
+                    if (persistedCustomUI !== null && this.props.setCustomUI) {
+                        this.props.setCustomUI(persistedCustomUI === 'true');
+                    }
+                } catch (e) {
+                    // ignore
+                }
+
             if (urlParams.has('clones')) {
                 const clones = +urlParams.get('clones');
                 if (Number.isNaN(clones) || clones < 0) {
@@ -479,6 +491,15 @@ const TWStateManager = function (WrappedComponent) {
 
                 setSearchParams(searchParams);
             }
+
+            // Persist customUI preference when it changes
+            if (this.props.customUI !== prevProps.customUI) {
+                try {
+                    setLocalStorage(CUSTOM_UI_KEY, this.props.customUI === true);
+                } catch (e) {
+                    // ignore
+                }
+            }
         }
         componentWillUnmount () {
             window.removeEventListener('hashchange', this.handleHashChange);
@@ -564,6 +585,7 @@ const TWStateManager = function (WrappedComponent) {
         highQualityPen: PropTypes.bool,
         framerate: PropTypes.number,
         interpolation: PropTypes.bool,
+    customUI: PropTypes.bool,
         turbo: PropTypes.bool,
         onSetIsFullScreen: PropTypes.func,
         onSetIsPlayerOnly: PropTypes.func,
@@ -589,6 +611,7 @@ const TWStateManager = function (WrappedComponent) {
         highQualityPen: state.scratchGui.tw.highQualityPen,
         framerate: state.scratchGui.tw.framerate,
         interpolation: state.scratchGui.tw.interpolation,
+        customUI: state.scratchGui.tw.customUI,
         turbo: state.scratchGui.vmStatus.turbo,
         username: state.scratchGui.tw.username,
         vm: state.scratchGui.vm
@@ -598,6 +621,7 @@ const TWStateManager = function (WrappedComponent) {
         onSetIsPlayerOnly: isPlayerOnly => dispatch(setPlayer(isPlayerOnly)),
         onSetProjectId: projectId => dispatch(setProjectId(projectId)),
         onSetUsername: username => dispatch(setUsername(username))
+        ,setCustomUI: value => dispatch(setCustomUIState(value))
     });
     return injectIntl(connect(
         mapStateToProps,
