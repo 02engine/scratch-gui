@@ -48951,6 +48951,7 @@ function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t =
 
 
 
+
 /* eslint-disable no-alert */
 
 const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_6__["defineMessages"])({
@@ -48964,6 +48965,7 @@ const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_6__["defineMessages"
   }
 });
 const USERNAME_KEY = 'tw:username';
+const CUSTOM_UI_KEY = 'tw:customUI';
 
 /**
  * The State Manager is responsible for managing persistent state and the URL.
@@ -49231,6 +49233,16 @@ const TWStateManager = function TWStateManager(WrappedComponent) {
           enabled: false
         });
       }
+
+      // Load persisted custom UI preference from localStorage (if present)
+      try {
+        const persistedCustomUI = getLocalStorage(CUSTOM_UI_KEY);
+        if (persistedCustomUI !== null && this.props.setCustomUI) {
+          this.props.setCustomUI(persistedCustomUI === 'true');
+        }
+      } catch (e) {
+        // ignore
+      }
       if (urlParams.has('clones')) {
         const clones = +urlParams.get('clones');
         if (Number.isNaN(clones) || clones < 0) {
@@ -49346,6 +49358,15 @@ const TWStateManager = function TWStateManager(WrappedComponent) {
         }
         Object(_tw_navigation_utils__WEBPACK_IMPORTED_MODULE_11__["setSearchParams"])(searchParams);
       }
+
+      // Persist customUI preference when it changes
+      if (this.props.customUI !== prevProps.customUI) {
+        try {
+          setLocalStorage(CUSTOM_UI_KEY, this.props.customUI === true);
+        } catch (e) {
+          // ignore
+        }
+      }
     }
     componentWillUnmount() {
       window.removeEventListener('hashchange', this.handleHashChange);
@@ -49428,6 +49449,7 @@ const TWStateManager = function TWStateManager(WrappedComponent) {
     highQualityPen: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool,
     framerate: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.number,
     interpolation: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool,
+    customUI: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool,
     turbo: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool,
     onSetIsFullScreen: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
     onSetIsPlayerOnly: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
@@ -49453,6 +49475,7 @@ const TWStateManager = function TWStateManager(WrappedComponent) {
     highQualityPen: state.scratchGui.tw.highQualityPen,
     framerate: state.scratchGui.tw.framerate,
     interpolation: state.scratchGui.tw.interpolation,
+    customUI: state.scratchGui.tw.customUI,
     turbo: state.scratchGui.vmStatus.turbo,
     username: state.scratchGui.tw.username,
     vm: state.scratchGui.vm
@@ -49461,7 +49484,8 @@ const TWStateManager = function TWStateManager(WrappedComponent) {
     onSetIsFullScreen: isFullScreen => dispatch(Object(_reducers_mode__WEBPACK_IMPORTED_MODULE_9__["setFullScreen"])(isFullScreen)),
     onSetIsPlayerOnly: isPlayerOnly => dispatch(Object(_reducers_mode__WEBPACK_IMPORTED_MODULE_9__["setPlayer"])(isPlayerOnly)),
     onSetProjectId: projectId => dispatch(Object(_reducers_project_state__WEBPACK_IMPORTED_MODULE_8__["setProjectId"])(projectId)),
-    onSetUsername: username => dispatch(Object(_reducers_tw__WEBPACK_IMPORTED_MODULE_7__["setUsername"])(username))
+    onSetUsername: username => dispatch(Object(_reducers_tw__WEBPACK_IMPORTED_MODULE_7__["setUsername"])(username)),
+    setCustomUI: value => dispatch(Object(_reducers_tw__WEBPACK_IMPORTED_MODULE_7__["setCustomUIState"])(value))
   });
   return Object(react_intl__WEBPACK_IMPORTED_MODULE_6__["injectIntl"])(Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["connect"])(mapStateToProps, mapDispatchToProps)(StateManagerComponent));
 };
@@ -54031,6 +54055,7 @@ const initialState = {
   framerate: 30,
   opsPerFrame: 1,
   interpolation: false,
+  customUI: true,
   cloud: true,
   username: '',
   highQualityPen: false,
