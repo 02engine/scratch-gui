@@ -1,6 +1,7 @@
 const SET_FRAMERATE = 'tw/SET_FRAMERATE';
 const SET_OPSPERFRAME = 'tw/SET_OPSPERFRAME';
 const SET_INTERPOLATION = 'tw/SET_INTERPOLATION';
+const SET_CUSTOM_UI = 'tw/SET_CUSTOM_UI';
 const SET_COMPILER_OPTIONS = 'tw/SET_COMPILER_OPTIONS';
 const SET_RUNTIME_OPTIONS = 'tw/SET_RUNTIME_OPTIONS';
 const SET_USERNAME = 'tw/SET_USERNAME';
@@ -67,6 +68,10 @@ const reducer = function (state, action) {
     case SET_OPSPERFRAME:
         return Object.assign({}, state, {
             opsPerFrame: action.opsPerFrame
+        });
+    case SET_CUSTOM_UI:
+        return Object.assign({}, state, {
+            customUI: action.customUI
         });
     case SET_INTERPOLATION:
         return Object.assign({}, state, {
@@ -162,6 +167,13 @@ const setOpsPerFrameState = function (opsPerFrame) {
     return {
         type: SET_OPSPERFRAME,
         opsPerFrame: opsPerFrame
+    };
+};
+
+const setCustomUIState = function (customUI) {
+    return {
+        type: SET_CUSTOM_UI,
+        customUI: customUI
     };
 };
 
@@ -296,6 +308,7 @@ export {
     initialState as twInitialState,
     setFramerateState,
     setOpsPerFrameState,
+    setCustomUIState,
     setInterpolationState,
     setCompilerOptionsState,
     setRuntimeOptionsState,

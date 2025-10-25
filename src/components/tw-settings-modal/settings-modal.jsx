@@ -235,6 +235,32 @@ CustomOPF.propTypes = {
     onCustomizeOpsPerFrame: PropTypes.func
 };
 
+const CustomUI = props => (
+    <BooleanSetting
+        value={props.customUI}
+        onChange={props.onChange}
+        label={(
+            <FormattedMessage
+                defaultMessage="Use Custom UI (Separated Stage/Targets)"
+                description="Custom UI toggle"
+                id="tw.settingsModal.customUI"
+            />
+        )}
+        help={(
+            <FormattedMessage
+                defaultMessage="Switches between the custom separated-window stage/targets UI and the original single-window UI."
+                description="Help text for custom UI toggle"
+                id="tw.settingsModal.customUIHelp"
+            />
+        )}
+        slug="custom-ui"
+    />
+);
+CustomUI.propTypes = {
+    customUI: PropTypes.bool,
+    onChange: PropTypes.func
+};
+
 
 const Interpolation = props => (
     <BooleanSetting
@@ -501,6 +527,10 @@ const SettingsModalComponent = props => (
                 onChange={props.onOpsPerFrameChange}
                 onCustomizeOpsPerFrame={props.onCustomizeOpsPerFrame}
             />
+            <CustomUI
+                customUI={props.customUI}
+                onChange={props.onCustomUIChange}
+            />
             <Interpolation
                 value={props.interpolation}
                 onChange={props.onInterpolationChange}
@@ -581,6 +611,8 @@ SettingsModalComponent.propTypes = {
     onWarpTimerChange: PropTypes.func,
     disableCompiler: PropTypes.bool,
     onDisableCompilerChange: PropTypes.func
+    ,customUI: PropTypes.bool,
+    onCustomUIChange: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);

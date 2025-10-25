@@ -6,7 +6,7 @@ import {connect} from 'react-redux';
 import {closeSettingsModal} from '../reducers/modals';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
 import {defaultStageSize} from '../reducers/custom-stage-size';
-import {setOpsPerFrameState} from '../reducers/tw';
+import {setOpsPerFrameState, setCustomUIState} from '../reducers/tw';
  
 const messages = defineMessages({
     newFramerate: {
@@ -38,6 +38,7 @@ class UsernameModal extends React.Component {
             'handleStageWidthChange',
             'handleStageHeightChange',
             'handleDisableCompilerChange',
+            'handleCustomUIChange',
             'handleStoreProjectOptions'
         ]);
     }
@@ -98,6 +99,10 @@ class UsernameModal extends React.Component {
             enabled: !e.target.checked
         });
     }
+    handleCustomUIChange (e) {
+        // store the preference in redux. UI wiring elsewhere should observe this state.
+        if (this.props.setCustomUI) this.props.setCustomUI(e.target.checked);
+    }
     handleStageWidthChange (value) {
         this.props.vm.setStageSize(value, this.props.customStageSize.height);
     }
@@ -122,6 +127,7 @@ class UsernameModal extends React.Component {
                 onCustomizeFramerate={this.handleCustomizeFramerate}
                 onOpsPerFrameChange={this.handleOpsPerFrameChange}
                 onCustomizeOpsPerFrame={this.handleCustomizeOpsPerFrame}
+                onCustomUIChange={this.handleCustomUIChange}
                 onHighQualityPenChange={this.handleHighQualityPenChange}
                 onInterpolationChange={this.handleInterpolationChange}
                 onInfiniteClonesChange={this.handleInfiniteClonesChange}
@@ -131,6 +137,7 @@ class UsernameModal extends React.Component {
                 onStageWidthChange={this.handleStageWidthChange}
                 onStageHeightChange={this.handleStageHeightChange}
                 onDisableCompilerChange={this.handleDisableCompilerChange}
+                customUI={this.props.customUI}
                 stageWidth={this.props.customStageSize.width}
                 stageHeight={this.props.customStageSize.height}
                 customStageSizeEnabled={
@@ -164,6 +171,7 @@ UsernameModal.propTypes = {
     opsPerFrame: PropTypes.number,
     highQualityPen: PropTypes.bool,
     interpolation: PropTypes.bool,
+    customUI: PropTypes.bool,
     infiniteClones: PropTypes.bool,
     removeFencing: PropTypes.bool,
     removeLimits: PropTypes.bool,
@@ -180,6 +188,7 @@ const mapStateToProps = state => ({
     isEmbedded: state.scratchGui.mode.isEmbedded,
     framerate: state.scratchGui.tw.framerate,
     opsPerFrame: state.scratchGui.tw.opsPerFrame,
+    customUI: !!state.scratchGui.tw.customUI,
     highQualityPen: state.scratchGui.tw.highQualityPen,
     interpolation: state.scratchGui.tw.interpolation,
     infiniteClones: state.scratchGui.tw.runtimeOptions.maxClones === Infinity,
@@ -193,6 +202,7 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeSettingsModal()),
     setOpsPerFrame: value => dispatch(setOpsPerFrameState(value))
+    ,setCustomUI: value => dispatch(setCustomUIState(value))
 });
 
 export default injectIntl(connect(

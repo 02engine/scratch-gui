@@ -54,6 +54,16 @@
     "defaultMessage": "Click to use a OpsPerFrame other than 1 or 2"
   },
   {
+    "id": "tw.settingsModal.customUI",
+    "description": "Custom UI toggle",
+    "defaultMessage": "Use New UI (Separated Stage/Targets)"
+  },
+  {
+    "id": "tw.settingsModal.customUIHelp",
+    "description": "Help text for custom UI toggle",
+    "defaultMessage": "Switches to the new separated-window stage/targets UI (replaces the original single-window layout)."
+  },
+  {
     "id": "tw.settingsModal.interpolation",
     "description": "Interpolation setting",
     "defaultMessage": "Interpolation"

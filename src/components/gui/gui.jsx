@@ -475,6 +475,7 @@ const GUIComponent = props => {
                             ) : null}
                         </Box>
 
+                        {props.customUI ? (
                         <>
                             {!stageWindowMinimized && (
                                 <DraggableWindow
@@ -520,6 +521,29 @@ const GUIComponent = props => {
                 {/* 全局唯一最小化栏 */}
                 <MinimizedBar windows={minimizedWindows} />
                         </>
+                        ) : (
+                        /* 原版内嵌布局（使用原始样式容器） */
+                        <Box className={styles.stageAndTargetWrapper}>
+                            <StageWrapper
+                                isFullScreen={isFullScreen}
+                                isRendererSupported={isRendererSupported()}
+                                isRtl={isRtl}
+                                loading={loading}
+                                stageSize={stageSize}
+                                vm={vm}
+                            >
+                                {alertsVisible ? (
+                                    <Alerts className={styles.alertsContainer} />
+                                ) : null}
+                            </StageWrapper>
+                            <Box className={styles.targetWrapper}>
+                                <TargetPane
+                                    stageSize={stageSize}
+                                    vm={vm}
+                                />
+                            </Box>
+                        </Box>
+                        )}
                     </Box>
                 </Box>
                 <DragLayer />
@@ -642,6 +666,7 @@ GUIComponent.defaultProps = {
 const mapStateToProps = state => ({
     customStageSize: state.scratchGui.customStageSize,
     isWindowFullScreen: state.scratchGui.tw.isWindowFullScreen,
+    customUI: !!state.scratchGui.tw.customUI,
     // This is the button's mode, as opposed to the actual current state
     blocksId: state.scratchGui.timeTravel.year.toString(),
     stageSizeMode: state.scratchGui.stageSize.stageSize,
