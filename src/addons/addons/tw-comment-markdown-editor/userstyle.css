@@ -1,0 +1,211 @@
+/* 切换开关容器 - 集成到拖动栏 */
+.tw-md-toggle-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 2px 6px;
+  background: transparent;
+  gap: 6px;
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 10;
+}
+
+/* 模式指示器 - 集成到拖动栏 */
+.tw-md-mode-indicator {
+  font-size: 14px;
+  color: var(--editorTheme3-commentText, #888);
+  margin-right: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.tw-md-mode-indicator.preview-mode {
+  color: #4CAF50;
+  opacity: 1;
+  font-weight: 600;
+}
+
+/* 切换按钮 - 集成到拖动栏 */
+.tw-md-toggle-button {
+  background: rgba(var(--editorTheme3-commentBorder-rgb, 200, 200, 200), 0.3);
+  color: var(--editorTheme3-commentText, #555);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(2px);
+}
+
+.tw-md-toggle-button:hover {
+  opacity: 1;
+  background: rgba(var(--editorTheme3-commentBorder-rgb, 200, 200, 200), 0.5);
+}
+
+.tw-md-toggle-button:active {
+  transform: scale(0.95);
+}
+
+.tw-md-toggle-button[data-mode="preview"] {
+  background: rgba(76, 175, 80, 0.3);
+  color: #2E7D32;
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+/* 预览容器 - 无背景框 */
+.tw-md-preview-container {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  background: transparent;
+  color: var(--editorTheme3-commentText, #333);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  max-height: 100%;
+}
+
+/* 预览内容样式 */
+.tw-md-preview-container h1,
+.tw-md-preview-container h2,
+.tw-md-preview-container h3 {
+  margin-top: 8px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.tw-md-preview-container h1 {
+  font-size: 22px;
+  color: var(--editorTheme3-commentText, #333);
+  border-bottom: 2px solid var(--editorTheme3-commentBorder, #ddd);
+  padding-bottom: 6px;
+}
+
+.tw-md-preview-container h2 {
+  font-size: 20px;
+  color: var(--editorTheme3-commentText, #444);
+}
+
+.tw-md-preview-container h3 {
+  font-size: 18px;
+  color: var(--editorTheme3-commentText, #555);
+}
+
+
+.tw-md-preview-container strong {
+  font-weight: 600;
+  color: var(--editorTheme3-commentText, #333);
+}
+
+.tw-md-preview-container em {
+  font-style: italic;
+  color: var(--editorTheme3-commentText, #444);
+}
+
+.tw-md-preview-container code {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: #d73a49;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 15px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 引用块样式 */
+.tw-md-preview-container blockquote {
+  border-left: 4px solid #dfe2e5;
+  padding: 0 16px;
+  margin: 8px 0;
+  color: #6a737d;
+  background-color: #f8f9fa;
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tw-md-preview-container pre code {
+  display: block;
+  padding: 12px 16px;
+  margin: 8px 0;
+  overflow-x: auto;
+  background-color: #f6f8fa;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tw-md-preview-container a {
+  color: #0366d6;
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.tw-md-preview-container a:hover {
+  text-decoration: underline;
+  border-bottom-color: #0366d6;
+}
+
+.tw-md-preview-container ul {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.tw-md-preview-container li {
+  margin: 2px 0;
+  padding-left: 4px;
+}
+
+.tw-md-preview-container li::marker {
+  color: var(--editorTheme3-commentText, #666);
+}
+
+/* 确保注释框内的滚动条正常显示 */
+.tw-md-preview-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.tw-md-preview-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+}
+
+.tw-md-preview-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.tw-md-preview-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* 确保注释框本身支持滚动 */
+.tw-md-preview-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) rgba(0, 0, 0, 0.05);
+}
