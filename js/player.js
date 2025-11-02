@@ -1123,7 +1123,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, ".draggable-window_draggableWindow_2Ssr9 {\n    position: absolute;\n    background-color: #fff;\n    border: 1px solid #ddd;\n    border-radius: 8px;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n    overflow: hidden;\n    display: flex;\n    flex-direction: column;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.draggable-window_windowHeader_IPYmF {\n    background-color: #00BAAD;\n    color: white;\n    padding: 8px 12px;\n    cursor: move;\n    font-weight: bold;\n    font-size: 14px;\n    border-bottom: 1px solid #ddd;\n    display: flex;\n    align-items: center;\n}\n\n.draggable-window_windowHeader_IPYmF:hover {\n    background-color: #00998d;\n}\n\n.draggable-window_windowTitle_33hm6 {\n    flex: 1;\n}\n\n.draggable-window_windowContent_3Xq2i {\n    flex: 1;\n    overflow: auto;\n    position: relative;\n}\n\n.draggable-window_resizeHandleE_3R9h5,\n.draggable-window_resizeHandleS_SKbaf,\n.draggable-window_resizeHandleSE_1l8Vg {\n    position: absolute;\n    background: transparent;\n}\n\n.draggable-window_resizeHandleE_3R9h5 {\n    right: 0;\n    top: 0;\n    bottom: 0;\n    width: 4px;\n    cursor: ew-resize;\n}\n\n.draggable-window_resizeHandleS_SKbaf {\n    bottom: 0;\n    left: 0;\n    right: 0;\n    height: 4px;\n    cursor: ns-resize;\n}\n\n.draggable-window_resizeHandleSE_1l8Vg {\n    right: 0;\n    bottom: 0;\n    width: 12px;\n    height: 12px;\n    cursor: nwse-resize;\n}\n\n.draggable-window_resizeHandleE_3R9h5:hover,\n.draggable-window_resizeHandleS_SKbaf:hover,\n.draggable-window_resizeHandleSE_1l8Vg:hover {\n    background-color: rgba(0, 186, 173, 0.3);\n}\n\n.draggable-window_windowControls_3h3pg {\n    display: flex;\n    gap: 4px;\n}\n\n.draggable-window_controlButton_1hbjV {\n    background: none;\n    border: none;\n    color: white;\n    cursor: pointer;\n    font-size: 14px;\n    width: 20px;\n    height: 20px;\n    border-radius: 3px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.draggable-window_controlButton_1hbjV:hover {\n    background-color: rgba(255, 255, 255, 0.2);\n}\n\n.draggable-window_minimizedBar_3EvsI {\n    position: fixed;\n    top: 12px;\n    right: 18px;\n    width: auto;\n    min-height: 0;\n    display: flex;\n    flex-direction: row;\n    align-items: flex-start;\n    justify-content: flex-end;\n    gap: 8px;\n    padding: 0;\n    background: none;\n    box-shadow: none;\n    z-index: 9999;\n    pointer-events: none;\n    overflow: visible;\n}\n\n.draggable-window_minimizedWindow_1_Af3 {\n    position: static;\n    width: 32px;\n    height: 32px;\n    min-width: 32px;\n    min-height: 32px;\n    max-width: 32px;\n    max-height: 32px;\n    background: #00BAAD;\n    color: #fff;\n    border-radius: 8px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-weight: 500;\n    font-size: 16px;\n    cursor: pointer;\n    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    margin: 0;\n    padding: 0;\n    transition: box-shadow 0.2s, transform 0.2s;\n    pointer-events: auto;\n    overflow: hidden;\n    gap: 0;\n    flex-shrink: 0;\n}\n\n.draggable-window_minimizedWindow_1_Af3:hover {\n    background: #00998d;\n    box-shadow: 0 4px 16px rgba(0,0,0,0.18);\n    transform: scale(1.08);\n}\n\n.draggable-window_minimizedWindowIcon_QIYKh {\n    width: 20px;\n    height: 20px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background: none;\n    border-radius: 0;\n    margin: 0;\n    font-size: 16px;\n}\n\n.draggable-window_minimizedWindowTitle_fcBPO {\n    display: none;\n}", ""]);
+exports.push([module.i, ".draggable-window_draggableWindow_2Ssr9 {\n    position: absolute;\n    background-color: #fff;\n    border: 1px solid #ddd;\n    border-radius: 8px;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n    overflow: hidden;\n    display: flex;\n    flex-direction: column;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.draggable-window_windowHeader_IPYmF {\n    background-color: #00BAAD;\n    color: white;\n    padding: 4px 8px;\n    cursor: move;\n    font-weight: bold;\n    font-size: 13px;\n    border-bottom: 1px solid #ddd;\n    display: flex;\n    align-items: center;\n    min-height: 24px;\n}\n\n.draggable-window_windowHeader_IPYmF:hover {\n    background-color: #00998d;\n}\n\n.draggable-window_windowTitle_33hm6 {\n    flex: 1;\n}\n\n.draggable-window_windowContent_3Xq2i {\n    flex: 1;\n    overflow: auto;\n    position: relative;\n}\n\n.draggable-window_resizeHandleE_3R9h5,\n.draggable-window_resizeHandleS_SKbaf,\n.draggable-window_resizeHandleSE_1l8Vg {\n    position: absolute;\n    background: transparent;\n}\n\n.draggable-window_resizeHandleE_3R9h5 {\n    right: 0;\n    top: 0;\n    bottom: 0;\n    width: 4px;\n    cursor: ew-resize;\n}\n\n.draggable-window_resizeHandleS_SKbaf {\n    bottom: 0;\n    left: 0;\n    right: 0;\n    height: 4px;\n    cursor: ns-resize;\n}\n\n.draggable-window_resizeHandleSE_1l8Vg {\n    right: 0;\n    bottom: 0;\n    width: 12px;\n    height: 12px;\n    cursor: nwse-resize;\n}\n\n.draggable-window_resizeHandleE_3R9h5:hover,\n.draggable-window_resizeHandleS_SKbaf:hover,\n.draggable-window_resizeHandleSE_1l8Vg:hover {\n    background-color: rgba(0, 186, 173, 0.3);\n}\n\n.draggable-window_windowControls_3h3pg {\n    display: flex;\n    gap: 4px;\n}\n\n.draggable-window_controlButton_1hbjV {\n    background: none;\n    border: none;\n    color: white;\n    cursor: pointer;\n    font-size: 12px;\n    width: 18px;\n    height: 18px;\n    border-radius: 2px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.draggable-window_controlButton_1hbjV:hover {\n    background-color: rgba(255, 255, 255, 0.2);\n}\n\n.draggable-window_minimizedBar_3EvsI {\n    position: fixed;\n    top: 12px;\n    right: 18px;\n    width: auto;\n    min-height: 0;\n    display: flex;\n    flex-direction: row;\n    align-items: flex-start;\n    justify-content: flex-end;\n    gap: 8px;\n    padding: 0;\n    background: none;\n    box-shadow: none;\n    z-index: 9999;\n    pointer-events: none;\n    overflow: visible;\n}\n\n.draggable-window_minimizedWindow_1_Af3 {\n    position: static;\n    width: 32px;\n    height: 32px;\n    min-width: 32px;\n    min-height: 32px;\n    max-width: 32px;\n    max-height: 32px;\n    background: #00BAAD;\n    color: #fff;\n    border-radius: 8px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-weight: 500;\n    font-size: 16px;\n    cursor: pointer;\n    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    margin: 0;\n    padding: 0;\n    transition: box-shadow 0.2s, transform 0.2s;\n    pointer-events: auto;\n    overflow: hidden;\n    gap: 0;\n    flex-shrink: 0;\n}\n\n.draggable-window_minimizedWindow_1_Af3:hover {\n    background: #00998d;\n    box-shadow: 0 4px 16px rgba(0,0,0,0.18);\n    transform: scale(1.08);\n}\n\n.draggable-window_minimizedWindowIcon_QIYKh {\n    width: 20px;\n    height: 20px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background: none;\n    border-radius: 0;\n    margin: 0;\n    font-size: 16px;\n}\n\n.draggable-window_minimizedWindowTitle_fcBPO {\n    display: none;\n}", ""]);
 
 // exports
 exports.locals = {
@@ -9835,10 +9835,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(classnames__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _draggable_window_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./draggable-window.css */ "./src/components/draggable-window/draggable-window.css");
 /* harmony import */ var _draggable_window_css__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_draggable_window_css__WEBPACK_IMPORTED_MODULE_3__);
-const _excluded = ["children", "className", "defaultPosition", "defaultSize", "isDraggable", "isResizable", "minSize", "maxSize", "onDragStart", "onDrag", "onDragStop", "onResizeStart", "onResize", "onResizeStop", "onMinimizeToggle", "title", "windowId", "zIndex"];
+/* harmony import */ var _lib_window_state_storage__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../lib/window-state-storage */ "./src/lib/window-state-storage.js");
+const _excluded = ["children", "className", "defaultPosition", "defaultSize", "isDraggable", "isResizable", "minSize", "maxSize", "onDragStart", "onDrag", "onDragStop", "onResizeStart", "onResize", "onResizeStop", "onMinimizeToggle", "title", "windowId", "zIndex", "enableStatePersistence"];
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
+
 
 
 
@@ -9874,11 +9876,30 @@ const DraggableWindow = props => {
       onMinimizeToggle,
       title,
       windowId,
-      zIndex = 1
+      zIndex = 1,
+      enableStatePersistence = true
     } = props,
     componentProps = _objectWithoutProperties(props, _excluded);
-  const [position, setPosition] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(defaultPosition);
-  const [size, setSize] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(defaultSize);
+
+  // 从本地存储恢复窗口状态
+  const getInitialState = () => {
+    if (enableStatePersistence && windowId) {
+      const savedState = _lib_window_state_storage__WEBPACK_IMPORTED_MODULE_4__["default"].getValidWindowState(windowId, {
+        position: defaultPosition,
+        size: defaultSize,
+        isMinimized: false
+      });
+      return savedState;
+    }
+    return {
+      position: defaultPosition,
+      size: defaultSize,
+      isMinimized: false
+    };
+  };
+  const initialState = getInitialState();
+  const [position, setPosition] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.position);
+  const [size, setSize] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.size);
   const [isDragging, setIsDragging] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
   const [isResizing, setIsResizing] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
   const [dragOffset, setDragOffset] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState({
@@ -9886,10 +9907,10 @@ const DraggableWindow = props => {
     y: 0
   });
   const [resizeHandle, setResizeHandle] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(null);
-  const [isMinimized, setIsMinimized] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
+  const [isMinimized, setIsMinimized] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.isMinimized);
   const [isFullScreen, setIsFullScreen] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
-  const [originalPosition, setOriginalPosition] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(defaultPosition);
-  const [originalSize, setOriginalSize] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(defaultSize);
+  const [originalPosition, setOriginalPosition] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.position);
+  const [originalSize, setOriginalSize] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.size);
   const [isDraggingMinimized, setIsDraggingMinimized] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
   const [dragStartPosition, setDragStartPosition] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState({
     x: 0,
@@ -9897,6 +9918,22 @@ const DraggableWindow = props => {
   });
   const windowRef = react__WEBPACK_IMPORTED_MODULE_1___default.a.useRef();
   const headerRef = react__WEBPACK_IMPORTED_MODULE_1___default.a.useRef();
+
+  // 保存窗口状态到本地存储
+  const saveWindowState = react__WEBPACK_IMPORTED_MODULE_1___default.a.useCallback(() => {
+    if (enableStatePersistence && windowId) {
+      _lib_window_state_storage__WEBPACK_IMPORTED_MODULE_4__["default"].saveWindowState(windowId, {
+        position,
+        size,
+        isMinimized
+      });
+    }
+  }, [enableStatePersistence, windowId, position, size, isMinimized]);
+
+  // 当状态变化时自动保存
+  react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
+    saveWindowState();
+  }, [position, size, isMinimized, saveWindowState]);
   const handleMouseDown = react__WEBPACK_IMPORTED_MODULE_1___default.a.useCallback(e => {
     if (!isDraggable) return;
     if (!e.touches && e.button !== 0) return; // 只在非触摸事件时检查鼠标按钮
@@ -10202,7 +10239,8 @@ DraggableWindow.propTypes = {
   onMinimizeToggle: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func,
   title: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.string.isRequired,
   windowId: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.string.isRequired,
-  zIndex: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.number
+  zIndex: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.number,
+  enableStatePersistence: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool
 };
 /* harmony default export */ __webpack_exports__["default"] = (DraggableWindow);
 
@@ -11210,7 +11248,8 @@ const GUIComponent = props => {
       onDragStop: (id, position) => setStageWindowPosition(position),
       onResizeStop: (id, size) => setStageWindowSize(size),
       onMinimizeToggle: (id, minimized) => setStageWindowMinimized(minimized),
-      zIndex: 100
+      zIndex: 100,
+      enableStatePersistence: true
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_16__["default"], {
       isFullScreen: isFullScreen,
       isRendererSupported: Object(_lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_42__["isRendererSupported"])(),
@@ -11233,7 +11272,8 @@ const GUIComponent = props => {
       onDragStop: (id, position) => setTargetPaneWindowPosition(position),
       onResizeStop: (id, size) => setTargetPaneWindowSize(size),
       onMinimizeToggle: (id, minimized) => setTargetPaneWindowMinimized(minimized),
-      zIndex: 90
+      zIndex: 90,
+      enableStatePersistence: true
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_target_pane_jsx__WEBPACK_IMPORTED_MODULE_14__["default"], {
       stageSize: stageSize,
       vm: vm
@@ -50591,6 +50631,137 @@ const vmManagerHOC = function vmManagerHOC(WrappedComponent) {
   return Object(react_redux__WEBPACK_IMPORTED_MODULE_3__["connect"])(mapStateToProps, mapDispatchToProps, mergeProps)(VMManager);
 };
 /* harmony default export */ __webpack_exports__["default"] = (vmManagerHOC);
+
+/***/ }),
+
+/***/ "./src/lib/window-state-storage.js":
+/*!*****************************************!*\
+  !*** ./src/lib/window-state-storage.js ***!
+  \*****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+/**
+ * 窗口状态存储工具类
+ * 用于保存和恢复拖动窗口的位置、大小和状态
+ */
+class WindowStateStorage {
+  constructor() {
+    this.storageKey = 'scratch-gui-window-states';
+  }
+
+  /**
+   * 保存窗口状态到本地存储
+   * @param {string} windowId - 窗口ID
+   * @param {Object} state - 窗口状态
+   */
+  saveWindowState(windowId, state) {
+    try {
+      const allStates = this.getAllWindowStates();
+      allStates[windowId] = _objectSpread(_objectSpread({}, state), {}, {
+        lastUpdated: Date.now()
+      });
+      localStorage.setItem(this.storageKey, JSON.stringify(allStates));
+    } catch (error) {
+      console.warn('Failed to save window state:', error);
+    }
+  }
+
+  /**
+   * 获取特定窗口的状态
+   * @param {string} windowId - 窗口ID
+   * @returns {Object|null} 窗口状态，如果不存在则返回null
+   */
+  getWindowState(windowId) {
+    try {
+      const allStates = this.getAllWindowStates();
+      return allStates[windowId] || null;
+    } catch (error) {
+      console.warn('Failed to get window state:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 获取所有窗口状态
+   * @returns {Object} 所有窗口状态
+   */
+  getAllWindowStates() {
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      console.warn('Failed to parse window states:', error);
+      return {};
+    }
+  }
+
+  /**
+   * 清除特定窗口的状态
+   * @param {string} windowId - 窗口ID
+   */
+  clearWindowState(windowId) {
+    try {
+      const allStates = this.getAllWindowStates();
+      delete allStates[windowId];
+      localStorage.setItem(this.storageKey, JSON.stringify(allStates));
+    } catch (error) {
+      console.warn('Failed to clear window state:', error);
+    }
+  }
+
+  /**
+   * 清除所有窗口状态
+   */
+  clearAllWindowStates() {
+    try {
+      localStorage.removeItem(this.storageKey);
+    } catch (error) {
+      console.warn('Failed to clear all window states:', error);
+    }
+  }
+
+  /**
+   * 检查窗口状态是否过期（超过7天）
+   * @param {Object} state - 窗口状态
+   * @returns {boolean} 是否过期
+   */
+  isStateExpired(state) {
+    if (!state || !state.lastUpdated) {
+      return true;
+    }
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    return Date.now() - state.lastUpdated > sevenDaysInMs;
+  }
+
+  /**
+   * 获取有效的窗口状态（未过期的）
+   * @param {string} windowId - 窗口ID
+   * @param {Object} defaultState - 默认状态
+   * @returns {Object} 有效的窗口状态
+   */
+  getValidWindowState(windowId, defaultState) {
+    const state = this.getWindowState(windowId);
+    if (!state || this.isStateExpired(state)) {
+      return defaultState;
+    }
+    return {
+      position: state.position || defaultState.position,
+      size: state.size || defaultState.size,
+      isMinimized: state.isMinimized || false
+    };
+  }
+}
+
+// 导出单例实例
+/* harmony default export */ __webpack_exports__["default"] = (new WindowStateStorage());
 
 /***/ }),
 
