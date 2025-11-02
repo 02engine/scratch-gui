@@ -3,6 +3,7 @@ import React from 'react';
 import classNames from 'classnames';
 
 import styles from './draggable-window.css';
+import windowStateStorage from '../../lib/window-state-storage';
 
 const DraggableWindow = props => {
     const {
@@ -24,24 +25,59 @@ const DraggableWindow = props => {
         title,
         windowId,
         zIndex = 1,
+        enableStatePersistence = true,
         ...componentProps
     } = props;
 
-    const [position, setPosition] = React.useState(defaultPosition);
-    const [size, setSize] = React.useState(defaultSize);
+    // 从本地存储恢复窗口状态
+    const getInitialState = () => {
+        if (enableStatePersistence && windowId) {
+            const savedState = windowStateStorage.getValidWindowState(windowId, {
+                position: defaultPosition,
+                size: defaultSize,
+                isMinimized: false
+            });
+            return savedState;
+        }
+        return {
+            position: defaultPosition,
+            size: defaultSize,
+            isMinimized: false
+        };
+    };
+
+    const initialState = getInitialState();
+    const [position, setPosition] = React.useState(initialState.position);
+    const [size, setSize] = React.useState(initialState.size);
     const [isDragging, setIsDragging] = React.useState(false);
     const [isResizing, setIsResizing] = React.useState(false);
     const [dragOffset, setDragOffset] = React.useState({x: 0, y: 0});
     const [resizeHandle, setResizeHandle] = React.useState(null);
-    const [isMinimized, setIsMinimized] = React.useState(false);
+    const [isMinimized, setIsMinimized] = React.useState(initialState.isMinimized);
     const [isFullScreen, setIsFullScreen] = React.useState(false);
-    const [originalPosition, setOriginalPosition] = React.useState(defaultPosition);
-    const [originalSize, setOriginalSize] = React.useState(defaultSize);
+    const [originalPosition, setOriginalPosition] = React.useState(initialState.position);
+    const [originalSize, setOriginalSize] = React.useState(initialState.size);
     const [isDraggingMinimized, setIsDraggingMinimized] = React.useState(false);
     const [dragStartPosition, setDragStartPosition] = React.useState({x: 0, y: 0});
 
     const windowRef = React.useRef();
     const headerRef = React.useRef();
+
+    // 保存窗口状态到本地存储
+    const saveWindowState = React.useCallback(() => {
+        if (enableStatePersistence && windowId) {
+            windowStateStorage.saveWindowState(windowId, {
+                position,
+                size,
+                isMinimized
+            });
+        }
+    }, [enableStatePersistence, windowId, position, size, isMinimized]);
+
+    // 当状态变化时自动保存
+    React.useEffect(() => {
+        saveWindowState();
+    }, [position, size, isMinimized, saveWindowState]);
 
     const handleMouseDown = React.useCallback(e => {
         if (!isDraggable) return;
@@ -368,7 +404,8 @@ DraggableWindow.propTypes = {
     onMinimizeToggle: PropTypes.func,
     title: PropTypes.string.isRequired,
     windowId: PropTypes.string.isRequired,
-    zIndex: PropTypes.number
+    zIndex: PropTypes.number,
+    enableStatePersistence: PropTypes.bool
 };
 
 export default DraggableWindow;

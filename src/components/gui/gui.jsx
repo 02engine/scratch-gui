@@ -489,6 +489,7 @@ const GUIComponent = props => {
                                     onResizeStop={(id, size) => setStageWindowSize(size)}
                                     onMinimizeToggle={(id, minimized) => setStageWindowMinimized(minimized)}
                                     zIndex={100}
+                                    enableStatePersistence={true}
                                 >
                                     <StageWrapper
                                         isFullScreen={isFullScreen}
@@ -511,6 +512,7 @@ const GUIComponent = props => {
                                     onResizeStop={(id, size) => setTargetPaneWindowSize(size)}
                                     onMinimizeToggle={(id, minimized) => setTargetPaneWindowMinimized(minimized)}
                                     zIndex={90}
+                                    enableStatePersistence={true}
                                 >
                                     <TargetPane
                                         stageSize={stageSize}
