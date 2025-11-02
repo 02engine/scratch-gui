@@ -157,7 +157,7 @@ class GitHubApiService {
      */
     async getFileSha(token, owner, repo, path, branch) {
         try {
-            const response = await fetch(`${this.baseApiUrl}/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+            const response = await fetch(`${this.baseApiUrl}/repos/${owner}/${repo}/contents/${path}?ref=${branch}&_t=${Date.now()}`, {
                 headers: {
                     'Authorization': `token ${token}`,
                     'Accept': 'application/vnd.github.v3+json'
@@ -258,16 +258,31 @@ class GitHubApiService {
      * @returns {ArrayBuffer} 解码后的 ArrayBuffer
      */
     base64ToArrayBuffer(base64) {
-        const binaryString = atob(base64);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
+        try {
+            console.log('🔍 [Git] Base64 input length:', base64.length);
+            console.log('🔍 [Git] Base64 input preview:', base64.substring(0, 100));
+
+            // Remove any potential whitespace or newlines from base64 string
+            const cleanBase64 = base64.trim();
+
+            const binaryString = atob(cleanBase64);
+            console.log('🔍 [Git] Decoded binary string length:', binaryString.length);
+
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            console.log('🔍 [Git] Created ArrayBuffer with byte length:', bytes.buffer.byteLength);
+            return bytes.buffer;
+        } catch (error) {
+            console.error('❌ [Git] Base64 decode error:', error);
+            throw new Error(`Failed to decode base64 content: ${error.message}`);
         }
-        return bytes.buffer;
     }
 
     /**
-     * 获取仓库中的文件内容
+     * 获取仓库中的文件内容 - 简化版本
      * @param {string} token - GitHub Personal Access Token
      * @param {string} owner - 仓库所有者
      * @param {string} repo - 仓库名称
@@ -277,29 +292,166 @@ class GitHubApiService {
      */
     async getFileContent(token, owner, repo, path, branch = 'main') {
         try {
-            const response = await fetch(`${this.baseApiUrl}/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
+            console.log('🔍 [Git] Starting fetch for:', { owner, repo, path, branch });
+
+            // 创建超时控制器（2分钟超时）
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                console.log('⏰ [Git] Fetch timeout reached (2 minutes), aborting request');
+                controller.abort();
+            }, 120000); // 2分钟 = 120000毫秒
+
+            // 方案1: 直接使用 raw.githubusercontent.com URL（最简单可靠）
+            const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+            console.log('🔍 [Git] Trying raw URL:', rawUrl);
+
+            let response = await fetch(rawUrl, {
+                signal: controller.signal
             });
 
-            if (response.status === 404) {
-                return { success: false, error: 'File not found' };
+            if (response.ok) {
+                clearTimeout(timeoutId); // 清除超时
+                console.log('✅ [Git] Raw URL fetch successful');
+                const arrayBuffer = await response.arrayBuffer();
+                if (arrayBuffer.byteLength === 0) {
+                    throw new Error('Downloaded file is empty');
+                }
+                return {
+                    success: true,
+                    content: arrayBuffer,
+                    sha: null
+                };
             }
 
-            if (!response.ok) {
-                throw new Error(`Failed to get file content: ${response.status}`);
+            console.log('⚠️ [Git] Raw URL failed, status:', response.status);
+
+            // 方案2: 如果raw URL失败，尝试带token的raw URL
+            if (token) {
+                console.log('🔍 [Git] Trying raw URL with token...');
+                response = await fetch(rawUrl, {
+                    headers: {
+                        'Authorization': `token ${token}`
+                    },
+                    signal: controller.signal
+                });
+
+                if (response.ok) {
+                    clearTimeout(timeoutId); // 清除超时
+                    console.log('✅ [Git] Raw URL with token successful');
+                    const arrayBuffer = await response.arrayBuffer();
+                    if (arrayBuffer.byteLength === 0) {
+                        throw new Error('Downloaded file is empty');
+                    }
+                    return {
+                        success: true,
+                        content: arrayBuffer,
+                        sha: null
+                    };
+                }
+                console.log('⚠️ [Git] Raw URL with token failed, status:', response.status);
             }
 
-            const fileInfo = await response.json();
-            return {
-                success: true,
-                content: this.base64ToArrayBuffer(fileInfo.content),
-                sha: fileInfo.sha
-            };
+            // 方案3: 使用GitHub API的raw media type
+            if (token) {
+                console.log('🔍 [Git] Trying GitHub API with raw media type...');
+                response = await fetch(`${this.baseApiUrl}/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3.raw'
+                    },
+                    signal: controller.signal
+                });
+
+                if (response.ok) {
+                    clearTimeout(timeoutId); // 清除超时
+                    console.log('✅ [Git] GitHub API raw media type successful');
+                    const arrayBuffer = await response.arrayBuffer();
+                    if (arrayBuffer.byteLength === 0) {
+                        throw new Error('Downloaded file is empty');
+                    }
+                    return {
+                        success: true,
+                        content: arrayBuffer,
+                        sha: null
+                    };
+                }
+                console.log('⚠️ [Git] GitHub API raw media type failed, status:', response.status);
+            }
+
+            // 方案4: 最后尝试标准GitHub API
+            if (token) {
+                console.log('🔍 [Git] Trying standard GitHub API...');
+                response = await fetch(`${this.baseApiUrl}/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    signal: controller.signal
+                });
+
+                if (response.ok) {
+                    clearTimeout(timeoutId); // 清除超时
+                    const responseText = await response.text();
+                    console.log('🔍 [Git] Standard API response length:', responseText.length);
+
+                    if (!responseText.trim()) {
+                        throw new Error('Empty response from GitHub API');
+                    }
+
+                    try {
+                        const fileInfo = JSON.parse(responseText);
+                        console.log('🔍 [Git] Parsed fileInfo:', {
+                            name: fileInfo.name,
+                            size: fileInfo.size,
+                            type: fileInfo.type,
+                            hasContent: !!fileInfo.content,
+                            hasDownloadUrl: !!fileInfo.download_url
+                        });
+
+                        if (fileInfo.type !== 'file') {
+                            throw new Error(`Expected file but got ${fileInfo.type}`);
+                        }
+
+                        if (fileInfo.content) {
+                            console.log('✅ [Git] Using content field');
+                            return {
+                                success: true,
+                                content: this.base64ToArrayBuffer(fileInfo.content),
+                                sha: fileInfo.sha
+                            };
+                        }
+
+                        if (fileInfo.download_url) {
+                            console.log('🔍 [Git] Using download_url from API response');
+                            const downloadResponse = await fetch(fileInfo.download_url, {
+                                headers: token ? { 'Authorization': `token ${token}` } : {},
+                                signal: controller.signal
+                            });
+
+                            if (downloadResponse.ok) {
+                                clearTimeout(timeoutId); // 清除超时
+                                const arrayBuffer = await downloadResponse.arrayBuffer();
+                                if (arrayBuffer.byteLength === 0) {
+                                    throw new Error('Downloaded file is empty');
+                                }
+                                return {
+                                    success: true,
+                                    content: arrayBuffer,
+                                    sha: fileInfo.sha
+                                };
+                            }
+                        }
+                    } catch (parseError) {
+                        console.error('❌ [Git] Failed to parse API response:', parseError);
+                    }
+                }
+            }
+
+            throw new Error('All fetch methods failed. Please check the repository, branch, and file path.');
+
         } catch (error) {
-            console.error('Failed to get file content:', error);
+            clearTimeout(timeoutId); // 清除超时
+            console.error('❌ [Git] getFileContent failed:', error);
             return {
                 success: false,
                 error: error.message
