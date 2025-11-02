@@ -1,0 +1,82 @@
+[
+  {
+    "id": "gui.gitCommit.title",
+    "description": "Title of the Git commit modal",
+    "defaultMessage": "Git Commit"
+  },
+  {
+    "id": "gui.gitCommit.tokenLabel",
+    "description": "Label for the GitHub token input",
+    "defaultMessage": "GitHub Personal Token"
+  },
+  {
+    "id": "gui.gitCommit.tokenPlaceholder",
+    "description": "Placeholder for the GitHub token input",
+    "defaultMessage": "Enter your GitHub Personal Access Token"
+  },
+  {
+    "id": "gui.gitCommit.repositoryLabel",
+    "description": "Label for the repository input",
+    "defaultMessage": "Repository"
+  },
+  {
+    "id": "gui.gitCommit.repositoryPlaceholder",
+    "description": "Placeholder for the repository input",
+    "defaultMessage": "owner/repository"
+  },
+  {
+    "id": "gui.gitCommit.summaryLabel",
+    "description": "Label for the commit summary input",
+    "defaultMessage": "Commit Summary"
+  },
+  {
+    "id": "gui.gitCommit.summaryPlaceholder",
+    "description": "Placeholder for the commit summary input",
+    "defaultMessage": "Brief summary of changes"
+  },
+  {
+    "id": "gui.gitCommit.descriptionLabel",
+    "description": "Label for the commit description textarea",
+    "defaultMessage": "Commit Description"
+  },
+  {
+    "id": "gui.gitCommit.descriptionPlaceholder",
+    "description": "Placeholder for the commit description textarea",
+    "defaultMessage": "Detailed description of changes (optional)"
+  },
+  {
+    "id": "gui.gitCommit.readmeLabel",
+    "description": "Label for the README file input",
+    "defaultMessage": "README.md (Optional)"
+  },
+  {
+    "id": "gui.gitCommit.commitButton",
+    "description": "Button to commit to GitHub",
+    "defaultMessage": "Commit to GitHub"
+  },
+  {
+    "id": "gui.gitCommit.cancelButton",
+    "description": "Button to cancel the commit",
+    "defaultMessage": "Cancel"
+  },
+  {
+    "id": "gui.gitCommit.saveToken",
+    "description": "Checkbox to save the GitHub token",
+    "defaultMessage": "Save token for future use"
+  },
+  {
+    "id": "gui.gitCommit.fetchButton",
+    "description": "Button to fetch from GitHub",
+    "defaultMessage": "Fetch from GitHub"
+  },
+  {
+    "id": "gui.gitCommit.loading",
+    "description": "Loading message during operation",
+    "defaultMessage": "Processing..."
+  },
+  {
+    "id": "gui.gitCommit.fetching",
+    "description": "Loading message during fetch",
+    "defaultMessage": "Fetching..."
+  }
+]

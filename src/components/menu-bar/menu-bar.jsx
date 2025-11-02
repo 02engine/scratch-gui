@@ -100,6 +100,8 @@ import ninetiesLogo from './nineties_logo.svg';
 import catLogo from './cat_logo.svg';
 import prehistoricLogo from './prehistoric-logo.svg';
 import oldtimeyLogo from './oldtimey-logo.svg';
+import gitIcon from './icon--git.svg';
+import GitDropdown from '../git-dropdown/git-dropdown.jsx';
 
 import sharedMessages from '../../lib/shared-messages';
 
@@ -222,6 +224,7 @@ class MenuBar extends React.Component {
             'handleClickRestorePoints',
             'handleClickSeeCommunity',
             'handleClickShare',
+            'handleClickGitCommit',
             'handleSetMode',
             'handleKeyPress',
             'handleRestoreOption',
@@ -388,6 +391,9 @@ class MenuBar extends React.Component {
     }
     handleClickSeeInside () {
         this.props.onClickSeeInside();
+    }
+    handleClickGitCommit () {
+        this.props.onClickGitCommit && this.props.onClickGitCommit();
     }
     buildAboutMenu (onClickAbout) {
         if (!onClickAbout) {
@@ -1051,6 +1057,54 @@ class MenuBar extends React.Component {
                             </Button>
                         </a>
                     </div>}
+                    {<div className={styles.menuBarItem}>
+                        <div
+                            className={classNames(styles.menuBarItem, styles.hoverable)}
+                            onClick={this.props.onClickGitCommit}
+                        >
+                            <img
+                                src={gitIcon}
+                                draggable={false}
+                                width={20}
+                                height={20}
+                            />
+                            <span className={styles.collapsibleLabel}>
+                                <FormattedMessage
+                                    defaultMessage="Git"
+                                    description="Button to open Git menu"
+                                    id="gui.menuBar.git"
+                                />
+                            </span>
+                        </div>
+                    </div>}
+                    {/* Git 快捷按钮 */}
+                    {this.props.vm && this.props.vm.runtime && this.props.vm.runtime.platform &&
+                     this.props.vm.runtime.platform.git && this.props.vm.runtime.platform.git.repository &&
+                     this.props.vm.runtime.platform.git.repository.trim().length > 0 && this.props.showGitQuickButtons && (
+                        <div className={styles.gitQuickButtonsGroup}>
+                            <button
+                                className={styles.gitQuickButton}
+                                onClick={() => this.props.onGitQuickAction && this.props.onGitQuickAction('commit')}
+                                title="Quick Commit"
+                            >
+                                Commit
+                            </button>
+                            <button
+                                className={styles.gitQuickButton}
+                                onClick={() => this.props.onGitQuickAction && this.props.onGitQuickAction('fetch')}
+                                title="Fetch from GitHub"
+                            >
+                                Fetch
+                            </button>
+                            <button
+                                className={styles.gitQuickButton}
+                                onClick={() => this.props.onGitQuickAction && this.props.onGitQuickAction('pullrequest')}
+                                title="Create Pull Request"
+                            >
+                                PR
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className={styles.accountInfoGroup}>
@@ -1129,6 +1183,9 @@ MenuBar.propTypes = {
     onClickRestorePoints: PropTypes.func,
     onClickEdit: PropTypes.func,
     onClickFile: PropTypes.func,
+    onClickGitCommit: PropTypes.func,
+    onGitQuickAction: PropTypes.func,
+    showGitQuickButtons: PropTypes.bool,
     onClickLogin: PropTypes.func,
     onClickMode: PropTypes.func,
     onClickNew: PropTypes.func,

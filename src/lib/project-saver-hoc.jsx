@@ -226,6 +226,29 @@ const ProjectSaverHOC = function (WrappedComponent) {
             // serialized project refers to a newer asset than what
             // we just finished saving).
             const savedVMState = this.props.vm.toJSON();
+
+            // 确保Git数据被保存到项目元数据中
+            if (this.props.vm && this.props.vm.runtime && this.props.vm.runtime.platform && this.props.vm.runtime.platform.git) {
+                const gitData = this.props.vm.runtime.platform.git;
+                console.log('💾 [Git] Saving Git data to project metadata:', gitData);
+
+                // 如果VM状态中已经有meta.platform.git，确保它是最新的
+                if (savedVMState.meta) {
+                    if (!savedVMState.meta.platform) {
+                        savedVMState.meta.platform = {};
+                    }
+                    savedVMState.meta.platform.git = {
+                        repository: gitData.repository || null,
+                        lastCommit: gitData.lastCommit || null,
+                        lastFetch: gitData.lastFetch || null
+                    };
+                    console.log('✅ [Git] Git data embedded in project metadata:', savedVMState.meta.platform.git);
+                } else {
+                    console.warn('⚠️ [Git] VM state has no meta field, cannot embed Git data');
+                }
+            } else {
+                console.log('ℹ️ [Git] No Git data to save in project metadata');
+            }
             return Promise.all(this.props.vm.assets
                 .filter(asset => !asset.clean)
                 .map(

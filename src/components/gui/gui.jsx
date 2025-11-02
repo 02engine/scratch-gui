@@ -11,6 +11,10 @@ import VM from 'scratch-vm';
 
 import DraggableWindow from '../draggable-window/draggable-window.jsx';
 import MinimizedBar from '../draggable-window/minimized-bar.jsx';
+import GitCommitModal from '../git-commit-modal/git-commit-modal.jsx';
+import GitQuickModal from '../git-quick-modal/git-quick-modal.jsx';
+import ProjectExporter from '../../lib/project-exporter.js';
+import githubApi from '../../lib/github-api.js';
 
 import Blocks from '../../containers/blocks.jsx';
 import CostumeTab from '../../containers/costume-tab.jsx';
@@ -171,6 +175,432 @@ const GUIComponent = props => {
     const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({x: 600, y: 100});
     const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({width: 240, height: 360});
     const [targetPaneWindowMinimized, setTargetPaneWindowMinimized] = React.useState(false);
+
+    // Git 状态跟踪
+    const [gitRepositoryExists, setGitRepositoryExists] = React.useState(false);
+    const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+
+    // Git 提交相关状态
+    const [isGitCommitModalOpen, setIsGitCommitModalOpen] = React.useState(false);
+    const [projectData, setProjectData] = React.useState(null);
+
+    // Git 快捷操作相关状态
+    const [isGitQuickModalOpen, setIsGitQuickModalOpen] = React.useState(false);
+    const [gitQuickModalType, setGitQuickModalType] = React.useState('commit');
+
+    // 处理 Git 提交按钮点击
+    const handleClickGitCommit = React.useCallback(async () => {
+        try {
+            // 导出项目数据
+            const sb3Data = await ProjectExporter.exportToSB3(vm);
+            setProjectData(sb3Data);
+            setIsGitCommitModalOpen(true);
+        } catch (error) {
+            console.error('Failed to export project for Git commit:', error);
+            // 可以在这里添加错误提示
+        }
+    }, [vm]);
+
+    // 处理 Git 提交模态框关闭
+    const handleCloseGitCommitModal = React.useCallback(() => {
+        setIsGitCommitModalOpen(false);
+        setProjectData(null);
+    }, []);
+
+    // 处理 Git 提交成功
+    const handleGitCommitSuccess = React.useCallback((result) => {
+        console.log('✅ [Git] Commit successful:', result);
+
+        // 保存仓库信息到 VM
+        if (vm && vm.runtime && vm.runtime.platform) {
+            console.log('💾 [Git] Saving repository data to VM...');
+            if (!vm.runtime.platform.git) {
+                vm.runtime.platform.git = {
+                    repository: null,
+                    lastCommit: null,
+                    lastFetch: null
+                };
+            }
+
+            // 更新 Git 数据
+            vm.runtime.platform.git.repository = result.repository;
+            vm.runtime.platform.git.lastCommit = new Date().toISOString();
+
+            console.log('📋 [Git] Updated VM git data:', vm.runtime.platform.git);
+
+            // 立即更新 React 状态
+            setGitRepositoryExists(true);
+
+            // Git数据会自动通过VM的SB3序列化机制保存到项目文件中
+            // 当项目保存时，Git数据会自动序列化到SB3文件的meta.platform.git中
+            console.log('💾 [Git] Git state will be automatically saved by VM SB3 serialization');
+
+            console.log('🔄 [Git] Git state updated, repository exists:', !!vm.runtime.platform.git.repository);
+        }
+
+        handleCloseGitCommitModal();
+    }, [handleCloseGitCommitModal, vm]);
+
+    // 处理 Git 获取成功
+    const handleGitFetchSuccess = React.useCallback(async (result) => {
+        console.log('🎉 [Git] Fetch successful:', result);
+
+        // 保存仓库信息到 VM
+        if (vm && vm.runtime && vm.runtime.platform) {
+            console.log('💾 [Git] Saving repository data to VM...');
+            if (!vm.runtime.platform.git) {
+                vm.runtime.platform.git = {
+                    repository: null,
+                    lastCommit: null,
+                    lastFetch: null
+                };
+            }
+
+            // 更新 Git 数据
+            vm.runtime.platform.git.repository = result.repository;
+            vm.runtime.platform.git.lastFetch = new Date().toISOString();
+
+            console.log('📋 [Git] Updated VM git data:', vm.runtime.platform.git);
+
+            // 立即更新 React 状态
+            setGitRepositoryExists(true);
+
+            // Git数据会自动通过VM的SB3序列化机制保存到项目文件中
+            // 当项目保存时，Git数据会自动序列化到SB3文件的meta.platform.git中
+            console.log('💾 [Git] Git state will be automatically saved by VM SB3 serialization');
+
+            // 如果有项目数据，加载到 VM
+            if (result.projectData) {
+                try {
+                    await vm.loadProject(result.projectData);
+                    console.log('✅ [Git] Project loaded successfully');
+
+                    // 项目加载完成后再次确保 Git 状态正确
+                    setTimeout(() => {
+                        if (vm.runtime.platform.git.repository) {
+                            setGitRepositoryExists(true);
+                        }
+                    }, 100);
+                } catch (error) {
+                    console.error('❌ [Git] Failed to load project:', error);
+                }
+            }
+
+            console.log('🔄 [Git] Git state updated after fetch, repository exists:', !!vm.runtime.platform.git.repository);
+        }
+
+        handleCloseGitCommitModal();
+    }, [handleCloseGitCommitModal, vm]);
+
+    
+    // 检查是否有保存的 Git 仓库和 Token
+    const hasGitRepository = React.useCallback(() => {
+        return gitRepositoryExists;
+    }, [gitRepositoryExists]);
+
+    const hasGitToken = React.useCallback(() => {
+        try {
+            const token = localStorage.getItem('github-personal-token');
+            return !!token;
+        } catch (error) {
+            return false;
+        }
+    }, []);
+
+    // 更新 Git 状态的函数
+    const updateGitRepositoryState = React.useCallback(() => {
+        if (!vm || !vm.runtime || !vm.runtime.platform) {
+            setGitRepositoryExists(false);
+            return;
+        }
+
+        // 确保 git 对象存在
+        if (!vm.runtime.platform.git) {
+            vm.runtime.platform.git = {
+                repository: null,
+                lastCommit: null,
+                lastFetch: null
+            };
+        }
+
+        const hasRepo = !!vm.runtime.platform.git.repository;
+        console.log('🔄 [Git] Updating repository state:', {
+            hasRepository: hasRepo,
+            repository: vm.runtime.platform.git.repository,
+            platform: vm.runtime.platform
+        });
+        setGitRepositoryExists(hasRepo);
+    }, [vm]);
+
+    // 处理 Git 快捷操作
+    const handleGitQuickAction = React.useCallback((type) => {
+        setGitQuickModalType(type);
+        setIsGitQuickModalOpen(true);
+    }, []);
+
+    // 关闭 Git 快捷模态框
+    const handleCloseGitQuickModal = React.useCallback(() => {
+        setIsGitQuickModalOpen(false);
+    }, []);
+
+    // 处理 Git 快捷操作成功
+    const handleGitQuickSuccess = React.useCallback((result) => {
+        console.log('✅ [Git] Quick action successful:', result);
+
+        // 如果是 fetch 操作，更新 Git 数据
+        if (result && result.repository && vm && vm.runtime && vm.runtime.platform) {
+            console.log('💾 [Git] Updating fetch data to VM...');
+            if (!vm.runtime.platform.git) {
+                vm.runtime.platform.git = {
+                    repository: null,
+                    lastCommit: null,
+                    lastFetch: null
+                };
+            }
+
+            // 更新 Git 数据
+            vm.runtime.platform.git.repository = result.repository;
+            vm.runtime.platform.git.lastFetch = new Date().toISOString();
+
+            console.log('📋 [Git] Updated VM git data after fetch:', vm.runtime.platform.git);
+
+            // 立即更新 React 状态
+            setGitRepositoryExists(true);
+
+            // Git数据会自动通过VM的SB3序列化机制保存到项目文件中
+            // 当项目保存时，Git数据会自动序列化到SB3文件的meta.platform.git中
+            console.log('💾 [Git] Git state will be automatically saved by VM SB3 serialization');
+
+            console.log('🔄 [Git] Git state updated after quick action, repository exists:', !!vm.runtime.platform.git.repository);
+        }
+
+        handleCloseGitQuickModal();
+    }, [handleCloseGitQuickModal, vm]);
+
+    // 确保 VM 初始化时 git 对象存在
+    React.useEffect(() => {
+        if (vm && vm.runtime && vm.runtime.platform) {
+            if (!vm.runtime.platform.git) {
+                vm.runtime.platform.git = {
+                    repository: null,
+                    lastCommit: null,
+                    lastFetch: null
+                };
+            }
+        }
+    }, [vm]);
+
+    // 监听项目加载完成事件，恢复 Git 数据
+    React.useEffect(() => {
+        if (!vm) return;
+
+        // Git状态检测函数 - 依赖VM的SB3反序列化机制
+        const detectAndRestoreGitState = () => {
+            console.log('🔍 [Git] Checking Git state from VM (restored by SB3 deserialization)...');
+
+            try {
+                if (!vm || !vm.runtime || !vm.runtime.platform) {
+                    console.warn('❌ [Git] VM runtime not available');
+                    setGitRepositoryExists(false);
+                    return false;
+                }
+
+                // 确保 git 对象存在
+                if (!vm.runtime.platform.git) {
+                    vm.runtime.platform.git = {
+                        repository: null,
+                        lastCommit: null,
+                        lastFetch: null
+                    };
+                }
+
+                // 检查 VM 中已经由SB3反序列化恢复的Git数据
+                const currentGitState = vm.runtime.platform.git;
+                const hasRepository = !!(currentGitState && currentGitState.repository);
+
+                console.log('📊 [Git] Current VM Git state (restored from SB3):', {
+                    repository: currentGitState.repository,
+                    lastCommit: currentGitState.lastCommit,
+                    lastFetch: currentGitState.lastFetch,
+                    hasRepository: hasRepository
+                });
+
+                if (hasRepository) {
+                    console.log('✅ [Git] Git repository found in VM:', currentGitState.repository);
+                    setGitRepositoryExists(true);
+                    return true;
+                }
+
+                console.log('📂 [Git] No Git repository found in current project');
+
+                // Git状态完全由VM的SB3反序列化机制管理
+                // 如果VM中没有Git仓库信息，说明当前项目确实没有Git信息
+                setGitRepositoryExists(false);
+                return false;
+
+            } catch (error) {
+                console.error('❌ [Git] Error in Git state detection:', error);
+                setGitRepositoryExists(false);
+                return false;
+            }
+        };
+
+        // 从项目元数据中提取Git信息
+        const extractGitFromProjectMetadata = () => {
+            try {
+                // 检查 vm.runtime.meta 是否包含 Git 信息
+                if (vm.runtime.meta && vm.runtime.meta.platform && vm.runtime.meta.platform.git) {
+                    const gitData = vm.runtime.meta.platform.git;
+                    console.log('📄 [Git] Found Git data in VM runtime meta:', gitData);
+                    return {
+                        repository: gitData.repository || null,
+                        lastCommit: gitData.lastCommit || null,
+                        lastFetch: gitData.lastFetch || null
+                    };
+                }
+
+                // 尝试通过序列化获取项目数据
+                try {
+                    const projectData = vm.runtime.serialize();
+                    if (projectData && projectData.meta && projectData.meta.platform && projectData.meta.platform.git) {
+                        const gitData = projectData.meta.platform.git;
+                        console.log('📄 [Git] Found Git data in serialized project:', gitData);
+                        return {
+                            repository: gitData.repository || null,
+                            lastCommit: gitData.lastCommit || null,
+                            lastFetch: gitData.lastFetch || null
+                        };
+                    }
+                } catch (serializeError) {
+                    console.warn('⚠️ [Git] Could not serialize project for Git data extraction:', serializeError);
+                }
+
+                // 尝试手动构建项目数据
+                if (vm.runtime.targets && vm.runtime.targets.length > 0) {
+                    const stage = vm.runtime.targetForStage;
+                    if (stage && stage.constructor && stage.constructor.name === 'Stage') {
+                        try {
+                            const projectData = {
+                                targets: vm.runtime.targets.map(target => target.toJSON()),
+                                meta: {
+                                    ...vm.runtime.meta,
+                                    platform: vm.runtime.platform
+                                }
+                            };
+
+                            if (projectData.meta && projectData.meta.platform && projectData.meta.platform.git) {
+                                const gitData = projectData.meta.platform.git;
+                                console.log('📄 [Git] Found Git data in manually constructed project:', gitData);
+                                return {
+                                    repository: gitData.repository || null,
+                                    lastCommit: gitData.lastCommit || null,
+                                    lastFetch: gitData.lastFetch || null
+                                };
+                            }
+                        } catch (manualError) {
+                            console.warn('⚠️ [Git] Could not manually construct project for Git data extraction:', manualError);
+                        }
+                    }
+                }
+
+                return null;
+
+            } catch (error) {
+                console.error('❌ [Git] Error extracting Git from project metadata:', error);
+                return null;
+            }
+        };
+
+        // Git状态恢复完全依赖VM的SB3反序列化机制
+        // 不需要从localStorage恢复，Git数据会自动从SB3文件的meta.platform.git恢复
+        const tryRestoreFromStorage = () => {
+            // Git数据已经通过VM的SB3反序列化自动恢复到vm.runtime.platform.git
+            // 不需要任何额外的恢复操作
+            console.log('📂 [Git] Git state is restored by VM SB3 deserialization');
+            return null; // 不使用localStorage，返回null
+        };
+
+        // Git状态会自动通过VM的SB3序列化机制保存到项目文件中
+        // 不需要额外的localStorage存储，Git数据会随SB3文件一起保存和加载
+        const saveGitStateToStorage = (gitState) => {
+            // Git数据已经通过vm.runtime.platform.git存储在VM中
+            // 当项目保存时，会自动序列化到SB3文件的meta.platform.git中
+            // 当项目加载时，会自动从SB3文件的meta.platform.git反序列化到vm.runtime.platform.git
+            console.log('💾 [Git] Git state is managed by VM SB3 serialization:', gitState);
+            // 不需要任何额外的存储操作
+        };
+
+        // 项目加载完成事件处理
+        const handleProjectLoaded = () => {
+            console.log('🚀 [Git] Project loaded, waiting for SB3 deserialization to complete...');
+
+            // 步骤1: 清除React状态
+            setGitRepositoryExists(false);
+
+            // 步骤2: 延迟检测，确保SB3反序列化完成
+            // VM的SB3反序列化会自动从meta.platform.git恢复Git数据
+            setTimeout(() => {
+                console.log('🔍 [Git] Checking Git state after SB3 deserialization...');
+                detectAndRestoreGitState();
+            }, 500); // 增加延迟确保SB3反序列化完成
+        };
+
+        // VM准备完成事件处理
+        const handleVmReady = () => {
+            console.log('🟢 [Git] VM ready, performing Git state detection...');
+
+            // 延迟检测以确保项目数据已加载
+            setTimeout(() => {
+                detectAndRestoreGitState();
+            }, 200);
+        };
+
+        // 项目变更事件处理
+        const handleProjectChanged = () => {
+            console.log('🔄 [Git] Project changed, updating Git state...');
+
+            // 延迟检测以确保变更已处理
+            setTimeout(() => {
+                detectAndRestoreGitState();
+            }, 150);
+        };
+
+        // 监听VM事件
+        vm.on('PROJECT_LOADED', handleProjectLoaded);
+        vm.on('VM_LOADED', handleVmReady);
+        vm.on('PROJECT_CHANGED', handleProjectChanged);
+
+        // Git状态变更监听器
+        const gitStateMonitor = setInterval(() => {
+            if (vm && vm.runtime && vm.runtime.platform && vm.runtime.platform.git) {
+                const currentRepo = vm.runtime.platform.git.repository;
+                const hasRepo = !!currentRepo;
+
+                // 如果状态发生变化，更新React状态
+                if (hasRepo !== gitRepositoryExists) {
+                    console.log('🔄 [Git] Git state changed detected:', {
+                        hasRepository: hasRepo,
+                        repository: currentRepo
+                    });
+                    setGitRepositoryExists(hasRepo);
+
+                    // Git数据会自动通过VM的SB3序列化机制保存
+                    // 当项目保存时，Git数据会自动序列化到SB3文件的meta.platform.git中
+                    // 不需要额外的localStorage保存操作
+                    if (hasRepo) {
+                        console.log('💾 [Git] Git state will be saved by VM SB3 serialization when project is saved');
+                    }
+                }
+            }
+        }, 1000); // 每秒检查一次
+
+        return () => {
+            vm.off('PROJECT_LOADED', handleProjectLoaded);
+            vm.off('VM_LOADED', handleVmReady);
+            vm.off('PROJECT_CHANGED', handleProjectChanged);
+            clearInterval(gitStateMonitor);
+        };
+    }, [vm, gitRepositoryExists]);
 
     if (children) {
         return <Box {...componentProps}>{children}</Box>;
@@ -366,6 +796,9 @@ const GUIComponent = props => {
                     onShare={onShare}
                     onStartSelectingFileUpload={onStartSelectingFileUpload}
                     onToggleLoginOpen={onToggleLoginOpen}
+                    onClickGitCommit={handleClickGitCommit}
+                    onGitQuickAction={handleGitQuickAction}
+                    showGitQuickButtons={hasGitRepository() && hasGitToken()}
                 />
                 )}
                 <Box className={styles.bodyWrapper}>
@@ -549,6 +982,30 @@ const GUIComponent = props => {
                     </Box>
                 </Box>
                 <DragLayer />
+
+                {/* Git 提交模态框 */}
+                {isGitCommitModalOpen && projectData && (
+                    <GitCommitModal
+                        isOpen={isGitCommitModalOpen}
+                        onCancel={handleCloseGitCommitModal}
+                        onCommit={handleGitCommitSuccess}
+                        onFetch={handleGitFetchSuccess}
+                        projectData={projectData}
+                    />
+                )}
+
+                {/* Git 快捷操作模态框 */}
+                {isGitQuickModalOpen && (
+                    <GitQuickModal
+                        isOpen={isGitQuickModalOpen}
+                        type={gitQuickModalType}
+                        repository={vm.runtime.platform.git.repository}
+                        token={githubApi.getToken() || ''}
+                        vm={vm}
+                        onCancel={handleCloseGitQuickModal}
+                        onSuccess={handleGitQuickSuccess}
+                    />
+                )}
             </Box>
         );
     }}</MediaQuery>);

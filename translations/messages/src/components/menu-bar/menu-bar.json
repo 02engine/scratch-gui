@@ -178,5 +178,10 @@
     "id": "zt.tools",
     "description": "Button to use 02tools in the menu bar",
     "defaultMessage": "Tools"
+  },
+  {
+    "id": "gui.menuBar.git",
+    "description": "Button to open Git menu",
+    "defaultMessage": "Git"
   }
 ]

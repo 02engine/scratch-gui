@@ -4762,7 +4762,10 @@
         "tw.usesCloudVariables2": "{APP_NAME} 的云变量与 Scratch 的云变量没有关联。任何人都可以把 {changeTheirUsername} 改成任何东西，所以请小心冒名顶替。",
         "tw.usesCloudVariables2.change": "自己的用户名",
         "tw.viewFeaturedProjects": "点击以查看特色作品。",
-        "tw.viewOnScratch": "在 Scratch 网站上查看作品"
+        "tw.viewOnScratch": "在 Scratch 网站上查看作品",
+        "gui.gitDropdown.commit": "提交到 GitHub",
+        "gui.gitDropdown.fetch": "从 GitHub 获取",
+        "gui.gitDropdown.pullRequest": "拉取请求"
     },
     "zh-tw": {
         "tw.backpack.rename": "新名稱:",

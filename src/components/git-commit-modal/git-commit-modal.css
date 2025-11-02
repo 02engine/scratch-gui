@@ -1,0 +1,319 @@
+.modalContent {
+    width: 500px;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 修改标签字体颜色为黑色 */
+.container .input-label,
+.container .input-label-secondary {
+    color: #000 !important;
+}
+
+/* 修改所有文字为黑色以提高可读性 */
+.container {
+    color: #000 !important;
+}
+
+.container h2 {
+    color: #000 !important;
+}
+
+.container .title {
+    color: #000 !important;
+}
+
+.container .repositoryInfo {
+    color: #000 !important;
+}
+
+.container .repositoryInfo strong {
+    color: #000 !important;
+}
+
+.container .selectedFile {
+    color: #000 !important;
+}
+
+.container .checkboxLabel {
+    color: #000 !important;
+}
+
+.container .clearButton {
+    color: #000 !important;
+}
+
+.container .error {
+    color: #c53030 !important;
+}
+
+.container .success {
+    color: #22543d !important;
+}
+
+.header {
+    padding: 20px 20px 10px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #fafafa;
+    border-radius: 8px 8px 0 0;
+}
+
+.title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.body {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.formGroup {
+    margin-bottom: 16px;
+}
+
+.input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #00BAAD;
+    box-shadow: 0 0 0 2px rgba(0, 186, 173, 0.2);
+}
+
+.input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.textarea:focus {
+    outline: none;
+    border-color: #00BAAD;
+    box-shadow: 0 0 0 2px rgba(0, 186, 173, 0.2);
+}
+
+.textarea:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.fileInput {
+    width: 100%;
+    padding: 8px 0;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+}
+
+.fileInput:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.checkboxGroup {
+    margin-bottom: 16px;
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.clearButton {
+    margin-top: 8px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #666;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.clearButton:hover:not(:disabled) {
+    background: #e0e0e0;
+}
+
+.clearButton:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.selectedFile {
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: #f0f8ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #0066cc;
+}
+
+.error {
+    padding: 12px;
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    border-radius: 4px;
+    color: #c53030;
+    font-size: 14px;
+    margin-top: 16px;
+}
+
+.success {
+    padding: 12px;
+    background: #f0fff4;
+    border: 1px solid #9ae6b4;
+    border-radius: 4px;
+    color: #22543d;
+    font-size: 14px;
+    margin-top: 16px;
+}
+
+.footer {
+    padding: 16px 20px;
+    border-top: 1px solid #e0e0e0;
+    background: #fafafa;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-radius: 0 0 8px 8px;
+}
+
+.cancelButton {
+    padding: 8px 16px;
+    background: #f5f5f5;
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.cancelButton:hover:not(:disabled) {
+    background: #e8e8e8;
+    border-color: #ccc;
+}
+
+.cancelButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.fetchButton {
+    padding: 8px 16px;
+    background: #4A90E2;
+    color: white;
+    border: 1px solid #357ABD;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    min-width: 120px;
+}
+
+.fetchButton:hover:not(:disabled) {
+    background: #357ABD;
+    border-color: #2968A8;
+}
+
+.fetchButton:disabled {
+    background: #ccc;
+    border-color: #bbb;
+    cursor: not-allowed;
+}
+
+.commitButton {
+    padding: 8px 16px;
+    background: #00BAAD;
+    color: white;
+    border: 1px solid #00998d;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    min-width: 120px;
+}
+
+.commitButton:hover:not(:disabled) {
+    background: #00998d;
+    border-color: #008578;
+}
+
+.commitButton:disabled {
+    background: #ccc;
+    border-color: #bbb;
+    cursor: not-allowed;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+    .modalContent {
+        width: 95vw;
+        max-height: 90vh;
+    }
+
+    .header,
+    .body,
+    .footer {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .footer {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .cancelButton,
+    .fetchButton,
+    .commitButton {
+        width: 100%;
+    }
+}

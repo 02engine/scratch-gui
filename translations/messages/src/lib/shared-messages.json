@@ -28,5 +28,20 @@
     "id": "gui.sharedMessages.loadFromComputerTitle",
     "description": "Title for uploading a project from your computer",
     "defaultMessage": "Load from your computer"
+  },
+  {
+    "id": "gui.gitDropdown.commit",
+    "description": "Commit option in Git dropdown",
+    "defaultMessage": "Commit to GitHub"
+  },
+  {
+    "id": "gui.gitDropdown.fetch",
+    "description": "Fetch option in Git dropdown",
+    "defaultMessage": "Fetch from GitHub"
+  },
+  {
+    "id": "gui.gitDropdown.pullRequest",
+    "description": "Pull Request option in Git dropdown",
+    "defaultMessage": "Pull Request"
   }
 ]

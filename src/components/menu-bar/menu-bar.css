@@ -233,3 +233,38 @@
     color: inherit;
     text-decoration: none;
 }
+
+/* Git 快捷按钮样式 */
+.gitQuickButtonsGroup {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    margin-left: 0.5rem;
+}
+
+.gitQuickButton {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: normal;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.gitQuickButton:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.gitQuickButton:active {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.gitQuickButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

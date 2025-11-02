@@ -71,6 +71,13 @@ const vmManagerHOC = function (WrappedComponent) {
         loadProject () {
             // tw: stop when loading new project
             this.props.vm.quit();
+
+            // 注意：Git数据清理交给VM的SB3反序列化机制处理
+            // SB3反序列化会自动：
+            // 1. 从json.meta.platform恢复Git数据（如果存在）
+            // 2. 重置为默认值（如果不存在）
+            // 这里不需要手动清理，避免干扰SB3的自动恢复机制
+
             return this.props.vm.loadProject(this.props.projectData)
                 .then(() => {
                     this.props.onLoadedProject(this.props.loadingState, this.props.canSave);

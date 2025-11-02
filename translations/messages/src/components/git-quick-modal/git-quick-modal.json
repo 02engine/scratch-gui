@@ -1,0 +1,82 @@
+[
+  {
+    "id": "gui.gitQuick.quickCommitTitle",
+    "description": "Title of the quick commit modal",
+    "defaultMessage": "Quick Commit"
+  },
+  {
+    "id": "gui.gitQuick.fetchTitle",
+    "description": "Title of the fetch modal",
+    "defaultMessage": "Fetch from GitHub"
+  },
+  {
+    "id": "gui.gitQuick.pullRequestTitle",
+    "description": "Title of the pull request modal",
+    "defaultMessage": "Create Pull Request"
+  },
+  {
+    "id": "gui.gitQuick.summaryLabel",
+    "description": "Label for the summary input",
+    "defaultMessage": "Summary"
+  },
+  {
+    "id": "gui.gitQuick.summaryPlaceholder",
+    "description": "Placeholder for the summary input",
+    "defaultMessage": "Brief summary of changes"
+  },
+  {
+    "id": "gui.gitQuick.descriptionLabel",
+    "description": "Label for the description textarea",
+    "defaultMessage": "Description"
+  },
+  {
+    "id": "gui.gitQuick.descriptionPlaceholder",
+    "description": "Placeholder for the description textarea",
+    "defaultMessage": "Detailed description of changes (optional)"
+  },
+  {
+    "id": "gui.gitQuick.prTitleLabel",
+    "description": "Label for the PR title input",
+    "defaultMessage": "Pull Request Title"
+  },
+  {
+    "id": "gui.gitQuick.prTitlePlaceholder",
+    "description": "Placeholder for the PR title input",
+    "defaultMessage": "Pull request title"
+  },
+  {
+    "id": "gui.gitQuick.prDescriptionLabel",
+    "description": "Label for the PR description textarea",
+    "defaultMessage": "Pull Request Description"
+  },
+  {
+    "id": "gui.gitQuick.prDescriptionPlaceholder",
+    "description": "Placeholder for the PR description textarea",
+    "defaultMessage": "Description of what this PR changes (optional)"
+  },
+  {
+    "id": "gui.gitQuick.commitButton",
+    "description": "Button to commit",
+    "defaultMessage": "Commit"
+  },
+  {
+    "id": "gui.gitQuick.fetchButton",
+    "description": "Button to fetch",
+    "defaultMessage": "Fetch"
+  },
+  {
+    "id": "gui.gitQuick.createPrButton",
+    "description": "Button to create pull request",
+    "defaultMessage": "Create Pull Request"
+  },
+  {
+    "id": "gui.gitQuick.cancelButton",
+    "description": "Button to cancel",
+    "defaultMessage": "Cancel"
+  },
+  {
+    "id": "gui.gitQuick.loading",
+    "description": "Loading message",
+    "defaultMessage": "Processing..."
+  }
+]

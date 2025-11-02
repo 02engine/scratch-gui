@@ -30,5 +30,20 @@ export default defineMessages({
         id: 'gui.sharedMessages.loadFromComputerTitle',
         defaultMessage: 'Load from your computer',
         description: 'Title for uploading a project from your computer'
+    },
+    gitDropdownCommit: {
+        id: 'gui.gitDropdown.commit',
+        defaultMessage: 'Commit to GitHub',
+        description: 'Commit option in Git dropdown'
+    },
+    gitDropdownFetch: {
+        id: 'gui.gitDropdown.fetch',
+        defaultMessage: 'Fetch from GitHub',
+        description: 'Fetch option in Git dropdown'
+    },
+    gitDropdownPullRequest: {
+        id: 'gui.gitDropdown.pullRequest',
+        defaultMessage: 'Pull Request',
+        description: 'Pull Request option in Git dropdown'
     }
 });

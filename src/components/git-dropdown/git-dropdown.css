@@ -1,0 +1,54 @@
+.dropdownContainer {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+}
+
+.dropdownMenu {
+    position: absolute;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    min-width: 150px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.dropdownItem {
+    width: 100%;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.dropdownItem:hover {
+    background-color: #f0f0f0;
+}
+
+.dropdownItem:active {
+    background-color: #e0e0e0;
+}
+
+.dropdownItem:not(:last-child) {
+    border-bottom: 1px solid #eee;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+    .dropdownMenu {
+        min-width: 140px;
+    }
+
+    .dropdownItem {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+}
