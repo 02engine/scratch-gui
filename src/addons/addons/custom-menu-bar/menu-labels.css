@@ -11,7 +11,7 @@
   padding: 0;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1124px) {
   [class*="menu-bar_file-group"] > [class*="menu-bar_hoverable"] > img {
     display: block;
   }
