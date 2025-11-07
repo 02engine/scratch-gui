@@ -454,6 +454,7 @@ class Stage extends React.Component {
                 colorInfo={this.state.colorInfo}
                 dragRef={this.setDragCanvas}
                 question={this.state.question}
+                isDragging={this.state.isDragging}
                 onDoubleClick={this.handleDoubleClick}
                 onQuestionAnswered={this.handleQuestionAnswered}
                 {...props}

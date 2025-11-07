@@ -20,6 +20,7 @@ const StageComponent = props => {
         customStageSize,
         dragRef,
         isColorPicking,
+        isDragging,
         isFullScreen,
         isPlayerOnly,
         isStarted,
@@ -46,7 +47,8 @@ const StageComponent = props => {
             <Box
                 className={classNames(
                     styles.stageWrapper,
-                    {[styles.withColorPicker]: !isFullScreen && isColorPicking})}
+                    {[styles.withColorPicker]: !isFullScreen && isColorPicking},
+                    {[styles.dragging]: isDragging})}
                 onDoubleClick={onDoubleClick}
                 style={isPlayerOnly ? null : {
                     // add 2 because a 1px border is shown around each side of the stage
@@ -159,6 +161,7 @@ StageComponent.propTypes = {
     colorInfo: Loupe.propTypes.colorInfo,
     dragRef: PropTypes.func,
     isColorPicking: PropTypes.bool,
+    isDragging: PropTypes.bool,
     isFullScreen: PropTypes.bool.isRequired,
     isPlayerOnly: PropTypes.bool,
     isRtl: PropTypes.bool,

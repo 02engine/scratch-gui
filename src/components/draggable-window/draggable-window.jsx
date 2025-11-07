@@ -108,7 +108,9 @@ const DraggableWindow = props => {
             const newY = moveClientY - offset.y;
             
             const targetX = Math.max(0, Math.min(window.innerWidth - size.width, newX));
-            const targetY = Math.max(0, Math.min(window.innerHeight - size.height, newY));
+            // 限制窗口不能被拖动到顶栏之上 (顶栏高度为 3rem = 48px)
+            const menuBarHeight = 48; // 3rem = 48px (based on $menu-bar-height in units.css)
+            const targetY = Math.max(menuBarHeight, Math.min(window.innerHeight - size.height, newY));
             
             const newPosition = {
                 x: targetX,

@@ -55,6 +55,10 @@
     position: relative;
 }
 
+.stage-wrapper.dragging {
+    z-index: $z-index-stage-dragging;
+}
+
 /* we want stage overlays to all be positioned in the same spot as the stage, but can't put them inside the border
 because we want their overflow to be visible, and the bordered element must have overflow: hidden set so that the
 stage doesn't "spill" out from under its rounded corners. instead, shift these over by the border width. */
