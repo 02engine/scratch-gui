@@ -1,17 +1,97 @@
 [
   {
-    "id": "gui.gitDropdown.commit",
-    "description": "Commit option in Git dropdown",
-    "defaultMessage": "Commit to GitHub"
+    "id": "gui.gitSidebar.title",
+    "description": "Title of the Git sidebar",
+    "defaultMessage": "Git Operations"
   },
   {
-    "id": "gui.gitDropdown.fetch",
-    "description": "Fetch option in Git dropdown",
-    "defaultMessage": "Fetch from GitHub"
+    "id": "gui.gitSidebar.backButton",
+    "description": "Button to go back to main menu",
+    "defaultMessage": "← Back"
   },
   {
-    "id": "gui.gitDropdown.pullRequest",
-    "description": "Pull Request option in Git dropdown",
-    "defaultMessage": "Pull Request"
+    "id": "gui.gitSidebar.closeButton",
+    "description": "Button to close the sidebar",
+    "defaultMessage": "Close"
+  },
+  {
+    "id": "gui.gitSidebar.tokenLabel",
+    "description": "Label for the GitHub token input",
+    "defaultMessage": "GitHub Personal Token"
+  },
+  {
+    "id": "gui.gitSidebar.tokenPlaceholder",
+    "description": "Placeholder for the GitHub token input",
+    "defaultMessage": "Enter your GitHub Personal Access Token"
+  },
+  {
+    "id": "gui.gitSidebar.repositoryLabel",
+    "description": "Label for the repository input",
+    "defaultMessage": "Repository"
+  },
+  {
+    "id": "gui.gitSidebar.repositoryPlaceholder",
+    "description": "Placeholder for the repository input",
+    "defaultMessage": "owner/repository"
+  },
+  {
+    "id": "gui.gitSidebar.summaryLabel",
+    "description": "Label for the commit summary input",
+    "defaultMessage": "Commit Summary"
+  },
+  {
+    "id": "gui.gitSidebar.summaryPlaceholder",
+    "description": "Placeholder for the commit summary input",
+    "defaultMessage": "Brief summary of changes"
+  },
+  {
+    "id": "gui.gitSidebar.descriptionLabel",
+    "description": "Label for the commit description textarea",
+    "defaultMessage": "Commit Description"
+  },
+  {
+    "id": "gui.gitSidebar.descriptionPlaceholder",
+    "description": "Placeholder for the commit description textarea",
+    "defaultMessage": "Detailed description of changes (optional)"
+  },
+  {
+    "id": "gui.gitSidebar.readmeLabel",
+    "description": "Label for the README file input",
+    "defaultMessage": "README.md (Optional)"
+  },
+  {
+    "id": "gui.gitSidebar.prTitleLabel",
+    "description": "Label for the PR title input",
+    "defaultMessage": "Pull Request Title"
+  },
+  {
+    "id": "gui.gitSidebar.prTitlePlaceholder",
+    "description": "Placeholder for the PR title input",
+    "defaultMessage": "Pull request title"
+  },
+  {
+    "id": "gui.gitSidebar.prDescriptionLabel",
+    "description": "Label for the PR description textarea",
+    "defaultMessage": "Pull Request Description"
+  },
+  {
+    "id": "gui.gitSidebar.prDescriptionPlaceholder",
+    "description": "Placeholder for the PR description textarea",
+    "defaultMessage": "Description of what this PR changes (optional)"
+  },
+  {
+    "id": "gui.gitSidebar.saveToken",
+    "description": "Checkbox to save the GitHub token",
+    "defaultMessage": "Save token for future use"
+  },
+  {
+    "id": "gui.gitSidebar.loading",
+    "description": "Loading message during operation",
+    "defaultMessage": "Processing..."
+  },
+  {
+    "id": "gui.gitSidebar.fetching",
+    "description": "Loading message during fetch",
+    "defaultMessage": "Fetching..."
   }
 ]

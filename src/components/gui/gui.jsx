@@ -11,8 +11,7 @@ import VM from 'scratch-vm';
 
 import DraggableWindow from '../draggable-window/draggable-window.jsx';
 import MinimizedBar from '../draggable-window/minimized-bar.jsx';
-import GitCommitModal from '../git-commit-modal/git-commit-modal.jsx';
-import GitQuickModal from '../git-quick-modal/git-quick-modal.jsx';
+import GitDropdown from '../git-dropdown/git-dropdown.jsx';
 import ProjectExporter from '../../lib/project-exporter.js';
 import githubApi from '../../lib/github-api.js';
 
@@ -187,6 +186,9 @@ const GUIComponent = props => {
     // Git 快捷操作相关状态
     const [isGitQuickModalOpen, setIsGitQuickModalOpen] = React.useState(false);
     const [gitQuickModalType, setGitQuickModalType] = React.useState('commit');
+
+    // Git 下拉菜单状态
+    const [isGitDropdownOpen, setIsGitDropdownOpen] = React.useState(false);
 
     // 处理 Git 提交按钮点击
     const handleClickGitCommit = React.useCallback(async () => {
@@ -797,6 +799,7 @@ const GUIComponent = props => {
                     onStartSelectingFileUpload={onStartSelectingFileUpload}
                     onToggleLoginOpen={onToggleLoginOpen}
                     onClickGitCommit={handleClickGitCommit}
+                    onToggleGitDropdown={() => setIsGitDropdownOpen(!isGitDropdownOpen)}
                     onGitQuickAction={handleGitQuickAction}
                     showGitQuickButtons={hasGitRepository() && hasGitToken()}
                 />
@@ -981,31 +984,20 @@ const GUIComponent = props => {
                         )}
                     </Box>
                 </Box>
-                <DragLayer />
 
-                {/* Git 提交模态框 */}
-                {isGitCommitModalOpen && projectData && (
-                    <GitCommitModal
-                        isOpen={isGitCommitModalOpen}
-                        onCancel={handleCloseGitCommitModal}
+                {/* Git 侧边栏 */}
+                {isGitDropdownOpen && (
+                    <GitDropdown
+                        isOpen={isGitDropdownOpen}
                         onCommit={handleGitCommitSuccess}
                         onFetch={handleGitFetchSuccess}
-                        projectData={projectData}
+                        onPullRequest={handleGitQuickSuccess}
+                        onClose={() => setIsGitDropdownOpen(false)}
+                        vm={vm}
                     />
                 )}
 
-                {/* Git 快捷操作模态框 */}
-                {isGitQuickModalOpen && (
-                    <GitQuickModal
-                        isOpen={isGitQuickModalOpen}
-                        type={gitQuickModalType}
-                        repository={vm.runtime.platform.git.repository}
-                        token={githubApi.getToken() || ''}
-                        vm={vm}
-                        onCancel={handleCloseGitQuickModal}
-                        onSuccess={handleGitQuickSuccess}
-                    />
-                )}
+                <DragLayer />
             </Box>
         );
     }}</MediaQuery>);
