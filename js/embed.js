@@ -1228,51 +1228,6 @@ exports.locals = {
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/components/git-commit-modal/git-commit-modal.css":
-/*!*********************************************************************************************************************************************!*\
-  !*** ./node_modules/css-loader??ref--5-1!./node_modules/postcss-loader/src??postcss!./src/components/git-commit-modal/git-commit-modal.css ***!
-  \*********************************************************************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
-// imports
-
-
-// module
-exports.push([module.i, ".git-commit-modal_modalContent_j_gqZ {\n    width: 500px;\n    max-width: 90vw;\n    max-height: 80vh;\n    overflow-y: auto;\n}\n\n.git-commit-modal_container_1Use7 {\n    display: flex;\n    flex-direction: column;\n    height: 100%;\n    background: white;\n    border-radius: 8px;\n    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);\n}\n\n/* 修改标签字体颜色为黑色 */\n\n.git-commit-modal_container_1Use7 .git-commit-modal_input-label_1amEt,\n.git-commit-modal_container_1Use7 .git-commit-modal_input-label-secondary_hMr89 {\n    color: #000 !important;\n}\n\n/* 修改所有文字为黑色以提高可读性 */\n\n.git-commit-modal_container_1Use7 {\n    color: #000 !important;\n}\n\n.git-commit-modal_container_1Use7 h2 {\n    color: #000 !important;\n}\n\n.git-commit-modal_container_1Use7 .git-commit-modal_title_N1KD1 {\n    color: #000 !important;\n}\n\n.git-commit-modal_container_1Use7 .git-commit-modal_repositoryInfo_3p7Vf {\n    color: #000 !important;\n}\n\n.git-commit-modal_container_1Use7 .git-commit-modal_repositoryInfo_3p7Vf strong {\n    color: #000 !important;\n}\n\n.git-commit-modal_container_1Use7 .git-commit-modal_selectedFile_ZiVaD {\n    color: #000 !important;\n}\n\n.git-commit-modal_container_1Use7 .git-commit-modal_checkboxLabel_1RExj {\n    color: #000 !important;\n}\n\n.git-commit-modal_container_1Use7 .git-commit-modal_clearButton_3432H {\n    color: #000 !important;\n}\n\n.git-commit-modal_container_1Use7 .git-commit-modal_error_1KZoX {\n    color: #c53030 !important;\n}\n\n.git-commit-modal_container_1Use7 .git-commit-modal_success_1peOh {\n    color: #22543d !important;\n}\n\n.git-commit-modal_header_2vRsw {\n    padding: 20px 20px 10px 20px;\n    border-bottom: 1px solid #e0e0e0;\n    background: #fafafa;\n    border-radius: 8px 8px 0 0;\n}\n\n.git-commit-modal_title_N1KD1 {\n    margin: 0;\n    font-size: 18px;\n    font-weight: 600;\n    color: #333;\n}\n\n.git-commit-modal_body_1Mg4d {\n    padding: 20px;\n    flex: 1;\n    overflow-y: auto;\n}\n\n.git-commit-modal_formGroup_3exvs {\n    margin-bottom: 16px;\n}\n\n.git-commit-modal_input_1IvoQ {\n    width: 100%;\n    padding: 10px 12px;\n    border: 1px solid #ddd;\n    border-radius: 4px;\n    font-size: 14px;\n    transition: border-color 0.2s, box-shadow 0.2s;\n    box-sizing: border-box;\n}\n\n.git-commit-modal_input_1IvoQ:focus {\n    outline: none;\n    border-color: #00BAAD;\n    box-shadow: 0 0 0 2px rgba(0, 186, 173, 0.2);\n}\n\n.git-commit-modal_input_1IvoQ:disabled {\n    background-color: #f5f5f5;\n    cursor: not-allowed;\n}\n\n.git-commit-modal_textarea_13jeg {\n    width: 100%;\n    padding: 10px 12px;\n    border: 1px solid #ddd;\n    border-radius: 4px;\n    font-size: 14px;\n    font-family: inherit;\n    resize: vertical;\n    transition: border-color 0.2s, box-shadow 0.2s;\n    box-sizing: border-box;\n}\n\n.git-commit-modal_textarea_13jeg:focus {\n    outline: none;\n    border-color: #00BAAD;\n    box-shadow: 0 0 0 2px rgba(0, 186, 173, 0.2);\n}\n\n.git-commit-modal_textarea_13jeg:disabled {\n    background-color: #f5f5f5;\n    cursor: not-allowed;\n}\n\n.git-commit-modal_fileInput_2YNYM {\n    width: 100%;\n    padding: 8px 0;\n    font-size: 14px;\n    border: 1px solid #ddd;\n    border-radius: 4px;\n    background: white;\n    cursor: pointer;\n}\n\n.git-commit-modal_fileInput_2YNYM:disabled {\n    background-color: #f5f5f5;\n    cursor: not-allowed;\n}\n\n.git-commit-modal_checkboxGroup_2rdCh {\n    margin-bottom: 16px;\n}\n\n.git-commit-modal_checkboxLabel_1RExj {\n    display: flex;\n    align-items: center;\n    font-size: 14px;\n    color: #333;\n    cursor: pointer;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.git-commit-modal_checkbox_23U6- {\n    margin-right: 8px;\n    cursor: pointer;\n}\n\n.git-commit-modal_clearButton_3432H {\n    margin-top: 8px;\n    padding: 4px 8px;\n    font-size: 12px;\n    color: #666;\n    background: #f0f0f0;\n    border: 1px solid #ddd;\n    border-radius: 3px;\n    cursor: pointer;\n    transition: background-color 0.2s;\n}\n\n.git-commit-modal_clearButton_3432H:hover:not(:disabled) {\n    background: #e0e0e0;\n}\n\n.git-commit-modal_clearButton_3432H:disabled {\n    cursor: not-allowed;\n    opacity: 0.6;\n}\n\n.git-commit-modal_selectedFile_ZiVaD {\n    margin-top: 8px;\n    padding: 6px 10px;\n    background: #f0f8ff;\n    border: 1px solid #b3d9ff;\n    border-radius: 4px;\n    font-size: 13px;\n    color: #0066cc;\n}\n\n.git-commit-modal_error_1KZoX {\n    padding: 12px;\n    background: #fff5f5;\n    border: 1px solid #fed7d7;\n    border-radius: 4px;\n    color: #c53030;\n    font-size: 14px;\n    margin-top: 16px;\n}\n\n.git-commit-modal_success_1peOh {\n    padding: 12px;\n    background: #f0fff4;\n    border: 1px solid #9ae6b4;\n    border-radius: 4px;\n    color: #22543d;\n    font-size: 14px;\n    margin-top: 16px;\n}\n\n.git-commit-modal_footer_1WW9r {\n    padding: 16px 20px;\n    border-top: 1px solid #e0e0e0;\n    background: #fafafa;\n    display: flex;\n    justify-content: flex-end;\n    gap: 12px;\n    border-radius: 0 0 8px 8px;\n}\n\n.git-commit-modal_cancelButton_1QeaF {\n    padding: 8px 16px;\n    background: #f5f5f5;\n    color: #666;\n    border: 1px solid #ddd;\n    border-radius: 4px;\n    font-size: 14px;\n    cursor: pointer;\n    transition: background-color 0.2s, border-color 0.2s;\n}\n\n.git-commit-modal_cancelButton_1QeaF:hover:not(:disabled) {\n    background: #e8e8e8;\n    border-color: #ccc;\n}\n\n.git-commit-modal_cancelButton_1QeaF:disabled {\n    opacity: 0.6;\n    cursor: not-allowed;\n}\n\n.git-commit-modal_fetchButton_WINoU {\n    padding: 8px 16px;\n    background: #4A90E2;\n    color: white;\n    border: 1px solid #357ABD;\n    border-radius: 4px;\n    font-size: 14px;\n    font-weight: 500;\n    cursor: pointer;\n    transition: background-color 0.2s, border-color 0.2s;\n    min-width: 120px;\n}\n\n.git-commit-modal_fetchButton_WINoU:hover:not(:disabled) {\n    background: #357ABD;\n    border-color: #2968A8;\n}\n\n.git-commit-modal_fetchButton_WINoU:disabled {\n    background: #ccc;\n    border-color: #bbb;\n    cursor: not-allowed;\n}\n\n.git-commit-modal_commitButton_2sLB1 {\n    padding: 8px 16px;\n    background: #00BAAD;\n    color: white;\n    border: 1px solid #00998d;\n    border-radius: 4px;\n    font-size: 14px;\n    font-weight: 500;\n    cursor: pointer;\n    transition: background-color 0.2s, border-color 0.2s;\n    min-width: 120px;\n}\n\n.git-commit-modal_commitButton_2sLB1:hover:not(:disabled) {\n    background: #00998d;\n    border-color: #008578;\n}\n\n.git-commit-modal_commitButton_2sLB1:disabled {\n    background: #ccc;\n    border-color: #bbb;\n    cursor: not-allowed;\n}\n\n/* 响应式设计 */\n\n@media (max-width: 600px) {\n    .git-commit-modal_modalContent_j_gqZ {\n        width: 95vw;\n        max-height: 90vh;\n    }\n\n    .git-commit-modal_header_2vRsw,\n    .git-commit-modal_body_1Mg4d,\n    .git-commit-modal_footer_1WW9r {\n        padding-left: 16px;\n        padding-right: 16px;\n    }\n\n    .git-commit-modal_footer_1WW9r {\n        flex-direction: column;\n        gap: 8px;\n    }\n\n    .git-commit-modal_cancelButton_1QeaF,\n    .git-commit-modal_fetchButton_WINoU,\n    .git-commit-modal_commitButton_2sLB1 {\n        width: 100%;\n    }\n}", ""]);
-
-// exports
-exports.locals = {
-	"modalContent": "git-commit-modal_modalContent_j_gqZ",
-	"container": "git-commit-modal_container_1Use7",
-	"input-label": "git-commit-modal_input-label_1amEt",
-	"inputLabel": "git-commit-modal_input-label_1amEt",
-	"input-label-secondary": "git-commit-modal_input-label-secondary_hMr89",
-	"inputLabelSecondary": "git-commit-modal_input-label-secondary_hMr89",
-	"title": "git-commit-modal_title_N1KD1",
-	"repositoryInfo": "git-commit-modal_repositoryInfo_3p7Vf",
-	"selectedFile": "git-commit-modal_selectedFile_ZiVaD",
-	"checkboxLabel": "git-commit-modal_checkboxLabel_1RExj",
-	"clearButton": "git-commit-modal_clearButton_3432H",
-	"error": "git-commit-modal_error_1KZoX",
-	"success": "git-commit-modal_success_1peOh",
-	"header": "git-commit-modal_header_2vRsw",
-	"body": "git-commit-modal_body_1Mg4d",
-	"formGroup": "git-commit-modal_formGroup_3exvs",
-	"input": "git-commit-modal_input_1IvoQ",
-	"textarea": "git-commit-modal_textarea_13jeg",
-	"fileInput": "git-commit-modal_fileInput_2YNYM",
-	"checkboxGroup": "git-commit-modal_checkboxGroup_2rdCh",
-	"checkbox": "git-commit-modal_checkbox_23U6-",
-	"footer": "git-commit-modal_footer_1WW9r",
-	"cancelButton": "git-commit-modal_cancelButton_1QeaF",
-	"fetchButton": "git-commit-modal_fetchButton_WINoU",
-	"commitButton": "git-commit-modal_commitButton_2sLB1"
-};
-
-/***/ }),
-
 /***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/components/git-dropdown/git-dropdown.css":
 /*!*************************************************************************************************************************************!*\
   !*** ./node_modules/css-loader??ref--5-1!./node_modules/postcss-loader/src??postcss!./src/components/git-dropdown/git-dropdown.css ***!
@@ -1285,51 +1240,13 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, ".git-dropdown_dropdownContainer_36bhU {\n    position: absolute;\n    top: 100%;\n    left: 0;\n    z-index: 1000;\n}\n\n.git-dropdown_dropdownMenu_1Pnxo {\n    position: absolute;\n    background: white;\n    border: 1px solid #ddd;\n    border-radius: 4px;\n    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);\n    min-width: 150px;\n    z-index: 1000;\n    overflow: hidden;\n}\n\n.git-dropdown_dropdownItem_zySCS {\n    width: 100%;\n    padding: 8px 12px;\n    background: none;\n    border: none;\n    text-align: left;\n    font-size: 14px;\n    color: #333;\n    cursor: pointer;\n    transition: background-color 0.2s;\n    white-space: nowrap;\n}\n\n.git-dropdown_dropdownItem_zySCS:hover {\n    background-color: #f0f0f0;\n}\n\n.git-dropdown_dropdownItem_zySCS:active {\n    background-color: #e0e0e0;\n}\n\n.git-dropdown_dropdownItem_zySCS:not(:last-child) {\n    border-bottom: 1px solid #eee;\n}\n\n/* 响应式设计 */\n\n@media (max-width: 600px) {\n    .git-dropdown_dropdownMenu_1Pnxo {\n        min-width: 140px;\n    }\n\n    .git-dropdown_dropdownItem_zySCS {\n        padding: 10px 12px;\n        font-size: 13px;\n    }\n}", ""]);
+exports.push([module.i, ".git-dropdown_dropdownContainer_36bhU {\n    position: absolute;\n    top: 0;\n    right: 0;\n    bottom: 0;\n    width: 280px;\n    z-index: 2000;\n    pointer-events: none;\n}\n\n.git-dropdown_dropdownMenu_1Pnxo {\n    position: absolute;\n    top: 0;\n    right: 0;\n    width: 100%;\n    height: calc(100% - 40px);\n    background: var(--ui-white);\n    border-left: 1px solid var(--ui-black-transparent);\n    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.12), -2px 0 4px rgba(0, 0, 0, 0.08);\n    z-index: 2000;\n    overflow-y: auto;\n    overflow-x: hidden;\n    -webkit-backdrop-filter: blur(8px);\n            backdrop-filter: blur(8px);\n    pointer-events: auto;\n    display: flex;\n    flex-direction: column;\n    padding: 20px;\n    border-radius: 0 0 8px 8px;\n    margin-bottom: 20px;\n}\n\n.git-dropdown_dropdownItem_zySCS {\n    width: 100%;\n    padding: 16px 20px;\n    background: none;\n    border: none;\n    text-align: left;\n    font-size: 16px;\n    font-weight: 500;\n    color: var(--text-primary);\n    cursor: pointer;\n    transition: all 0.3s ease;\n    white-space: nowrap;\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    position: relative;\n    border-radius: 8px;\n    margin-bottom: 8px;\n}\n\n.git-dropdown_dropdownItem_zySCS::before {\n    content: '';\n    width: 20px;\n    height: 20px;\n    flex-shrink: 0;\n    background-size: contain;\n    background-repeat: no-repeat;\n    background-position: center;\n    opacity: 0.9;\n    border-radius: 4px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-size: 14px;\n    font-weight: 600;\n}\n\n/* Commit Icon - Modern checkmark with teal background */\n\n.git-dropdown_dropdownItem_zySCS:nth-child(1)::before {\n    content: '\\2713';\n    background: linear-gradient(135deg, #00baad 0%, #009688 100%);\n    color: white;\n    box-shadow: 0 2px 4px rgba(0, 186, 173, 0.3);\n    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);\n}\n\n/* Fetch Icon - Modern download arrow with teal background */\n\n.git-dropdown_dropdownItem_zySCS:nth-child(2)::before {\n    content: '\\2193';\n    background: linear-gradient(135deg, #00baad 0%, #009688 100%);\n    color: white;\n    box-shadow: 0 2px 4px rgba(0, 186, 173, 0.3);\n    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);\n}\n\n/* Pull Request Icon - Modern merge arrow with teal background */\n\n.git-dropdown_dropdownItem_zySCS:nth-child(3)::before {\n    content: '\\2934';\n    background: linear-gradient(135deg, #00baad 0%, #009688 100%);\n    color: white;\n    box-shadow: 0 2px 4px rgba(0, 186, 173, 0.3);\n    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);\n}\n\n/* Settings Icon - Gray theme for configuration */\n\n.git-dropdown_dropdownItem_zySCS:nth-child(4)::before {\n    content: '\\2699';\n    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);\n    color: white;\n    box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);\n    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);\n}\n\n.git-dropdown_dropdownItem_zySCS:hover {\n    background: linear-gradient(135deg, rgba(0, 186, 173, 0.08) 0%, rgba(0, 186, 173, 0.04) 100%);\n    transform: translateX(4px);\n    box-shadow: 0 2px 8px rgba(0, 186, 173, 0.15);\n    border: 1px solid rgba(0, 186, 173, 0.2);\n}\n\n.git-dropdown_dropdownItem_zySCS:active {\n    background: linear-gradient(135deg, rgba(0, 186, 173, 0.12) 0%, rgba(0, 186, 173, 0.06) 100%);\n    transform: translateX(2px);\n    box-shadow: 0 1px 4px rgba(0, 186, 173, 0.2);\n}\n\n/* 响应式设计 */\n\n@media (max-width: 600px) {\n    .git-dropdown_dropdownMenu_1Pnxo {\n        min-width: 160px;\n    }\n\n    .git-dropdown_dropdownItem_zySCS {\n        padding: 10px 12px;\n        font-size: 13px;\n        gap: 8px;\n    }\n\n    .git-dropdown_dropdownItem_zySCS::before {\n        width: 14px;\n        height: 14px;\n    }\n}\n", ""]);
 
 // exports
 exports.locals = {
 	"dropdownContainer": "git-dropdown_dropdownContainer_36bhU",
 	"dropdownMenu": "git-dropdown_dropdownMenu_1Pnxo",
 	"dropdownItem": "git-dropdown_dropdownItem_zySCS"
-};
-
-/***/ }),
-
-/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/components/git-quick-modal/git-quick-modal.css":
-/*!*******************************************************************************************************************************************!*\
-  !*** ./node_modules/css-loader??ref--5-1!./node_modules/postcss-loader/src??postcss!./src/components/git-quick-modal/git-quick-modal.css ***!
-  \*******************************************************************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
-// imports
-
-
-// module
-exports.push([module.i, ".git-quick-modal_modalContent_3eu6- {\n    width: 500px;\n    max-width: 90vw;\n    max-height: 80vh;\n    overflow-y: auto;\n}\n\n.git-quick-modal_container_1h7Dd {\n    display: flex;\n    flex-direction: column;\n    height: 100%;\n    background: white;\n    border-radius: 8px;\n    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);\n}\n\n/* 修改标签字体颜色为黑色 */\n\n.git-quick-modal_container_1h7Dd .git-quick-modal_input-label_33s8J,\n.git-quick-modal_container_1h7Dd .git-quick-modal_input-label-secondary_1x07q {\n    color: #000 !important;\n}\n\n/* 修改所有文字为黑色以提高可读性 */\n\n.git-quick-modal_container_1h7Dd {\n    color: #000 !important;\n}\n\n.git-quick-modal_container_1h7Dd h2 {\n    color: #000 !important;\n}\n\n.git-quick-modal_container_1h7Dd .git-quick-modal_title_2-g8j {\n    color: #000 !important;\n}\n\n.git-quick-modal_container_1h7Dd .git-quick-modal_repositoryInfo_YdwRX {\n    color: #000 !important;\n}\n\n.git-quick-modal_container_1h7Dd .git-quick-modal_repositoryInfo_YdwRX strong {\n    color: #000 !important;\n}\n\n.git-quick-modal_container_1h7Dd .git-quick-modal_error_KRv2L {\n    color: #c53030 !important;\n}\n\n.git-quick-modal_container_1h7Dd .git-quick-modal_success_31MFN {\n    color: #22543d !important;\n}\n\n.git-quick-modal_header_1bZ7p {\n    padding: 20px 20px 10px 20px;\n    border-bottom: 1px solid #e0e0e0;\n    background: #fafafa;\n    border-radius: 8px 8px 0 0;\n}\n\n.git-quick-modal_title_2-g8j {\n    margin: 0;\n    font-size: 18px;\n    font-weight: 600;\n    color: #333;\n}\n\n.git-quick-modal_body_3A47l {\n    padding: 20px;\n    flex: 1;\n    overflow-y: auto;\n}\n\n.git-quick-modal_repositoryInfo_YdwRX {\n    margin-bottom: 16px;\n    padding: 10px;\n    background: #f0f8ff;\n    border: 1px solid #b3d9ff;\n    border-radius: 4px;\n    font-size: 14px;\n    color: #0066cc;\n}\n\n.git-quick-modal_formGroup_3W47F {\n    margin-bottom: 16px;\n}\n\n.git-quick-modal_input_1GE8y {\n    width: 100%;\n    padding: 10px 12px;\n    border: 1px solid #ddd;\n    border-radius: 4px;\n    font-size: 14px;\n    transition: border-color 0.2s, box-shadow 0.2s;\n    box-sizing: border-box;\n}\n\n.git-quick-modal_input_1GE8y:focus {\n    outline: none;\n    border-color: #00BAAD;\n    box-shadow: 0 0 0 2px rgba(0, 186, 173, 0.2);\n}\n\n.git-quick-modal_input_1GE8y:disabled {\n    background-color: #f5f5f5;\n    cursor: not-allowed;\n}\n\n.git-quick-modal_textarea_QnL-s {\n    width: 100%;\n    padding: 10px 12px;\n    border: 1px solid #ddd;\n    border-radius: 4px;\n    font-size: 14px;\n    font-family: inherit;\n    resize: vertical;\n    transition: border-color 0.2s, box-shadow 0.2s;\n    box-sizing: border-box;\n}\n\n.git-quick-modal_textarea_QnL-s:focus {\n    outline: none;\n    border-color: #00BAAD;\n    box-shadow: 0 0 0 2px rgba(0, 186, 173, 0.2);\n}\n\n.git-quick-modal_textarea_QnL-s:disabled {\n    background-color: #f5f5f5;\n    cursor: not-allowed;\n}\n\n.git-quick-modal_error_KRv2L {\n    padding: 12px;\n    background: #fff5f5;\n    border: 1px solid #fed7d7;\n    border-radius: 4px;\n    color: #c53030;\n    font-size: 14px;\n    margin-top: 16px;\n}\n\n.git-quick-modal_success_31MFN {\n    padding: 12px;\n    background: #f0fff4;\n    border: 1px solid #9ae6b4;\n    border-radius: 4px;\n    color: #22543d;\n    font-size: 14px;\n    margin-top: 16px;\n}\n\n.git-quick-modal_footer_30TAg {\n    padding: 16px 20px;\n    border-top: 1px solid #e0e0e0;\n    background: #fafafa;\n    display: flex;\n    justify-content: flex-end;\n    gap: 12px;\n    border-radius: 0 0 8px 8px;\n}\n\n.git-quick-modal_cancelButton_2c9lg {\n    padding: 8px 16px;\n    background: #f5f5f5;\n    color: #666;\n    border: 1px solid #ddd;\n    border-radius: 4px;\n    font-size: 14px;\n    cursor: pointer;\n    transition: background-color 0.2s, border-color 0.2s;\n}\n\n.git-quick-modal_cancelButton_2c9lg:hover:not(:disabled) {\n    background: #e8e8e8;\n    border-color: #ccc;\n}\n\n.git-quick-modal_cancelButton_2c9lg:disabled {\n    opacity: 0.6;\n    cursor: not-allowed;\n}\n\n.git-quick-modal_actionButton_1mWKN {\n    padding: 8px 16px;\n    background: #00BAAD;\n    color: white;\n    border: 1px solid #00998d;\n    border-radius: 4px;\n    font-size: 14px;\n    font-weight: 500;\n    cursor: pointer;\n    transition: background-color 0.2s, border-color 0.2s;\n    min-width: 120px;\n}\n\n.git-quick-modal_actionButton_1mWKN:hover:not(:disabled) {\n    background: #00998d;\n    border-color: #008578;\n}\n\n.git-quick-modal_actionButton_1mWKN:disabled {\n    background: #ccc;\n    border-color: #bbb;\n    cursor: not-allowed;\n}\n\n/* 响应式设计 */\n\n@media (max-width: 600px) {\n    .git-quick-modal_modalContent_3eu6- {\n        width: 95vw;\n        max-height: 90vh;\n    }\n\n    .git-quick-modal_header_1bZ7p,\n    .git-quick-modal_body_3A47l,\n    .git-quick-modal_footer_30TAg {\n        padding-left: 16px;\n        padding-right: 16px;\n    }\n\n    .git-quick-modal_footer_30TAg {\n        flex-direction: column;\n        gap: 8px;\n    }\n\n    .git-quick-modal_cancelButton_2c9lg,\n    .git-quick-modal_actionButton_1mWKN {\n        width: 100%;\n    }\n}", ""]);
-
-// exports
-exports.locals = {
-	"modalContent": "git-quick-modal_modalContent_3eu6-",
-	"container": "git-quick-modal_container_1h7Dd",
-	"input-label": "git-quick-modal_input-label_33s8J",
-	"inputLabel": "git-quick-modal_input-label_33s8J",
-	"input-label-secondary": "git-quick-modal_input-label-secondary_1x07q",
-	"inputLabelSecondary": "git-quick-modal_input-label-secondary_1x07q",
-	"title": "git-quick-modal_title_2-g8j",
-	"repositoryInfo": "git-quick-modal_repositoryInfo_YdwRX",
-	"error": "git-quick-modal_error_KRv2L",
-	"success": "git-quick-modal_success_31MFN",
-	"header": "git-quick-modal_header_1bZ7p",
-	"body": "git-quick-modal_body_3A47l",
-	"formGroup": "git-quick-modal_formGroup_3W47F",
-	"input": "git-quick-modal_input_1GE8y",
-	"textarea": "git-quick-modal_textarea_QnL-s",
-	"footer": "git-quick-modal_footer_30TAg",
-	"cancelButton": "git-quick-modal_cancelButton_2c9lg",
-	"actionButton": "git-quick-modal_actionButton_1mWKN"
 };
 
 /***/ }),
@@ -1673,7 +1590,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "/* overridden by src/lib/themes/guiHelpers.js */\n\n/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */\n\n/* layout contants from `layout-constants.js` */\n\n/*\n    Contains constants for the z-index values of elements that are part of the global stack context.\n    In other words, z-index values that are \"inside\" a component are not added here.\n    This prevents conflicts between identical z-index values in different components.\n*/\n\n/* Toolbox z-index: 40; set in scratch-blocks */\n\n/* tooltips should go over add buttons if they overlap */\n\n/* monitors go over add buttons */\n\n/* \"ask\" block text input goes above monitors */\n\n/* menu-bar should go over monitors, alerts and tutorials */\n\n/* behind menu-bar */\n\n/* Block drag z-index: 1000; default 50 is overriden in blocks.css */\n\n/* so it is draggable into other panes */\n\n/* behind modals */\n\n/* behind modals */\n\n/* above menu-bar when dragging */\n\n/* in most interfaces, the context menu is always on top */\n\n.menu-bar_menu-bar_JcuHF {\n    display: flex;\n    flex-direction: row;\n    justify-content: space-between;\n    flex-wrap: nowrap;\n    gap: 0.5rem;\n\n    /*\n        For most things, we shouldn't explicitly set height, and let the\n        content push the element to whatever fits. Using a fixed height\n        instead, will help us subtract the value we assign from the body,\n        adding up to a perfect 100%. This means we don't need to set\n        overflow: hidden, which makes it hard to debug. border-box\n        simplifies by all of this by removing padding from the equation.\n    */\n    box-sizing: border-box;\n    height: 3rem;\n\n    /*\n        @todo: This adds ~20px in Chrome, when scrolling to the right,\n        but fixes [FFx + Safari] [resize window down + scroll to the right] bug.\n        width: 100%;\n    */\n    font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n    font-size: 0.75rem;\n    font-weight: bold;\n    background-color: var(--menu-bar-background);\n    background-image: var(--menu-bar-background-image);\n    color: var(--menu-bar-foreground);\n}\n\n.menu-bar_main-menu_3wjWH {\n    display: flex;\n    flex-direction: row;\n    justify-content: flex-start;\n    flex-wrap: nowrap;\n    align-items: center;\n    flex-grow: 1;\n    gap: 0.5rem;\n}\n\n.menu-bar_inactive_2rk8q {\n    opacity: 0;\n}\n\n.menu-bar_scratch-logo_2uReV {\n    height:  1.6rem;\n    vertical-align: middle;\n}\n\n.menu-bar_scratch-logo_2uReV.menu-bar_clickable_1g3uo {\n    cursor: pointer;\n}\n\n.menu-bar_menu-bar-item_oLDa- {\n    display: flex;\n    text-decoration: none;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    align-self: center;\n    position: relative;\n    align-items: center;\n    white-space: nowrap;\n    height: 3rem;\n}\n\n.menu-bar_menu-bar-item_oLDa-.menu-bar_hoverable_c6WFB {\n    cursor: pointer;\n}\n\n.menu-bar_menu-bar-item_oLDa-.menu-bar_active_2Lfqh,\n.menu-bar_menu-bar-item_oLDa-.menu-bar_hoverable_c6WFB:hover {\n    background-color: var(--ui-black-transparent);\n}\n\n.menu-bar_menu-bar-item_oLDa-.menu-bar_growable_1sHWN {\n    max-width: 12rem;\n    flex: 1;\n}\n\n.menu-bar_title-field-growable_3qr4G {\n    flex-grow: 1;\n    width: 2rem;\n}\n\n.menu-bar_file-group_1_CHX {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    gap: 0.5rem;\n}\n\n.menu-bar_file-group_1_CHX .menu-bar_menu-bar-item_oLDa- {\n    padding: 0 0.5rem;\n}\n\n.menu-bar_menu-bar-menu_239MD {\n    margin-top: 3rem;\n    z-index: 491;\n}\n\n.menu-bar_feedback-link_1BnAR {\n    color: var(--menu-bar-background);\n    text-decoration: none;\n}\n\n.menu-bar_feedback-button_2rEcj {\n    background-color: white;\n    color: inherit;\n    height: 34px;\n}\n\n.menu-bar_divider_2VFCm {\n    height: 34px;\n}\n\n.menu-bar_author-info_22Nub {\n    margin-left: .25rem;\n    margin-right: .6875rem;\n}\n\n.menu-bar_menu-bar-button_3IDN0 {\n    height: 2rem;\n}\n\n.menu-bar_remix-button_2LQQc {\n    background-color: var(--pen-primary)\n}\n\n.menu-bar_remix-button-icon_2E93U {\n    height: 1.25rem;\n}\n\n.menu-bar_coming-soon_3yU1L >:not(.menu-bar_coming-soon-tooltip_20GhI) {\n    opacity: 0.5;\n}\n\n.menu-bar_account-info-group_MeJZP {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n}\n\n.menu-bar_account-info-group_MeJZP .menu-bar_menu-bar-item_oLDa- {\n    margin: 0 .25rem;\n    padding: 0 0.75rem;\n}\n\n.menu-bar_mystuff-icon_3DtcD {\n    margin: 0 .25rem;\n    height: 1rem;\n}\n\n.menu-bar_help-icon_3Xtrt {\n    margin: 0 .25rem 0 0;\n}\n\n[dir=\"rtl\"] .menu-bar_help-icon_3Xtrt {\n    margin: 0 0 0 .25rem;\n}\n\n.menu-bar_account-nav-menu_3uu9p, .menu-bar_mystuff-button_16jPf {\n    padding: 0 .25rem;\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n}\n\n.menu-bar_profile-icon_2bJkI {\n    margin: 0 .25rem;\n    width: 2rem;\n    border-radius: calc(0.5rem / 2);\n}\n\n.menu-bar_dropdown-caret-icon_FkdUe {\n    width: 0.5rem;\n    height: 0.5rem;\n}\n\n[dir=\"ltr\"] .menu-bar_dropdown-caret-icon_FkdUe {\n    margin-left: .5rem;\n}\n\n[dir=\"rtl\"] .menu-bar_dropdown-caret-icon_FkdUe {\n    margin-right: .5rem;\n}\n\n.menu-bar_disabled_3x5sy {\n    opacity: 0.5;\n}\n\n.menu-bar_mystuff_3RiSb > a {\n  background-repeat: no-repeat;\n  background-position: center center;\n  background-size: 45%;\n  padding-right: 10px;\n  padding-left: 10px;\n  width: 30px;\n  overflow: hidden;\n  text-indent: 50px;\n  white-space: nowrap;\n}\n\n.menu-bar_mystuff_3RiSb > a:hover {\n  background-size: 50%;\n}\n\n.menu-bar_mystuff_3RiSb > a {\n  /* background-image: url(\"/images/mystuff.png\"); */\n}\n\n.menu-bar_about-icon_dZI7K {\n    height: 1.25rem;\n    margin: 0.5rem;\n    vertical-align: middle;\n}\n\n.menu-bar_collapsible-label_o2tym {\n    margin: 0 .25rem;\n}\n\n@media only screen and (max-width: 1124px) {\n    .menu-bar_tutorials-label_2tFBo, .menu-bar_collapsible-label_o2tym {\n        display: none;\n    }\n\n    .menu-bar_help-icon_3Xtrt {\n        margin-right: 0;\n    }\n}\n\n.menu-bar_menu-item-link_20T0- {\n    color: inherit;\n    text-decoration: none;\n}\n\n/* Git 快捷按钮样式 */\n\n.menu-bar_gitQuickButtonsGroup_3vKqz {\n    display: flex;\n    gap: 0.25rem;\n    align-items: center;\n    margin-left: 0.5rem;\n}\n\n.menu-bar_gitQuickButton_w8Gm5 {\n    padding: 0.25rem 0.5rem;\n    font-size: 0.7rem;\n    font-weight: normal;\n    background: rgba(255, 255, 255, 0.2);\n    color: white;\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    border-radius: 3px;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    white-space: nowrap;\n}\n\n.menu-bar_gitQuickButton_w8Gm5:hover {\n    background: rgba(255, 255, 255, 0.3);\n    border-color: rgba(255, 255, 255, 0.5);\n}\n\n.menu-bar_gitQuickButton_w8Gm5:active {\n    background: rgba(255, 255, 255, 0.4);\n}\n\n.menu-bar_gitQuickButton_w8Gm5:disabled {\n    opacity: 0.5;\n    cursor: not-allowed;\n}\n", ""]);
+exports.push([module.i, "/* overridden by src/lib/themes/guiHelpers.js */\n\n/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */\n\n/* layout contants from `layout-constants.js` */\n\n/*\n    Contains constants for the z-index values of elements that are part of the global stack context.\n    In other words, z-index values that are \"inside\" a component are not added here.\n    This prevents conflicts between identical z-index values in different components.\n*/\n\n/* Toolbox z-index: 40; set in scratch-blocks */\n\n/* tooltips should go over add buttons if they overlap */\n\n/* monitors go over add buttons */\n\n/* \"ask\" block text input goes above monitors */\n\n/* menu-bar should go over monitors, alerts and tutorials */\n\n/* behind menu-bar */\n\n/* Block drag z-index: 1000; default 50 is overriden in blocks.css */\n\n/* so it is draggable into other panes */\n\n/* behind modals */\n\n/* behind modals */\n\n/* above menu-bar when dragging */\n\n/* in most interfaces, the context menu is always on top */\n\n.menu-bar_menu-bar_JcuHF {\n    display: flex;\n    flex-direction: row;\n    justify-content: space-between;\n    flex-wrap: nowrap;\n    gap: 0.5rem;\n\n    /*\n        For most things, we shouldn't explicitly set height, and let the\n        content push the element to whatever fits. Using a fixed height\n        instead, will help us subtract the value we assign from the body,\n        adding up to a perfect 100%. This means we don't need to set\n        overflow: hidden, which makes it hard to debug. border-box\n        simplifies by all of this by removing padding from the equation.\n    */\n    box-sizing: border-box;\n    height: 3rem;\n\n    /*\n        @todo: This adds ~20px in Chrome, when scrolling to the right,\n        but fixes [FFx + Safari] [resize window down + scroll to the right] bug.\n        width: 100%;\n    */\n    font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n    font-size: 0.75rem;\n    font-weight: bold;\n    background-color: var(--menu-bar-background);\n    background-image: var(--menu-bar-background-image);\n    color: var(--menu-bar-foreground);\n}\n\n.menu-bar_main-menu_3wjWH {\n    display: flex;\n    flex-direction: row;\n    justify-content: flex-start;\n    flex-wrap: nowrap;\n    align-items: center;\n    flex-grow: 1;\n    gap: 0.5rem;\n}\n\n.menu-bar_inactive_2rk8q {\n    opacity: 0;\n}\n\n.menu-bar_scratch-logo_2uReV {\n    height:  1.6rem;\n    vertical-align: middle;\n}\n\n.menu-bar_scratch-logo_2uReV.menu-bar_clickable_1g3uo {\n    cursor: pointer;\n}\n\n.menu-bar_menu-bar-item_oLDa- {\n    display: flex;\n    text-decoration: none;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    align-self: center;\n    position: relative;\n    align-items: center;\n    white-space: nowrap;\n    height: 3rem;\n}\n\n.menu-bar_menu-bar-item_oLDa-.menu-bar_hoverable_c6WFB {\n    cursor: pointer;\n}\n\n.menu-bar_menu-bar-item_oLDa-.menu-bar_active_2Lfqh,\n.menu-bar_menu-bar-item_oLDa-.menu-bar_hoverable_c6WFB:hover {\n    background-color: var(--ui-black-transparent);\n}\n\n.menu-bar_menu-bar-item_oLDa-.menu-bar_growable_1sHWN {\n    max-width: 12rem;\n    flex: 1;\n}\n\n.menu-bar_title-field-growable_3qr4G {\n    flex-grow: 1;\n    width: 2rem;\n}\n\n.menu-bar_file-group_1_CHX {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    gap: 0.5rem;\n}\n\n.menu-bar_file-group_1_CHX .menu-bar_menu-bar-item_oLDa- {\n    padding: 0 0.5rem;\n}\n\n.menu-bar_menu-bar-menu_239MD {\n    margin-top: 3rem;\n    z-index: 491;\n}\n\n.menu-bar_feedback-link_1BnAR {\n    color: var(--menu-bar-background);\n    text-decoration: none;\n}\n\n.menu-bar_feedback-button_2rEcj {\n    background-color: white;\n    color: inherit;\n    height: 34px;\n}\n\n.menu-bar_divider_2VFCm {\n    height: 34px;\n}\n\n.menu-bar_author-info_22Nub {\n    margin-left: .25rem;\n    margin-right: .6875rem;\n}\n\n.menu-bar_menu-bar-button_3IDN0 {\n    height: 2rem;\n}\n\n.menu-bar_remix-button_2LQQc {\n    background-color: var(--pen-primary)\n}\n\n.menu-bar_remix-button-icon_2E93U {\n    height: 1.25rem;\n}\n\n.menu-bar_coming-soon_3yU1L >:not(.menu-bar_coming-soon-tooltip_20GhI) {\n    opacity: 0.5;\n}\n\n.menu-bar_account-info-group_MeJZP {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n}\n\n.menu-bar_account-info-group_MeJZP .menu-bar_menu-bar-item_oLDa- {\n    margin: 0 .25rem;\n    padding: 0 0.75rem;\n}\n\n.menu-bar_mystuff-icon_3DtcD {\n    margin: 0 .25rem;\n    height: 1rem;\n}\n\n.menu-bar_help-icon_3Xtrt {\n    margin: 0 .25rem 0 0;\n}\n\n[dir=\"rtl\"] .menu-bar_help-icon_3Xtrt {\n    margin: 0 0 0 .25rem;\n}\n\n.menu-bar_account-nav-menu_3uu9p, .menu-bar_mystuff-button_16jPf {\n    padding: 0 .25rem;\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n}\n\n.menu-bar_profile-icon_2bJkI {\n    margin: 0 .25rem;\n    width: 2rem;\n    border-radius: calc(0.5rem / 2);\n}\n\n.menu-bar_dropdown-caret-icon_FkdUe {\n    width: 0.5rem;\n    height: 0.5rem;\n}\n\n[dir=\"ltr\"] .menu-bar_dropdown-caret-icon_FkdUe {\n    margin-left: .5rem;\n}\n\n[dir=\"rtl\"] .menu-bar_dropdown-caret-icon_FkdUe {\n    margin-right: .5rem;\n}\n\n.menu-bar_disabled_3x5sy {\n    opacity: 0.5;\n}\n\n.menu-bar_mystuff_3RiSb > a {\n  background-repeat: no-repeat;\n  background-position: center center;\n  background-size: 45%;\n  padding-right: 10px;\n  padding-left: 10px;\n  width: 30px;\n  overflow: hidden;\n  text-indent: 50px;\n  white-space: nowrap;\n}\n\n.menu-bar_mystuff_3RiSb > a:hover {\n  background-size: 50%;\n}\n\n.menu-bar_mystuff_3RiSb > a {\n  /* background-image: url(\"/images/mystuff.png\"); */\n}\n\n.menu-bar_about-icon_dZI7K {\n    height: 1.25rem;\n    margin: 0.5rem;\n    vertical-align: middle;\n}\n\n.menu-bar_collapsible-label_o2tym {\n    margin: 0 .25rem;\n}\n\n@media only screen and (max-width: 1124px) {\n    .menu-bar_tutorials-label_2tFBo, .menu-bar_collapsible-label_o2tym {\n        display: none;\n    }\n\n    .menu-bar_help-icon_3Xtrt {\n        margin-right: 0;\n    }\n}\n\n.menu-bar_menu-item-link_20T0- {\n    color: inherit;\n    text-decoration: none;\n}\n\n/* Git 快捷按钮样式 */\n\n.menu-bar_gitQuickButtonsGroup_3vKqz {\n    display: flex;\n    gap: 0.25rem;\n    align-items: center;\n    margin-left: 0.5rem;\n}\n\n.menu-bar_gitQuickButton_w8Gm5 {\n    padding: 0.25rem 0.5rem;\n    font-size: 0.7rem;\n    font-weight: normal;\n    background: rgba(255, 255, 255, 0.2);\n    color: white;\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    border-radius: 3px;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    white-space: nowrap;\n}\n\n.menu-bar_gitQuickButton_w8Gm5:hover {\n    background: rgba(255, 255, 255, 0.3);\n    border-color: rgba(255, 255, 255, 0.5);\n}\n\n.menu-bar_gitQuickButton_w8Gm5:active {\n    background: rgba(255, 255, 255, 0.4);\n}\n\n.menu-bar_gitQuickButton_w8Gm5:disabled {\n    opacity: 0.5;\n    cursor: not-allowed;\n}\n\n/* Git button specific styling */\n\n.menu-bar_git-button-icon_31l6E {\n    display: none;\n}\n\n@media only screen and (max-width: 1124px) {\n    .menu-bar_git-button-icon_31l6E {\n        display: inline-block;\n    }\n}\n", ""]);
 
 // exports
 exports.locals = {
@@ -1738,7 +1655,9 @@ exports.locals = {
 	"menu-item-link": "menu-bar_menu-item-link_20T0-",
 	"menuItemLink": "menu-bar_menu-item-link_20T0-",
 	"gitQuickButtonsGroup": "menu-bar_gitQuickButtonsGroup_3vKqz",
-	"gitQuickButton": "menu-bar_gitQuickButton_w8Gm5"
+	"gitQuickButton": "menu-bar_gitQuickButton_w8Gm5",
+	"git-button-icon": "menu-bar_git-button-icon_31l6E",
+	"gitButtonIcon": "menu-bar_git-button-icon_31l6E"
 };
 
 /***/ }),
@@ -9546,418 +9465,6 @@ Label.defaultProps = {
 
 /***/ }),
 
-/***/ "./src/components/git-commit-modal/git-commit-modal.css":
-/*!**************************************************************!*\
-  !*** ./src/components/git-commit-modal/git-commit-modal.css ***!
-  \**************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--5-1!../../../node_modules/postcss-loader/src??postcss!./git-commit-modal.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/components/git-commit-modal/git-commit-modal.css");
-
-if(typeof content === 'string') content = [[module.i, content, '']];
-
-var transform;
-var insertInto;
-
-
-
-var options = {"hmr":true}
-
-options.transform = transform
-options.insertInto = undefined;
-
-var update = __webpack_require__(/*! ../../../node_modules/style-loader/lib/addStyles.js */ "./node_modules/style-loader/lib/addStyles.js")(content, options);
-
-if(content.locals) module.exports = content.locals;
-
-if(false) {}
-
-/***/ }),
-
-/***/ "./src/components/git-commit-modal/git-commit-modal.jsx":
-/*!**************************************************************!*\
-  !*** ./src/components/git-commit-modal/git-commit-modal.jsx ***!
-  \**************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
-/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-intl */ "./node_modules/react-intl/lib/index.es.js");
-/* harmony import */ var _box_box_jsx__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../box/box.jsx */ "./src/components/box/box.jsx");
-/* harmony import */ var _button_button_jsx__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../button/button.jsx */ "./src/components/button/button.jsx");
-/* harmony import */ var _modal_modal_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../modal/modal.jsx */ "./src/components/modal/modal.jsx");
-/* harmony import */ var _forms_input_jsx__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../forms/input.jsx */ "./src/components/forms/input.jsx");
-/* harmony import */ var _forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../forms/label.jsx */ "./src/components/forms/label.jsx");
-/* harmony import */ var _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./git-commit-modal.css */ "./src/components/git-commit-modal/git-commit-modal.css");
-/* harmony import */ var _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(_git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../lib/github-api.js */ "./src/lib/github-api.js");
-
-
-
-
-
-
-
-
-
-
-const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_2__["defineMessages"])({
-  title: {
-    "id": "gui.gitCommit.title",
-    "defaultMessage": "Git Commit"
-  },
-  tokenLabel: {
-    "id": "gui.gitCommit.tokenLabel",
-    "defaultMessage": "GitHub Personal Token"
-  },
-  tokenPlaceholder: {
-    "id": "gui.gitCommit.tokenPlaceholder",
-    "defaultMessage": "Enter your GitHub Personal Access Token"
-  },
-  repositoryLabel: {
-    "id": "gui.gitCommit.repositoryLabel",
-    "defaultMessage": "Repository"
-  },
-  repositoryPlaceholder: {
-    "id": "gui.gitCommit.repositoryPlaceholder",
-    "defaultMessage": "owner/repository"
-  },
-  summaryLabel: {
-    "id": "gui.gitCommit.summaryLabel",
-    "defaultMessage": "Commit Summary"
-  },
-  summaryPlaceholder: {
-    "id": "gui.gitCommit.summaryPlaceholder",
-    "defaultMessage": "Brief summary of changes"
-  },
-  descriptionLabel: {
-    "id": "gui.gitCommit.descriptionLabel",
-    "defaultMessage": "Commit Description"
-  },
-  descriptionPlaceholder: {
-    "id": "gui.gitCommit.descriptionPlaceholder",
-    "defaultMessage": "Detailed description of changes (optional)"
-  },
-  readmeLabel: {
-    "id": "gui.gitCommit.readmeLabel",
-    "defaultMessage": "README.md (Optional)"
-  },
-  commitButton: {
-    "id": "gui.gitCommit.commitButton",
-    "defaultMessage": "Commit to GitHub"
-  },
-  cancelButton: {
-    "id": "gui.gitCommit.cancelButton",
-    "defaultMessage": "Cancel"
-  },
-  saveToken: {
-    "id": "gui.gitCommit.saveToken",
-    "defaultMessage": "Save token for future use"
-  },
-  fetchButton: {
-    "id": "gui.gitCommit.fetchButton",
-    "defaultMessage": "Fetch from GitHub"
-  },
-  loading: {
-    "id": "gui.gitCommit.loading",
-    "defaultMessage": "Processing..."
-  },
-  fetching: {
-    "id": "gui.gitCommit.fetching",
-    "defaultMessage": "Fetching..."
-  }
-});
-const GitCommitModal = props => {
-  const {
-    intl,
-    isOpen,
-    onCancel,
-    onCommit,
-    onFetch,
-    projectData
-  } = props;
-  const [token, setToken] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
-  const [repository, setRepository] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
-  const [summary, setSummary] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
-  const [description, setDescription] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
-  const [readmeFile, setReadmeFile] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(null);
-  const [saveToken, setSaveToken] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
-  const [isLoading, setIsLoading] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
-  const [isFetching, setIsFetching] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
-  const [error, setError] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
-  const [success, setSuccess] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
-
-  // 组件初始化时加载保存的 token
-  react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
-    const savedToken = _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__["default"].getToken();
-    if (savedToken) {
-      setToken(savedToken);
-      setSaveToken(true);
-    }
-  }, []);
-  const handleTokenChange = e => {
-    setToken(e.target.value);
-    setError('');
-  };
-  const handleRepositoryChange = e => {
-    setRepository(e.target.value);
-    setError('');
-  };
-  const handleSummaryChange = e => {
-    setSummary(e.target.value);
-    setError('');
-  };
-  const handleDescriptionChange = e => {
-    setDescription(e.target.value);
-    setError('');
-  };
-  const handleReadmeChange = e => {
-    const file = e.target.files[0];
-    if (file && file.name.toLowerCase().endsWith('.md')) {
-      setReadmeFile(file);
-      setError('');
-    } else if (file) {
-      setError('Please select a valid .md file');
-      e.target.value = ''; // 清除无效文件
-    }
-  };
-  const handleSaveTokenChange = e => {
-    setSaveToken(e.target.checked);
-  };
-  const validateInputs = () => {
-    if (!token.trim()) {
-      setError('Please enter your GitHub Personal Token');
-      return false;
-    }
-    if (!repository.trim()) {
-      setError('Please enter a repository');
-      return false;
-    }
-
-    // 验证仓库格式
-    const repoPattern = /^[^/]+\/[^/]+$/;
-    if (!repoPattern.test(repository.trim())) {
-      setError('Repository must be in format: owner/repository');
-      return false;
-    }
-    return true;
-  };
-  const handleSubmit = async () => {
-    if (!validateInputs()) {
-      return;
-    }
-    setIsLoading(true);
-    setError('');
-    setSuccess('');
-    try {
-      // 保存 token（如果用户选择）
-      if (saveToken && token) {
-        _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__["default"].saveToken(token);
-      }
-
-      // 创建 SB3 文件对象
-      let sb3File;
-      if (projectData instanceof Blob) {
-        // 如果已经是 Blob，直接创建 File
-        sb3File = new File([projectData], 'project.sb3', {
-          type: 'application/zip'
-        });
-      } else {
-        // 如果是 ArrayBuffer，先创建 Blob 再创建 File
-        const sb3Blob = new Blob([projectData], {
-          type: 'application/zip'
-        });
-        sb3File = new File([sb3Blob], 'project.sb3', {
-          type: 'application/zip'
-        });
-      }
-
-      // 提交到 GitHub
-      const commitSummary = summary.trim() || "Upload project from 02engine - ".concat(new Date().toISOString());
-      const commitDescription = description.trim();
-      const result = await _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__["default"].commitProject({
-        token: token.trim(),
-        repository: repository.trim(),
-        sb3File,
-        readmeFile,
-        commitMessage: commitSummary,
-        summary: commitSummary,
-        description: commitDescription
-      });
-      if (result.success) {
-        setSuccess("Successfully committed to ".concat(result.repository, " (").concat(result.branch, ")"));
-        onCommit && onCommit(result);
-      } else {
-        setError(result.error || 'Failed to commit to GitHub');
-      }
-    } catch (err) {
-      console.error('Commit error:', err);
-      setError(err.message || 'An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  const handleFetch = async () => {
-    if (!validateInputs()) {
-      return;
-    }
-    setIsFetching(true);
-    setError('');
-    setSuccess('');
-    try {
-      // 保存 token（如果用户选择）
-      if (saveToken && token) {
-        _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__["default"].saveToken(token);
-      }
-
-      // 从 GitHub 获取项目
-      const result = await _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__["default"].fetchProject(token.trim(), repository.trim());
-      if (result.success) {
-        setSuccess("Successfully fetched project from ".concat(result.repository, " (").concat(result.branch, ")"));
-        onFetch && onFetch(result);
-      } else {
-        setError(result.error || 'Failed to fetch from GitHub');
-      }
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError(err.message || 'An unexpected error occurred while fetching');
-    } finally {
-      setIsFetching(false);
-    }
-  };
-  const handleCancel = () => {
-    if (!isLoading && !isFetching) {
-      onCancel && onCancel();
-    }
-  };
-  const handleClearToken = () => {
-    _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__["default"].clearToken();
-    setToken('');
-    setSaveToken(false);
-  };
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_modal_modal_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.modalContent,
-    contentLabel: intl.formatMessage(messages.title),
-    isOpen: isOpen,
-    onRequestClose: handleCancel
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.container
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.header
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("h2", {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.title
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.title))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.body
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.formGroup
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
-    text: intl.formatMessage(messages.tokenLabel)
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
-    type: "password",
-    value: token,
-    onChange: handleTokenChange,
-    placeholder: intl.formatMessage(messages.tokenPlaceholder),
-    disabled: isLoading || isFetching,
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.input
-  })), token && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
-    type: "button",
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.clearButton,
-    onClick: handleClearToken,
-    disabled: isLoading || isFetching
-  }, "Clear")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.checkboxGroup
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("label", {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.checkboxLabel
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("input", {
-    type: "checkbox",
-    checked: saveToken,
-    onChange: handleSaveTokenChange,
-    disabled: isLoading || isFetching,
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.checkbox
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.saveToken))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.formGroup
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
-    text: intl.formatMessage(messages.repositoryLabel)
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
-    type: "text",
-    value: repository,
-    onChange: handleRepositoryChange,
-    placeholder: intl.formatMessage(messages.repositoryPlaceholder),
-    disabled: isLoading || isFetching,
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.input
-  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.formGroup
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
-    text: intl.formatMessage(messages.summaryLabel)
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
-    type: "text",
-    value: summary,
-    onChange: handleSummaryChange,
-    placeholder: intl.formatMessage(messages.summaryPlaceholder),
-    disabled: isLoading || isFetching,
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.input
-  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.formGroup
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
-    text: intl.formatMessage(messages.descriptionLabel)
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("textarea", {
-    value: description,
-    onChange: handleDescriptionChange,
-    placeholder: intl.formatMessage(messages.descriptionPlaceholder),
-    disabled: isLoading || isFetching,
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.textarea,
-    rows: 3
-  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.formGroup
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
-    text: intl.formatMessage(messages.readmeLabel)
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("input", {
-    type: "file",
-    accept: ".md,.markdown",
-    onChange: handleReadmeChange,
-    disabled: isLoading || isFetching,
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.fileInput
-  })), readmeFile && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.selectedFile
-  }, "Selected: ", readmeFile.name)), error && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.error
-  }, error), success && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.success
-  }, success)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.footer
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.cancelButton,
-    onClick: handleCancel,
-    disabled: isLoading || isFetching
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.cancelButton)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.fetchButton,
-    onClick: handleFetch,
-    disabled: isLoading || isFetching
-  }, isFetching ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.fetching) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.fetchButton)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
-    className: _git_commit_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.commitButton,
-    onClick: handleSubmit,
-    disabled: isLoading || isFetching
-  }, isLoading ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.loading) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.commitButton)))));
-};
-GitCommitModal.propTypes = {
-  intl: react_intl__WEBPACK_IMPORTED_MODULE_2__["intlShape"].isRequired,
-  isOpen: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool.isRequired,
-  onCancel: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func,
-  onCommit: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func,
-  onFetch: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func,
-  projectData: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.instanceOf(ArrayBuffer), prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.instanceOf(Blob)]).isRequired
-};
-/* harmony default export */ __webpack_exports__["default"] = (Object(react_intl__WEBPACK_IMPORTED_MODULE_2__["injectIntl"])(GitCommitModal));
-
-/***/ }),
-
 /***/ "./src/components/git-dropdown/git-dropdown.css":
 /*!******************************************************!*\
   !*** ./src/components/git-dropdown/git-dropdown.css ***!
@@ -10002,117 +9509,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-intl */ "./node_modules/react-intl/lib/index.es.js");
-/* harmony import */ var _lib_shared_messages__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../lib/shared-messages */ "./src/lib/shared-messages.js");
-/* harmony import */ var _git_dropdown_css__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./git-dropdown.css */ "./src/components/git-dropdown/git-dropdown.css");
-/* harmony import */ var _git_dropdown_css__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_git_dropdown_css__WEBPACK_IMPORTED_MODULE_4__);
-
-
-
-
-
-const GitDropdown = props => {
-  const {
-    intl,
-    isOpen,
-    onCommit,
-    onFetch,
-    onPullRequest,
-    onClose,
-    buttonRef,
-    position = 'bottom-left'
-  } = props;
-  if (!isOpen) return null;
-  const handleMenuClick = action => {
-    action();
-    onClose();
-  };
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
-    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_4___default.a.dropdownContainer
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
-    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_4___default.a.dropdownMenu,
-    style: {
-      bottom: position === 'bottom-left' ? '32px' : 'auto',
-      top: position === 'top-left' ? '32px' : 'auto',
-      left: position.includes('left') ? '0' : 'auto',
-      right: position.includes('right') ? '0' : 'auto'
-    }
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
-    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_4___default.a.dropdownItem,
-    onClick: () => handleMenuClick(onCommit)
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], _lib_shared_messages__WEBPACK_IMPORTED_MODULE_3__["default"].gitDropdownCommit)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
-    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_4___default.a.dropdownItem,
-    onClick: () => handleMenuClick(onFetch)
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], _lib_shared_messages__WEBPACK_IMPORTED_MODULE_3__["default"].gitDropdownFetch)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
-    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_4___default.a.dropdownItem,
-    onClick: () => handleMenuClick(onPullRequest)
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], _lib_shared_messages__WEBPACK_IMPORTED_MODULE_3__["default"].gitDropdownPullRequest))));
-};
-GitDropdown.propTypes = {
-  intl: react_intl__WEBPACK_IMPORTED_MODULE_2__["intlShape"].isRequired,
-  isOpen: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool.isRequired,
-  onCommit: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func.isRequired,
-  onFetch: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func.isRequired,
-  onPullRequest: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func.isRequired,
-  onClose: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func.isRequired,
-  buttonRef: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.object,
-  position: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.oneOf(['bottom-left', 'top-left', 'bottom-right', 'top-right'])
-};
-/* harmony default export */ __webpack_exports__["default"] = (Object(react_intl__WEBPACK_IMPORTED_MODULE_2__["injectIntl"])(GitDropdown));
-
-/***/ }),
-
-/***/ "./src/components/git-quick-modal/git-quick-modal.css":
-/*!************************************************************!*\
-  !*** ./src/components/git-quick-modal/git-quick-modal.css ***!
-  \************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--5-1!../../../node_modules/postcss-loader/src??postcss!./git-quick-modal.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/components/git-quick-modal/git-quick-modal.css");
-
-if(typeof content === 'string') content = [[module.i, content, '']];
-
-var transform;
-var insertInto;
-
-
-
-var options = {"hmr":true}
-
-options.transform = transform
-options.insertInto = undefined;
-
-var update = __webpack_require__(/*! ../../../node_modules/style-loader/lib/addStyles.js */ "./node_modules/style-loader/lib/addStyles.js")(content, options);
-
-if(content.locals) module.exports = content.locals;
-
-if(false) {}
-
-/***/ }),
-
-/***/ "./src/components/git-quick-modal/git-quick-modal.jsx":
-/*!************************************************************!*\
-  !*** ./src/components/git-quick-modal/git-quick-modal.jsx ***!
-  \************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
-/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-intl */ "./node_modules/react-intl/lib/index.es.js");
 /* harmony import */ var _box_box_jsx__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../box/box.jsx */ "./src/components/box/box.jsx");
 /* harmony import */ var _button_button_jsx__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../button/button.jsx */ "./src/components/button/button.jsx");
-/* harmony import */ var _modal_modal_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../modal/modal.jsx */ "./src/components/modal/modal.jsx");
-/* harmony import */ var _forms_input_jsx__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../forms/input.jsx */ "./src/components/forms/input.jsx");
-/* harmony import */ var _forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../forms/label.jsx */ "./src/components/forms/label.jsx");
-/* harmony import */ var _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./git-quick-modal.css */ "./src/components/git-quick-modal/git-quick-modal.css");
-/* harmony import */ var _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(_git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../lib/github-api.js */ "./src/lib/github-api.js");
+/* harmony import */ var _forms_input_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../forms/input.jsx */ "./src/components/forms/input.jsx");
+/* harmony import */ var _forms_label_jsx__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../forms/label.jsx */ "./src/components/forms/label.jsx");
+/* harmony import */ var _lib_shared_messages__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../lib/shared-messages */ "./src/lib/shared-messages.js");
+/* harmony import */ var _lib_github_api_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../lib/github-api.js */ "./src/lib/github-api.js");
+/* harmony import */ var _git_dropdown_css__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./git-dropdown.css */ "./src/components/git-dropdown/git-dropdown.css");
+/* harmony import */ var _git_dropdown_css__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(_git_dropdown_css__WEBPACK_IMPORTED_MODULE_9__);
 
 
 
@@ -10124,171 +9528,222 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_2__["defineMessages"])({
-  quickCommitTitle: {
-    "id": "gui.gitQuick.quickCommitTitle",
-    "defaultMessage": "Quick Commit"
+  title: {
+    "id": "gui.gitSidebar.title",
+    "defaultMessage": "Git Operations"
   },
-  fetchTitle: {
-    "id": "gui.gitQuick.fetchTitle",
-    "defaultMessage": "Fetch from GitHub"
+  backButton: {
+    "id": "gui.gitSidebar.backButton",
+    "defaultMessage": "\u2190 Back"
   },
-  pullRequestTitle: {
-    "id": "gui.gitQuick.pullRequestTitle",
-    "defaultMessage": "Create Pull Request"
+  closeButton: {
+    "id": "gui.gitSidebar.closeButton",
+    "defaultMessage": "Close"
+  },
+  tokenLabel: {
+    "id": "gui.gitSidebar.tokenLabel",
+    "defaultMessage": "GitHub Personal Token"
+  },
+  tokenPlaceholder: {
+    "id": "gui.gitSidebar.tokenPlaceholder",
+    "defaultMessage": "Enter your GitHub Personal Access Token"
+  },
+  repositoryLabel: {
+    "id": "gui.gitSidebar.repositoryLabel",
+    "defaultMessage": "Repository"
+  },
+  repositoryPlaceholder: {
+    "id": "gui.gitSidebar.repositoryPlaceholder",
+    "defaultMessage": "owner/repository"
   },
   summaryLabel: {
-    "id": "gui.gitQuick.summaryLabel",
-    "defaultMessage": "Summary"
+    "id": "gui.gitSidebar.summaryLabel",
+    "defaultMessage": "Commit Summary"
   },
   summaryPlaceholder: {
-    "id": "gui.gitQuick.summaryPlaceholder",
+    "id": "gui.gitSidebar.summaryPlaceholder",
     "defaultMessage": "Brief summary of changes"
   },
   descriptionLabel: {
-    "id": "gui.gitQuick.descriptionLabel",
-    "defaultMessage": "Description"
+    "id": "gui.gitSidebar.descriptionLabel",
+    "defaultMessage": "Commit Description"
   },
   descriptionPlaceholder: {
-    "id": "gui.gitQuick.descriptionPlaceholder",
+    "id": "gui.gitSidebar.descriptionPlaceholder",
     "defaultMessage": "Detailed description of changes (optional)"
   },
+  readmeLabel: {
+    "id": "gui.gitSidebar.readmeLabel",
+    "defaultMessage": "README.md (Optional)"
+  },
   prTitleLabel: {
-    "id": "gui.gitQuick.prTitleLabel",
+    "id": "gui.gitSidebar.prTitleLabel",
     "defaultMessage": "Pull Request Title"
   },
   prTitlePlaceholder: {
-    "id": "gui.gitQuick.prTitlePlaceholder",
+    "id": "gui.gitSidebar.prTitlePlaceholder",
     "defaultMessage": "Pull request title"
   },
   prDescriptionLabel: {
-    "id": "gui.gitQuick.prDescriptionLabel",
+    "id": "gui.gitSidebar.prDescriptionLabel",
     "defaultMessage": "Pull Request Description"
   },
   prDescriptionPlaceholder: {
-    "id": "gui.gitQuick.prDescriptionPlaceholder",
+    "id": "gui.gitSidebar.prDescriptionPlaceholder",
     "defaultMessage": "Description of what this PR changes (optional)"
   },
-  commitButton: {
-    "id": "gui.gitQuick.commitButton",
-    "defaultMessage": "Commit"
-  },
-  fetchButton: {
-    "id": "gui.gitQuick.fetchButton",
-    "defaultMessage": "Fetch"
-  },
-  createPrButton: {
-    "id": "gui.gitQuick.createPrButton",
-    "defaultMessage": "Create Pull Request"
-  },
-  cancelButton: {
-    "id": "gui.gitQuick.cancelButton",
-    "defaultMessage": "Cancel"
+  saveToken: {
+    "id": "gui.gitSidebar.saveToken",
+    "defaultMessage": "Save token for future use"
   },
   loading: {
-    "id": "gui.gitQuick.loading",
+    "id": "gui.gitSidebar.loading",
     "defaultMessage": "Processing..."
+  },
+  fetching: {
+    "id": "gui.gitSidebar.fetching",
+    "defaultMessage": "Fetching..."
   }
 });
-const GitQuickModal = props => {
+const GitDropdown = props => {
   const {
     intl,
     isOpen,
-    onCancel,
-    type,
-    repository,
-    token,
-    vm,
-    onSuccess
+    onCommit,
+    onFetch,
+    onPullRequest,
+    onClose,
+    vm
   } = props;
+
+  // View states
+  const [currentView, setCurrentView] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('main'); // 'main', 'settings', 'commit', 'quick-commit', 'fetch', 'pull-request'
+
+  // Form states
+  const [token, setToken] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
+  const [repository, setRepository] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
   const [summary, setSummary] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
   const [description, setDescription] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
+  const [readmeFile, setReadmeFile] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(null);
   const [prTitle, setPrTitle] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
   const [prDescription, setPrDescription] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
+  const [saveToken, setSaveToken] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
+
+  // UI states
   const [isLoading, setIsLoading] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
   const [error, setError] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
   const [success, setSuccess] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
-  const handleSummaryChange = e => {
-    setSummary(e.target.value);
-    setError('');
-  };
-  const handleDescriptionChange = e => {
-    setDescription(e.target.value);
-    setError('');
-  };
-  const handlePrTitleChange = e => {
-    setPrTitle(e.target.value);
-    setError('');
-  };
-  const handlePrDescriptionChange = e => {
-    setPrDescription(e.target.value);
-    setError('');
-  };
-  const handleQuickCommit = async () => {
-    if (!summary.trim()) {
-      setError('Please enter a commit summary');
-      return;
+
+  // Initialize saved token
+  react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
+    const savedToken = _lib_github_api_js__WEBPACK_IMPORTED_MODULE_8__["default"].getToken();
+    if (savedToken) {
+      setToken(savedToken);
+      setSaveToken(true);
     }
+  }, []);
+
+  // Reset form when view changes
+  react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
+    setError('');
+    setSuccess('');
+    setIsLoading(false);
+  }, [currentView]);
+  if (!isOpen) return null;
+  const handleMenuClick = view => {
+    setCurrentView(view);
+  };
+  const handleBack = () => {
+    setCurrentView('main');
+    setError('');
+    setSuccess('');
+  };
+  const validateInputs = () => {
+    const savedToken = _lib_github_api_js__WEBPACK_IMPORTED_MODULE_8__["default"].getToken();
+    if (!savedToken) {
+      setError('Please configure your GitHub token in Settings first');
+      return false;
+    }
+    if (!repository.trim()) {
+      setError('Please enter a repository');
+      return false;
+    }
+    const repoPattern = /^[^/]+\/[^/]+$/;
+    if (!repoPattern.test(repository.trim())) {
+      setError('Repository must be in format: owner/repository');
+      return false;
+    }
+    return true;
+  };
+  const handleFullCommit = async () => {
+    if (!validateInputs()) return;
     setIsLoading(true);
     setError('');
     setSuccess('');
     try {
-      // 导出项目数据
-      const projectData = await vm.saveProjectSb3();
-      const sb3Blob = new Blob([projectData], {
+      if (saveToken && token) {
+        _lib_github_api_js__WEBPACK_IMPORTED_MODULE_8__["default"].saveToken(token);
+      }
+
+      // Export project data
+      const sb3Data = await vm.saveProjectSb3();
+      const sb3Blob = new Blob([sb3Data], {
         type: 'application/zip'
       });
       const sb3File = new File([sb3Blob], 'project.sb3', {
         type: 'application/zip'
       });
-      const result = await _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__["default"].commitProject({
-        token,
-        repository,
+      const commitSummary = summary.trim() || "Upload project from 02engine - ".concat(new Date().toISOString());
+      const commitDescription = description.trim();
+      const result = await _lib_github_api_js__WEBPACK_IMPORTED_MODULE_8__["default"].commitProject({
+        token: token.trim(),
+        repository: repository.trim(),
         sb3File,
-        summary: summary.trim(),
-        description: description.trim()
+        readmeFile,
+        commitMessage: commitSummary,
+        summary: commitSummary,
+        description: commitDescription
       });
       if (result.success) {
-        setSuccess("Successfully committed to ".concat(repository));
-        // 更新 VM 中的 Git 数据
-        vm.runtime.platform.git.repository = repository;
+        setSuccess("Successfully committed to ".concat(result.repository, " (").concat(result.branch, ")"));
+        vm.runtime.platform.git.repository = result.repository;
         vm.runtime.platform.git.lastCommit = new Date().toISOString();
-        onSuccess && onSuccess(result);
+        onCommit && onCommit(result);
       } else {
-        setError(result.error || 'Failed to commit');
+        setError(result.error || 'Failed to commit to GitHub');
       }
     } catch (err) {
-      console.error('Quick commit failed:', err);
+      console.error('Commit error:', err);
       setError(err.message || 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
   };
   const handleFetch = async () => {
+    if (!validateInputs()) return;
     setIsLoading(true);
     setError('');
     setSuccess('');
     try {
-      const result = await _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__["default"].fetchProject(token, repository);
+      const result = await _lib_github_api_js__WEBPACK_IMPORTED_MODULE_8__["default"].fetchProject(token.trim(), repository.trim());
       if (result.success) {
-        // 加载获取的项目数据到 VM
         const arrayBuffer = result.projectData;
         await vm.loadProject(arrayBuffer);
-        setSuccess("Successfully fetched from ".concat(repository));
-        // 更新 VM 中的 Git 数据
+        setSuccess("Successfully fetched project from ".concat(result.repository, " (").concat(result.branch, ")"));
         vm.runtime.platform.git.repository = repository;
         vm.runtime.platform.git.lastFetch = new Date().toISOString();
-        onSuccess && onSuccess(result);
+        onFetch && onFetch(result);
       } else {
-        setError(result.error || 'Failed to fetch project');
+        setError(result.error || 'Failed to fetch from GitHub');
       }
     } catch (err) {
-      console.error('Fetch failed:', err);
-      setError(err.message || 'An unexpected error occurred');
+      console.error('Fetch error:', err);
+      setError(err.message || 'An unexpected error occurred while fetching');
     } finally {
       setIsLoading(false);
     }
   };
-  const handleCreatePullRequest = async () => {
+  const handlePullRequest = async () => {
     if (!prTitle.trim()) {
       setError('Please enter a pull request title');
       return;
@@ -10298,14 +9753,10 @@ const GitQuickModal = props => {
     setSuccess('');
     try {
       const [owner, repo] = repository.split('/').filter(part => part.trim());
-
-      // 检查仓库是否支持 Pull Request
-      const supportsPR = await _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__["default"].supportsPullRequests(token, owner, repo);
+      const supportsPR = await _lib_github_api_js__WEBPACK_IMPORTED_MODULE_8__["default"].supportsPullRequests(token, owner, repo);
       if (!supportsPR) {
         throw new Error('This repository does not support pull requests or you do not have permission');
       }
-
-      // 检查是否是 Fork
       const repoInfo = await fetch("https://api.github.com/repos/".concat(owner, "/").concat(repo), {
         headers: {
           'Authorization': "token ".concat(token),
@@ -10313,17 +9764,14 @@ const GitQuickModal = props => {
         }
       }).then(res => res.json());
       if (repoInfo.fork) {
-        // 如果是 Fork，提供创建 PR 的指导
         const upstreamUrl = "https://github.com/".concat(repoInfo.parent.owner.login, "/").concat(repoInfo.parent.name, "/compare/").concat(repoInfo.parent.default_branch, "...").concat(owner, ":").concat(repoInfo.default_branch);
         setSuccess("This is a fork repository. Create a pull request at: ".concat(upstreamUrl));
         return;
       }
-
-      // 对于非 Fork 仓库，提供分支信息指导
-      const defaultBranch = await _lib_github_api_js__WEBPACK_IMPORTED_MODULE_9__["default"].getDefaultBranch(token, owner, repo);
+      const defaultBranch = await _lib_github_api_js__WEBPACK_IMPORTED_MODULE_8__["default"].getDefaultBranch(token, owner, repo);
       const repoUrl = "https://github.com/".concat(owner, "/").concat(repo);
       setSuccess("Repository ready for pull requests. Create a new branch and submit a PR at: ".concat(repoUrl, "/pulls"));
-      onSuccess && onSuccess({
+      onPullRequest && onPullRequest({
         success: true,
         repository: repository
       });
@@ -10334,131 +9782,474 @@ const GitQuickModal = props => {
       setIsLoading(false);
     }
   };
-  const handleSubmit = () => {
-    switch (type) {
-      case 'commit':
-        handleQuickCommit();
-        break;
-      case 'fetch':
-        handleFetch();
-        break;
-      case 'pullrequest':
-        handleCreatePullRequest();
-        break;
-      default:
-        break;
+  const renderMainMenu = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      marginBottom: 'auto'
     }
-  };
-  const getTitle = () => {
-    switch (type) {
-      case 'commit':
-        return intl.formatMessage(messages.quickCommitTitle);
-      case 'fetch':
-        return intl.formatMessage(messages.fetchTitle);
-      case 'pullrequest':
-        return intl.formatMessage(messages.pullRequestTitle);
-      default:
-        return '';
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("h3", {
+    style: {
+      margin: '0 0 20px 0',
+      fontSize: '18px',
+      fontWeight: '600',
+      color: 'var(--text-primary)',
+      borderBottom: '2px solid var(--ui-black-transparent)',
+      paddingBottom: '10px'
     }
-  };
-  const getButtonText = () => {
-    switch (type) {
-      case 'commit':
-        return intl.formatMessage(messages.commitButton);
-      case 'fetch':
-        return intl.formatMessage(messages.fetchButton);
-      case 'pullrequest':
-        return intl.formatMessage(messages.createPrButton);
-      default:
-        return '';
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.title))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      flex: 1
     }
-  };
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_modal_modal_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.modalContent,
-    contentLabel: getTitle(),
-    isOpen: isOpen,
-    onRequestClose: onCancel
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
+    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_9___default.a.dropdownItem,
+    onClick: () => handleMenuClick('commit')
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], _lib_shared_messages__WEBPACK_IMPORTED_MODULE_7__["default"].gitDropdownCommit)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
+    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_9___default.a.dropdownItem,
+    onClick: () => handleMenuClick('fetch')
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], _lib_shared_messages__WEBPACK_IMPORTED_MODULE_7__["default"].gitDropdownFetch)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
+    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_9___default.a.dropdownItem,
+    onClick: () => handleMenuClick('pull-request')
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], _lib_shared_messages__WEBPACK_IMPORTED_MODULE_7__["default"].gitDropdownPullRequest)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
+    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_9___default.a.dropdownItem,
+    onClick: () => handleMenuClick('settings')
+  }, "\u2699\uFE0F Settings")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      marginTop: 'auto',
+      paddingTop: '20px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
+    onClick: onClose,
+    style: {
+      width: '100%',
+      padding: '10px',
+      background: 'var(--ui-black-transparent)',
+      color: 'var(--text-primary)',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '14px',
+      fontWeight: '500',
+      transition: 'all 0.2s ease'
+    },
+    onMouseOver: e => e.target.style.background = 'var(--ui-black-transparent)',
+    onMouseOut: e => e.target.style.background = 'var(--ui-black-transparent)'
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.closeButton))));
+  const renderFormHeader = title => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      marginBottom: '20px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("h3", {
+    style: {
+      margin: '0',
+      fontSize: '16px',
+      fontWeight: '600',
+      color: 'var(--text-primary)'
+    }
+  }, title));
+  const renderCommitForm = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, renderFormHeader('Full Commit'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      flex: 1,
+      overflowY: 'auto'
+    }
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.container
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.header
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("h2", {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.title
-  }, getTitle())), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.body
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.repositoryInfo
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("strong", null, "Repository:"), " ", repository), type === 'commit' && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.formGroup
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
+    text: intl.formatMessage(messages.repositoryLabel)
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    type: "text",
+    value: repository,
+    onChange: e => setRepository(e.target.value),
+    placeholder: intl.formatMessage(messages.repositoryPlaceholder),
+    disabled: isLoading
+  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
     text: intl.formatMessage(messages.summaryLabel)
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], {
     type: "text",
     value: summary,
-    onChange: handleSummaryChange,
+    onChange: e => setSummary(e.target.value),
     placeholder: intl.formatMessage(messages.summaryPlaceholder),
-    disabled: isLoading,
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.input
+    disabled: isLoading
   }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.formGroup
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
     text: intl.formatMessage(messages.descriptionLabel)
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("textarea", {
     value: description,
-    onChange: handleDescriptionChange,
+    onChange: e => setDescription(e.target.value),
     placeholder: intl.formatMessage(messages.descriptionPlaceholder),
     disabled: isLoading,
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.textarea,
+    style: {
+      width: '100%',
+      minHeight: '80px',
+      padding: '8px',
+      border: '1px solid var(--ui-black-transparent)',
+      borderRadius: '4px',
+      fontFamily: 'inherit',
+      fontSize: '14px'
+    },
     rows: 3
-  })))), type === 'pullrequest' && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.formGroup
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
+  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
+    text: intl.formatMessage(messages.readmeLabel)
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("input", {
+    type: "file",
+    accept: ".md,.markdown",
+    onChange: e => {
+      const file = e.target.files[0];
+      if (file && file.name.toLowerCase().endsWith('.md')) {
+        setReadmeFile(file);
+      } else if (file) {
+        setError('Please select a valid .md file');
+        e.target.value = '';
+      }
+    },
+    disabled: isLoading,
+    style: {
+      width: '100%'
+    }
+  })), readmeFile && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      marginTop: '5px',
+      fontSize: '12px',
+      color: 'var(--text-primary)'
+    }
+  }, "Selected: ", readmeFile.name)), error && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px',
+      padding: '10px',
+      background: '#fee',
+      border: '1px solid #fcc',
+      borderRadius: '4px',
+      color: '#c33',
+      fontSize: '14px'
+    }
+  }, error), success && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px',
+      padding: '10px',
+      background: '#efe',
+      border: '1px solid #cfc',
+      borderRadius: '4px',
+      color: '#363',
+      fontSize: '14px'
+    }
+  }, success)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      marginTop: 'auto',
+      paddingTop: '20px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    onClick: handleFullCommit,
+    disabled: isLoading,
+    style: {
+      width: '100%',
+      marginBottom: '10px'
+    }
+  }, isLoading ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.loading) : 'Commit to GitHub'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    onClick: handleBack,
+    disabled: isLoading,
+    style: {
+      width: '100%'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.backButton))));
+  const renderFetchForm = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, renderFormHeader('Fetch from GitHub'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      flex: 1,
+      overflowY: 'auto'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
+    text: intl.formatMessage(messages.repositoryLabel)
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    type: "text",
+    value: repository,
+    onChange: e => setRepository(e.target.value),
+    placeholder: intl.formatMessage(messages.repositoryPlaceholder),
+    disabled: isLoading
+  }))), error && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px',
+      padding: '10px',
+      background: '#fee',
+      border: '1px solid #fcc',
+      borderRadius: '4px',
+      color: '#c33',
+      fontSize: '14px'
+    }
+  }, error), success && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px',
+      padding: '10px',
+      background: '#efe',
+      border: '1px solid #cfc',
+      borderRadius: '4px',
+      color: '#363',
+      fontSize: '14px'
+    }
+  }, success)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      marginTop: 'auto',
+      paddingTop: '20px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    onClick: handleFetch,
+    disabled: isLoading,
+    style: {
+      width: '100%',
+      marginBottom: '10px'
+    }
+  }, isLoading ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.fetching) : 'Fetch'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    onClick: handleBack,
+    disabled: isLoading,
+    style: {
+      width: '100%'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.backButton))));
+  const renderPullRequestForm = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, renderFormHeader('Create Pull Request'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      flex: 1,
+      overflowY: 'auto'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px',
+      padding: '10px',
+      background: 'var(--ui-white-dim)',
+      borderRadius: '4px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("strong", null, "Repository:"), " ", repository || 'Not set'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
     text: intl.formatMessage(messages.prTitleLabel)
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], {
     type: "text",
     value: prTitle,
-    onChange: handlePrTitleChange,
+    onChange: e => setPrTitle(e.target.value),
     placeholder: intl.formatMessage(messages.prTitlePlaceholder),
-    disabled: isLoading,
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.input
+    disabled: isLoading
   }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.formGroup
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
     text: intl.formatMessage(messages.prDescriptionLabel)
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("textarea", {
     value: prDescription,
-    onChange: handlePrDescriptionChange,
+    onChange: e => setPrDescription(e.target.value),
     placeholder: intl.formatMessage(messages.prDescriptionPlaceholder),
     disabled: isLoading,
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.textarea,
+    style: {
+      width: '100%',
+      minHeight: '80px',
+      padding: '8px',
+      border: '1px solid var(--ui-black-transparent)',
+      borderRadius: '4px',
+      fontFamily: 'inherit',
+      fontSize: '14px'
+    },
     rows: 3
-  })))), error && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.error
+  }))), error && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px',
+      padding: '10px',
+      background: '#fee',
+      border: '1px solid #fcc',
+      borderRadius: '4px',
+      color: '#c33',
+      fontSize: '14px'
+    }
   }, error), success && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.success
-  }, success)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.footer
+    style: {
+      marginBottom: '15px',
+      padding: '10px',
+      background: '#efe',
+      border: '1px solid #cfc',
+      borderRadius: '4px',
+      color: '#363',
+      fontSize: '14px'
+    }
+  }, success)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      marginTop: 'auto',
+      paddingTop: '20px'
+    }
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.cancelButton,
-    onClick: onCancel,
+    onClick: handlePullRequest,
+    disabled: isLoading,
+    style: {
+      width: '100%',
+      marginBottom: '10px'
+    }
+  }, isLoading ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.loading) : 'Create Pull Request'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    onClick: handleBack,
+    disabled: isLoading,
+    style: {
+      width: '100%'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.backButton))));
+  const renderSettingsForm = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, renderFormHeader('Git Settings'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      flex: 1,
+      overflowY: 'auto'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '20px',
+      padding: '15px',
+      background: 'var(--ui-white-dim)',
+      borderRadius: '6px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("h4", {
+    style: {
+      margin: '0 0 10px 0',
+      fontSize: '14px',
+      fontWeight: '600',
+      color: 'var(--text-primary)'
+    }
+  }, "Token Status"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      fontSize: '13px',
+      color: token ? '#363' : '#c33'
+    }
+  }, token ? '✓ Token configured' : '✗ No token configured'), token && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      fontSize: '12px',
+      color: 'var(--text-primary)',
+      marginTop: '5px',
+      opacity: 0.7
+    }
+  }, "Token ends with: ...", token.slice(-4))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
+    text: intl.formatMessage(messages.tokenLabel)
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    type: "password",
+    value: token,
+    onChange: e => setToken(e.target.value),
+    placeholder: intl.formatMessage(messages.tokenPlaceholder),
     disabled: isLoading
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.cancelButton)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
-    className: _git_quick_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.actionButton,
-    onClick: handleSubmit,
+  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("label", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("input", {
+    type: "checkbox",
+    checked: saveToken,
+    onChange: e => setSaveToken(e.target.checked),
     disabled: isLoading
-  }, isLoading ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.loading) : getButtonText()))));
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.saveToken))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_label_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
+    text: intl.formatMessage(messages.repositoryLabel)
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_forms_input_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    type: "text",
+    value: repository,
+    onChange: e => setRepository(e.target.value),
+    placeholder: intl.formatMessage(messages.repositoryPlaceholder),
+    disabled: isLoading
+  }))), error && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px',
+      padding: '10px',
+      background: '#fee',
+      border: '1px solid #fcc',
+      borderRadius: '4px',
+      color: '#c33',
+      fontSize: '14px'
+    }
+  }, error), success && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    style: {
+      marginBottom: '15px',
+      padding: '10px',
+      background: '#efe',
+      border: '1px solid #cfc',
+      borderRadius: '4px',
+      color: '#363',
+      fontSize: '14px'
+    }
+  }, success)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      marginTop: 'auto',
+      paddingTop: '20px'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    onClick: () => {
+      if (saveToken && token) {
+        _lib_github_api_js__WEBPACK_IMPORTED_MODULE_8__["default"].saveToken(token);
+        setSuccess('Settings saved successfully!');
+      } else if (!saveToken) {
+        _lib_github_api_js__WEBPACK_IMPORTED_MODULE_8__["default"].clearToken();
+        setToken('');
+        setSuccess('Token cleared successfully!');
+      }
+    },
+    disabled: isLoading,
+    style: {
+      width: '100%',
+      marginBottom: '10px'
+    }
+  }, "Save Settings"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    onClick: handleBack,
+    disabled: isLoading,
+    style: {
+      width: '100%'
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], messages.backButton))));
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'settings':
+        return renderSettingsForm();
+      case 'commit':
+        return renderCommitForm();
+      case 'fetch':
+        return renderFetchForm();
+      case 'pull-request':
+        return renderPullRequestForm();
+      default:
+        return renderMainMenu();
+    }
+  };
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_9___default.a.dropdownContainer
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    className: _git_dropdown_css__WEBPACK_IMPORTED_MODULE_9___default.a.dropdownMenu
+  }, renderCurrentView()));
 };
-GitQuickModal.propTypes = {
+GitDropdown.propTypes = {
   intl: react_intl__WEBPACK_IMPORTED_MODULE_2__["intlShape"].isRequired,
   isOpen: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool.isRequired,
-  onCancel: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func,
-  type: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.oneOf(['commit', 'fetch', 'pullrequest']).isRequired,
-  repository: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.string.isRequired,
-  token: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.string.isRequired,
-  vm: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.object.isRequired,
-  onSuccess: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func
+  onCommit: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func,
+  onFetch: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func,
+  onPullRequest: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func,
+  onClose: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func.isRequired,
+  vm: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.object.isRequired
 };
-/* harmony default export */ __webpack_exports__["default"] = (Object(react_intl__WEBPACK_IMPORTED_MODULE_2__["injectIntl"])(GitQuickModal));
+/* harmony default export */ __webpack_exports__["default"] = (Object(react_intl__WEBPACK_IMPORTED_MODULE_2__["injectIntl"])(GitDropdown));
 
 /***/ }),
 
@@ -10624,48 +10415,47 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var scratch_vm__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(scratch_vm__WEBPACK_IMPORTED_MODULE_9__);
 /* harmony import */ var _draggable_window_draggable_window_jsx__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../draggable-window/draggable-window.jsx */ "./src/components/draggable-window/draggable-window.jsx");
 /* harmony import */ var _draggable_window_minimized_bar_jsx__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../draggable-window/minimized-bar.jsx */ "./src/components/draggable-window/minimized-bar.jsx");
-/* harmony import */ var _git_commit_modal_git_commit_modal_jsx__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../git-commit-modal/git-commit-modal.jsx */ "./src/components/git-commit-modal/git-commit-modal.jsx");
-/* harmony import */ var _git_quick_modal_git_quick_modal_jsx__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../git-quick-modal/git-quick-modal.jsx */ "./src/components/git-quick-modal/git-quick-modal.jsx");
-/* harmony import */ var _lib_project_exporter_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../lib/project-exporter.js */ "./src/lib/project-exporter.js");
-/* harmony import */ var _lib_github_api_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../../lib/github-api.js */ "./src/lib/github-api.js");
-/* harmony import */ var _containers_blocks_jsx__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../../containers/blocks.jsx */ "./src/containers/blocks.jsx");
-/* harmony import */ var _containers_costume_tab_jsx__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../../containers/costume-tab.jsx */ "./src/containers/costume-tab.jsx");
-/* harmony import */ var _containers_target_pane_jsx__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../../containers/target-pane.jsx */ "./src/containers/target-pane.jsx");
-/* harmony import */ var _containers_sound_tab_jsx__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../../containers/sound-tab.jsx */ "./src/containers/sound-tab.jsx");
-/* harmony import */ var _containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../../containers/stage-wrapper.jsx */ "./src/containers/stage-wrapper.jsx");
-/* harmony import */ var _loader_loader_jsx__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../loader/loader.jsx */ "./src/components/loader/loader.jsx");
-/* harmony import */ var _box_box_jsx__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../box/box.jsx */ "./src/components/box/box.jsx");
-/* harmony import */ var _menu_bar_menu_bar_jsx__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../menu-bar/menu-bar.jsx */ "./src/components/menu-bar/menu-bar.jsx");
-/* harmony import */ var _containers_costume_library_jsx__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../../containers/costume-library.jsx */ "./src/containers/costume-library.jsx");
-/* harmony import */ var _containers_backdrop_library_jsx__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../../containers/backdrop-library.jsx */ "./src/containers/backdrop-library.jsx");
-/* harmony import */ var _containers_watermark_jsx__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ../../containers/watermark.jsx */ "./src/containers/watermark.jsx");
-/* harmony import */ var _containers_backpack_jsx__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ../../containers/backpack.jsx */ "./src/containers/backpack.jsx");
-/* harmony import */ var _browser_modal_browser_modal_jsx__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ../browser-modal/browser-modal.jsx */ "./src/components/browser-modal/browser-modal.jsx");
-/* harmony import */ var _containers_tips_library_jsx__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ../../containers/tips-library.jsx */ "./src/containers/tips-library.jsx");
-/* harmony import */ var _containers_cards_jsx__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../../containers/cards.jsx */ "./src/containers/cards.jsx");
-/* harmony import */ var _containers_alerts_jsx__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../../containers/alerts.jsx */ "./src/containers/alerts.jsx");
-/* harmony import */ var _containers_drag_layer_jsx__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ../../containers/drag-layer.jsx */ "./src/containers/drag-layer.jsx");
-/* harmony import */ var _containers_connection_modal_jsx__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ../../containers/connection-modal.jsx */ "./src/containers/connection-modal.jsx");
-/* harmony import */ var _telemetry_modal_telemetry_modal_jsx__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../telemetry-modal/telemetry-modal.jsx */ "./src/components/telemetry-modal/telemetry-modal.jsx");
-/* harmony import */ var _containers_tw_username_modal_jsx__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../../containers/tw-username-modal.jsx */ "./src/containers/tw-username-modal.jsx");
-/* harmony import */ var _containers_tw_settings_modal_jsx__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../../containers/tw-settings-modal.jsx */ "./src/containers/tw-settings-modal.jsx");
-/* harmony import */ var _containers_tw_security_manager_jsx__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../../containers/tw-security-manager.jsx */ "./src/containers/tw-security-manager.jsx");
-/* harmony import */ var _containers_tw_custom_extension_modal_jsx__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../../containers/tw-custom-extension-modal.jsx */ "./src/containers/tw-custom-extension-modal.jsx");
-/* harmony import */ var _containers_tw_restore_point_manager_jsx__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../../containers/tw-restore-point-manager.jsx */ "./src/containers/tw-restore-point-manager.jsx");
-/* harmony import */ var _containers_tw_fonts_modal_jsx__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ../../containers/tw-fonts-modal.jsx */ "./src/containers/tw-fonts-modal.jsx");
-/* harmony import */ var _containers_tw_unknown_platform_modal_jsx__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ../../containers/tw-unknown-platform-modal.jsx */ "./src/containers/tw-unknown-platform-modal.jsx");
-/* harmony import */ var _containers_tw_invalid_project_modal_jsx__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ../../containers/tw-invalid-project-modal.jsx */ "./src/containers/tw-invalid-project-modal.jsx");
-/* harmony import */ var _lib_layout_constants__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../../lib/layout-constants */ "./src/lib/layout-constants.js");
-/* harmony import */ var _lib_screen_utils__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ../../lib/screen-utils */ "./src/lib/screen-utils.js");
-/* harmony import */ var _lib_themes__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ../../lib/themes */ "./src/lib/themes/index.js");
-/* harmony import */ var _lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ../../lib/tw-environment-support-prober */ "./src/lib/tw-environment-support-prober.js");
-/* harmony import */ var _gui_css__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./gui.css */ "./src/components/gui/gui.css");
-/* harmony import */ var _gui_css__WEBPACK_IMPORTED_MODULE_47___default = /*#__PURE__*/__webpack_require__.n(_gui_css__WEBPACK_IMPORTED_MODULE_47__);
-/* harmony import */ var _icon_extensions_svg__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ./icon--extensions.svg */ "./src/components/gui/icon--extensions.svg");
-/* harmony import */ var _icon_extensions_svg__WEBPACK_IMPORTED_MODULE_48___default = /*#__PURE__*/__webpack_require__.n(_icon_extensions_svg__WEBPACK_IMPORTED_MODULE_48__);
-/* harmony import */ var _lib_tw_recolor_build_icon_code_svg__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ../../lib/tw-recolor/build!./icon--code.svg */ "./src/lib/tw-recolor/build.js!./src/components/gui/icon--code.svg");
-/* harmony import */ var _lib_tw_recolor_build_icon_costumes_svg__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! ../../lib/tw-recolor/build!./icon--costumes.svg */ "./src/lib/tw-recolor/build.js!./src/components/gui/icon--costumes.svg");
-/* harmony import */ var _lib_tw_recolor_build_icon_sounds_svg__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! ../../lib/tw-recolor/build!./icon--sounds.svg */ "./src/lib/tw-recolor/build.js!./src/components/gui/icon--sounds.svg");
+/* harmony import */ var _git_dropdown_git_dropdown_jsx__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../git-dropdown/git-dropdown.jsx */ "./src/components/git-dropdown/git-dropdown.jsx");
+/* harmony import */ var _lib_project_exporter_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../../lib/project-exporter.js */ "./src/lib/project-exporter.js");
+/* harmony import */ var _lib_github_api_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../lib/github-api.js */ "./src/lib/github-api.js");
+/* harmony import */ var _containers_blocks_jsx__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../../containers/blocks.jsx */ "./src/containers/blocks.jsx");
+/* harmony import */ var _containers_costume_tab_jsx__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../../containers/costume-tab.jsx */ "./src/containers/costume-tab.jsx");
+/* harmony import */ var _containers_target_pane_jsx__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../../containers/target-pane.jsx */ "./src/containers/target-pane.jsx");
+/* harmony import */ var _containers_sound_tab_jsx__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../../containers/sound-tab.jsx */ "./src/containers/sound-tab.jsx");
+/* harmony import */ var _containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../../containers/stage-wrapper.jsx */ "./src/containers/stage-wrapper.jsx");
+/* harmony import */ var _loader_loader_jsx__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../loader/loader.jsx */ "./src/components/loader/loader.jsx");
+/* harmony import */ var _box_box_jsx__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../box/box.jsx */ "./src/components/box/box.jsx");
+/* harmony import */ var _menu_bar_menu_bar_jsx__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../menu-bar/menu-bar.jsx */ "./src/components/menu-bar/menu-bar.jsx");
+/* harmony import */ var _containers_costume_library_jsx__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../../containers/costume-library.jsx */ "./src/containers/costume-library.jsx");
+/* harmony import */ var _containers_backdrop_library_jsx__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../../containers/backdrop-library.jsx */ "./src/containers/backdrop-library.jsx");
+/* harmony import */ var _containers_watermark_jsx__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../../containers/watermark.jsx */ "./src/containers/watermark.jsx");
+/* harmony import */ var _containers_backpack_jsx__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ../../containers/backpack.jsx */ "./src/containers/backpack.jsx");
+/* harmony import */ var _browser_modal_browser_modal_jsx__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ../browser-modal/browser-modal.jsx */ "./src/components/browser-modal/browser-modal.jsx");
+/* harmony import */ var _containers_tips_library_jsx__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ../../containers/tips-library.jsx */ "./src/containers/tips-library.jsx");
+/* harmony import */ var _containers_cards_jsx__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ../../containers/cards.jsx */ "./src/containers/cards.jsx");
+/* harmony import */ var _containers_alerts_jsx__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../../containers/alerts.jsx */ "./src/containers/alerts.jsx");
+/* harmony import */ var _containers_drag_layer_jsx__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../../containers/drag-layer.jsx */ "./src/containers/drag-layer.jsx");
+/* harmony import */ var _containers_connection_modal_jsx__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ../../containers/connection-modal.jsx */ "./src/containers/connection-modal.jsx");
+/* harmony import */ var _telemetry_modal_telemetry_modal_jsx__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ../telemetry-modal/telemetry-modal.jsx */ "./src/components/telemetry-modal/telemetry-modal.jsx");
+/* harmony import */ var _containers_tw_username_modal_jsx__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../../containers/tw-username-modal.jsx */ "./src/containers/tw-username-modal.jsx");
+/* harmony import */ var _containers_tw_settings_modal_jsx__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../../containers/tw-settings-modal.jsx */ "./src/containers/tw-settings-modal.jsx");
+/* harmony import */ var _containers_tw_security_manager_jsx__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../../containers/tw-security-manager.jsx */ "./src/containers/tw-security-manager.jsx");
+/* harmony import */ var _containers_tw_custom_extension_modal_jsx__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../../containers/tw-custom-extension-modal.jsx */ "./src/containers/tw-custom-extension-modal.jsx");
+/* harmony import */ var _containers_tw_restore_point_manager_jsx__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../../containers/tw-restore-point-manager.jsx */ "./src/containers/tw-restore-point-manager.jsx");
+/* harmony import */ var _containers_tw_fonts_modal_jsx__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../../containers/tw-fonts-modal.jsx */ "./src/containers/tw-fonts-modal.jsx");
+/* harmony import */ var _containers_tw_unknown_platform_modal_jsx__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ../../containers/tw-unknown-platform-modal.jsx */ "./src/containers/tw-unknown-platform-modal.jsx");
+/* harmony import */ var _containers_tw_invalid_project_modal_jsx__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ../../containers/tw-invalid-project-modal.jsx */ "./src/containers/tw-invalid-project-modal.jsx");
+/* harmony import */ var _lib_layout_constants__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ../../lib/layout-constants */ "./src/lib/layout-constants.js");
+/* harmony import */ var _lib_screen_utils__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../../lib/screen-utils */ "./src/lib/screen-utils.js");
+/* harmony import */ var _lib_themes__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ../../lib/themes */ "./src/lib/themes/index.js");
+/* harmony import */ var _lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ../../lib/tw-environment-support-prober */ "./src/lib/tw-environment-support-prober.js");
+/* harmony import */ var _gui_css__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./gui.css */ "./src/components/gui/gui.css");
+/* harmony import */ var _gui_css__WEBPACK_IMPORTED_MODULE_46___default = /*#__PURE__*/__webpack_require__.n(_gui_css__WEBPACK_IMPORTED_MODULE_46__);
+/* harmony import */ var _icon_extensions_svg__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./icon--extensions.svg */ "./src/components/gui/icon--extensions.svg");
+/* harmony import */ var _icon_extensions_svg__WEBPACK_IMPORTED_MODULE_47___default = /*#__PURE__*/__webpack_require__.n(_icon_extensions_svg__WEBPACK_IMPORTED_MODULE_47__);
+/* harmony import */ var _lib_tw_recolor_build_icon_code_svg__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ../../lib/tw-recolor/build!./icon--code.svg */ "./src/lib/tw-recolor/build.js!./src/components/gui/icon--code.svg");
+/* harmony import */ var _lib_tw_recolor_build_icon_costumes_svg__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ../../lib/tw-recolor/build!./icon--costumes.svg */ "./src/lib/tw-recolor/build.js!./src/components/gui/icon--costumes.svg");
+/* harmony import */ var _lib_tw_recolor_build_icon_sounds_svg__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! ../../lib/tw-recolor/build!./icon--sounds.svg */ "./src/lib/tw-recolor/build.js!./src/components/gui/icon--sounds.svg");
 const _excluded = ["accountNavOpen", "activeTabIndex", "alertsVisible", "authorId", "authorThumbnailUrl", "authorUsername", "basePath", "backdropLibraryVisible", "backpackHost", "backpackVisible", "blocksId", "blocksTabVisible", "cardsVisible", "canChangeLanguage", "canChangeTheme", "canCreateNew", "canEditTitle", "canManageFiles", "canRemix", "canSave", "canCreateCopy", "canShare", "canUseCloud", "children", "connectionModalVisible", "costumeLibraryVisible", "costumesTabVisible", "customStageSize", "enableCommunity", "intl", "isCreating", "isEmbedded", "isFullScreen", "isPlayerOnly", "isRtl", "isShared", "isWindowFullScreen", "isTelemetryEnabled", "isTotallyNormal", "loading", "logo", "renderLogin", "onClickAbout", "onClickAccountNav", "onCloseAccountNav", "onClickAddonSettings", "onClickDesktopSettings", "onClickNewWindow", "onClickPackager", "onLogOut", "onOpenRegistration", "onToggleLoginOpen", "onActivateCostumesTab", "onActivateSoundsTab", "onActivateTab", "onClickLogo", "onExtensionButtonClick", "onOpenCustomExtensionModal", "onProjectTelemetryEvent", "onRequestCloseBackdropLibrary", "onRequestCloseCostumeLibrary", "onRequestCloseTelemetryModal", "onSeeCommunity", "onShare", "onShowPrivacyPolicy", "onStartSelectingFileUpload", "onTelemetryModalCancel", "onTelemetryModalOptIn", "onTelemetryModalOptOut", "securityManager", "showComingSoon", "showOpenFilePicker", "showSaveFilePicker", "soundsTabVisible", "stageSizeMode", "targetIsStage", "telemetryModalVisible", "theme", "tipsLibraryVisible", "usernameModalVisible", "settingsModalVisible", "customExtensionModalVisible", "fontsModalVisible", "unknownPlatformModalVisible", "invalidProjectModalVisible", "vm"];
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
@@ -10675,7 +10465,6 @@ function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" 
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
-
 
 
 
@@ -10866,11 +10655,14 @@ const GUIComponent = props => {
   const [isGitQuickModalOpen, setIsGitQuickModalOpen] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState(false);
   const [gitQuickModalType, setGitQuickModalType] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState('commit');
 
+  // Git 下拉菜单状态
+  const [isGitDropdownOpen, setIsGitDropdownOpen] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState(false);
+
   // 处理 Git 提交按钮点击
   const handleClickGitCommit = react__WEBPACK_IMPORTED_MODULE_3___default.a.useCallback(async () => {
     try {
       // 导出项目数据
-      const sb3Data = await _lib_project_exporter_js__WEBPACK_IMPORTED_MODULE_14__["default"].exportToSB3(vm);
+      const sb3Data = await _lib_project_exporter_js__WEBPACK_IMPORTED_MODULE_13__["default"].exportToSB3(vm);
       setProjectData(sb3Data);
       setIsGitCommitModalOpen(true);
     } catch (error) {
@@ -11259,7 +11051,7 @@ const GUIComponent = props => {
     };
   }, [vm, gitRepositoryExists]);
   if (children) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], componentProps, children);
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], componentProps, children);
   }
 
   // 全局最小化窗口栏数据
@@ -11321,44 +11113,44 @@ const GUIComponent = props => {
     });
   }
   const tabClassNames = {
-    tabs: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.tabs,
-    tab: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTab, _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.tab),
-    tabList: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabList, _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.tabList),
-    tabPanel: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabPanel, _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.tabPanel),
-    tabPanelSelected: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabPanelSelected, _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.isSelected),
-    tabSelected: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabSelected, _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.isSelected)
+    tabs: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.tabs,
+    tab: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTab, _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.tab),
+    tabList: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabList, _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.tabList),
+    tabPanel: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabPanel, _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.tabPanel),
+    tabPanelSelected: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabPanelSelected, _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.isSelected),
+    tabSelected: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabSelected, _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.isSelected)
   };
-  const unconstrainedWidth = _lib_layout_constants__WEBPACK_IMPORTED_MODULE_43__["UNCONSTRAINED_NON_STAGE_WIDTH"] + _lib_layout_constants__WEBPACK_IMPORTED_MODULE_43__["FIXED_WIDTH"] + Math.max(0, customStageSize.width - _lib_layout_constants__WEBPACK_IMPORTED_MODULE_43__["FIXED_WIDTH"]);
+  const unconstrainedWidth = _lib_layout_constants__WEBPACK_IMPORTED_MODULE_42__["UNCONSTRAINED_NON_STAGE_WIDTH"] + _lib_layout_constants__WEBPACK_IMPORTED_MODULE_42__["FIXED_WIDTH"] + Math.max(0, customStageSize.width - _lib_layout_constants__WEBPACK_IMPORTED_MODULE_42__["FIXED_WIDTH"]);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_responsive__WEBPACK_IMPORTED_MODULE_6___default.a, {
     minWidth: unconstrainedWidth
   }, isUnconstrained => {
-    const stageSize = Object(_lib_screen_utils__WEBPACK_IMPORTED_MODULE_44__["resolveStageSize"])(stageSizeMode, isUnconstrained);
-    const alwaysEnabledModals = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_3___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_security_manager_jsx__WEBPACK_IMPORTED_MODULE_37__["default"], {
+    const stageSize = Object(_lib_screen_utils__WEBPACK_IMPORTED_MODULE_43__["resolveStageSize"])(stageSizeMode, isUnconstrained);
+    const alwaysEnabledModals = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_3___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_security_manager_jsx__WEBPACK_IMPORTED_MODULE_36__["default"], {
       securityManager: securityManager
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_restore_point_manager_jsx__WEBPACK_IMPORTED_MODULE_39__["default"], null), usernameModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_username_modal_jsx__WEBPACK_IMPORTED_MODULE_35__["default"], null), settingsModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_settings_modal_jsx__WEBPACK_IMPORTED_MODULE_36__["default"], null), customExtensionModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_custom_extension_modal_jsx__WEBPACK_IMPORTED_MODULE_38__["default"], null), fontsModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_fonts_modal_jsx__WEBPACK_IMPORTED_MODULE_40__["default"], null), unknownPlatformModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_unknown_platform_modal_jsx__WEBPACK_IMPORTED_MODULE_41__["default"], null), invalidProjectModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_invalid_project_modal_jsx__WEBPACK_IMPORTED_MODULE_42__["default"], null));
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_restore_point_manager_jsx__WEBPACK_IMPORTED_MODULE_38__["default"], null), usernameModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_username_modal_jsx__WEBPACK_IMPORTED_MODULE_34__["default"], null), settingsModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_settings_modal_jsx__WEBPACK_IMPORTED_MODULE_35__["default"], null), customExtensionModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_custom_extension_modal_jsx__WEBPACK_IMPORTED_MODULE_37__["default"], null), fontsModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_fonts_modal_jsx__WEBPACK_IMPORTED_MODULE_39__["default"], null), unknownPlatformModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_unknown_platform_modal_jsx__WEBPACK_IMPORTED_MODULE_40__["default"], null), invalidProjectModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_invalid_project_modal_jsx__WEBPACK_IMPORTED_MODULE_41__["default"], null));
     return isPlayerOnly ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_3___default.a.Fragment, null, isWindowFullScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.fullscreenBackground,
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.fullscreenBackground,
       style: {
         backgroundColor: fullscreenBackgroundColor
       }
-    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_20__["default"], {
+    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_19__["default"], {
       isFullScreen: isFullScreen,
       isEmbedded: isEmbedded,
-      isRendererSupported: Object(_lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_46__["isRendererSupported"])(),
+      isRendererSupported: Object(_lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_45__["isRendererSupported"])(),
       isRtl: isRtl,
       loading: loading,
-      stageSize: _lib_layout_constants__WEBPACK_IMPORTED_MODULE_43__["STAGE_SIZE_MODES"].full,
+      stageSize: _lib_layout_constants__WEBPACK_IMPORTED_MODULE_42__["STAGE_SIZE_MODES"].full,
       vm: vm
-    }, alertsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_alerts_jsx__WEBPACK_IMPORTED_MODULE_31__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.alertsContainer
-    }) : null), alwaysEnabledModals) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], _extends({
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.pageWrapper,
+    }, alertsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_alerts_jsx__WEBPACK_IMPORTED_MODULE_30__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.alertsContainer
+    }) : null), alwaysEnabledModals) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], _extends({
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.pageWrapper,
       dir: isRtl ? 'rtl' : 'ltr',
       style: {
         minWidth: 1024 + Math.max(0, customStageSize.width - 480),
         minHeight: 640 + Math.max(0, customStageSize.height - 360)
       }
-    }, componentProps), alwaysEnabledModals, telemetryModalVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_telemetry_modal_telemetry_modal_jsx__WEBPACK_IMPORTED_MODULE_34__["default"], {
+    }, componentProps), alwaysEnabledModals, telemetryModalVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_telemetry_modal_telemetry_modal_jsx__WEBPACK_IMPORTED_MODULE_33__["default"], {
       isRtl: isRtl,
       isTelemetryEnabled: isTelemetryEnabled,
       onCancel: onTelemetryModalCancel,
@@ -11366,25 +11158,25 @@ const GUIComponent = props => {
       onOptOut: onTelemetryModalOptOut,
       onRequestClose: onRequestCloseTelemetryModal,
       onShowPrivacyPolicy: onShowPrivacyPolicy
-    }) : null, loading ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_loader_loader_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], {
+    }) : null, loading ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_loader_loader_jsx__WEBPACK_IMPORTED_MODULE_20__["default"], {
       isFullScreen: true
-    }) : null, isCreating ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_loader_loader_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], {
+    }) : null, isCreating ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_loader_loader_jsx__WEBPACK_IMPORTED_MODULE_20__["default"], {
       isFullScreen: true,
       messageId: "gui.loader.creating"
-    }) : null, Object(_lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_46__["isBrowserSupported"])() ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_browser_modal_browser_modal_jsx__WEBPACK_IMPORTED_MODULE_28__["default"], {
+    }) : null, Object(_lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_45__["isBrowserSupported"])() ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_browser_modal_browser_modal_jsx__WEBPACK_IMPORTED_MODULE_27__["default"], {
       isRtl: isRtl,
       onClickDesktopSettings: onClickDesktopSettings
-    }), tipsLibraryVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tips_library_jsx__WEBPACK_IMPORTED_MODULE_29__["default"], null) : null, cardsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_cards_jsx__WEBPACK_IMPORTED_MODULE_30__["default"], null) : null, alertsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_alerts_jsx__WEBPACK_IMPORTED_MODULE_31__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.alertsContainer
-    }) : null, connectionModalVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_connection_modal_jsx__WEBPACK_IMPORTED_MODULE_33__["default"], {
+    }), tipsLibraryVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tips_library_jsx__WEBPACK_IMPORTED_MODULE_28__["default"], null) : null, cardsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_cards_jsx__WEBPACK_IMPORTED_MODULE_29__["default"], null) : null, alertsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_alerts_jsx__WEBPACK_IMPORTED_MODULE_30__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.alertsContainer
+    }) : null, connectionModalVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_connection_modal_jsx__WEBPACK_IMPORTED_MODULE_32__["default"], {
       vm: vm
-    }) : null, costumeLibraryVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_costume_library_jsx__WEBPACK_IMPORTED_MODULE_24__["default"], {
+    }) : null, costumeLibraryVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_costume_library_jsx__WEBPACK_IMPORTED_MODULE_23__["default"], {
       vm: vm,
       onRequestClose: onRequestCloseCostumeLibrary
-    }) : null, backdropLibraryVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_backdrop_library_jsx__WEBPACK_IMPORTED_MODULE_25__["default"], {
+    }) : null, backdropLibraryVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_backdrop_library_jsx__WEBPACK_IMPORTED_MODULE_24__["default"], {
       vm: vm,
       onRequestClose: onRequestCloseBackdropLibrary
-    }) : null, !isFullScreen && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_menu_bar_menu_bar_jsx__WEBPACK_IMPORTED_MODULE_23__["default"], {
+    }) : null, !isFullScreen && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_menu_bar_menu_bar_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], {
       accountNavOpen: accountNavOpen,
       authorId: authorId,
       authorThumbnailUrl: authorThumbnailUrl,
@@ -11398,7 +11190,7 @@ const GUIComponent = props => {
       canRemix: canRemix,
       canSave: canSave,
       canShare: canShare,
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.menuBarPosition,
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.menuBarPosition,
       enableCommunity: enableCommunity,
       isShared: isShared,
       isTotallyNormal: isTotallyNormal,
@@ -11423,14 +11215,15 @@ const GUIComponent = props => {
       onStartSelectingFileUpload: onStartSelectingFileUpload,
       onToggleLoginOpen: onToggleLoginOpen,
       onClickGitCommit: handleClickGitCommit,
+      onToggleGitDropdown: () => setIsGitDropdownOpen(!isGitDropdownOpen),
       onGitQuickAction: handleGitQuickAction,
       showGitQuickButtons: hasGitRepository() && hasGitToken()
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.bodyWrapper
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.flexWrapper
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.editorWrapper
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.bodyWrapper
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.flexWrapper
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.editorWrapper
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_tabs__WEBPACK_IMPORTED_MODULE_7__["Tabs"], {
       forceRenderTabPanel: true,
       className: tabClassNames.tabs,
@@ -11444,7 +11237,7 @@ const GUIComponent = props => {
       className: tabClassNames.tab
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
       draggable: false,
-      src: Object(_lib_tw_recolor_build_icon_code_svg__WEBPACK_IMPORTED_MODULE_49__["default"])()
+      src: Object(_lib_tw_recolor_build_icon_code_svg__WEBPACK_IMPORTED_MODULE_48__["default"])()
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_4__["FormattedMessage"], {
       defaultMessage: "Code",
       id: "gui.gui.codeTab"
@@ -11453,7 +11246,7 @@ const GUIComponent = props => {
       onClick: onActivateCostumesTab
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
       draggable: false,
-      src: Object(_lib_tw_recolor_build_icon_costumes_svg__WEBPACK_IMPORTED_MODULE_50__["default"])()
+      src: Object(_lib_tw_recolor_build_icon_costumes_svg__WEBPACK_IMPORTED_MODULE_49__["default"])()
     }), targetIsStage ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_4__["FormattedMessage"], {
       defaultMessage: "Backdrops",
       id: "gui.gui.backdropsTab"
@@ -11465,15 +11258,15 @@ const GUIComponent = props => {
       onClick: onActivateSoundsTab
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
       draggable: false,
-      src: Object(_lib_tw_recolor_build_icon_sounds_svg__WEBPACK_IMPORTED_MODULE_51__["default"])()
+      src: Object(_lib_tw_recolor_build_icon_sounds_svg__WEBPACK_IMPORTED_MODULE_50__["default"])()
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_4__["FormattedMessage"], {
       defaultMessage: "Sounds",
       id: "gui.gui.soundsTab"
     }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_tabs__WEBPACK_IMPORTED_MODULE_7__["TabPanel"], {
       className: tabClassNames.tabPanel
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.blocksWrapper
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_blocks_jsx__WEBPACK_IMPORTED_MODULE_16__["default"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.blocksWrapper
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_blocks_jsx__WEBPACK_IMPORTED_MODULE_15__["default"], {
       key: "".concat(blocksId, "/").concat(theme.id),
       canUseCloud: canUseCloud,
       grow: 1,
@@ -11485,27 +11278,27 @@ const GUIComponent = props => {
       onOpenCustomExtensionModal: onOpenCustomExtensionModal,
       theme: theme,
       vm: vm
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.extensionButtonContainer
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.extensionButtonContainer
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.extensionButton,
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.extensionButton,
       title: intl.formatMessage(messages.addExtension),
       onClick: onExtensionButtonClick
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.extensionButtonIcon,
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.extensionButtonIcon,
       draggable: false,
-      src: _icon_extensions_svg__WEBPACK_IMPORTED_MODULE_48___default.a
-    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.watermark
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_watermark_jsx__WEBPACK_IMPORTED_MODULE_26__["default"], null))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_tabs__WEBPACK_IMPORTED_MODULE_7__["TabPanel"], {
+      src: _icon_extensions_svg__WEBPACK_IMPORTED_MODULE_47___default.a
+    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.watermark
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_watermark_jsx__WEBPACK_IMPORTED_MODULE_25__["default"], null))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_tabs__WEBPACK_IMPORTED_MODULE_7__["TabPanel"], {
       className: tabClassNames.tabPanel
-    }, costumesTabVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_costume_tab_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
+    }, costumesTabVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_costume_tab_jsx__WEBPACK_IMPORTED_MODULE_16__["default"], {
       vm: vm
     }) : null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_tabs__WEBPACK_IMPORTED_MODULE_7__["TabPanel"], {
       className: tabClassNames.tabPanel
-    }, soundsTabVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_sound_tab_jsx__WEBPACK_IMPORTED_MODULE_19__["default"], {
+    }, soundsTabVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_sound_tab_jsx__WEBPACK_IMPORTED_MODULE_18__["default"], {
       vm: vm
-    }) : null)), backpackVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_backpack_jsx__WEBPACK_IMPORTED_MODULE_27__["default"], {
+    }) : null)), backpackVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_backpack_jsx__WEBPACK_IMPORTED_MODULE_26__["default"], {
       host: backpackHost
     }) : null), props.customUI ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_3___default.a.Fragment, null, !stageWindowMinimized && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_draggable_window_draggable_window_jsx__WEBPACK_IMPORTED_MODULE_10__["default"], {
       windowId: "stage",
@@ -11525,9 +11318,9 @@ const GUIComponent = props => {
       onMinimizeToggle: (id, minimized) => setStageWindowMinimized(minimized),
       zIndex: 100,
       enableStatePersistence: true
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_20__["default"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_19__["default"], {
       isFullScreen: isFullScreen,
-      isRendererSupported: Object(_lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_46__["isRendererSupported"])(),
+      isRendererSupported: Object(_lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_45__["isRendererSupported"])(),
       isRtl: isRtl,
       stageSize: stageSize,
       vm: vm
@@ -11549,7 +11342,7 @@ const GUIComponent = props => {
       onMinimizeToggle: (id, minimized) => setTargetPaneWindowMinimized(minimized),
       zIndex: 90,
       enableStatePersistence: true
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_target_pane_jsx__WEBPACK_IMPORTED_MODULE_18__["default"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_target_pane_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
       stageSize: stageSize,
       vm: vm
     })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_draggable_window_minimized_bar_jsx__WEBPACK_IMPORTED_MODULE_11__["default"], {
@@ -11557,37 +11350,30 @@ const GUIComponent = props => {
     })) :
     /*#__PURE__*/
     /* 原版内嵌布局（使用原始样式容器） */
-    react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.stageAndTargetWrapper
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_20__["default"], {
+    react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.stageAndTargetWrapper
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_19__["default"], {
       isFullScreen: isFullScreen,
-      isRendererSupported: Object(_lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_46__["isRendererSupported"])(),
+      isRendererSupported: Object(_lib_tw_environment_support_prober__WEBPACK_IMPORTED_MODULE_45__["isRendererSupported"])(),
       isRtl: isRtl,
       loading: loading,
       stageSize: stageSize,
       vm: vm
-    }, alertsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_alerts_jsx__WEBPACK_IMPORTED_MODULE_31__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.alertsContainer
-    }) : null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_47___default.a.targetWrapper
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_target_pane_jsx__WEBPACK_IMPORTED_MODULE_18__["default"], {
+    }, alertsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_alerts_jsx__WEBPACK_IMPORTED_MODULE_30__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.alertsContainer
+    }) : null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_46___default.a.targetWrapper
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_target_pane_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
       stageSize: stageSize,
       vm: vm
-    }))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_drag_layer_jsx__WEBPACK_IMPORTED_MODULE_32__["default"], null), isGitCommitModalOpen && projectData && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_git_commit_modal_git_commit_modal_jsx__WEBPACK_IMPORTED_MODULE_12__["default"], {
-      isOpen: isGitCommitModalOpen,
-      onCancel: handleCloseGitCommitModal,
+    }))))), isGitDropdownOpen && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_git_dropdown_git_dropdown_jsx__WEBPACK_IMPORTED_MODULE_12__["default"], {
+      isOpen: isGitDropdownOpen,
       onCommit: handleGitCommitSuccess,
       onFetch: handleGitFetchSuccess,
-      projectData: projectData
-    }), isGitQuickModalOpen && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_git_quick_modal_git_quick_modal_jsx__WEBPACK_IMPORTED_MODULE_13__["default"], {
-      isOpen: isGitQuickModalOpen,
-      type: gitQuickModalType,
-      repository: vm.runtime.platform.git.repository,
-      token: _lib_github_api_js__WEBPACK_IMPORTED_MODULE_15__["default"].getToken() || '',
-      vm: vm,
-      onCancel: handleCloseGitQuickModal,
-      onSuccess: handleGitQuickSuccess
-    }));
+      onPullRequest: handleGitQuickSuccess,
+      onClose: () => setIsGitDropdownOpen(false),
+      vm: vm
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_drag_layer_jsx__WEBPACK_IMPORTED_MODULE_31__["default"], null));
   });
 };
 GUIComponent.propTypes = {
@@ -11666,10 +11452,10 @@ GUIComponent.propTypes = {
   showOpenFilePicker: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   showSaveFilePicker: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   soundsTabVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
-  stageSizeMode: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.oneOf(Object.keys(_lib_layout_constants__WEBPACK_IMPORTED_MODULE_43__["STAGE_SIZE_MODES"])),
+  stageSizeMode: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.oneOf(Object.keys(_lib_layout_constants__WEBPACK_IMPORTED_MODULE_42__["STAGE_SIZE_MODES"])),
   targetIsStage: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   telemetryModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
-  theme: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.instanceOf(_lib_themes__WEBPACK_IMPORTED_MODULE_45__["Theme"]),
+  theme: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.instanceOf(_lib_themes__WEBPACK_IMPORTED_MODULE_44__["Theme"]),
   tipsLibraryVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   usernameModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   settingsModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
@@ -11700,7 +11486,7 @@ GUIComponent.defaultProps = {
   isTotallyNormal: false,
   loading: false,
   showComingSoon: false,
-  stageSizeMode: _lib_layout_constants__WEBPACK_IMPORTED_MODULE_43__["STAGE_SIZE_MODES"].large
+  stageSizeMode: _lib_layout_constants__WEBPACK_IMPORTED_MODULE_42__["STAGE_SIZE_MODES"].large
 };
 const mapStateToProps = state => ({
   customStageSize: state.scratchGui.customStageSize,
@@ -14226,7 +14012,21 @@ class MenuBar extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Component {
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_3__["FormattedMessage"], {
       defaultMessage: "Advanced",
       id: "tw.menuBar.advanced"
-    })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(_divider_divider_jsx__WEBPACK_IMPORTED_MODULE_14__["default"], {
+    })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
+      className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.menuBarItem, _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.hoverable),
+      onClick: this.props.onToggleGitDropdown
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("img", {
+      src: _icon_git_svg__WEBPACK_IMPORTED_MODULE_54___default.a,
+      className: _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.gitButtonIcon,
+      draggable: false,
+      width: 20,
+      height: 20
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("span", {
+      className: _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.collapsibleLabel
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_3__["FormattedMessage"], {
+      defaultMessage: "Git",
+      id: "gui.menuBar.git"
+    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(_divider_divider_jsx__WEBPACK_IMPORTED_MODULE_14__["default"], {
       className: _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.divider
     }), this.props.canEditTitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
       className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.menuBarItem, _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.growable)
@@ -14295,21 +14095,6 @@ class MenuBar extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Component {
       values: {
         APP_NAME: _lib_brand_js__WEBPACK_IMPORTED_MODULE_59__["APP_NAME"]
       }
-    })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
-      className: _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.menuBarItem
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
-      className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.menuBarItem, _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.hoverable),
-      onClick: this.props.onClickGitCommit
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("img", {
-      src: _icon_git_svg__WEBPACK_IMPORTED_MODULE_54___default.a,
-      draggable: false,
-      width: 20,
-      height: 20
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("span", {
-      className: _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.collapsibleLabel
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_3__["FormattedMessage"], {
-      defaultMessage: "Git",
-      id: "gui.menuBar.git"
     })))), this.props.vm && this.props.vm.runtime && this.props.vm.runtime.platform && this.props.vm.runtime.platform.git && this.props.vm.runtime.platform.git.repository && this.props.vm.runtime.platform.git.repository.trim().length > 0 && this.props.showGitQuickButtons && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
       className: _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.gitQuickButtonsGroup
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("button", {
@@ -14396,6 +14181,7 @@ MenuBar.propTypes = {
   onClickEdit: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
   onClickFile: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
   onClickGitCommit: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
+  onToggleGitDropdown: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
   onGitQuickAction: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
   showGitQuickButtons: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.bool,
   onClickLogin: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
