@@ -932,26 +932,6 @@ class MenuBar extends React.Component {
                         )}
                     </div>
 
-                    {<div
-                        className={classNames(styles.menuBarItem, styles.hoverable)}
-                        onClick={this.props.onToggleGitDropdown}
-                    >
-                        <img
-                            src={gitIcon}
-                            className={styles.gitButtonIcon}
-                            draggable={false}
-                            width={20}
-                            height={20}
-                        />
-                        <span className={styles.collapsibleLabel}>
-                            <FormattedMessage
-                                defaultMessage="Git"
-                                description="Button to open Git menu"
-                                id="gui.menuBar.git"
-                            />
-                        </span>
-                    </div>}
-
                     <Divider className={styles.divider} />
 
                     {this.props.canEditTitle ? (
@@ -1077,7 +1057,26 @@ class MenuBar extends React.Component {
                             </Button>
                         </a>
                     </div>}
-
+                    {<div className={styles.menuBarItem}>
+                        <div
+                            className={classNames(styles.menuBarItem, styles.hoverable)}
+                            onClick={this.props.onClickGitCommit}
+                        >
+                            <img
+                                src={gitIcon}
+                                draggable={false}
+                                width={20}
+                                height={20}
+                            />
+                            <span className={styles.collapsibleLabel}>
+                                <FormattedMessage
+                                    defaultMessage="Git"
+                                    description="Button to open Git menu"
+                                    id="gui.menuBar.git"
+                                />
+                            </span>
+                        </div>
+                    </div>}
                     {/* Git 快捷按钮 */}
                     {this.props.vm && this.props.vm.runtime && this.props.vm.runtime.platform &&
                      this.props.vm.runtime.platform.git && this.props.vm.runtime.platform.git.repository &&
@@ -1185,7 +1184,6 @@ MenuBar.propTypes = {
     onClickEdit: PropTypes.func,
     onClickFile: PropTypes.func,
     onClickGitCommit: PropTypes.func,
-    onToggleGitDropdown: PropTypes.func,
     onGitQuickAction: PropTypes.func,
     showGitQuickButtons: PropTypes.bool,
     onClickLogin: PropTypes.func,

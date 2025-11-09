@@ -1,134 +1,54 @@
 .dropdownContainer {
     position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 280px;
-    z-index: 2000;
-    pointer-events: none;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
 }
 
 .dropdownMenu {
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 100%;
-    height: calc(100% - 40px);
-    background: var(--ui-white);
-    border-left: 1px solid var(--ui-black-transparent);
-    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.12), -2px 0 4px rgba(0, 0, 0, 0.08);
-    z-index: 2000;
-    overflow-y: auto;
-    overflow-x: hidden;
-    backdrop-filter: blur(8px);
-    pointer-events: auto;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    border-radius: 0 0 8px 8px;
-    margin-bottom: 20px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    min-width: 150px;
+    z-index: 1000;
+    overflow: hidden;
 }
 
 .dropdownItem {
     width: 100%;
-    padding: 16px 20px;
+    padding: 8px 12px;
     background: none;
     border: none;
     text-align: left;
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    position: relative;
-    border-radius: 8px;
-    margin-bottom: 8px;
-}
-
-.dropdownItem::before {
-    content: '';
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    opacity: 0.9;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     font-size: 14px;
-    font-weight: 600;
-}
-
-/* Commit Icon - Modern checkmark with teal background */
-.dropdownItem:nth-child(1)::before {
-    content: '✓';
-    background: linear-gradient(135deg, #00baad 0%, #009688 100%);
-    color: white;
-    box-shadow: 0 2px 4px rgba(0, 186, 173, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* Fetch Icon - Modern download arrow with teal background */
-.dropdownItem:nth-child(2)::before {
-    content: '↓';
-    background: linear-gradient(135deg, #00baad 0%, #009688 100%);
-    color: white;
-    box-shadow: 0 2px 4px rgba(0, 186, 173, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* Pull Request Icon - Modern merge arrow with teal background */
-.dropdownItem:nth-child(3)::before {
-    content: '⤴';
-    background: linear-gradient(135deg, #00baad 0%, #009688 100%);
-    color: white;
-    box-shadow: 0 2px 4px rgba(0, 186, 173, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* Settings Icon - Gray theme for configuration */
-.dropdownItem:nth-child(4)::before {
-    content: '⚙';
-    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-    color: white;
-    box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
 }
 
 .dropdownItem:hover {
-    background: linear-gradient(135deg, rgba(0, 186, 173, 0.08) 0%, rgba(0, 186, 173, 0.04) 100%);
-    transform: translateX(4px);
-    box-shadow: 0 2px 8px rgba(0, 186, 173, 0.15);
-    border: 1px solid rgba(0, 186, 173, 0.2);
+    background-color: #f0f0f0;
 }
 
 .dropdownItem:active {
-    background: linear-gradient(135deg, rgba(0, 186, 173, 0.12) 0%, rgba(0, 186, 173, 0.06) 100%);
-    transform: translateX(2px);
-    box-shadow: 0 1px 4px rgba(0, 186, 173, 0.2);
+    background-color: #e0e0e0;
+}
+
+.dropdownItem:not(:last-child) {
+    border-bottom: 1px solid #eee;
 }
 
 /* 响应式设计 */
 @media (max-width: 600px) {
     .dropdownMenu {
-        min-width: 160px;
+        min-width: 140px;
     }
 
     .dropdownItem {
         padding: 10px 12px;
         font-size: 13px;
-        gap: 8px;
-    }
-
-    .dropdownItem::before {
-        width: 14px;
-        height: 14px;
     }
 }
