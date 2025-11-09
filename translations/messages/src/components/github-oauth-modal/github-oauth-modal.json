@@ -1,0 +1,77 @@
+[
+  {
+    "id": "gui.githubOAuth.title",
+    "description": "Title of the GitHub OAuth modal",
+    "defaultMessage": "GitHub OAuth Authentication"
+  },
+  {
+    "id": "gui.githubOAuth.clientIdLabel",
+    "description": "Label for the Client ID input",
+    "defaultMessage": "GitHub OAuth App Client ID"
+  },
+  {
+    "id": "gui.githubOAuth.clientIdPlaceholder",
+    "description": "Placeholder for the Client ID input",
+    "defaultMessage": "Enter your GitHub OAuth App Client ID"
+  },
+  {
+    "id": "gui.githubOAuth.description",
+    "description": "Description of OAuth authentication",
+    "defaultMessage": "Authenticate with GitHub using OAuth 2.0 for secure access to your repositories."
+  },
+  {
+    "id": "gui.githubOAuth.setupInstructions",
+    "description": "Setup instructions header",
+    "defaultMessage": "To set up OAuth authentication:"
+  },
+  {
+    "id": "gui.githubOAuth.step1",
+    "description": "Step 1 of setup instructions",
+    "defaultMessage": "1. Go to GitHub Settings > Developer settings > OAuth Apps"
+  },
+  {
+    "id": "gui.githubOAuth.step2",
+    "description": "Step 2 of setup instructions",
+    "defaultMessage": "2. Create a new OAuth App or use an existing one"
+  },
+  {
+    "id": "gui.githubOAuth.step3",
+    "description": "Step 3 of setup instructions",
+    "defaultMessage": "3. Set Authorization callback URL to: {callbackUrl}"
+  },
+  {
+    "id": "gui.githubOAuth.step4",
+    "description": "Step 4 of setup instructions",
+    "defaultMessage": "4. Copy the Client ID and paste it below"
+  },
+  {
+    "id": "gui.githubOAuth.authenticateButton",
+    "description": "Button to start OAuth authentication",
+    "defaultMessage": "Authenticate with GitHub"
+  },
+  {
+    "id": "gui.githubOAuth.cancelButton",
+    "description": "Button to cancel authentication",
+    "defaultMessage": "Cancel"
+  },
+  {
+    "id": "gui.githubOAuth.loading",
+    "description": "Loading message during authentication",
+    "defaultMessage": "Authenticating..."
+  },
+  {
+    "id": "gui.githubOAuth.userInfoTitle",
+    "description": "Title for authenticated user info",
+    "defaultMessage": "Authenticated User"
+  },
+  {
+    "id": "gui.githubOAuth.logoutButton",
+    "description": "Button to logout",
+    "defaultMessage": "Logout"
+  },
+  {
+    "id": "gui.githubOAuth.tokenStatus",
+    "description": "Token status display",
+    "defaultMessage": "Token Status: {status}"
+  }
+]

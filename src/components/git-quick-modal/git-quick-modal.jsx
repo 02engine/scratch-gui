@@ -301,11 +301,9 @@ const GitQuickModal = props => {
             onRequestClose={onCancel}
         >
             <Box className={styles.container}>
-                <Box className={styles.header}>
-                    <h2 className={styles.title}>{getTitle()}</h2>
-                </Box>
-
                 <Box className={styles.body}>
+                    <h2 className={styles.title}>{getTitle()}</h2>
+
                     {/* 仓库信息显示 */}
                     <Box className={styles.repositoryInfo}>
                         <strong>Repository:</strong> {repository}

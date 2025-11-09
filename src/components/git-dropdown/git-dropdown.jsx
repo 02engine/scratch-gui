@@ -12,6 +12,7 @@ const GitDropdown = props => {
         onCommit,
         onFetch,
         onPullRequest,
+        onLogout,
         onClose,
         buttonRef,
         position = 'bottom-left'
@@ -53,6 +54,21 @@ const GitDropdown = props => {
                 >
                     <FormattedMessage {...sharedMessages.gitDropdownPullRequest} />
                 </button>
+                {onLogout && (
+                    <div className={styles.dropdownDivider} />
+                )}
+                {onLogout && (
+                    <button
+                        className={styles.dropdownItem}
+                        onClick={() => handleMenuClick(onLogout)}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Logout"
+                            description="Button to logout from GitHub"
+                            id="gui.gitDropdown.logout"
+                        />
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -64,6 +80,7 @@ GitDropdown.propTypes = {
     onCommit: PropTypes.func.isRequired,
     onFetch: PropTypes.func.isRequired,
     onPullRequest: PropTypes.func.isRequired,
+    onLogout: PropTypes.func,
     onClose: PropTypes.func.isRequired,
     buttonRef: PropTypes.object,
     position: PropTypes.oneOf(['bottom-left', 'top-left', 'bottom-right', 'top-right'])

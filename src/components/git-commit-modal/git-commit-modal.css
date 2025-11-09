@@ -9,9 +9,16 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e1e5e9;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.content {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
 }
 
 /* 修改标签字体颜色为黑色 */
@@ -61,24 +68,11 @@
     color: #22543d !important;
 }
 
-.header {
-    padding: 20px 20px 10px 20px;
-    border-bottom: 1px solid #e0e0e0;
-    background: #fafafa;
-    border-radius: 8px 8px 0 0;
-}
-
 .title {
-    margin: 0;
+    margin: 0 0 20px 0;
     font-size: 18px;
     font-weight: 600;
     color: #333;
-}
-
-.body {
-    padding: 20px;
-    flex: 1;
-    overflow-y: auto;
 }
 
 .formGroup {
@@ -131,17 +125,24 @@
 
 .fileInput {
     width: 100%;
-    padding: 8px 0;
+    padding: 8px 12px;
     font-size: 14px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    background: white;
+    background: #f9f9f9;
     cursor: pointer;
+    color: #666;
+}
+
+.fileInput:hover:not(:disabled) {
+    background: #f0f0f0;
+    border-color: #ccc;
 }
 
 .fileInput:disabled {
     background-color: #f5f5f5;
     cursor: not-allowed;
+    color: #999;
 }
 
 .checkboxGroup {
@@ -220,7 +221,6 @@
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    border-radius: 0 0 8px 8px;
 }
 
 .cancelButton {
@@ -255,6 +255,10 @@
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
     min-width: 120px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .fetchButton:hover:not(:disabled) {
@@ -279,6 +283,10 @@
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
     min-width: 120px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .commitButton:hover:not(:disabled) {
@@ -292,6 +300,127 @@
     cursor: not-allowed;
 }
 
+.logoutButton {
+    padding: 8px 16px;
+    background: #dc3545;
+    color: white;
+    border: 1px solid #c82333;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    min-width: 80px;
+}
+
+.logoutButton:hover:not(:disabled) {
+    background: #c82333;
+    border-color: #bd2130;
+}
+
+.logoutButton:disabled {
+    background: #ccc;
+    border-color: #bbb;
+    cursor: not-allowed;
+}
+
+/* 拖拽区域样式 */
+.dropZone {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafafa;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropZone:hover {
+    border-color: #00BAAD;
+    background: #f0f8ff;
+}
+
+.dropZoneActive {
+    border-color: #00BAAD !important;
+    background: #e6f7ff !important;
+    transform: scale(1.02);
+}
+
+.dropZoneContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropIcon {
+    font-size: 24px;
+    opacity: 0.7;
+}
+
+.dropText {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.dropHint {
+    font-size: 12px;
+    color: #666;
+    font-weight: normal;
+}
+
+.fileSelected {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: #e8f5e8;
+    border: 1px solid #4caf50;
+    border-radius: 6px;
+    min-width: 200px;
+}
+
+.fileIcon {
+    font-size: 16px;
+}
+
+.fileName {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2e7d32;
+    text-align: left;
+}
+
+.removeFile {
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.removeFile:hover:not(:disabled) {
+    background: #d32f2f;
+}
+
+.removeFile:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
 /* 响应式设计 */
 @media (max-width: 600px) {
     .modalContent {
@@ -299,8 +428,7 @@
         max-height: 90vh;
     }
 
-    .header,
-    .body,
+    .content,
     .footer {
         padding-left: 16px;
         padding-right: 16px;

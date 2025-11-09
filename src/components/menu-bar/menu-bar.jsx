@@ -76,7 +76,9 @@ import {
     closeSettingsMenu,
     errorsMenuOpen,
     openErrorsMenu,
-    closeErrorsMenu
+    closeErrorsMenu,
+    openGitMenu,
+    closeGitMenu
 } from '../../reducers/menus';
 import {setFileHandle} from '../../reducers/tw.js';
 
@@ -101,7 +103,7 @@ import catLogo from './cat_logo.svg';
 import prehistoricLogo from './prehistoric-logo.svg';
 import oldtimeyLogo from './oldtimey-logo.svg';
 import gitIcon from './icon--git.svg';
-import GitDropdown from '../git-dropdown/git-dropdown.jsx';
+
 
 import sharedMessages from '../../lib/shared-messages';
 
@@ -521,14 +523,14 @@ class MenuBar extends React.Component {
                                     place={this.props.isRtl ? 'left' : 'right'}
                                 >
                                     <MenuSection>
-                                        <MenuItemLink href="https://scratch.mit.edu/users/GarboMuffin/#comments">
+                                        <MenuItemLink href="https://qm.qq.com/q/PBB5Pgjmqk">
                                             <FormattedMessage
                                                 defaultMessage="Some scripts encountered errors."
                                                 description="Link in error menu"
                                                 id="tw.menuBar.reportError1"
                                             />
                                         </MenuItemLink>
-                                        <MenuItemLink href="https://scratch.mit.edu/users/GarboMuffin/#comments">
+                                        <MenuItemLink href="https://qm.qq.com/q/PBB5Pgjmqk">
                                             <FormattedMessage
                                                 defaultMessage="This is a bug. Please report it."
                                                 description="Link in error menu"
@@ -1020,7 +1022,7 @@ class MenuBar extends React.Component {
                     {/* <div className={styles.menuBarItem}>
                         <a
                             className={styles.feedbackLink}
-                            href="https://scratch.mit.edu/users/GarboMuffin/#comments"
+                            href="https://qm.qq.com/q/PBB5Pgjmqk"
                             rel="noopener noreferrer"
                             target="_blank"
                         >

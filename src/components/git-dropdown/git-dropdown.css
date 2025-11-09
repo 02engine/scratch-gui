@@ -7,38 +7,69 @@
 
 .dropdownMenu {
     position: absolute;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    min-width: 150px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 180px;
     z-index: 1000;
     overflow: hidden;
+    padding: 4px 0;
 }
 
 .dropdownItem {
     width: 100%;
-    padding: 8px 12px;
+    padding: 10px 16px;
     background: none;
     border: none;
     text-align: left;
     font-size: 14px;
-    color: #333;
+    font-weight: 500;
+    color: #24292f;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.15s ease;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
 }
 
 .dropdownItem:hover {
-    background-color: #f0f0f0;
+    background-color: #f6f8fa;
+    color: #0969da;
 }
 
 .dropdownItem:active {
-    background-color: #e0e0e0;
+    background-color: #f3f4f6;
+    transform: scale(0.98);
 }
 
 .dropdownItem:not(:last-child) {
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdownItem::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.7;
+}
+
+.dropdownItem:nth-child(1)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3E%3Cpath fill-rule='evenodd' d='M1.643 3.143L.427 1.927A.25.25 0 000 2.104V5.75c0 .138.112.25.25.25h3.646a.25.25 0 00.177-.427L2.715 4.215a6.5 6.5 0 11-1.18 4.458.75.75 0 10-1.493.154 8.001 8.001 0 101.6-1.416zM7.75 4a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5A.75.75 0 017.75 4zm0 6a1 1 0 100 0 1 1 0 000-2 1 1 0 000 2z'/%3E%3C/svg%3E");
+}
+
+.dropdownItem:nth-child(2)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3E%3Cpath fill-rule='evenodd' d='M8 2a.75.75 0 01.75.75v5.59l1.95-2.1a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0L4.2 7.26a.75.75 0 111.1-1.02l1.95 2.1V2.75A.75.75 0 018 2z'/%3E%3C/svg%3E");
+}
+
+.dropdownItem:nth-child(3)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3E%3Cpath fill-rule='evenodd' d='M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.28 3.935a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100-1.5.75.75 0 000 1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V9.644a1.75 1.75 0 102.652 0v1.756A3.75 3.75 0 111.5 9.39v-1.52a.75.75 0 00-.75-.75H.75A.75.75 0 010 6.75v-.5A.75.75 0 01.75 5.5h.75a.75.75 0 00.75-.75V3.56z'/%3E%3C/svg%3E");
 }
 
 /* 响应式设计 */

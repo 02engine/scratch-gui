@@ -1,7 +1,10 @@
 /**
  * GitHub API 服务模块
  * 处理与 GitHub API 的交互，包括认证、仓库操作和文件上传
+ * 支持 OAuth 令牌和 Personal Access Token
  */
+
+import githubOAuth from './github-oauth.js';
 
 class GitHubApiService {
     constructor() {
@@ -47,6 +50,66 @@ class GitHubApiService {
             console.warn('Failed to clear GitHub token:', error);
             return false;
         }
+    }
+
+    /**
+     * 获取有效的令牌（优先使用 OAuth 令牌，其次是 PAT）
+     * @returns {string|null} 有效的令牌
+     */
+    getEffectiveToken() {
+        // 优先使用 OAuth 令牌
+        const oauthToken = githubOAuth.getToken();
+        if (oauthToken) {
+            return oauthToken;
+        }
+
+        // 回退到 Personal Access Token
+        return this.getToken();
+    }
+
+    /**
+     * 检查是否有任何有效的认证令牌
+     * @returns {boolean} 是否有有效的令牌
+     */
+    hasAnyToken() {
+        return !!(this.getEffectiveToken());
+    }
+
+    /**
+     * 获取当前认证的用户信息
+     * @returns {Object|null} 用户信息
+     */
+    getCurrentUserInfo() {
+        // 优先使用 OAuth 用户信息
+        const oauthUser = githubOAuth.getUserInfo();
+        if (oauthUser) {
+            return {
+                ...oauthUser,
+                authType: 'oauth',
+                email: githubOAuth.getUserEmail()
+            };
+        }
+
+        // 如果有 PAT，尝试获取用户信息（需要网络请求）
+        const pat = this.getToken();
+        if (pat) {
+            // 注意：这里返回 null，因为获取 PAT 用户信息需要异步请求
+            // 调用者应该使用 getUserInfo 方法
+            return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * 清除所有认证信息（包括 OAuth 和 PAT）
+     */
+    clearAllAuth() {
+        // 清除 OAuth 认证
+        githubOAuth.clearAuth();
+
+        // 清除 PAT
+        this.clearToken();
     }
 
     /**

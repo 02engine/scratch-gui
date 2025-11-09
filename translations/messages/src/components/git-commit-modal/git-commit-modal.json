@@ -5,16 +5,6 @@
     "defaultMessage": "Git Commit"
   },
   {
-    "id": "gui.gitCommit.tokenLabel",
-    "description": "Label for the GitHub token input",
-    "defaultMessage": "GitHub Personal Token"
-  },
-  {
-    "id": "gui.gitCommit.tokenPlaceholder",
-    "description": "Placeholder for the GitHub token input",
-    "defaultMessage": "Enter your GitHub Personal Access Token"
-  },
-  {
     "id": "gui.gitCommit.repositoryLabel",
     "description": "Label for the repository input",
     "defaultMessage": "Repository"
@@ -78,5 +68,15 @@
     "id": "gui.gitCommit.fetching",
     "description": "Loading message during fetch",
     "defaultMessage": "Fetching..."
+  },
+  {
+    "id": "gui.gitCommit.loginButton",
+    "description": "Button to login to GitHub",
+    "defaultMessage": "Login"
+  },
+  {
+    "id": "gui.gitCommit.logoutButton",
+    "description": "Button to logout from GitHub",
+    "defaultMessage": "Logout"
   }
 ]

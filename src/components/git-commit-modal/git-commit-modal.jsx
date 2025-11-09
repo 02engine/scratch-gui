@@ -16,16 +16,6 @@ const messages = defineMessages({
         defaultMessage: 'Git Commit',
         description: 'Title of the Git commit modal'
     },
-    tokenLabel: {
-        id: 'gui.gitCommit.tokenLabel',
-        defaultMessage: 'GitHub Personal Token',
-        description: 'Label for the GitHub token input'
-    },
-    tokenPlaceholder: {
-        id: 'gui.gitCommit.tokenPlaceholder',
-        defaultMessage: 'Enter your GitHub Personal Access Token',
-        description: 'Placeholder for the GitHub token input'
-    },
     repositoryLabel: {
         id: 'gui.gitCommit.repositoryLabel',
         defaultMessage: 'Repository',
@@ -100,79 +90,97 @@ const GitCommitModal = props => {
         onCancel,
         onCommit,
         onFetch,
+        onLogin,
         projectData
     } = props;
 
-    const [token, setToken] = React.useState('');
-    const [repository, setRepository] = React.useState('');
-    const [summary, setSummary] = React.useState('');
-    const [description, setDescription] = React.useState('');
-    const [readmeFile, setReadmeFile] = React.useState(null);
-    const [saveToken, setSaveToken] = React.useState(false);
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [isFetching, setIsFetching] = React.useState(false);
-    const [error, setError] = React.useState('');
-    const [success, setSuccess] = React.useState('');
+    const [formData, setFormData] = React.useState({
+        repository: '',
+        summary: '',
+        description: '',
+        readmeFile: null
+    });
+    const [loadingStates, setLoadingStates] = React.useState({
+        isLoading: false,
+        isFetching: false
+    });
+    const [uiMessages, setUiMessages] = React.useState({
+        error: '',
+        success: ''
+    });
+    const [isDragOver, setIsDragOver] = React.useState(false);
 
-    // 组件初始化时加载保存的 token
-    React.useEffect(() => {
-        const savedToken = githubApi.getToken();
-        if (savedToken) {
-            setToken(savedToken);
-            setSaveToken(true);
-        }
-    }, []);
-
-    const handleTokenChange = e => {
-        setToken(e.target.value);
-        setError('');
+    const updateFormData = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setUiMessages(prev => ({ ...prev, error: '' }));
     };
 
-    const handleRepositoryChange = e => {
-        setRepository(e.target.value);
-        setError('');
-    };
-
-    const handleSummaryChange = e => {
-        setSummary(e.target.value);
-        setError('');
-    };
-
-    const handleDescriptionChange = e => {
-        setDescription(e.target.value);
-        setError('');
-    };
+    const handleRepositoryChange = e => updateFormData('repository', e.target.value);
+    const handleSummaryChange = e => updateFormData('summary', e.target.value);
+    const handleDescriptionChange = e => updateFormData('description', e.target.value);
 
     const handleReadmeChange = e => {
         const file = e.target.files[0];
         if (file && file.name.toLowerCase().endsWith('.md')) {
-            setReadmeFile(file);
-            setError('');
+            updateFormData('readmeFile', file);
         } else if (file) {
-            setError('Please select a valid .md file');
-            e.target.value = ''; // 清除无效文件
+            setUiMessages(prev => ({ ...prev, error: 'Please select a valid .md file' }));
+            e.target.value = '';
         }
     };
 
-    const handleSaveTokenChange = e => {
-        setSaveToken(e.target.checked);
+    const handleDragOver = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isDragOver) {
+            setIsDragOver(true);
+        }
+    };
+
+    const handleDragLeave = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        // 只有当鼠标真正离开拖拽区域时才重置状态
+        if (e.currentTarget.contains(e.relatedTarget)) {
+            return;
+        }
+        setIsDragOver(false);
+    };
+
+    const handleDrop = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.name.toLowerCase().endsWith('.md') || file.name.toLowerCase().endsWith('.markdown')) {
+                updateFormData('readmeFile', file);
+            } else {
+                setUiMessages(prev => ({ ...prev, error: 'Please drop a valid .md or .markdown file' }));
+            }
+        }
+    };
+
+    const handleFileInputClick = () => {
+        // 触发隐藏的文件输入
+        const fileInput = document.getElementById('readme-file-input');
+        if (fileInput) {
+            fileInput.click();
+        }
     };
 
     const validateInputs = () => {
-        if (!token.trim()) {
-            setError('Please enter your GitHub Personal Token');
-            return false;
-        }
-
-        if (!repository.trim()) {
-            setError('Please enter a repository');
+        if (!formData.repository.trim()) {
+            setUiMessages(prev => ({ ...prev, error: 'Please enter a repository' }));
             return false;
         }
 
         // 验证仓库格式
         const repoPattern = /^[^/]+\/[^/]+$/;
-        if (!repoPattern.test(repository.trim())) {
-            setError('Repository must be in format: owner/repository');
+        if (!repoPattern.test(formData.repository.trim())) {
+            setUiMessages(prev => ({ ...prev, error: 'Repository must be in format: owner/repository' }));
             return false;
         }
 
@@ -180,103 +188,93 @@ const GitCommitModal = props => {
     };
 
     const handleSubmit = async () => {
-        if (!validateInputs()) {
-            return;
-        }
+        if (!validateInputs()) return;
 
-        setIsLoading(true);
-        setError('');
-        setSuccess('');
+        setLoadingStates(prev => ({ ...prev, isLoading: true }));
+        setUiMessages({ error: '', success: '' });
 
         try {
-            // 保存 token（如果用户选择）
-            if (saveToken && token) {
-                githubApi.saveToken(token);
+            // 获取有效的token（OAuth优先）
+            const token = githubApi.getEffectiveToken();
+            if (!token) {
+                setUiMessages(prev => ({ ...prev, error: 'No authentication token available. Please authenticate first.' }));
+                return;
             }
 
             // 创建 SB3 文件对象
             let sb3File;
             if (projectData instanceof Blob) {
-                // 如果已经是 Blob，直接创建 File
                 sb3File = new File([projectData], 'project.sb3', {type: 'application/zip'});
             } else {
-                // 如果是 ArrayBuffer，先创建 Blob 再创建 File
                 const sb3Blob = new Blob([projectData], {type: 'application/zip'});
                 sb3File = new File([sb3Blob], 'project.sb3', {type: 'application/zip'});
             }
 
             // 提交到 GitHub
-            const commitSummary = summary.trim() || `Upload project from 02engine - ${new Date().toISOString()}`;
-            const commitDescription = description.trim();
+            const commitSummary = formData.summary.trim() || `Upload project from 02engine - ${new Date().toISOString()}`;
+            const commitDescription = formData.description.trim();
 
             const result = await githubApi.commitProject({
-                token: token.trim(),
-                repository: repository.trim(),
+                token: token,
+                repository: formData.repository.trim(),
                 sb3File,
-                readmeFile,
+                readmeFile: formData.readmeFile,
                 commitMessage: commitSummary,
                 summary: commitSummary,
                 description: commitDescription
             });
 
             if (result.success) {
-                setSuccess(`Successfully committed to ${result.repository} (${result.branch})`);
+                setUiMessages(prev => ({ ...prev, success: `Successfully committed to ${result.repository} (${result.branch})` }));
                 onCommit && onCommit(result);
             } else {
-                setError(result.error || 'Failed to commit to GitHub');
+                setUiMessages(prev => ({ ...prev, error: result.error || 'Failed to commit to GitHub' }));
             }
 
         } catch (err) {
             console.error('Commit error:', err);
-            setError(err.message || 'An unexpected error occurred');
+            setUiMessages(prev => ({ ...prev, error: err.message || 'An unexpected error occurred' }));
         } finally {
-            setIsLoading(false);
+            setLoadingStates(prev => ({ ...prev, isLoading: false }));
         }
     };
 
     const handleFetch = async () => {
-        if (!validateInputs()) {
-            return;
-        }
+        if (!validateInputs()) return;
 
-        setIsFetching(true);
-        setError('');
-        setSuccess('');
+        setLoadingStates(prev => ({ ...prev, isFetching: true }));
+        setUiMessages({ error: '', success: '' });
 
         try {
-            // 保存 token（如果用户选择）
-            if (saveToken && token) {
-                githubApi.saveToken(token);
+            // 获取有效的token（OAuth优先）
+            const token = githubApi.getEffectiveToken();
+            if (!token) {
+                setUiMessages(prev => ({ ...prev, error: 'No authentication token available. Please authenticate first.' }));
+                return;
             }
 
             // 从 GitHub 获取项目
-            const result = await githubApi.fetchProject(token.trim(), repository.trim());
+            const result = await githubApi.fetchProject(token, formData.repository.trim());
 
             if (result.success) {
-                setSuccess(`Successfully fetched project from ${result.repository} (${result.branch})`);
+                setUiMessages(prev => ({ ...prev, success: `Successfully fetched project from ${result.repository} (${result.branch})` }));
                 onFetch && onFetch(result);
             } else {
-                setError(result.error || 'Failed to fetch from GitHub');
+                setUiMessages(prev => ({ ...prev, error: result.error || 'Failed to fetch from GitHub' }));
             }
 
         } catch (err) {
             console.error('Fetch error:', err);
-            setError(err.message || 'An unexpected error occurred while fetching');
+            setUiMessages(prev => ({ ...prev, error: err.message || 'An unexpected error occurred while fetching' }));
         } finally {
-            setIsFetching(false);
+            setLoadingStates(prev => ({ ...prev, isFetching: false }));
         }
     };
 
     const handleCancel = () => {
-        if (!isLoading && !isFetching) {
+        if (!loadingStates.isLoading && !loadingStates.isFetching) {
             onCancel && onCancel();
         }
-    };
-
-    const handleClearToken = () => {
-        githubApi.clearToken();
-        setToken('');
-        setSaveToken(false);
     };
 
     return (
@@ -287,60 +285,20 @@ const GitCommitModal = props => {
             onRequestClose={handleCancel}
         >
             <Box className={styles.container}>
-                <Box className={styles.header}>
+                <Box className={styles.content}>
                     <h2 className={styles.title}>
                         <FormattedMessage {...messages.title} />
                     </h2>
-                </Box>
-
-                <Box className={styles.body}>
-                    {/* GitHub Token 输入 */}
-                    <Box className={styles.formGroup}>
-                        <Label text={intl.formatMessage(messages.tokenLabel)}>
-                            <Input
-                                type="password"
-                                value={token}
-                                onChange={handleTokenChange}
-                                placeholder={intl.formatMessage(messages.tokenPlaceholder)}
-                                disabled={isLoading || isFetching}
-                                className={styles.input}
-                            />
-                        </Label>
-                        {token && (
-                            <button
-                                type="button"
-                                className={styles.clearButton}
-                                onClick={handleClearToken}
-                                disabled={isLoading || isFetching}
-                            >
-                                Clear
-                            </button>
-                        )}
-                    </Box>
-
-                    {/* 保存 Token 复选框 */}
-                    <Box className={styles.checkboxGroup}>
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                checked={saveToken}
-                                onChange={handleSaveTokenChange}
-                                disabled={isLoading || isFetching}
-                                className={styles.checkbox}
-                            />
-                            <FormattedMessage {...messages.saveToken} />
-                        </label>
-                    </Box>
 
                     {/* 仓库输入 */}
                     <Box className={styles.formGroup}>
                         <Label text={intl.formatMessage(messages.repositoryLabel)}>
                             <Input
                                 type="text"
-                                value={repository}
+                                value={formData.repository}
                                 onChange={handleRepositoryChange}
                                 placeholder={intl.formatMessage(messages.repositoryPlaceholder)}
-                                disabled={isLoading || isFetching}
+                                disabled={loadingStates.isLoading || loadingStates.isFetching}
                                 className={styles.input}
                             />
                         </Label>
@@ -351,10 +309,10 @@ const GitCommitModal = props => {
                         <Label text={intl.formatMessage(messages.summaryLabel)}>
                             <Input
                                 type="text"
-                                value={summary}
+                                value={formData.summary}
                                 onChange={handleSummaryChange}
                                 placeholder={intl.formatMessage(messages.summaryPlaceholder)}
-                                disabled={isLoading || isFetching}
+                                disabled={loadingStates.isLoading || loadingStates.isFetching}
                                 className={styles.input}
                             />
                         </Label>
@@ -364,10 +322,10 @@ const GitCommitModal = props => {
                     <Box className={styles.formGroup}>
                         <Label text={intl.formatMessage(messages.descriptionLabel)}>
                             <textarea
-                                value={description}
+                                value={formData.description}
                                 onChange={handleDescriptionChange}
                                 placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-                                disabled={isLoading || isFetching}
+                                disabled={loadingStates.isLoading || loadingStates.isFetching}
                                 className={styles.textarea}
                                 rows={3}
                             />
@@ -377,32 +335,64 @@ const GitCommitModal = props => {
                     {/* README 文件选择 */}
                     <Box className={styles.formGroup}>
                         <Label text={intl.formatMessage(messages.readmeLabel)}>
+                            <div
+                                className={`${styles.dropZone} ${isDragOver ? styles.dropZoneActive : ''}`}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                onClick={handleFileInputClick}
+                            >
+                                {formData.readmeFile ? (
+                                    <div className={styles.fileSelected}>
+                                        <span className={styles.fileIcon}>📄</span>
+                                        <span className={styles.fileName}>{formData.readmeFile.name}</span>
+                                        <button
+                                            type="button"
+                                            className={styles.removeFile}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                updateFormData('readmeFile', null);
+                                            }}
+                                            disabled={loadingStates.isLoading || loadingStates.isFetching}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className={styles.dropZoneContent}>
+                                        <span className={styles.dropIcon}>📎</span>
+                                        <span className={styles.dropText}>
+                                            {isDragOver ? '释放文件以上传' : '拖拽文件到此处或点击选择'}
+                                        </span>
+                                        <span className={styles.dropHint}>
+                                            支持 .md 或 .markdown 文件
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                            {/* 隐藏的文件输入 */}
                             <input
+                                id="readme-file-input"
                                 type="file"
                                 accept=".md,.markdown"
                                 onChange={handleReadmeChange}
-                                disabled={isLoading || isFetching}
-                                className={styles.fileInput}
+                                disabled={loadingStates.isLoading || loadingStates.isFetching}
+                                style={{ display: 'none' }}
                             />
                         </Label>
-                        {readmeFile && (
-                            <Box className={styles.selectedFile}>
-                                Selected: {readmeFile.name}
-                            </Box>
-                        )}
                     </Box>
 
                     {/* 错误消息 */}
-                    {error && (
+                    {uiMessages.error && (
                         <Box className={styles.error}>
-                            {error}
+                            {uiMessages.error}
                         </Box>
                     )}
 
                     {/* 成功消息 */}
-                    {success && (
+                    {uiMessages.success && (
                         <Box className={styles.success}>
-                            {success}
+                            {uiMessages.success}
                         </Box>
                     )}
                 </Box>
@@ -411,16 +401,49 @@ const GitCommitModal = props => {
                     <Button
                         className={styles.cancelButton}
                         onClick={handleCancel}
-                        disabled={isLoading || isFetching}
+                        disabled={loadingStates.isLoading || loadingStates.isFetching}
                     >
                         <FormattedMessage {...messages.cancelButton} />
                     </Button>
+                    {!githubApi.hasAnyToken() ? (
+                        <Button
+                            className={styles.loginButton}
+                            onClick={() => {
+                                // 触发登录流程 - 这里需要通过props传递登录回调
+                                if (onLogin) {
+                                    onLogin();
+                                }
+                            }}
+                            disabled={loadingStates.isLoading || loadingStates.isFetching}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Login"
+                                description="Button to login to GitHub"
+                                id="gui.gitCommit.loginButton"
+                            />
+                        </Button>
+                    ) : (
+                        <Button
+                            className={styles.logoutButton}
+                            onClick={() => {
+                                githubApi.clearAllAuth();
+                                setUiMessages(prev => ({ ...prev, success: 'Successfully logged out from GitHub' }));
+                            }}
+                            disabled={loadingStates.isLoading || loadingStates.isFetching}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Logout"
+                                description="Button to logout from GitHub"
+                                id="gui.gitCommit.logoutButton"
+                            />
+                        </Button>
+                    )}
                     <Button
                         className={styles.fetchButton}
                         onClick={handleFetch}
-                        disabled={isLoading || isFetching}
+                        disabled={loadingStates.isLoading || loadingStates.isFetching || !githubApi.hasAnyToken()}
                     >
-                        {isFetching ? (
+                        {loadingStates.isFetching ? (
                             <FormattedMessage {...messages.fetching} />
                         ) : (
                             <FormattedMessage {...messages.fetchButton} />
@@ -429,9 +452,9 @@ const GitCommitModal = props => {
                     <Button
                         className={styles.commitButton}
                         onClick={handleSubmit}
-                        disabled={isLoading || isFetching}
+                        disabled={loadingStates.isLoading || loadingStates.isFetching || !githubApi.hasAnyToken()}
                     >
-                        {isLoading ? (
+                        {loadingStates.isLoading ? (
                             <FormattedMessage {...messages.loading} />
                         ) : (
                             <FormattedMessage {...messages.commitButton} />
@@ -449,6 +472,7 @@ GitCommitModal.propTypes = {
     onCancel: PropTypes.func,
     onCommit: PropTypes.func,
     onFetch: PropTypes.func,
+    onLogin: PropTypes.func,
     projectData: PropTypes.oneOfType([
         PropTypes.instanceOf(ArrayBuffer),
         PropTypes.instanceOf(Blob)

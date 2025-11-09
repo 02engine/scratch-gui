@@ -13,6 +13,7 @@ import DraggableWindow from '../draggable-window/draggable-window.jsx';
 import MinimizedBar from '../draggable-window/minimized-bar.jsx';
 import GitCommitModal from '../git-commit-modal/git-commit-modal.jsx';
 import GitQuickModal from '../git-quick-modal/git-quick-modal.jsx';
+import GitHubOAuthModal from '../github-oauth-modal/github-oauth-modal.jsx';
 import ProjectExporter from '../../lib/project-exporter.js';
 import githubApi from '../../lib/github-api.js';
 
@@ -188,8 +189,18 @@ const GUIComponent = props => {
     const [isGitQuickModalOpen, setIsGitQuickModalOpen] = React.useState(false);
     const [gitQuickModalType, setGitQuickModalType] = React.useState('commit');
 
+    // OAuth 认证相关状态
+    const [isOAuthModalOpen, setIsOAuthModalOpen] = React.useState(false);
+
     // 处理 Git 提交按钮点击
     const handleClickGitCommit = React.useCallback(async () => {
+        // 检查是否已认证
+        if (!githubApi.hasAnyToken()) {
+            // 如果没有认证，显示 OAuth 模态框
+            setIsOAuthModalOpen(true);
+            return;
+        }
+
         try {
             // 导出项目数据
             const sb3Data = await ProjectExporter.exportToSB3(vm);
@@ -299,12 +310,7 @@ const GUIComponent = props => {
     }, [gitRepositoryExists]);
 
     const hasGitToken = React.useCallback(() => {
-        try {
-            const token = localStorage.getItem('github-personal-token');
-            return !!token;
-        } catch (error) {
-            return false;
-        }
+        return githubApi.hasAnyToken();
     }, []);
 
     // 更新 Git 状态的函数
@@ -376,6 +382,30 @@ const GUIComponent = props => {
 
         handleCloseGitQuickModal();
     }, [handleCloseGitQuickModal, vm]);
+
+    // 处理 OAuth 认证成功
+    const handleOAuthSuccess = React.useCallback((result) => {
+        console.log('✅ [OAuth] Authentication successful:', result);
+        setIsOAuthModalOpen(false);
+
+        // 认证成功后，自动打开 Git 提交模态框
+        setTimeout(() => {
+            handleClickGitCommit();
+        }, 100);
+    }, []);
+
+    // 处理 OAuth 认证错误
+    const handleOAuthError = React.useCallback((error) => {
+        console.error('❌ [OAuth] Authentication failed:', error);
+        // 错误已在模态框中显示
+    }, []);
+
+    // 处理 OAuth 模态框关闭
+    const handleCloseOAuthModal = React.useCallback(() => {
+        setIsOAuthModalOpen(false);
+    }, []);
+
+
 
     // 确保 VM 初始化时 git 对象存在
     React.useEffect(() => {
@@ -990,6 +1020,7 @@ const GUIComponent = props => {
                         onCancel={handleCloseGitCommitModal}
                         onCommit={handleGitCommitSuccess}
                         onFetch={handleGitFetchSuccess}
+                        onLogin={() => setIsOAuthModalOpen(true)}
                         projectData={projectData}
                     />
                 )}
@@ -1000,10 +1031,20 @@ const GUIComponent = props => {
                         isOpen={isGitQuickModalOpen}
                         type={gitQuickModalType}
                         repository={vm.runtime.platform.git.repository}
-                        token={githubApi.getToken() || ''}
+                        token={githubApi.getEffectiveToken() || ''}
                         vm={vm}
                         onCancel={handleCloseGitQuickModal}
                         onSuccess={handleGitQuickSuccess}
+                    />
+                )}
+
+                {/* GitHub OAuth 认证模态框 */}
+                {isOAuthModalOpen && (
+                    <GitHubOAuthModal
+                        isOpen={isOAuthModalOpen}
+                        onCancel={handleCloseOAuthModal}
+                        onSuccess={handleOAuthSuccess}
+                        onError={handleOAuthError}
                     />
                 )}
             </Box>

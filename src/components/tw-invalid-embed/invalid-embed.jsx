@@ -35,7 +35,7 @@ const InvalidEmbed = () => (
         <p>
             {'If you are seeing this page even though you aren\'t embedding anything, let us know on '}
             <a
-                href="https://scratch.mit.edu/users/GarboMuffin/#comments"
+                href="https://qm.qq.com/q/PBB5Pgjmqk"
                 target="_blank"
                 rel="noreferrer"
             >

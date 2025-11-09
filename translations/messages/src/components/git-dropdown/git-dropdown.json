@@ -1,17 +1,7 @@
 [
   {
-    "id": "gui.gitDropdown.commit",
-    "description": "Commit option in Git dropdown",
-    "defaultMessage": "Commit to GitHub"
-  },
-  {
-    "id": "gui.gitDropdown.fetch",
-    "description": "Fetch option in Git dropdown",
-    "defaultMessage": "Fetch from GitHub"
-  },
-  {
-    "id": "gui.gitDropdown.pullRequest",
-    "description": "Pull Request option in Git dropdown",
-    "defaultMessage": "Pull Request"
+    "id": "gui.gitDropdown.logout",
+    "description": "Button to logout from GitHub",
+    "defaultMessage": "Logout"
   }
 ]

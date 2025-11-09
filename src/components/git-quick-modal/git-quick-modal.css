@@ -9,9 +9,10 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e1e5e9;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
 /* 修改标签字体颜色为黑色 */
@@ -49,24 +50,17 @@
     color: #22543d !important;
 }
 
-.header {
-    padding: 20px 20px 10px 20px;
-    border-bottom: 1px solid #e0e0e0;
-    background: #fafafa;
-    border-radius: 8px 8px 0 0;
-}
-
-.title {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-}
-
 .body {
     padding: 20px;
     flex: 1;
     overflow-y: auto;
+}
+
+.title {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
 }
 
 .repositoryInfo {
@@ -74,7 +68,6 @@
     padding: 10px;
     background: #f0f8ff;
     border: 1px solid #b3d9ff;
-    border-radius: 4px;
     font-size: 14px;
     color: #0066cc;
 }
@@ -87,7 +80,6 @@
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ddd;
-    border-radius: 4px;
     font-size: 14px;
     transition: border-color 0.2s, box-shadow 0.2s;
     box-sizing: border-box;
@@ -108,7 +100,6 @@
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ddd;
-    border-radius: 4px;
     font-size: 14px;
     font-family: inherit;
     resize: vertical;
@@ -131,7 +122,6 @@
     padding: 12px;
     background: #fff5f5;
     border: 1px solid #fed7d7;
-    border-radius: 4px;
     color: #c53030;
     font-size: 14px;
     margin-top: 16px;
@@ -141,7 +131,6 @@
     padding: 12px;
     background: #f0fff4;
     border: 1px solid #9ae6b4;
-    border-radius: 4px;
     color: #22543d;
     font-size: 14px;
     margin-top: 16px;
@@ -154,7 +143,6 @@
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    border-radius: 0 0 8px 8px;
 }
 
 .cancelButton {
@@ -162,7 +150,6 @@
     background: #f5f5f5;
     color: #666;
     border: 1px solid #ddd;
-    border-radius: 4px;
     font-size: 14px;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
@@ -183,12 +170,15 @@
     background: #00BAAD;
     color: white;
     border: 1px solid #00998d;
-    border-radius: 4px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
     min-width: 120px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .actionButton:hover:not(:disabled) {
@@ -209,7 +199,6 @@
         max-height: 90vh;
     }
 
-    .header,
     .body,
     .footer {
         padding-left: 16px;

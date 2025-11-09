@@ -12,6 +12,7 @@ const MENU_SETTINGS = 'settingsMenu';
 const MENU_ACCENT = 'accentMenu';
 const MENU_BLOCKS_THEME = 'blocksThemeMenu';
 const MENU_ERRORS = 'errorsMenu';
+const MENU_GIT = 'gitMenu';
 
 class Menu {
     constructor (id) {
@@ -63,7 +64,8 @@ const rootMenu = new Menu('root')
     .addChild(new Menu(MENU_SETTINGS))
     .addChild(new Menu(MENU_LOGIN))
     .addChild(new Menu(MENU_ACCOUNT))
-    .addChild(new Menu(MENU_ABOUT));
+    .addChild(new Menu(MENU_ABOUT))
+    .addChild(new Menu(MENU_GIT));
 
 const initialState = {
     [MENU_ABOUT]: false,
@@ -76,7 +78,8 @@ const initialState = {
     [MENU_SETTINGS]: false,
     [MENU_ACCENT]: false,
     [MENU_BLOCKS_THEME]: false,
-    [MENU_ERRORS]: false
+    [MENU_ERRORS]: false,
+    [MENU_GIT]: false
 };
 
 const reducer = function (state, action) {
@@ -160,6 +163,10 @@ const openErrorsMenu = () => openMenu(MENU_ERRORS);
 const closeErrorsMenu = () => closeMenu(MENU_ERRORS);
 const errorsMenuOpen = state => state.scratchGui.menus[MENU_ERRORS];
 
+const openGitMenu = () => openMenu(MENU_GIT);
+const closeGitMenu = () => closeMenu(MENU_GIT);
+const gitMenuOpen = state => state.scratchGui.menus[MENU_GIT];
+
 export {
     reducer as default,
     initialState as menuInitialState,
@@ -195,5 +202,8 @@ export {
     blocksThemeMenuOpen,
     openErrorsMenu,
     closeErrorsMenu,
-    errorsMenuOpen
+    errorsMenuOpen,
+    openGitMenu,
+    closeGitMenu,
+    gitMenuOpen
 };
