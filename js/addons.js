@@ -2519,7 +2519,8 @@ __webpack_require__.r(__webpack_exports__);
   "tw-remove-feedback": () => __webpack_require__.e(/*! import() | addon-entry-tw-remove-feedback */ "addon-entry-tw-remove-feedback").then(__webpack_require__.bind(null, /*! ../addons/tw-remove-feedback/_runtime_entry.js */ "./src/addons/addons/tw-remove-feedback/_runtime_entry.js")),
   "tw-disable-cloud-variables": () => __webpack_require__.e(/*! import() | addon-entry-tw-disable-cloud-variables */ "addon-entry-tw-disable-cloud-variables").then(__webpack_require__.bind(null, /*! ../addons/tw-disable-cloud-variables/_runtime_entry.js */ "./src/addons/addons/tw-disable-cloud-variables/_runtime_entry.js")),
   "tw-disable-compiler": () => __webpack_require__.e(/*! import() | addon-entry-tw-disable-compiler */ "addon-entry-tw-disable-compiler").then(__webpack_require__.bind(null, /*! ../addons/tw-disable-compiler/_runtime_entry.js */ "./src/addons/addons/tw-disable-compiler/_runtime_entry.js")),
-  "editor-stepping": () => __webpack_require__.e(/*! import() | addon-entry-editor-stepping */ "addon-entry-editor-stepping").then(__webpack_require__.bind(null, /*! ../addons/editor-stepping/_runtime_entry.js */ "./src/addons/addons/editor-stepping/_runtime_entry.js"))
+  "editor-stepping": () => __webpack_require__.e(/*! import() | addon-entry-editor-stepping */ "addon-entry-editor-stepping").then(__webpack_require__.bind(null, /*! ../addons/editor-stepping/_runtime_entry.js */ "./src/addons/addons/editor-stepping/_runtime_entry.js")),
+  "tw-comment-markdown-editor": () => __webpack_require__.e(/*! import() | addon-tw-comment-markdown-editor */ "addon-tw-comment-markdown-editor").then(__webpack_require__.bind(null, /*! ../addons/tw-comment-markdown-editor/_runtime_entry.js */ "./src/addons/addons/tw-comment-markdown-editor/_runtime_entry.js"))
 });
 
 /***/ }),
