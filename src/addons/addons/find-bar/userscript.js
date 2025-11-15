@@ -218,18 +218,342 @@ export default async function ({ addon, msg, console }) {
     getScratchBlocks() {
       let myBlocks = [];
       let myBlocksByProcCode = {};
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
 
-      let topBlocks = this.workspace.getTopBlocks();
+      /**
+       * 生成积木的显示文本
+       * @param {object} block - 积木数据
+       * @param {object} target - 目标对象
+       * @returns {string} 积木的显示文本
+       */
+      function generateBlockText(block, target) {
+        if (!block || !block.opcode) return "";
+        
+        const opcode = block.opcode;
+        const fields = block.fields || {};
+        const inputs = block.inputs || {};
+        
+        // 处理事件类积木
+        if (opcode === "event_whenflagclicked") {
+          return "when flag clicked";
+        }
+        if (opcode === "event_whenthisspriteclicked") {
+          return "when this sprite clicked";
+        }
+        if (opcode === "event_whenstageclicked") {
+          return "when stage clicked";
+        }
+        if (opcode === "event_whenkeypressed") {
+          const key = fields.KEY_OPTION?.value || "any";
+          return `when key [${key}] pressed`;
+        }
+        if (opcode === "event_whenbroadcastreceived") {
+          const message = fields.BROADCAST_OPTION?.value || "message1";
+          return `when I receive [${message}]`;
+        }
+        if (opcode === "event_whenbackdropswitchesto") {
+          const backdrop = fields.BACKDROP?.value || "backdrop1";
+          return `when backdrop switches to [${backdrop}]`;
+        }
+        if (opcode === "event_whengreaterthan") {
+          const option = fields.WHENGREATERTHANMENU?.value || "loudness";
+          const value = inputs.VALUE ? "( )" : "( )";
+          return `when [${option}] > ${value}`;
+        }
+        if (opcode === "event_whenbroadcastreceived") {
+          const message = fields.BROADCAST_OPTION?.value || "message1";
+          return `when I receive [${message}]`;
+        }
+        if (opcode === "control_start_as_clone") {
+          return "when I start as a clone";
+        }
+        
+        // 处理控制类积木
+        if (opcode === "control_wait") {
+          const secs = inputs.DURATION ? "( )" : "( )";
+          return `wait ${secs} seconds`;
+        }
+        if (opcode === "control_repeat") {
+          const times = inputs.TIMES ? "( )" : "( )";
+          return `repeat ${times}`;
+        }
+        if (opcode === "control_if") {
+          return "if <> then";
+        }
+        if (opcode === "control_if_else") {
+          return "if <> then else";
+        }
+        if (opcode === "control_wait_until") {
+          return "wait until <>";
+        }
+        if (opcode === "control_repeat_until") {
+          return "repeat until <>";
+        }
+        if (opcode === "control_stop") {
+          const option = fields.STOP_OPTION?.value || "all";
+          return `stop [${option}]`;
+        }
+        if (opcode === "control_create_clone_of") {
+          const option = inputs.CLONE_OPTION ? "(myself)" : "(myself)";
+          return `create clone of ${option}`;
+        }
+        if (opcode === "control_delete_this_clone") {
+          return "delete this clone";
+        }
+        
+        // 处理变量和列表
+        if (opcode === "data_setvariableto") {
+          const varName = fields.VARIABLE?.value || "my variable";
+          const value = inputs.VALUE ? "( )" : "( )";
+          return `set [${varName}] to ${value}`;
+        }
+        if (opcode === "data_changevariableby") {
+          const varName = fields.VARIABLE?.value || "my variable";
+          const value = inputs.VALUE ? "( )" : "( )";
+          return `change [${varName}] by ${value}`;
+        }
+        if (opcode === "data_showvariable") {
+          const varName = fields.VARIABLE?.value || "my variable";
+          return `show variable [${varName}]`;
+        }
+        if (opcode === "data_hidevariable") {
+          const varName = fields.VARIABLE?.value || "my variable";
+          return `hide variable [${varName}]`;
+        }
+        if (opcode === "data_addtolist") {
+          const listName = fields.LIST?.value || "my list";
+          const item = inputs.ITEM ? "( )" : "( )";
+          return `add ${item} to [${listName}]`;
+        }
+        if (opcode === "data_deleteoflist") {
+          const listName = fields.LIST?.value || "my list";
+          const index = inputs.INDEX ? "( )" : "( )";
+          return `delete ${index} of [${listName}]`;
+        }
+        if (opcode === "data_deletealloflist") {
+          const listName = fields.LIST?.value || "my list";
+          return `delete all of [${listName}]`;
+        }
+        if (opcode === "data_insertatlist") {
+          const listName = fields.LIST?.value || "my list";
+          const item = inputs.ITEM ? "( )" : "( )";
+          const index = inputs.INDEX ? "( )" : "( )";
+          return `insert ${item} at ${index} of [${listName}]`;
+        }
+        if (opcode === "data_replaceitemoflist") {
+          const listName = fields.LIST?.value || "my list";
+          const index = inputs.INDEX ? "( )" : "( )";
+          const item = inputs.ITEM ? "( )" : "( )";
+          return `replace item ${index} of [${listName}] with ${item}`;
+        }
+        if (opcode === "data_itemoflist") {
+          const listName = fields.LIST?.value || "my list";
+          const index = inputs.INDEX ? "( )" : "( )";
+          return `item ${index} of [${listName}]`;
+        }
+        if (opcode === "data_itemnumoflist") {
+          const item = inputs.ITEM ? "( )" : "( )";
+          const listName = fields.LIST?.value || "my list";
+          return `item # of ${item} in [${listName}]`;
+        }
+        if (opcode === "data_lengthoflist") {
+          const listName = fields.LIST?.value || "my list";
+          return `length of [${listName}]`;
+        }
+        if (opcode === "data_listcontainsitem") {
+          const listName = fields.LIST?.value || "my list";
+          const item = inputs.ITEM ? "(thing)" : "(thing)";
+          return `[${listName}] contains ${item}?`;
+        }
+        if (opcode === "data_showlist") {
+          const listName = fields.LIST?.value || "my list";
+          return `show list [${listName}]`;
+        }
+        if (opcode === "data_hidelist") {
+          const listName = fields.LIST?.value || "my list";
+          return `hide list [${listName}]`;
+        }
+        
+        // 处理运算类积木
+        if (opcode === "operator_add") {
+          const num1 = inputs.NUM1 ? "( )" : "( )";
+          const num2 = inputs.NUM2 ? "( )" : "( )";
+          return `(${num1} + ${num2})`;
+        }
+        if (opcode === "operator_subtract") {
+          const num1 = inputs.NUM1 ? "( )" : "( )";
+          const num2 = inputs.NUM2 ? "( )" : "( )";
+          return `(${num1} - ${num2})`;
+        }
+        if (opcode === "operator_multiply") {
+          const num1 = inputs.NUM1 ? "( )" : "( )";
+          const num2 = inputs.NUM2 ? "( )" : "( )";
+          return `(${num1} * ${num2})`;
+        }
+        if (opcode === "operator_divide") {
+          const num1 = inputs.NUM1 ? "( )" : "( )";
+          const num2 = inputs.NUM2 ? "( )" : "( )";
+          return `(${num1} / ${num2})`;
+        }
+        if (opcode === "operator_random") {
+          const from = inputs.FROM ? "( )" : "( )";
+          const to = inputs.TO ? "( )" : "( )";
+          return `pick random ${from} to ${to}`;
+        }
+        if (opcode === "operator_lt") {
+          const value1 = inputs.OPERAND1 ? "( )" : "( )";
+          const value2 = inputs.OPERAND2 ? "( )" : "( )";
+          return `<${value1} < ${value2}>`;
+        }
+        if (opcode === "operator_equals") {
+          const value1 = inputs.OPERAND1 ? "( )" : "( )";
+          const value2 = inputs.OPERAND2 ? "( )" : "( )";
+          return `<${value1} = ${value2}>`;
+        }
+        if (opcode === "operator_gt") {
+          const value1 = inputs.OPERAND1 ? "( )" : "( )";
+          const value2 = inputs.OPERAND2 ? "( )" : "( )";
+          return `<${value1} > ${value2}>`;
+        }
+        if (opcode === "operator_and") {
+          const value1 = inputs.OPERAND1 ? "<>" : "<>";
+          const value2 = inputs.OPERAND2 ? "<>" : "<>";
+          return `<${value1} and ${value2}>`;
+        }
+        if (opcode === "operator_or") {
+          const value1 = inputs.OPERAND1 ? "<>" : "<>";
+          const value2 = inputs.OPERAND2 ? "<>" : "<>";
+          return `<${value1} or ${value2}>`;
+        }
+        if (opcode === "operator_not") {
+          const value = inputs.OPERAND ? "<>" : "<>";
+          return `<not ${value}>`;
+        }
+        if (opcode === "operator_join") {
+          const string1 = inputs.STRING1 ? "( )" : "( )";
+          const string2 = inputs.STRING2 ? "( )" : "( )";
+          return `join ${string1} and ${string2}`;
+        }
+        if (opcode === "operator_letter_of") {
+          const letter = inputs.LETTER ? "( )" : "( )";
+          const string = inputs.STRING ? "( )" : "( )";
+          return `letter ${letter} of ${string}`;
+        }
+        if (opcode === "operator_length") {
+          const string = inputs.STRING ? "( )" : "( )";
+          return `length of ${string}`;
+        }
+        if (opcode === "operator_contains") {
+          const string1 = inputs.STRING1 ? "( )" : "( )";
+          const string2 = inputs.STRING2 ? "( )" : "( )";
+          return `<${string1} contains ${string2}?>`;
+        }
+        if (opcode === "operator_mod") {
+          const num1 = inputs.NUM1 ? "( )" : "( )";
+          const num2 = inputs.NUM2 ? "( )" : "( )";
+          return `(${num1} mod ${num2})`;
+        }
+        if (opcode === "operator_round") {
+          const num = inputs.NUM ? "( )" : "( )";
+          return `round ${num}`;
+        }
+        if (opcode === "operator_mathop") {
+          const operator = fields.OPERATOR?.value || "abs";
+          const num = inputs.NUM ? "( )" : "( )";
+          return `[${operator}] of ${num}`;
+        }
+        
+        // 处理自定义过程调用
+        if (opcode === "procedures_call") {
+          const procCode = block.mutation?.proccode || "custom block";
+          // 处理参数
+          let result = procCode;
+          const paramNames = block.mutation?.argumentnames || "[]";
+          const argNames = JSON.parse(paramNames);
+          
+          for (let i = 0; i < argNames.length; i++) {
+            const argId = `input${i}`;
+            const placeholder = `%${i + 1}s`;
+            const value = inputs[argId] ? "( )" : "( )";
+            result = result.replace(placeholder, value);
+          }
+          return result;
+        }
+        
+        // 处理感知类积木
+        if (opcode === "sensing_touchingobject") {
+          const object = inputs.TOUCHINGOBJECTMENU ? "( )" : "( )";
+          return `<touching ${object}?>`;
+        }
+        if (opcode === "sensing_touchingcolor") {
+          const color = inputs.COLOR ? "( )" : "( )";
+          return `<touching color ${color}?>`;
+        }
+        if (opcode === "sensing_coloristouchingcolor") {
+          const color1 = inputs.COLOR ? "( )" : "( )";
+          const color2 = inputs.COLOR2 ? "( )" : "( )";
+          return `<color ${color1} is touching ${color2}?>`;
+        }
+        if (opcode === "sensing_distanceto") {
+          const object = inputs.DISTANCETOMENU ? "( )" : "( )";
+          return `distance to ${object}`;
+        }
+        if (opcode === "sensing_keypressed") {
+          const key = inputs.KEY_OPTION ? "( )" : "( )";
+          return `<key [${key}] pressed?>`;
+        }
+        if (opcode === "sensing_mousedown") {
+          return "<mouse down?>";
+        }
+        if (opcode === "sensing_mousex") {
+          return "mouse x";
+        }
+        if (opcode === "sensing_mousey") {
+          return "mouse y";
+        }
+        if (opcode === "sensing_timer") {
+          return "timer";
+        }
+        if (opcode === "sensing_resettimer") {
+          return "reset timer";
+        }
+        if (opcode === "sensing_of") {
+          const property = fields.PROPERTY?.value || "x position";
+          const object = inputs.OBJECT ? "(Stage)" : "(Stage)";
+          return `[${property}] of ${object}`;
+        }
+        if (opcode === "sensing_current") {
+          const option = fields.CURRENTMENU?.value || "year";
+          return `current [${option}]`;
+        }
+        if (opcode === "sensing_dayssince2000") {
+          return "days since 2000";
+        }
+        if (opcode === "sensing_username") {
+          return "username";
+        }
+        if (opcode === "sensing_loudness") {
+          return "loudness";
+        }
+        
+        // 默认返回opcode
+        return opcode.replace(/_/g, ' ');
+      }
 
       /**
        * @param cls
-       * @param txt
-       * @param root
+       * @param block
+       * @param targetId
+       * @param targetName
        * @returns BlockItem
        */
-      function addBlock(cls, txt, root) {
-        let id = root.id ? root.id : root.getId ? root.getId() : null;
-        let clone = myBlocksByProcCode[txt];
+      function addBlock(cls, block, targetId, targetName) {
+        let id = block.id;
+        const blockText = generateBlockText(block, targetName);
+        const displayName = targetName ? `[${targetName}] ${blockText}` : blockText;
+        
+        let clone = myBlocksByProcCode[displayName];
         if (clone) {
           if (!clone.clones) {
             clone.clones = [];
@@ -237,91 +561,93 @@ export default async function ({ addon, msg, console }) {
           clone.clones.push(id);
           return clone;
         }
-        let items = new BlockItem(cls, txt, id, 0);
-        items.y = root.getRelativeToSurfaceXY ? root.getRelativeToSurfaceXY().y : null;
+        let items = new BlockItem(cls, displayName, id, 0, targetId, targetName);
         myBlocks.push(items);
-        myBlocksByProcCode[txt] = items;
+        myBlocksByProcCode[displayName] = items;
         return items;
       }
 
-      function getDescFromField(root) {
-        let fields = root.inputList[0];
-        let desc;
-        for (const fieldRow of fields.fieldRow) {
-          desc = desc ? desc + " " : "";
-          if (fieldRow instanceof Blockly.FieldImage && fieldRow.src_.endsWith("green-flag.svg")) {
-            desc += msg("/_general/blocks/green-flag");
-          } else {
-            desc += fieldRow.getText();
-          }
-        }
-        return desc;
-      }
-
-      for (const root of topBlocks) {
-        if (root.type === "procedures_definition") {
-          const label = root.getChildren()[0];
-          const procCode = label.getProcCode();
-          if (!procCode) {
+      // 遍历所有目标（精灵和舞台）
+      for (const target of targets) {
+        if (!target.isOriginal) continue; // 跳过克隆体
+        
+        const targetName = target.isStage ? "Stage" : target.sprite.name;
+        const targetId = target.id;
+        
+        // 获取目标的积木
+        const blocks = target.blocks._blocks;
+        const blockIds = Object.keys(blocks);
+        
+        for (const blockId of blockIds) {
+          const block = blocks[blockId];
+          const blockType = block.opcode;
+          
+          if (blockType === "procedures_definition") {
+            addBlock("define", block, targetId, targetName);
             continue;
           }
-          const indexOfLabel = root.inputList.findIndex((i) => i.fieldRow.length > 0);
-          if (indexOfLabel === -1) {
+          
+          if (blockType.startsWith("event_")) {
+            addBlock("event", block, targetId, targetName);
             continue;
           }
-          const translatedDefine = root.inputList[indexOfLabel].fieldRow[0].getText();
-          const message = indexOfLabel === 0 ? `${translatedDefine} ${procCode}` : `${procCode} ${translatedDefine}`;
-          addBlock("define", message, root);
-          continue;
+          
+          if (blockType === "control_start_as_clone") {
+            addBlock("event", block, targetId, targetName);
+            continue;
+          }
+          
+          // 其他类型的积木也添加到搜索结果中
+          if (blockType && !blockType.startsWith("procedures_")) {
+            // 根据积木类型分类
+            let cls = "stack";
+            if (blockType.startsWith("data_")) {
+              cls = blockType.includes("list") ? "list" : "var";
+            } else if (blockType.startsWith("control_")) {
+              cls = "control";
+            } else if (blockType.startsWith("operator_")) {
+              cls = "operator";
+            } else if (blockType.startsWith("sensing_")) {
+              cls = "sensing";
+            } else if (blockType.startsWith("looks_")) {
+              cls = "looks";
+            } else if (blockType.startsWith("motion_")) {
+              cls = "motion";
+            } else if (blockType.startsWith("sound_")) {
+              cls = "sound";
+            } else if (blockType.startsWith("pen_")) {
+              cls = "pen";
+            }
+            
+            addBlock(cls, block, targetId, targetName);
+          }
         }
-
-        if (root.type === "event_whenflagclicked") {
-          addBlock("flag", getDescFromField(root), root); // "When Flag Clicked"
-          continue;
+        
+        // 收集变量和列表
+        const variableMap = target.variables;
+        for (const varId of Object.keys(variableMap)) {
+          const variable = variableMap[varId];
+          if (variable.type === "") { // 普通变量
+            const isLocal = !target.isStage; // 舞台变量是全局的，精灵变量是局部的
+            const cls = isLocal ? "var" : "VAR";
+            const procCode = isLocal ? msg("var-local", { name: variable.name }) : msg("var-global", { name: variable.name });
+            addBlock(cls, procCode, {id: varId}, targetId, targetName);
+          } else if (variable.type === "list") { // 列表
+            const isLocal = !target.isStage;
+            const cls = isLocal ? "list" : "LIST";
+            const procCode = isLocal ? msg("list-local", { name: variable.name }) : msg("list-global", { name: variable.name });
+            addBlock(cls, procCode, {id: varId}, targetId, targetName);
+          }
         }
-
-        if (root.type === "event_whenbroadcastreceived") {
-          const fieldRow = root.inputList[0].fieldRow;
-          let eventName = fieldRow.find((input) => input.name === "BROADCAST_OPTION").getText();
-          addBlock("receive", msg("event", { name: eventName }), root).eventName = eventName;
-
-          continue;
-        }
-
-        if (root.type.substr(0, 10) === "event_when") {
-          addBlock("event", getDescFromField(root), root); // "When Flag Clicked"
-          continue;
-        }
-
-        if (root.type === "control_start_as_clone") {
-          addBlock("event", getDescFromField(root), root); // "when I start as a clone"
-          continue;
-        }
-      }
-
-      let map = this.workspace.getVariableMap();
-
-      let vars = map.getVariablesOfType("");
-      for (const row of vars) {
-        addBlock(
-          row.isLocal ? "var" : "VAR",
-          row.isLocal ? msg("var-local", { name: row.name }) : msg("var-global", { name: row.name }),
-          row
-        );
-      }
-
-      let lists = map.getVariablesOfType("list");
-      for (const row of lists) {
-        addBlock(
-          row.isLocal ? "list" : "LIST",
-          row.isLocal ? msg("list-local", { name: row.name }) : msg("list-global", { name: row.name }),
-          row
-        );
       }
 
       const events = this.getCallsToEvents();
       for (const event of events) {
-        addBlock("receive", msg("event", { name: event.eventName }), event.block).eventName = event.eventName;
+        const targetName = event.targetId === this.utils.getEditingTarget().id ? null : 
+                          targets.find(t => t.id === event.targetId)?.sprite?.name;
+        const item = addBlock("receive", msg("event", { name: event.eventName }), event.block, 
+                             event.targetId, targetName);
+        item.eventName = event.eventName;
       }
 
       const clsOrder = { flag: 0, receive: 1, event: 2, define: 3, var: 4, VAR: 5, list: 6, LIST: 7 };
@@ -344,30 +670,50 @@ export default async function ({ addon, msg, console }) {
     }
 
     getScratchCostumes() {
-      let costumes = this.utils.getEditingTarget().getCostumes();
-
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
       let items = [];
-
       let i = 0;
-      for (const costume of costumes) {
-        let item = new BlockItem("costume", costume.name, costume.assetId, i);
-        items.push(item);
-        i++;
+
+      // 遍历所有目标
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        
+        const targetName = target.isStage ? "Stage" : target.sprite.name;
+        const targetId = target.id;
+        const costumes = target.getCostumes();
+        
+        for (const costume of costumes) {
+          const displayName = target.isStage ? costume.name : `[${targetName}] ${costume.name}`;
+          let item = new BlockItem("costume", displayName, costume.assetId, i, targetId, targetName);
+          items.push(item);
+          i++;
+        }
       }
 
       return items;
     }
 
     getScratchSounds() {
-      let sounds = this.utils.getEditingTarget().getSounds();
-
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
       let items = [];
-
       let i = 0;
-      for (const sound of sounds) {
-        let item = new BlockItem("sound", sound.name, sound.assetId, i);
-        items.push(item);
-        i++;
+
+      // 遍历所有目标
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        
+        const targetName = target.isStage ? "Stage" : target.sprite.name;
+        const targetId = target.id;
+        const sounds = target.getSounds();
+        
+        for (const sound of sounds) {
+          const displayName = target.isStage ? sound.name : `[${targetName}] ${sound.name}`;
+          let item = new BlockItem("sound", displayName, sound.assetId, i, targetId, targetName);
+          items.push(item);
+          i++;
+        }
       }
 
       return items;
@@ -376,26 +722,38 @@ export default async function ({ addon, msg, console }) {
     getCallsToEvents() {
       const uses = [];
       const alreadyFound = new Set();
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
 
-      for (const block of this.workspace.getAllBlocks()) {
-        if (block.type !== "event_broadcast" && block.type !== "event_broadcastandwait") {
-          continue;
-        }
+      // 遍历所有目标
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        
+        const targetId = target.id;
+        const blocks = target.blocks._blocks;
+        
+        for (const blockId of Object.keys(blocks)) {
+          const block = blocks[blockId];
+          
+          if (block.opcode !== "event_broadcast" && block.opcode !== "event_broadcastandwait") {
+            continue;
+          }
 
-        const broadcastInput = block.getChildren()[0];
-        if (!broadcastInput) {
-          continue;
-        }
-
-        let eventName = "";
-        if (broadcastInput.type === "event_broadcast_menu") {
-          eventName = broadcastInput.inputList[0].fieldRow[0].getText();
-        } else {
-          eventName = msg("complex-broadcast");
-        }
-        if (!alreadyFound.has(eventName)) {
-          alreadyFound.add(eventName);
-          uses.push({ eventName: eventName, block: block });
+          let eventName = "";
+          const broadcastInputBlockId = block.inputs.BROADCAST_INPUT?.block;
+          if (broadcastInputBlockId) {
+            const broadcastInputBlock = blocks[broadcastInputBlockId];
+            if (broadcastInputBlock && broadcastInputBlock.opcode === "event_broadcast_menu") {
+              eventName = broadcastInputBlock.fields.BROADCAST_OPTION?.value || "";
+            } else {
+              eventName = msg("complex-broadcast");
+            }
+          }
+          
+          if (eventName && !alreadyFound.has(eventName)) {
+            alreadyFound.add(eventName);
+            uses.push({ eventName: eventName, block: {id: blockId}, targetId: targetId });
+          }
         }
       }
 
@@ -472,6 +830,8 @@ export default async function ({ addon, msg, console }) {
       const item = document.createElement("li");
       item.innerText = proc.procCode;
       item.data = proc;
+      item.title = proc.procCode; // 添加title属性，鼠标悬浮时显示完整文本
+      
       const colorIds = {
         receive: "events",
         event: "events",
@@ -482,6 +842,14 @@ export default async function ({ addon, msg, console }) {
         LIST: "data-lists",
         costume: "looks",
         sound: "sounds",
+        stack: "control",
+        control: "control",
+        operator: "operators",
+        sensing: "sensing",
+        looks: "looks",
+        motion: "motion",
+        sound: "sounds",
+        pen: "pen",
       };
       if (proc.cls === "flag") {
         item.className = "sa-find-flag";
@@ -501,89 +869,109 @@ export default async function ({ addon, msg, console }) {
     }
 
     onItemClick(item, instanceBlock) {
-      if (this.selected && this.selected !== item) {
-        this.selected.classList.remove("sel");
-        this.selected = null;
-      }
-      if (this.selected !== item) {
-        item.classList.add("sel");
-        this.selected = item;
+        if (this.selected && this.selected !== item) {
+          this.selected.classList.remove("sel");
+          this.selected = null;
+        }
+        if (this.selected !== item) {
+          item.classList.add("sel");
+          this.selected = item;
+        }
+
+        // 切换到目标（如果需要）
+        if (item.data.targetId && item.data.targetId !== this.utils.getEditingTarget().id) {
+          this.utils.setEditingTarget(item.data.targetId);
+          // 等待目标切换完成
+          setTimeout(() => this.onItemClickAfterTargetSwitch(item, instanceBlock), 100);
+          return;
+        }
+        
+        this.onItemClickAfterTargetSwitch(item, instanceBlock);
       }
 
-      let cls = item.data.cls;
-      if (cls === "costume" || cls === "sound") {
-        // Viewing costumes/sounds - jump to selected costume/sound
-        const assetPanel = document.querySelector("[class^=asset-panel_wrapper]");
-        if (assetPanel) {
-          const reactInstance = assetPanel[addon.tab.traps.getInternalKey(assetPanel)];
-          const reactProps = reactInstance.child.stateNode.props;
-          reactProps.onItemClick(item.data.y);
-          const selectorList = assetPanel.firstChild.firstChild;
-          selectorList.children[item.data.y].scrollIntoView({
-            behavior: "auto",
-            block: "center",
-            inline: "start",
-          });
-          // The wrapper seems to scroll when we use the function above.
-          let wrapper = assetPanel.closest("div[class*=gui_flex-wrapper]");
-          wrapper.scrollTop = 0;
-        }
-      } else if (cls === "var" || cls === "VAR" || cls === "list" || cls === "LIST") {
-        // Search now for all instances
-        let blocks = this.getVariableUsesById(item.data.labelID);
-        this.carousel.build(item, blocks, instanceBlock);
-      } else if (cls === "define") {
-        let blocks = this.getCallsToProcedureById(item.data.labelID);
-        this.carousel.build(item, blocks, instanceBlock);
-      } else if (cls === "receive") {
-        /*
-          let blocks = [this.workspace.getBlockById(li.data.labelID)];
-          if (li.data.clones) {
-              for (const cloneID of li.data.clones) {
-                  blocks.push(this.workspace.getBlockById(cloneID))
-              }
+      onItemClickAfterTargetSwitch(item, instanceBlock) {
+        let cls = item.data.cls;
+        if (cls === "costume" || cls === "sound") {
+          // Viewing costumes/sounds - jump to selected costume/sound
+          const assetPanel = document.querySelector("[class^=asset-panel_wrapper]");
+          if (assetPanel) {
+            const reactInstance = assetPanel[addon.tab.traps.getInternalKey(assetPanel)];
+            const reactProps = reactInstance.child.stateNode.props;
+            reactProps.onItemClick(item.data.y);
+            const selectorList = assetPanel.firstChild.firstChild;
+            if (selectorList.children[item.data.y]) {
+              selectorList.children[item.data.y].scrollIntoView({
+                behavior: "auto",
+                block: "center",
+                inline: "start",
+              });
+            }
+            // The wrapper seems to scroll when we use the function above.
+            let wrapper = assetPanel.closest("div[class*=gui_flex-wrapper]");
+            if (wrapper) wrapper.scrollTop = 0;
           }
-          blocks = blocks.concat(getCallsToEventsByName(li.data.eventName));
-        */
-        // Now, fetch the events from the scratch runtime instead of blockly
-        let blocks = this.getCallsToEventsByName(item.data.eventName);
-        if (!instanceBlock) {
-          // Can we start by selecting the first block on 'this' sprite
-          const currentTargetID = this.utils.getEditingTarget().id;
-          for (const block of blocks) {
-            if (block.targetId === currentTargetID) {
-              instanceBlock = block;
-              break;
+        } else if (cls === "var" || cls === "VAR" || cls === "list" || cls === "LIST") {
+          // Search now for all instances
+          let blocks = this.getVariableUsesById(item.data.labelID);
+          this.carousel.build(item, blocks, instanceBlock);
+        } else if (cls === "define") {
+          let blocks = this.getCallsToProcedureById(item.data.labelID);
+          this.carousel.build(item, blocks, instanceBlock);
+        } else if (cls === "receive") {
+          // Now, fetch the events from the scratch runtime instead of blockly
+          let blocks = this.getCallsToEventsByName(item.data.eventName);
+          if (!instanceBlock) {
+            // Can we start by selecting the first block on 'this' sprite
+            const currentTargetID = this.utils.getEditingTarget().id;
+            for (const block of blocks) {
+              if (block.targetId === currentTargetID) {
+                instanceBlock = block;
+                break;
+              }
             }
           }
+          this.carousel.build(item, blocks, instanceBlock);
+        } else if (item.data.clones) {
+          let blocks = [this.workspace.getBlockById(item.data.labelID)];
+          for (const cloneID of item.data.clones) {
+            blocks.push(this.workspace.getBlockById(cloneID));
+          }
+          this.carousel.build(item, blocks, instanceBlock);
+        } else {
+          this.utils.scrollBlockIntoView(item.data.labelID);
+          this.carousel.remove();
         }
-        this.carousel.build(item, blocks, instanceBlock);
-      } else if (item.data.clones) {
-        let blocks = [this.workspace.getBlockById(item.data.labelID)];
-        for (const cloneID of item.data.clones) {
-          blocks.push(this.workspace.getBlockById(cloneID));
-        }
-        this.carousel.build(item, blocks, instanceBlock);
-      } else {
-        this.utils.scrollBlockIntoView(item.data.labelID);
-        this.carousel.remove();
       }
-    }
 
     getVariableUsesById(id) {
       let uses = [];
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
 
-      let topBlocks = this.workspace.getTopBlocks();
-      for (const topBlock of topBlocks) {
-        /** @type {!Array<!Blockly.Block>} */
-        let kids = topBlock.getDescendants();
-        for (const block of kids) {
-          /** @type {!Array<!Blockly.VariableModel>} */
-          let blockVariables = block.getVarModels();
-          if (blockVariables) {
-            for (const blockVar of blockVariables) {
-              if (blockVar.getId() === id) {
-                uses.push(block);
+      // 遍历所有目标
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        
+        const blocks = target.blocks._blocks;
+        
+        for (const blockId of Object.keys(blocks)) {
+          const block = blocks[blockId];
+          
+          // 检查积木是否使用了该变量
+          if (block.fields && block.fields.hasOwnProperty(id)) {
+            uses.push(new BlockInstance(target, block));
+          }
+          
+          // 检查输入中是否使用了该变量
+          if (block.inputs) {
+            for (const inputName of Object.keys(block.inputs)) {
+              const input = block.inputs[inputName];
+              if (input.block) {
+                const inputBlock = blocks[input.block];
+                if (inputBlock && inputBlock.fields && inputBlock.fields.hasOwnProperty(id)) {
+                  uses.push(new BlockInstance(target, block));
+                  break;
+                }
               }
             }
           }
@@ -594,19 +982,45 @@ export default async function ({ addon, msg, console }) {
     }
 
     getCallsToProcedureById(id) {
-      let procBlock = this.workspace.getBlockById(id);
-      let label = procBlock.getChildren()[0];
-      let procCode = label.getProcCode();
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
+      let procCode = null;
+      let targetId = null;
+      
+      // 首先找到该过程的定义以获取 procCode
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        
+        const blocks = target.blocks._blocks;
+        if (blocks[id] && blocks[id].opcode === "procedures_definition") {
+          const definitionBlock = blocks[id];
+          const protopypeBlockId = definitionBlock.inputs.custom_block?.block;
+          if (protopypeBlockId) {
+            const protopypeBlock = blocks[protopypeBlockId];
+            procCode = protopypeBlock.mutation?.proccode;
+            targetId = target.id;
+            break;
+          }
+        }
+      }
+      
+      if (!procCode || !targetId) {
+        return [];
+      }
 
-      let uses = [procBlock]; // Definition First, then calls to it
-      let topBlocks = this.workspace.getTopBlocks();
-      for (const topBlock of topBlocks) {
-        /** @type {!Array<!Blockly.Block>} */
-        let kids = topBlock.getDescendants();
-        for (const block of kids) {
-          if (block.type === "procedures_call") {
-            if (block.getProcCode() === procCode) {
-              uses.push(block);
+      let uses = [new BlockInstance(targets.find(t => t.id === targetId), {id: id})]; // Definition First, then calls to it
+      
+      // 遍历所有目标查找调用
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        
+        const blocks = target.blocks._blocks;
+        
+        for (const blockId of Object.keys(blocks)) {
+          const block = blocks[blockId];
+          if (block.opcode === "procedures_call") {
+            if (block.mutation?.proccode === procCode) {
+              uses.push(new BlockInstance(target, block));
             }
           }
         }
@@ -621,32 +1035,54 @@ export default async function ({ addon, msg, console }) {
       const runtime = addon.tab.traps.vm.runtime;
       const targets = runtime.targets; // The sprites / stage
 
+      // 首先找到所有接收该广播的事件定义
       for (const target of targets) {
         if (!target.isOriginal) {
           continue; // Skip clones
         }
 
-        const blocks = target.blocks;
-        if (!blocks._blocks) {
+        const blocks = target.blocks._blocks;
+        if (!blocks) {
           continue;
         }
 
-        for (const id of Object.keys(blocks._blocks)) {
-          const block = blocks._blocks[id];
-          if (block.opcode === "event_whenbroadcastreceived" && block.fields.BROADCAST_OPTION.value === name) {
+        for (const id of Object.keys(blocks)) {
+          const block = blocks[id];
+          if (block.opcode === "event_whenbroadcastreceived" && 
+              block.fields.BROADCAST_OPTION && 
+              block.fields.BROADCAST_OPTION.value === name) {
             uses.push(new BlockInstance(target, block));
-          } else if (block.opcode === "event_broadcast" || block.opcode === "event_broadcastandwait") {
-            const broadcastInputBlockId = block.inputs.BROADCAST_INPUT.block;
-            const broadcastInputBlock = blocks._blocks[broadcastInputBlockId];
-            if (broadcastInputBlock) {
-              let eventName;
-              if (broadcastInputBlock.opcode === "event_broadcast_menu") {
-                eventName = broadcastInputBlock.fields.BROADCAST_OPTION.value;
-              } else {
-                eventName = msg("complex-broadcast");
-              }
-              if (eventName === name) {
-                uses.push(new BlockInstance(target, block));
+          }
+        }
+      }
+
+      // 然后找到所有发送该广播的积木
+      for (const target of targets) {
+        if (!target.isOriginal) {
+          continue; // Skip clones
+        }
+
+        const blocks = target.blocks._blocks;
+        if (!blocks) {
+          continue;
+        }
+
+        for (const id of Object.keys(blocks)) {
+          const block = blocks[id];
+          if (block.opcode === "event_broadcast" || block.opcode === "event_broadcastandwait") {
+            const broadcastInputBlockId = block.inputs.BROADCAST_INPUT?.block;
+            if (broadcastInputBlockId) {
+              const broadcastInputBlock = blocks[broadcastInputBlockId];
+              if (broadcastInputBlock) {
+                let eventName;
+                if (broadcastInputBlock.opcode === "event_broadcast_menu") {
+                  eventName = broadcastInputBlock.fields.BROADCAST_OPTION?.value;
+                } else {
+                  eventName = msg("complex-broadcast");
+                }
+                if (eventName === name) {
+                  uses.push(new BlockInstance(target, block));
+                }
               }
             }
           }

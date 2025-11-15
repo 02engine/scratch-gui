@@ -1,10 +1,12 @@
 export default class BlockItem {
-  constructor(cls, procCode, labelID, y) {
+  constructor(cls, procCode, labelID, y, targetId, targetName) {
     this.cls = cls;
     this.procCode = procCode;
     this.labelID = labelID;
     this.y = y;
     this.lower = procCode.toLowerCase();
+    this.targetId = targetId;
+    this.targetName = targetName;
     /**
      * An Array of block ids
      * @type {Array.<string>}
