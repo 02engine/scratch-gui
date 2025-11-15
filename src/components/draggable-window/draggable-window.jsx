@@ -35,14 +35,20 @@ const DraggableWindow = props => {
             const savedState = windowStateStorage.getValidWindowState(windowId, {
                 position: defaultPosition,
                 size: defaultSize,
-                isMinimized: false
+                isMinimized: false,
+                isFullScreen: false,
+                originalPosition: defaultPosition,
+                originalSize: defaultSize
             });
             return savedState;
         }
         return {
             position: defaultPosition,
             size: defaultSize,
-            isMinimized: false
+            isMinimized: false,
+            isFullScreen: false,
+            originalPosition: defaultPosition,
+            originalSize: defaultSize
         };
     };
 
@@ -54,9 +60,9 @@ const DraggableWindow = props => {
     const [dragOffset, setDragOffset] = React.useState({x: 0, y: 0});
     const [resizeHandle, setResizeHandle] = React.useState(null);
     const [isMinimized, setIsMinimized] = React.useState(initialState.isMinimized);
-    const [isFullScreen, setIsFullScreen] = React.useState(false);
-    const [originalPosition, setOriginalPosition] = React.useState(initialState.position);
-    const [originalSize, setOriginalSize] = React.useState(initialState.size);
+    const [isFullScreen, setIsFullScreen] = React.useState(initialState.isFullScreen);
+    const [originalPosition, setOriginalPosition] = React.useState(initialState.originalPosition);
+    const [originalSize, setOriginalSize] = React.useState(initialState.originalSize);
     const [isDraggingMinimized, setIsDraggingMinimized] = React.useState(false);
     const [dragStartPosition, setDragStartPosition] = React.useState({x: 0, y: 0});
 
@@ -66,18 +72,24 @@ const DraggableWindow = props => {
     // 保存窗口状态到本地存储
     const saveWindowState = React.useCallback(() => {
         if (enableStatePersistence && windowId) {
-            windowStateStorage.saveWindowState(windowId, {
+            const stateToSave = {
                 position,
                 size,
-                isMinimized
-            });
+                isMinimized,
+                isFullScreen
+            };
+            if (isFullScreen) {
+                stateToSave.originalPosition = originalPosition;
+                stateToSave.originalSize = originalSize;
+            }
+            windowStateStorage.saveWindowState(windowId, stateToSave);
         }
-    }, [enableStatePersistence, windowId, position, size, isMinimized]);
+    }, [enableStatePersistence, windowId, position, size, isMinimized, isFullScreen, originalPosition, originalSize]);
 
     // 当状态变化时自动保存
     React.useEffect(() => {
         saveWindowState();
-    }, [position, size, isMinimized, saveWindowState]);
+    }, [position, size, isMinimized, isFullScreen, saveWindowState]);
 
     const handleMouseDown = React.useCallback(e => {
         if (!isDraggable) return;

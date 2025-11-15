@@ -106,7 +106,10 @@ class WindowStateStorage {
         return {
             position: state.position || defaultState.position,
             size: state.size || defaultState.size,
-            isMinimized: state.isMinimized || false
+            isMinimized: state.isMinimized || false,
+            isFullScreen: state.isFullScreen || false,
+            originalPosition: state.originalPosition || defaultState.position,
+            originalSize: state.originalSize || defaultState.size
         };
     }
 }
