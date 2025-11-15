@@ -8873,14 +8873,20 @@ const DraggableWindow = props => {
       const savedState = _lib_window_state_storage__WEBPACK_IMPORTED_MODULE_4__["default"].getValidWindowState(windowId, {
         position: defaultPosition,
         size: defaultSize,
-        isMinimized: false
+        isMinimized: false,
+        isFullScreen: false,
+        originalPosition: defaultPosition,
+        originalSize: defaultSize
       });
       return savedState;
     }
     return {
       position: defaultPosition,
       size: defaultSize,
-      isMinimized: false
+      isMinimized: false,
+      isFullScreen: false,
+      originalPosition: defaultPosition,
+      originalSize: defaultSize
     };
   };
   const initialState = getInitialState();
@@ -8894,9 +8900,9 @@ const DraggableWindow = props => {
   });
   const [resizeHandle, setResizeHandle] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(null);
   const [isMinimized, setIsMinimized] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.isMinimized);
-  const [isFullScreen, setIsFullScreen] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
-  const [originalPosition, setOriginalPosition] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.position);
-  const [originalSize, setOriginalSize] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.size);
+  const [isFullScreen, setIsFullScreen] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.isFullScreen);
+  const [originalPosition, setOriginalPosition] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.originalPosition);
+  const [originalSize, setOriginalSize] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(initialState.originalSize);
   const [isDraggingMinimized, setIsDraggingMinimized] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false);
   const [dragStartPosition, setDragStartPosition] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState({
     x: 0,
@@ -8908,18 +8914,24 @@ const DraggableWindow = props => {
   // 保存窗口状态到本地存储
   const saveWindowState = react__WEBPACK_IMPORTED_MODULE_1___default.a.useCallback(() => {
     if (enableStatePersistence && windowId) {
-      _lib_window_state_storage__WEBPACK_IMPORTED_MODULE_4__["default"].saveWindowState(windowId, {
+      const stateToSave = {
         position,
         size,
-        isMinimized
-      });
+        isMinimized,
+        isFullScreen
+      };
+      if (isFullScreen) {
+        stateToSave.originalPosition = originalPosition;
+        stateToSave.originalSize = originalSize;
+      }
+      _lib_window_state_storage__WEBPACK_IMPORTED_MODULE_4__["default"].saveWindowState(windowId, stateToSave);
     }
-  }, [enableStatePersistence, windowId, position, size, isMinimized]);
+  }, [enableStatePersistence, windowId, position, size, isMinimized, isFullScreen, originalPosition, originalSize]);
 
   // 当状态变化时自动保存
   react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
     saveWindowState();
-  }, [position, size, isMinimized, saveWindowState]);
+  }, [position, size, isMinimized, isFullScreen, saveWindowState]);
   const handleMouseDown = react__WEBPACK_IMPORTED_MODULE_1___default.a.useCallback(e => {
     if (!isDraggable) return;
     if (!e.touches && e.button !== 0) return; // 只在非触摸事件时检查鼠标按钮
@@ -51316,7 +51328,10 @@ class WindowStateStorage {
     return {
       position: state.position || defaultState.position,
       size: state.size || defaultState.size,
-      isMinimized: state.isMinimized || false
+      isMinimized: state.isMinimized || false,
+      isFullScreen: state.isFullScreen || false,
+      originalPosition: state.originalPosition || defaultState.position,
+      originalSize: state.originalSize || defaultState.size
     };
   }
 }
