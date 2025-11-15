@@ -79,6 +79,7 @@ import _tw_remove_feedback from "../addons/tw-remove-feedback/_manifest_entry.js
 import _tw_disable_cloud_variables from "../addons/tw-disable-cloud-variables/_manifest_entry.js";
 import _tw_disable_compiler from "../addons/tw-disable-compiler/_manifest_entry.js";
 import _editor_stepping from "../addons/editor-stepping/_manifest_entry.js";
+import _tw_markdown_comment_editor from "../addons/tw-comment-markdown-editor/_manifest_entry.js";
 export default {
   "cat-blocks": _cat_blocks,
   "editor-devtools": _editor_devtools,
@@ -160,4 +161,5 @@ export default {
   "tw-disable-cloud-variables": _tw_disable_cloud_variables,
   "tw-disable-compiler": _tw_disable_compiler,
   "editor-stepping": _editor_stepping,
+  "tw-comment-markdown-editor": _tw_markdown_comment_editor
 };
