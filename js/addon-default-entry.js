@@ -3227,6 +3227,88 @@ __webpack_require__.r(__webpack_exports__);
         const fields = block.fields || {};
         const inputs = block.inputs || {};
 
+        // Helper function to get variable name by ID
+        const getVariableName = (varId, target) => {
+          if (!varId || !target) return varId;
+          const variable = target.variables[varId];
+          return variable ? variable.name : varId;
+        };
+
+        // Helper function to get list name by ID
+        const getListName = (listId, target) => {
+          if (!listId || !target) return listId;
+          const variable = target.variables[listId];
+          return variable ? variable.name : listId;
+        };
+
+        // Helper function to get input value content
+        const getInputValue = (input, target, blocks) => {
+          if (!input || !target) return "( )";
+          if (!blocks && target.blocks && target.blocks._blocks) {
+            blocks = target.blocks._blocks;
+          }
+          if (!blocks) return "( )";
+
+          // If it's a shadow block with a field value
+          if (input.shadow) {
+            const shadowBlockId = typeof input.shadow === 'string' ? input.shadow : input.shadow.id;
+            if (shadowBlockId && blocks[shadowBlockId]) {
+              const shadowBlock = blocks[shadowBlockId];
+              if (shadowBlock) {
+                // Handle text input
+                if (shadowBlock.fields && shadowBlock.fields.TEXT) {
+                  return "\"".concat(shadowBlock.fields.TEXT.value, "\"");
+                }
+                // Handle math number
+                if (shadowBlock.fields && shadowBlock.fields.NUM) {
+                  return shadowBlock.fields.NUM.value;
+                }
+                // Handle other field types
+                for (const fieldName of Object.keys(shadowBlock.fields || {})) {
+                  return shadowBlock.fields[fieldName].value;
+                }
+              }
+            }
+          }
+
+          // If it's a regular block
+          if (input.block) {
+            const blockId = typeof input.block === 'string' ? input.block : input.block.id;
+            const inputBlock = blocks[blockId];
+            if (inputBlock) {
+              // Handle text blocks
+              if (inputBlock.opcode === "text") {
+                return "\"".concat(inputBlock.fields.TEXT.value, "\"");
+              }
+              // Handle number blocks
+              if (inputBlock.opcode === "math_number") {
+                return inputBlock.fields.NUM.value;
+              }
+              // Handle variable reporters
+              if (inputBlock.opcode === "data_variable") {
+                const varId = inputBlock.fields.VARIABLE.value;
+                return getVariableName(varId, target);
+              }
+              // Handle list reporters
+              if (inputBlock.opcode === "data_listcontents") {
+                const listId = inputBlock.fields.LIST.value;
+                return getListName(listId, target);
+              }
+              // Handle color picker
+              if (inputBlock.opcode === "colour_picker") {
+                return inputBlock.fields.COLOUR.value;
+              }
+              // Handle boolean operators - return the structure
+              if (inputBlock.opcode.startsWith("operator_")) {
+                return generateBlockText(inputBlock, target);
+              }
+              // For other complex blocks, return a simplified representation
+              return "[".concat(inputBlock.opcode.replace(/_/g, ' '), "]");
+            }
+          }
+          return "( )";
+        };
+
         // 处理事件类积木
         if (opcode === "event_whenflagclicked") {
           return "when flag clicked";
@@ -3255,7 +3337,7 @@ __webpack_require__.r(__webpack_exports__);
         if (opcode === "event_whengreaterthan") {
           var _fields$WHENGREATERTH;
           const option = ((_fields$WHENGREATERTH = fields.WHENGREATERTHANMENU) === null || _fields$WHENGREATERTH === void 0 ? void 0 : _fields$WHENGREATERTH.value) || "loudness";
-          const value = inputs.VALUE ? "( )" : "( )";
+          const value = getInputValue(inputs.VALUE, target, target.blocks._blocks);
           return "when [".concat(option, "] > ").concat(value);
         }
         if (opcode === "event_whenbroadcastreceived") {
@@ -3269,11 +3351,11 @@ __webpack_require__.r(__webpack_exports__);
 
         // 处理控制类积木
         if (opcode === "control_wait") {
-          const secs = inputs.DURATION ? "( )" : "( )";
+          const secs = getInputValue(inputs.DURATION, target, target.blocks._blocks);
           return "wait ".concat(secs, " seconds");
         }
         if (opcode === "control_repeat") {
-          const times = inputs.TIMES ? "( )" : "( )";
+          const times = getInputValue(inputs.TIMES, target, target.blocks._blocks);
           return "repeat ".concat(times);
         }
         if (opcode === "control_if") {
@@ -3294,7 +3376,7 @@ __webpack_require__.r(__webpack_exports__);
           return "stop [".concat(option, "]");
         }
         if (opcode === "control_create_clone_of") {
-          const option = inputs.CLONE_OPTION ? "(myself)" : "(myself)";
+          const option = getInputValue(inputs.CLONE_OPTION, target, target.blocks._blocks);
           return "create clone of ".concat(option);
         }
         if (opcode === "control_delete_this_clone") {
@@ -3304,178 +3386,193 @@ __webpack_require__.r(__webpack_exports__);
         // 处理变量和列表
         if (opcode === "data_setvariableto") {
           var _fields$VARIABLE;
-          const varName = ((_fields$VARIABLE = fields.VARIABLE) === null || _fields$VARIABLE === void 0 ? void 0 : _fields$VARIABLE.value) || "my variable";
-          const value = inputs.VALUE ? "( )" : "( )";
+          const varId = ((_fields$VARIABLE = fields.VARIABLE) === null || _fields$VARIABLE === void 0 ? void 0 : _fields$VARIABLE.value) || "";
+          const varName = getVariableName(varId, target);
+          const value = getInputValue(inputs.VALUE, target, target.blocks._blocks);
           return "set [".concat(varName, "] to ").concat(value);
         }
         if (opcode === "data_changevariableby") {
           var _fields$VARIABLE2;
-          const varName = ((_fields$VARIABLE2 = fields.VARIABLE) === null || _fields$VARIABLE2 === void 0 ? void 0 : _fields$VARIABLE2.value) || "my variable";
-          const value = inputs.VALUE ? "( )" : "( )";
+          const varId = ((_fields$VARIABLE2 = fields.VARIABLE) === null || _fields$VARIABLE2 === void 0 ? void 0 : _fields$VARIABLE2.value) || "";
+          const varName = getVariableName(varId, target);
+          const value = getInputValue(inputs.VALUE, target, target.blocks._blocks);
           return "change [".concat(varName, "] by ").concat(value);
         }
         if (opcode === "data_showvariable") {
           var _fields$VARIABLE3;
-          const varName = ((_fields$VARIABLE3 = fields.VARIABLE) === null || _fields$VARIABLE3 === void 0 ? void 0 : _fields$VARIABLE3.value) || "my variable";
+          const varId = ((_fields$VARIABLE3 = fields.VARIABLE) === null || _fields$VARIABLE3 === void 0 ? void 0 : _fields$VARIABLE3.value) || "";
+          const varName = getVariableName(varId, target);
           return "show variable [".concat(varName, "]");
         }
         if (opcode === "data_hidevariable") {
           var _fields$VARIABLE4;
-          const varName = ((_fields$VARIABLE4 = fields.VARIABLE) === null || _fields$VARIABLE4 === void 0 ? void 0 : _fields$VARIABLE4.value) || "my variable";
+          const varId = ((_fields$VARIABLE4 = fields.VARIABLE) === null || _fields$VARIABLE4 === void 0 ? void 0 : _fields$VARIABLE4.value) || "";
+          const varName = getVariableName(varId, target);
           return "hide variable [".concat(varName, "]");
         }
         if (opcode === "data_addtolist") {
           var _fields$LIST;
-          const listName = ((_fields$LIST = fields.LIST) === null || _fields$LIST === void 0 ? void 0 : _fields$LIST.value) || "my list";
-          const item = inputs.ITEM ? "( )" : "( )";
+          const listId = ((_fields$LIST = fields.LIST) === null || _fields$LIST === void 0 ? void 0 : _fields$LIST.value) || "";
+          const listName = getListName(listId, target);
+          const item = getInputValue(inputs.ITEM, target, target.blocks._blocks);
           return "add ".concat(item, " to [").concat(listName, "]");
         }
         if (opcode === "data_deleteoflist") {
           var _fields$LIST2;
-          const listName = ((_fields$LIST2 = fields.LIST) === null || _fields$LIST2 === void 0 ? void 0 : _fields$LIST2.value) || "my list";
-          const index = inputs.INDEX ? "( )" : "( )";
+          const listId = ((_fields$LIST2 = fields.LIST) === null || _fields$LIST2 === void 0 ? void 0 : _fields$LIST2.value) || "";
+          const listName = getListName(listId, target);
+          const index = getInputValue(inputs.INDEX, target, target.blocks._blocks);
           return "delete ".concat(index, " of [").concat(listName, "]");
         }
         if (opcode === "data_deletealloflist") {
           var _fields$LIST3;
-          const listName = ((_fields$LIST3 = fields.LIST) === null || _fields$LIST3 === void 0 ? void 0 : _fields$LIST3.value) || "my list";
+          const listId = ((_fields$LIST3 = fields.LIST) === null || _fields$LIST3 === void 0 ? void 0 : _fields$LIST3.value) || "";
+          const listName = getListName(listId, target);
           return "delete all of [".concat(listName, "]");
         }
         if (opcode === "data_insertatlist") {
           var _fields$LIST4;
-          const listName = ((_fields$LIST4 = fields.LIST) === null || _fields$LIST4 === void 0 ? void 0 : _fields$LIST4.value) || "my list";
-          const item = inputs.ITEM ? "( )" : "( )";
-          const index = inputs.INDEX ? "( )" : "( )";
+          const listId = ((_fields$LIST4 = fields.LIST) === null || _fields$LIST4 === void 0 ? void 0 : _fields$LIST4.value) || "";
+          const listName = getListName(listId, target);
+          const item = getInputValue(inputs.ITEM, target, target.blocks._blocks);
+          const index = getInputValue(inputs.INDEX, target, target.blocks._blocks);
           return "insert ".concat(item, " at ").concat(index, " of [").concat(listName, "]");
         }
         if (opcode === "data_replaceitemoflist") {
           var _fields$LIST5;
-          const listName = ((_fields$LIST5 = fields.LIST) === null || _fields$LIST5 === void 0 ? void 0 : _fields$LIST5.value) || "my list";
-          const index = inputs.INDEX ? "( )" : "( )";
-          const item = inputs.ITEM ? "( )" : "( )";
+          const listId = ((_fields$LIST5 = fields.LIST) === null || _fields$LIST5 === void 0 ? void 0 : _fields$LIST5.value) || "";
+          const listName = getListName(listId, target);
+          const index = getInputValue(inputs.INDEX, target, target.blocks._blocks);
+          const item = getInputValue(inputs.ITEM, target, target.blocks._blocks);
           return "replace item ".concat(index, " of [").concat(listName, "] with ").concat(item);
         }
         if (opcode === "data_itemoflist") {
           var _fields$LIST6;
-          const listName = ((_fields$LIST6 = fields.LIST) === null || _fields$LIST6 === void 0 ? void 0 : _fields$LIST6.value) || "my list";
-          const index = inputs.INDEX ? "( )" : "( )";
+          const listId = ((_fields$LIST6 = fields.LIST) === null || _fields$LIST6 === void 0 ? void 0 : _fields$LIST6.value) || "";
+          const listName = getListName(listId, target);
+          const index = getInputValue(inputs.INDEX, target, target.blocks._blocks);
           return "item ".concat(index, " of [").concat(listName, "]");
         }
         if (opcode === "data_itemnumoflist") {
           var _fields$LIST7;
-          const item = inputs.ITEM ? "( )" : "( )";
-          const listName = ((_fields$LIST7 = fields.LIST) === null || _fields$LIST7 === void 0 ? void 0 : _fields$LIST7.value) || "my list";
+          const item = getInputValue(inputs.ITEM, target, target.blocks._blocks);
+          const listId = ((_fields$LIST7 = fields.LIST) === null || _fields$LIST7 === void 0 ? void 0 : _fields$LIST7.value) || "";
+          const listName = getListName(listId, target);
           return "item # of ".concat(item, " in [").concat(listName, "]");
         }
         if (opcode === "data_lengthoflist") {
           var _fields$LIST8;
-          const listName = ((_fields$LIST8 = fields.LIST) === null || _fields$LIST8 === void 0 ? void 0 : _fields$LIST8.value) || "my list";
+          const listId = ((_fields$LIST8 = fields.LIST) === null || _fields$LIST8 === void 0 ? void 0 : _fields$LIST8.value) || "";
+          const listName = getListName(listId, target);
           return "length of [".concat(listName, "]");
         }
         if (opcode === "data_listcontainsitem") {
           var _fields$LIST9;
-          const listName = ((_fields$LIST9 = fields.LIST) === null || _fields$LIST9 === void 0 ? void 0 : _fields$LIST9.value) || "my list";
-          const item = inputs.ITEM ? "(thing)" : "(thing)";
+          const listId = ((_fields$LIST9 = fields.LIST) === null || _fields$LIST9 === void 0 ? void 0 : _fields$LIST9.value) || "";
+          const listName = getListName(listId, target);
+          const item = getInputValue(inputs.ITEM, target, target.blocks._blocks);
           return "[".concat(listName, "] contains ").concat(item, "?");
         }
         if (opcode === "data_showlist") {
           var _fields$LIST0;
-          const listName = ((_fields$LIST0 = fields.LIST) === null || _fields$LIST0 === void 0 ? void 0 : _fields$LIST0.value) || "my list";
+          const listId = ((_fields$LIST0 = fields.LIST) === null || _fields$LIST0 === void 0 ? void 0 : _fields$LIST0.value) || "";
+          const listName = getListName(listId, target);
           return "show list [".concat(listName, "]");
         }
         if (opcode === "data_hidelist") {
           var _fields$LIST1;
-          const listName = ((_fields$LIST1 = fields.LIST) === null || _fields$LIST1 === void 0 ? void 0 : _fields$LIST1.value) || "my list";
+          const listId = ((_fields$LIST1 = fields.LIST) === null || _fields$LIST1 === void 0 ? void 0 : _fields$LIST1.value) || "";
+          const listName = getListName(listId, target);
           return "hide list [".concat(listName, "]");
         }
 
         // 处理运算类积木
         if (opcode === "operator_add") {
-          const num1 = inputs.NUM1 ? "( )" : "( )";
-          const num2 = inputs.NUM2 ? "( )" : "( )";
+          const num1 = getInputValue(inputs.NUM1, target, target.blocks._blocks);
+          const num2 = getInputValue(inputs.NUM2, target, target.blocks._blocks);
           return "(".concat(num1, " + ").concat(num2, ")");
         }
         if (opcode === "operator_subtract") {
-          const num1 = inputs.NUM1 ? "( )" : "( )";
-          const num2 = inputs.NUM2 ? "( )" : "( )";
+          const num1 = getInputValue(inputs.NUM1, target, target.blocks._blocks);
+          const num2 = getInputValue(inputs.NUM2, target, target.blocks._blocks);
           return "(".concat(num1, " - ").concat(num2, ")");
         }
         if (opcode === "operator_multiply") {
-          const num1 = inputs.NUM1 ? "( )" : "( )";
-          const num2 = inputs.NUM2 ? "( )" : "( )";
+          const num1 = getInputValue(inputs.NUM1, target, target.blocks._blocks);
+          const num2 = getInputValue(inputs.NUM2, target, target.blocks._blocks);
           return "(".concat(num1, " * ").concat(num2, ")");
         }
         if (opcode === "operator_divide") {
-          const num1 = inputs.NUM1 ? "( )" : "( )";
-          const num2 = inputs.NUM2 ? "( )" : "( )";
+          const num1 = getInputValue(inputs.NUM1, target, target.blocks._blocks);
+          const num2 = getInputValue(inputs.NUM2, target, target.blocks._blocks);
           return "(".concat(num1, " / ").concat(num2, ")");
         }
         if (opcode === "operator_random") {
-          const from = inputs.FROM ? "( )" : "( )";
-          const to = inputs.TO ? "( )" : "( )";
+          const from = getInputValue(inputs.FROM, target, target.blocks._blocks);
+          const to = getInputValue(inputs.TO, target, target.blocks._blocks);
           return "pick random ".concat(from, " to ").concat(to);
         }
         if (opcode === "operator_lt") {
-          const value1 = inputs.OPERAND1 ? "( )" : "( )";
-          const value2 = inputs.OPERAND2 ? "( )" : "( )";
+          const value1 = getInputValue(inputs.OPERAND1, target, target.blocks._blocks);
+          const value2 = getInputValue(inputs.OPERAND2, target, target.blocks._blocks);
           return "<".concat(value1, " < ").concat(value2, ">");
         }
         if (opcode === "operator_equals") {
-          const value1 = inputs.OPERAND1 ? "( )" : "( )";
-          const value2 = inputs.OPERAND2 ? "( )" : "( )";
+          const value1 = getInputValue(inputs.OPERAND1, target, target.blocks._blocks);
+          const value2 = getInputValue(inputs.OPERAND2, target, target.blocks._blocks);
           return "<".concat(value1, " = ").concat(value2, ">");
         }
         if (opcode === "operator_gt") {
-          const value1 = inputs.OPERAND1 ? "( )" : "( )";
-          const value2 = inputs.OPERAND2 ? "( )" : "( )";
+          const value1 = getInputValue(inputs.OPERAND1, target, target.blocks._blocks);
+          const value2 = getInputValue(inputs.OPERAND2, target, target.blocks._blocks);
           return "<".concat(value1, " > ").concat(value2, ">");
         }
         if (opcode === "operator_and") {
-          const value1 = inputs.OPERAND1 ? "<>" : "<>";
-          const value2 = inputs.OPERAND2 ? "<>" : "<>";
+          const value1 = getInputValue(inputs.OPERAND1, target, target.blocks._blocks);
+          const value2 = getInputValue(inputs.OPERAND2, target, target.blocks._blocks);
           return "<".concat(value1, " and ").concat(value2, ">");
         }
         if (opcode === "operator_or") {
-          const value1 = inputs.OPERAND1 ? "<>" : "<>";
-          const value2 = inputs.OPERAND2 ? "<>" : "<>";
+          const value1 = getInputValue(inputs.OPERAND1, target, target.blocks._blocks);
+          const value2 = getInputValue(inputs.OPERAND2, target, target.blocks._blocks);
           return "<".concat(value1, " or ").concat(value2, ">");
         }
         if (opcode === "operator_not") {
-          const value = inputs.OPERAND ? "<>" : "<>";
+          const value = getInputValue(inputs.OPERAND, target, target.blocks._blocks);
           return "<not ".concat(value, ">");
         }
         if (opcode === "operator_join") {
-          const string1 = inputs.STRING1 ? "( )" : "( )";
-          const string2 = inputs.STRING2 ? "( )" : "( )";
+          const string1 = getInputValue(inputs.STRING1, target, target.blocks._blocks);
+          const string2 = getInputValue(inputs.STRING2, target, target.blocks._blocks);
           return "join ".concat(string1, " and ").concat(string2);
         }
         if (opcode === "operator_letter_of") {
-          const letter = inputs.LETTER ? "( )" : "( )";
-          const string = inputs.STRING ? "( )" : "( )";
+          const letter = getInputValue(inputs.LETTER, target, target.blocks._blocks);
+          const string = getInputValue(inputs.STRING, target, target.blocks._blocks);
           return "letter ".concat(letter, " of ").concat(string);
         }
         if (opcode === "operator_length") {
-          const string = inputs.STRING ? "( )" : "( )";
+          const string = getInputValue(inputs.STRING, target, target.blocks._blocks);
           return "length of ".concat(string);
         }
         if (opcode === "operator_contains") {
-          const string1 = inputs.STRING1 ? "( )" : "( )";
-          const string2 = inputs.STRING2 ? "( )" : "( )";
+          const string1 = getInputValue(inputs.STRING1, target, target.blocks._blocks);
+          const string2 = getInputValue(inputs.STRING2, target, target.blocks._blocks);
           return "<".concat(string1, " contains ").concat(string2, "?>");
         }
         if (opcode === "operator_mod") {
-          const num1 = inputs.NUM1 ? "( )" : "( )";
-          const num2 = inputs.NUM2 ? "( )" : "( )";
+          const num1 = getInputValue(inputs.NUM1, target, target.blocks._blocks);
+          const num2 = getInputValue(inputs.NUM2, target, target.blocks._blocks);
           return "(".concat(num1, " mod ").concat(num2, ")");
         }
         if (opcode === "operator_round") {
-          const num = inputs.NUM ? "( )" : "( )";
+          const num = getInputValue(inputs.NUM, target, target.blocks._blocks);
           return "round ".concat(num);
         }
         if (opcode === "operator_mathop") {
           var _fields$OPERATOR;
           const operator = ((_fields$OPERATOR = fields.OPERATOR) === null || _fields$OPERATOR === void 0 ? void 0 : _fields$OPERATOR.value) || "abs";
-          const num = inputs.NUM ? "( )" : "( )";
+          const num = getInputValue(inputs.NUM, target, target.blocks._blocks);
           return "[".concat(operator, "] of ").concat(num);
         }
 
@@ -3490,7 +3587,7 @@ __webpack_require__.r(__webpack_exports__);
           for (let i = 0; i < argNames.length; i++) {
             const argId = "input".concat(i);
             const placeholder = "%".concat(i + 1, "s");
-            const value = inputs[argId] ? "( )" : "( )";
+            const value = getInputValue(inputs[argId], target, target.blocks._blocks);
             result = result.replace(placeholder, value);
           }
           return result;
@@ -3498,24 +3595,24 @@ __webpack_require__.r(__webpack_exports__);
 
         // 处理感知类积木
         if (opcode === "sensing_touchingobject") {
-          const object = inputs.TOUCHINGOBJECTMENU ? "( )" : "( )";
+          const object = getInputValue(inputs.TOUCHINGOBJECTMENU, target, target.blocks._blocks);
           return "<touching ".concat(object, "?>");
         }
         if (opcode === "sensing_touchingcolor") {
-          const color = inputs.COLOR ? "( )" : "( )";
+          const color = getInputValue(inputs.COLOR, target, target.blocks._blocks);
           return "<touching color ".concat(color, "?>");
         }
         if (opcode === "sensing_coloristouchingcolor") {
-          const color1 = inputs.COLOR ? "( )" : "( )";
-          const color2 = inputs.COLOR2 ? "( )" : "( )";
+          const color1 = getInputValue(inputs.COLOR, target, target.blocks._blocks);
+          const color2 = getInputValue(inputs.COLOR2, target, target.blocks._blocks);
           return "<color ".concat(color1, " is touching ").concat(color2, "?>");
         }
         if (opcode === "sensing_distanceto") {
-          const object = inputs.DISTANCETOMENU ? "( )" : "( )";
+          const object = getInputValue(inputs.DISTANCETOMENU, target, target.blocks._blocks);
           return "distance to ".concat(object);
         }
         if (opcode === "sensing_keypressed") {
-          const key = inputs.KEY_OPTION ? "( )" : "( )";
+          const key = getInputValue(inputs.KEY_OPTION, target, target.blocks._blocks);
           return "<key [".concat(key, "] pressed?>");
         }
         if (opcode === "sensing_mousedown") {
@@ -3536,7 +3633,7 @@ __webpack_require__.r(__webpack_exports__);
         if (opcode === "sensing_of") {
           var _fields$PROPERTY;
           const property = ((_fields$PROPERTY = fields.PROPERTY) === null || _fields$PROPERTY === void 0 ? void 0 : _fields$PROPERTY.value) || "x position";
-          const object = inputs.OBJECT ? "(Stage)" : "(Stage)";
+          const object = getInputValue(inputs.OBJECT, target, target.blocks._blocks);
           return "[".concat(property, "] of ").concat(object);
         }
         if (opcode === "sensing_current") {
@@ -3565,9 +3662,9 @@ __webpack_require__.r(__webpack_exports__);
        * @param targetName
        * @returns BlockItem
        */
-      function addBlock(cls, block, targetId, targetName) {
+      function addBlock(cls, block, targetId, targetName, target) {
         let id = block.id;
-        const blockText = generateBlockText(block, targetName);
+        const blockText = generateBlockText(block, target);
         const displayName = targetName ? "[".concat(targetName, "] ").concat(blockText) : blockText;
         let clone = myBlocksByProcCode[displayName];
         if (clone) {
@@ -3597,15 +3694,15 @@ __webpack_require__.r(__webpack_exports__);
           const block = blocks[blockId];
           const blockType = block.opcode;
           if (blockType === "procedures_definition") {
-            addBlock("define", block, targetId, targetName);
+            addBlock("define", block, targetId, targetName, target);
             continue;
           }
           if (blockType.startsWith("event_")) {
-            addBlock("event", block, targetId, targetName);
+            addBlock("event", block, targetId, targetName, target);
             continue;
           }
           if (blockType === "control_start_as_clone") {
-            addBlock("event", block, targetId, targetName);
+            addBlock("event", block, targetId, targetName, target);
             continue;
           }
 
@@ -3630,7 +3727,7 @@ __webpack_require__.r(__webpack_exports__);
             } else if (blockType.startsWith("pen_")) {
               cls = "pen";
             }
-            addBlock(cls, block, targetId, targetName);
+            addBlock(cls, block, targetId, targetName, target);
           }
         }
 
@@ -3649,7 +3746,7 @@ __webpack_require__.r(__webpack_exports__);
             });
             addBlock(cls, procCode, {
               id: varId
-            }, targetId, targetName);
+            }, targetId, targetName, target);
           } else if (variable.type === "list") {
             // 列表
             const isLocal = !target.isStage;
@@ -3661,7 +3758,7 @@ __webpack_require__.r(__webpack_exports__);
             });
             addBlock(cls, procCode, {
               id: varId
-            }, targetId, targetName);
+            }, targetId, targetName, target);
           }
         }
       }
@@ -3669,9 +3766,10 @@ __webpack_require__.r(__webpack_exports__);
       for (const event of events) {
         var _targets$find, _targets$find$sprite;
         const targetName = event.targetId === this.utils.getEditingTarget().id ? null : (_targets$find = targets.find(t => t.id === event.targetId)) === null || _targets$find === void 0 ? void 0 : (_targets$find$sprite = _targets$find.sprite) === null || _targets$find$sprite === void 0 ? void 0 : _targets$find$sprite.name;
+        const eventTarget = targets.find(t => t.id === event.targetId);
         const item = addBlock("receive", msg("event", {
           name: event.eventName
-        }), event.block, event.targetId, targetName);
+        }), event.block, event.targetId, targetName, eventTarget);
         item.eventName = event.eventName;
       }
       const clsOrder = {
@@ -3970,19 +4068,31 @@ __webpack_require__.r(__webpack_exports__);
           const block = blocks[blockId];
 
           // 检查积木是否使用了该变量
-          if (block.fields && block.fields.hasOwnProperty(id)) {
-            uses.push(new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](target, block));
+          if (block.fields) {
+            for (const fieldName of Object.keys(block.fields)) {
+              const field = block.fields[fieldName];
+              if (field.value === id) {
+                uses.push(new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](target, block));
+                break;
+              }
+            }
           }
 
           // 检查输入中是否使用了该变量
           if (block.inputs) {
             for (const inputName of Object.keys(block.inputs)) {
               const input = block.inputs[inputName];
-              if (input.block) {
-                const inputBlock = blocks[input.block];
-                if (inputBlock && inputBlock.fields && inputBlock.fields.hasOwnProperty(id)) {
-                  uses.push(new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](target, block));
-                  break;
+              const blockId = typeof input.block === 'string' ? input.block : input.block.id;
+              if (blockId && blocks[blockId]) {
+                const inputBlock = blocks[blockId];
+                if (inputBlock && inputBlock.fields) {
+                  for (const fieldName of Object.keys(inputBlock.fields)) {
+                    const field = inputBlock.fields[fieldName];
+                    if (field.value === id) {
+                      uses.push(new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](target, block));
+                      break;
+                    }
+                  }
                 }
               }
             }
