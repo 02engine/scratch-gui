@@ -27018,6 +27018,28 @@ const StoreProjectOptions = _ref3 => {
 StoreProjectOptions.propTypes = {
   onStoreProjectOptions: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func
 };
+const ResetWindowCoefficients = _ref4 => {
+  let {
+    onResetWindowCoefficients
+  } = _ref4;
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+    className: _settings_modal_css__WEBPACK_IMPORTED_MODULE_11___default.a.setting
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("button", {
+    onClick: onResetWindowCoefficients,
+    className: _settings_modal_css__WEBPACK_IMPORTED_MODULE_11___default.a.button
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], {
+    defaultMessage: "Reset Window Coefficients",
+    id: "tw.settingsModal.resetWindowCoefficients"
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"]
+  // eslint-disable-next-line max-len
+  , {
+    defaultMessage: "Resets all draggable window positions and sizes to their default values. This will restore the stage and sprites windows to their initial layout.",
+    id: "tw.settingsModal.resetWindowCoefficientsHelp"
+  }))));
+};
+ResetWindowCoefficients.propTypes = {
+  onResetWindowCoefficients: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func
+};
 const Header = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
   className: _settings_modal_css__WEBPACK_IMPORTED_MODULE_11___default.a.header
 }, props.children, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
@@ -27074,7 +27096,9 @@ const SettingsModalComponent = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MOD
 })), !props.isEmbedded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(CustomStageSize, props), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(DisableCompiler, {
   value: props.disableCompiler,
   onChange: props.onDisableCompilerChange
-}), !props.isEmbedded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(StoreProjectOptions, props)));
+}), !props.isEmbedded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(StoreProjectOptions, props), props.customUI && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(ResetWindowCoefficients, {
+  onResetWindowCoefficients: props.onResetWindowCoefficients
+})));
 SettingsModalComponent.propTypes = {
   intl: react_intl__WEBPACK_IMPORTED_MODULE_0__["intlShape"],
   onClose: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
@@ -27100,7 +27124,8 @@ SettingsModalComponent.propTypes = {
   disableCompiler: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool,
   onDisableCompilerChange: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
   customUI: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool,
-  onCustomUIChange: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func
+  onCustomUIChange: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
+  onResetWindowCoefficients: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func
 };
 /* harmony default export */ __webpack_exports__["default"] = (Object(react_intl__WEBPACK_IMPORTED_MODULE_0__["injectIntl"])(SettingsModalComponent));
 
@@ -39495,10 +39520,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_tw_settings_modal_settings_modal_jsx__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../components/tw-settings-modal/settings-modal.jsx */ "./src/components/tw-settings-modal/settings-modal.jsx");
 /* harmony import */ var _reducers_custom_stage_size__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../reducers/custom-stage-size */ "./src/reducers/custom-stage-size.js");
 /* harmony import */ var _reducers_tw__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../reducers/tw */ "./src/reducers/tw.js");
+/* harmony import */ var _lib_window_state_storage__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../lib/window-state-storage */ "./src/lib/window-state-storage.js");
 const _excluded = ["onClose", "vm"];
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
+
 
 
 
@@ -39521,7 +39548,7 @@ const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_2__["defineMessages"
 class UsernameModal extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component {
   constructor(props) {
     super(props);
-    lodash_bindall__WEBPACK_IMPORTED_MODULE_3___default()(this, ['handleFramerateChange', 'handleCustomizeFramerate', 'handleOpsPerFrameChange', 'handleCustomizeOpsPerFrame', 'handleHighQualityPenChange', 'handleInterpolationChange', 'handleInfiniteClonesChange', 'handleRemoveFencingChange', 'handleRemoveLimitsChange', 'handleWarpTimerChange', 'handleStageWidthChange', 'handleStageHeightChange', 'handleDisableCompilerChange', 'handleCustomUIChange', 'handleStoreProjectOptions']);
+    lodash_bindall__WEBPACK_IMPORTED_MODULE_3___default()(this, ['handleFramerateChange', 'handleCustomizeFramerate', 'handleOpsPerFrameChange', 'handleCustomizeOpsPerFrame', 'handleHighQualityPenChange', 'handleInterpolationChange', 'handleInfiniteClonesChange', 'handleRemoveFencingChange', 'handleRemoveLimitsChange', 'handleWarpTimerChange', 'handleStageWidthChange', 'handleStageHeightChange', 'handleDisableCompilerChange', 'handleCustomUIChange', 'handleStoreProjectOptions', 'handleResetWindowCoefficients']);
   }
   handleFramerateChange(e) {
     this.props.vm.setFramerate(e.target.checked ? 60 : 30);
@@ -39593,6 +39620,13 @@ class UsernameModal extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Compone
   handleStoreProjectOptions() {
     this.props.vm.storeProjectOptions();
   }
+  handleResetWindowCoefficients() {
+    // 清除所有窗口状态
+    _lib_window_state_storage__WEBPACK_IMPORTED_MODULE_9__["default"].clearAllWindowStates();
+
+    // 刷新页面以应用重置
+    window.location.reload();
+  }
   render() {
     const _this$props = this.props,
       {
@@ -39622,7 +39656,8 @@ class UsernameModal extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Compone
       stageWidth: this.props.customStageSize.width,
       stageHeight: this.props.customStageSize.height,
       customStageSizeEnabled: this.props.customStageSize.width !== _reducers_custom_stage_size__WEBPACK_IMPORTED_MODULE_7__["defaultStageSize"].width || this.props.customStageSize.height !== _reducers_custom_stage_size__WEBPACK_IMPORTED_MODULE_7__["defaultStageSize"].height,
-      onStoreProjectOptions: this.handleStoreProjectOptions
+      onStoreProjectOptions: this.handleStoreProjectOptions,
+      onResetWindowCoefficients: this.handleResetWindowCoefficients
     }, props));
   }
 }
