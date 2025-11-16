@@ -492,6 +492,34 @@ StoreProjectOptions.propTypes = {
     onStoreProjectOptions: PropTypes.func
 };
 
+const ResetWindowCoefficients = ({onResetWindowCoefficients}) => (
+    <div className={styles.setting}>
+        <div>
+            <button
+                onClick={onResetWindowCoefficients}
+                className={styles.button}
+            >
+                <FormattedMessage
+                    defaultMessage="Reset Window Coefficients"
+                    description="Button in settings modal"
+                    id="tw.settingsModal.resetWindowCoefficients"
+                />
+            </button>
+            <p>
+                <FormattedMessage
+                    // eslint-disable-next-line max-len
+                    defaultMessage="Resets all draggable window positions and sizes to their default values. This will restore the stage and sprites windows to their initial layout."
+                    description="Help text for the reset window coefficients button"
+                    id="tw.settingsModal.resetWindowCoefficientsHelp"
+                />
+            </p>
+        </div>
+    </div>
+);
+ResetWindowCoefficients.propTypes = {
+    onResetWindowCoefficients: PropTypes.func
+};
+
 const Header = props => (
     <div className={styles.header}>
         {props.children}
@@ -583,6 +611,11 @@ const SettingsModalComponent = props => (
                     {...props}
                 />
             )}
+            {props.customUI && (
+                <ResetWindowCoefficients
+                    onResetWindowCoefficients={props.onResetWindowCoefficients}
+                />
+            )}
         </Box>
     </Modal>
 );
@@ -610,9 +643,10 @@ SettingsModalComponent.propTypes = {
     warpTimer: PropTypes.bool,
     onWarpTimerChange: PropTypes.func,
     disableCompiler: PropTypes.bool,
-    onDisableCompilerChange: PropTypes.func
-    ,customUI: PropTypes.bool,
-    onCustomUIChange: PropTypes.func
+    onDisableCompilerChange: PropTypes.func,
+    customUI: PropTypes.bool,
+    onCustomUIChange: PropTypes.func,
+    onResetWindowCoefficients: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);

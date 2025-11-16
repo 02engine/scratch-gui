@@ -7,6 +7,7 @@ import {closeSettingsModal} from '../reducers/modals';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
 import {defaultStageSize} from '../reducers/custom-stage-size';
 import {setOpsPerFrameState, setCustomUIState} from '../reducers/tw';
+import windowStateStorage from '../lib/window-state-storage';
  
 const messages = defineMessages({
     newFramerate: {
@@ -39,7 +40,8 @@ class UsernameModal extends React.Component {
             'handleStageHeightChange',
             'handleDisableCompilerChange',
             'handleCustomUIChange',
-            'handleStoreProjectOptions'
+            'handleStoreProjectOptions',
+            'handleResetWindowCoefficients'
         ]);
     }
     handleFramerateChange (e) {
@@ -112,6 +114,13 @@ class UsernameModal extends React.Component {
     handleStoreProjectOptions () {
         this.props.vm.storeProjectOptions();
     }
+    handleResetWindowCoefficients () {
+        // 清除所有窗口状态
+        windowStateStorage.clearAllWindowStates();
+
+        // 刷新页面以应用重置
+        window.location.reload();
+    }
     render () {
         const {
             /* eslint-disable no-unused-vars */
@@ -145,6 +154,7 @@ class UsernameModal extends React.Component {
                     this.props.customStageSize.height !== defaultStageSize.height
                 }
                 onStoreProjectOptions={this.handleStoreProjectOptions}
+                onResetWindowCoefficients={this.handleResetWindowCoefficients}
                 {...props}
             />
         );

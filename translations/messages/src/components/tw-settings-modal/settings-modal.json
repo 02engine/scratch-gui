@@ -149,6 +149,16 @@
     "defaultMessage": "Stores the selected settings in the project so they will be automatically applied when 02Engine loads this project. Warp timer and disable compiler will not be saved."
   },
   {
+    "id": "tw.settingsModal.resetWindowCoefficients",
+    "description": "Button in settings modal",
+    "defaultMessage": "Reset Window Coefficients"
+  },
+  {
+    "id": "tw.settingsModal.resetWindowCoefficientsHelp",
+    "description": "Help text for the reset window coefficients button",
+    "defaultMessage": "Resets all draggable window positions and sizes to their default values. This will restore the stage and sprites windows to their initial layout."
+  },
+  {
     "id": "tw.settingsModal.featured",
     "description": "Settings modal section",
     "defaultMessage": "Featured"
