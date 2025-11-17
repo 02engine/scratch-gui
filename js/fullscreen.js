@@ -44885,12 +44885,21 @@ __webpack_require__.r(__webpack_exports__);
 
 class GitHubOAuthService {
   constructor() {
+    // 默认配置（会被组件中的设置覆盖）
     this.backendUrl = 'https://02engine-oauth-backend.netlify.app/.netlify/functions/token';
     this.redirectUri = window.location.origin + window.location.pathname;
     this.tokenStorageKey = 'github_token';
     this.userStorageKey = 'github_user';
     this.emailStorageKey = 'github_email';
     this.clientIdStorageKey = 'github_oauth_client_id';
+  }
+
+  /**
+   * 设置后端URL（新增方法）
+   * @param {string} url - 后端服务URL
+   */
+  setBackendUrl(url) {
+    this.backendUrl = url;
   }
 
   /**
