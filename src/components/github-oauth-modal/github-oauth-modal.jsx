@@ -88,6 +88,41 @@ const messages = defineMessages({
     }
 });
 
+// 域名配置映射
+const DOMAIN_CONFIGS = {
+    '02studio.xyz': {
+        clientId: 'Ov23liShK8kmAipWUYCw',
+        backendUrl: 'https://02engine-oauth-backend.netlify.app/.netlify/functions/token'
+    },
+    '0pen.top': {
+        clientId: 'Ov23liAie81Wqd2u9gmK', // 替换为实际的 Client ID
+        backendUrl: 'https://02engine-0pen-oauth-backend.netlify.app/.netlify/functions/token' // 替换为实际的后端地址
+    }
+};
+
+// 获取当前域名配置
+const getDomainConfig = () => {
+    const currentDomain = window.location.hostname;
+    
+    // 精确匹配域名
+    if (DOMAIN_CONFIGS[currentDomain]) {
+        return DOMAIN_CONFIGS[currentDomain];
+    }
+    
+    // 子域名匹配（如 www.02studio.xyz -> 02studio.xyz）
+    const domainParts = currentDomain.split('.');
+    if (domainParts.length >= 2) {
+        const rootDomain = domainParts.slice(-2).join('.');
+        if (DOMAIN_CONFIGS[rootDomain]) {
+            return DOMAIN_CONFIGS[rootDomain];
+        }
+    }
+    
+    // 默认使用 02studio.xyz 配置
+    console.warn(`未找到域名 ${currentDomain} 的配置，使用默认配置`);
+    return DOMAIN_CONFIGS['02studio.xyz'];
+};
+
 const GitHubOAuthModal = props => {
     const {
         intl,
@@ -101,8 +136,14 @@ const GitHubOAuthModal = props => {
     const [userInfo, setUserInfo] = React.useState(null);
     const [error, setError] = React.useState('');
 
-    // 预设的Client ID
-    const CLIENT_ID = 'Ov23liShK8kmAipWUYCw';
+    // 根据域名获取配置
+    const domainConfig = React.useMemo(() => getDomainConfig(), []);
+    const CLIENT_ID = domainConfig.clientId;
+
+    // 设置后端URL（在组件挂载时）
+    React.useEffect(() => {
+        githubOAuth.setBackendUrl(domainConfig.backendUrl);
+    }, [domainConfig.backendUrl]);
 
     // 组件初始化时检查是否已认证
     React.useEffect(() => {
@@ -263,7 +304,10 @@ const GitHubOAuthModal = props => {
                                 )}
                             </button>
 
-
+                            {/* 显示当前使用的配置 */}
+                            <div className={styles.domainInfo}>
+                                当前域名: {window.location.hostname}
+                            </div>
                         </div>
                     )}
                 </Box>
