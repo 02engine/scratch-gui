@@ -11794,6 +11794,42 @@ const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_2__["defineMessages"
     "defaultMessage": "Token Status: {status}"
   }
 });
+
+// 域名配置映射
+const DOMAIN_CONFIGS = {
+  '02studio.xyz': {
+    clientId: 'Ov23liShK8kmAipWUYCw',
+    backendUrl: 'https://02engine-oauth-backend.netlify.app/.netlify/functions/token'
+  },
+  '0pen.top': {
+    clientId: 'Ov23liAie81Wqd2u9gmK',
+    // 替换为实际的 Client ID
+    backendUrl: 'https://02engine-0pen-oauth-backend.netlify.app/.netlify/functions/token' // 替换为实际的后端地址
+  }
+};
+
+// 获取当前域名配置
+const getDomainConfig = () => {
+  const currentDomain = window.location.hostname;
+
+  // 精确匹配域名
+  if (DOMAIN_CONFIGS[currentDomain]) {
+    return DOMAIN_CONFIGS[currentDomain];
+  }
+
+  // 子域名匹配（如 www.02studio.xyz -> 02studio.xyz）
+  const domainParts = currentDomain.split('.');
+  if (domainParts.length >= 2) {
+    const rootDomain = domainParts.slice(-2).join('.');
+    if (DOMAIN_CONFIGS[rootDomain]) {
+      return DOMAIN_CONFIGS[rootDomain];
+    }
+  }
+
+  // 默认使用 02studio.xyz 配置
+  console.warn("\u672A\u627E\u5230\u57DF\u540D ".concat(currentDomain, " \u7684\u914D\u7F6E\uFF0C\u4F7F\u7528\u9ED8\u8BA4\u914D\u7F6E"));
+  return DOMAIN_CONFIGS['02studio.xyz'];
+};
 const GitHubOAuthModal = props => {
   const {
     intl,
@@ -11806,8 +11842,14 @@ const GitHubOAuthModal = props => {
   const [userInfo, setUserInfo] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(null);
   const [error, setError] = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState('');
 
-  // 预设的Client ID
-  const CLIENT_ID = 'Ov23liShK8kmAipWUYCw';
+  // 根据域名获取配置
+  const domainConfig = react__WEBPACK_IMPORTED_MODULE_1___default.a.useMemo(() => getDomainConfig(), []);
+  const CLIENT_ID = domainConfig.clientId;
+
+  // 设置后端URL（在组件挂载时）
+  react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
+    _lib_github_oauth_js__WEBPACK_IMPORTED_MODULE_9__["default"].setBackendUrl(domainConfig.backendUrl);
+  }, [domainConfig.backendUrl]);
 
   // 组件初始化时检查是否已认证
   react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
@@ -11932,7 +11974,9 @@ const GitHubOAuthModal = props => {
     fill: "currentColor"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("path", {
     d: "M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-  })), "\u4F7F\u7528 GitHub \u767B\u5F55")))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+  })), "\u4F7F\u7528 GitHub \u767B\u5F55")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    className: _github_oauth_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.domainInfo
+  }, "\u5F53\u524D\u57DF\u540D: ", window.location.hostname))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
     className: _github_oauth_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.footer
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
     className: _github_oauth_modal_css__WEBPACK_IMPORTED_MODULE_8___default.a.cancelButton,
