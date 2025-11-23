@@ -144,9 +144,6 @@ jspm_packages/
 *.swo
 *~
 
-# Claude settings
-.claude/
-
 # OS generated files
 .DS_Store
 .DS_Store?

@@ -104,6 +104,14 @@ const DOMAIN_CONFIGS = {
 const getDomainConfig = () => {
     const currentDomain = window.location.hostname;
     
+    // 检查是否在 Electron 环境中
+    const isElectron = typeof window.EditorPreload !== 'undefined';
+    
+    if (isElectron) {
+        // 在 Electron 环境中，直接使用内置的配置而不显示警告
+        return DOMAIN_CONFIGS['02studio.xyz'];
+    }
+    
     // 精确匹配域名
     if (DOMAIN_CONFIGS[currentDomain]) {
         return DOMAIN_CONFIGS[currentDomain];

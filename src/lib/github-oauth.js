@@ -12,7 +12,14 @@ class GitHubOAuthService {
         this.userStorageKey = 'github_user';
         this.emailStorageKey = 'github_email';
         this.clientIdStorageKey = 'github_oauth_client_id';
-        this.isElectron = typeof window.EditorPreload !== 'undefined';
+    }
+
+    /**
+     * 检查是否在 Electron 环境中
+     * @returns {boolean} 是否在 Electron 环境中
+     */
+    get isElectron() {
+        return typeof window.EditorPreload !== 'undefined';
     }
 
     /**
@@ -61,8 +68,9 @@ class GitHubOAuthService {
         try {
             // 检查是否在 Electron 环境中
             if (this.isElectron) {
-                // 在 Electron 中，打开 oauth-proxy 页面而不是直接重定向到 GitHub
-                const proxyUrl = window.location.origin + window.location.pathname.replace(/\/gui\/.*$/, '/') + 'oauth-proxy.html';
+                // 在 Electron 中，打开远程 oauth-proxy 页面而不是直接重定向到 GitHub
+                // 远程 oauth-proxy 会处理回调并将结果传递回桌面应用
+                const proxyUrl = 'https://idyllic-kangaroo-a50663.netlify.app/';
                 window.open(proxyUrl, '_blank', 'width=600,height=800');
                 
                 // 启动轮询检查是否收到 token，并返回结果
