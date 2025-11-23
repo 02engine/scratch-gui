@@ -156,17 +156,10 @@ const GitHubOAuthModal = props => {
                 });
             }
 
-            // 检查是否在桌面环境中，如果是，检查是否有待处理的 OAuth 回调
-            const isDesktop = typeof EditorPreload !== 'undefined';
-            if (isDesktop) {
-                // 在桌面环境中，我们不依赖 URL 参数
-                // 而是依赖主进程发送的 token
-            } else {
-                // 检查 URL 参数是否包含 OAuth 回调
-                const params = new URLSearchParams(window.location.search);
-                if (params.has('code')) {
-                    handleOAuthCallback();
-                }
+            // 检查 URL 参数是否包含 OAuth 回调
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('code')) {
+                handleOAuthCallback();
             }
         }
     }, [isOpen]);
@@ -191,42 +184,6 @@ const GitHubOAuthModal = props => {
             setIsAuthenticating(false);
         }
     };
-    
-    // 桌面环境中的 OAuth 令牌接收处理
-    React.useEffect(() => {
-        let unsubscribe = null;
-        
-        if (isOpen && typeof EditorPreload !== 'undefined') {
-            // 在桌面环境中监听来自主进程的 OAuth 令牌
-            unsubscribe = EditorPreload.receiveOAuthToken(async (token) => {
-                try {
-                    setIsAuthenticating(true);
-                    setError('');
-                    
-                    // 使用接收到的令牌处理用户信息
-                    const result = await githubOAuth.processToken(token);
-                    setUserInfo({
-                        ...result.user,
-                        email: result.email
-                    });
-
-                    onSuccess && onSuccess(result);
-                } catch (err) {
-                    console.error('OAuth token processing failed:', err);
-                    setError(err.message);
-                    onError && onError(err);
-                } finally {
-                    setIsAuthenticating(false);
-                }
-            });
-        }
-        
-        return () => {
-            if (unsubscribe) {
-                unsubscribe();
-            }
-        };
-    }, [isOpen]);
 
     const handleAuthenticate = async () => {
         try {

@@ -22,9 +22,7 @@ import {
     closeCostumeLibrary,
     closeBackdropLibrary,
     closeTelemetryModal,
-    openExtensionLibrary,
-    openGitHubOAuthModal,
-    closeGitHubOAuthModal
+    openExtensionLibrary
 } from '../reducers/modals';
 
 import FontLoaderHOC from '../lib/font-loader-hoc.jsx';
@@ -103,9 +101,6 @@ class GUI extends React.Component {
         return (
             <GUIComponent
                 loading={fetchingProject || isLoading || loadingStateVisible}
-                githubOAuthModalVisible={githubOAuthModalVisible}
-                onOpenGitHubOAuthModal={onOpenGitHubOAuthModal}
-                onRequestCloseGitHubOAuthModal={onRequestCloseGitHubOAuthModal}
                 {...componentProps}
             >
                 {children}
@@ -137,9 +132,6 @@ GUI.propTypes = {
     projectHost: PropTypes.string,
     projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     telemetryModalVisible: PropTypes.bool,
-    githubOAuthModalVisible: PropTypes.bool,
-    onOpenGitHubOAuthModal: PropTypes.func,
-    onRequestCloseGitHubOAuthModal: PropTypes.func,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 
@@ -185,7 +177,6 @@ const mapStateToProps = state => {
         fontsModalVisible: state.scratchGui.modals.fontsModal,
         unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,
         invalidProjectModalVisible: state.scratchGui.modals.invalidProjectModal,
-        githubOAuthModalVisible: state.scratchGui.modals.githubOAuthModal,
         vm: state.scratchGui.vm
     };
 };
@@ -197,9 +188,7 @@ const mapDispatchToProps = dispatch => ({
     onActivateSoundsTab: () => dispatch(activateTab(SOUNDS_TAB_INDEX)),
     onRequestCloseBackdropLibrary: () => dispatch(closeBackdropLibrary()),
     onRequestCloseCostumeLibrary: () => dispatch(closeCostumeLibrary()),
-    onRequestCloseTelemetryModal: () => dispatch(closeTelemetryModal()),
-    onRequestOpenGitHubOAuthModal: () => dispatch(openGitHubOAuthModal()),
-    onRequestCloseGitHubOAuthModal: () => dispatch(closeGitHubOAuthModal())
+    onRequestCloseTelemetryModal: () => dispatch(closeTelemetryModal())
 });
 
 const ConnectedGUI = injectIntl(connect(

@@ -18,7 +18,6 @@ const MODAL_RESTORE_POINTS = 'restorePointModal';
 const MODAL_FONTS = 'fontsModal';
 const MODAL_UNKNOWN_PLATFORM = 'unknownPlatformModal';
 const MODAL_INVALID_PROJECT = 'invalidProjectModal';
-const MODAL_GITHUB_OAUTH = 'githubOAuthModal';
 
 const initialState = {
     [MODAL_BACKDROP_LIBRARY]: false,
@@ -37,8 +36,7 @@ const initialState = {
     [MODAL_RESTORE_POINTS]: false,
     [MODAL_FONTS]: false,
     [MODAL_UNKNOWN_PLATFORM]: false,
-    [MODAL_INVALID_PROJECT]: false,
-    [MODAL_GITHUB_OAUTH]: false
+    [MODAL_INVALID_PROJECT]: false
 };
 
 const reducer = function (state, action) {
@@ -119,9 +117,6 @@ const openUnknownPlatformModal = function () {
 const openInvalidProjectModal = function () {
     return openModal(MODAL_INVALID_PROJECT);
 };
-const openGitHubOAuthModal = function () {
-    return openModal(MODAL_GITHUB_OAUTH);
-};
 const closeBackdropLibrary = function () {
     return closeModal(MODAL_BACKDROP_LIBRARY);
 };
@@ -173,9 +168,6 @@ const closeUnknownPlatformModal = function () {
 const closeInvalidProjectModal = function () {
     return closeModal(MODAL_INVALID_PROJECT);
 };
-const closeGitHubOAuthModal = function () {
-    return closeModal(MODAL_GITHUB_OAUTH);
-};
 export {
     reducer as default,
     initialState as modalsInitialState,
@@ -196,7 +188,6 @@ export {
     openFontsModal,
     openUnknownPlatformModal,
     openInvalidProjectModal,
-    openGitHubOAuthModal,
     closeBackdropLibrary,
     closeCostumeLibrary,
     closeExtensionLibrary,
@@ -213,6 +204,5 @@ export {
     closeRestorePointModal,
     closeFontsModal,
     closeUnknownPlatformModal,
-    closeInvalidProjectModal,
-    closeGitHubOAuthModal
+    closeInvalidProjectModal
 };

@@ -829,7 +829,6 @@ const GUIComponent = props => {
                     onClickGitCommit={handleClickGitCommit}
                     onGitQuickAction={handleGitQuickAction}
                     showGitQuickButtons={hasGitRepository() && hasGitToken()}
-                    onClickGitHubOAuth={() => setIsOAuthModalOpen(true)}
                 />
                 )}
                 <Box className={styles.bodyWrapper}>
@@ -1138,8 +1137,6 @@ GUIComponent.propTypes = {
     fontsModalVisible: PropTypes.bool,
     unknownPlatformModalVisible: PropTypes.bool,
     invalidProjectModalVisible: PropTypes.bool,
-    githubOAuthModalVisible: PropTypes.bool,
-    onClickGitHubOAuth: PropTypes.func,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 GUIComponent.defaultProps = {
