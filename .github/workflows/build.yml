@@ -34,7 +34,7 @@ jobs:
         run: npm run build
 
       - name: Zip build folder 📦
-        run: zip -r build.zip ./build
+        run: zip -r build.zip ./
 
       - name: Upload build artifact 📤
         uses: actions/upload-artifact@v4
