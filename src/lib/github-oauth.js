@@ -68,10 +68,9 @@ class GitHubOAuthService {
         try {
             // 检查是否在 Electron 环境中
             if (this.isElectron) {
-                // 在 Electron 中，打开远程 oauth-proxy 页面而不是直接重定向到 GitHub
-                // 远程 oauth-proxy 会处理回调并将结果传递回桌面应用
-                const proxyUrl = 'https://idyllic-kangaroo-a50663.netlify.app/';
-                window.open(proxyUrl, '_blank', 'width=600,height=800');
+                // 在 Electron 中，使用 window.open 打开 oauth-proxy 页面
+                // 它会被 handleWindowOpen 捕获并正确配置
+                window.open('https://idyllic-kangaroo-a50663.netlify.app/', '_blank', 'width=600,height=800');
                 
                 // 启动轮询检查是否收到 token，并返回结果
                 return await this.pollForToken();
@@ -111,14 +110,14 @@ class GitHubOAuthService {
      */
     async pollForToken() {
         return new Promise((resolve, reject) => {
-            const maxAttempts = 60; // 最多等待 30 秒 (60 次 * 500ms)
+            const maxAttempts = 180; // 最多等待 90 秒 (180 次 * 500ms)
             let attempts = 0;
             
             const poll = async () => {
                 attempts++;
                 
                 if (attempts > maxAttempts) {
-                    reject(new Error('OAuth timeout: No token received within 30 seconds'));
+                    reject(new Error('OAuth timeout: No token received within 90 seconds'));
                     return;
                 }
 
@@ -149,6 +148,7 @@ class GitHubOAuthService {
                 setTimeout(poll, 500); // 每 500ms 检查一次
             };
 
+            // 立即开始轮询，然后定期检查
             poll();
         });
     }

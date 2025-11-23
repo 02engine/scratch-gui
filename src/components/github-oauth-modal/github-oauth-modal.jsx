@@ -202,7 +202,7 @@ const GitHubOAuthModal = props => {
             const isElectron = typeof window.EditorPreload !== 'undefined';
             
             if (isElectron) {
-                // 在 Electron 环境中，使用轮询的方式处理 OAuth
+                // 在 Electron 环境中，启动 OAuth 并等待结果
                 const result = await githubOAuth.startOAuth(CLIENT_ID);
                 setUserInfo({
                     ...result.user,
@@ -211,8 +211,8 @@ const GitHubOAuthModal = props => {
 
                 onSuccess && onSuccess(result);
             } else {
+                // 在浏览器环境中，启动 OAuth（这将重定向页面）
                 await githubOAuth.startOAuth(CLIENT_ID);
-                // 如果 startOAuth 成功，页面会重定向到 GitHub
             }
         } catch (err) {
             console.error('OAuth start failed:', err);
