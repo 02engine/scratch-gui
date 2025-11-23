@@ -12,6 +12,7 @@ class GitHubOAuthService {
         this.userStorageKey = 'github_user';
         this.emailStorageKey = 'github_email';
         this.clientIdStorageKey = 'github_oauth_client_id';
+        this.isElectron = typeof window.EditorPreload !== 'undefined';
     }
 
     /**
@@ -50,7 +51,7 @@ class GitHubOAuthService {
     /**
      * 启动 OAuth 认证流程
      * @param {string} clientId - GitHub OAuth App Client ID
-     * @returns {Promise<void>}
+     * @returns {Promise<any>} - 在 Electron 环境中返回认证结果，否则返回 undefined
      */
     async startOAuth(clientId) {
         if (!clientId) {
@@ -58,32 +59,90 @@ class GitHubOAuthService {
         }
 
         try {
-            // 生成 PKCE 挑战码
-            const codeVerifier = this.generateRandomString(128);
-            const codeChallenge = await this.sha256(codeVerifier);
+            // 检查是否在 Electron 环境中
+            if (this.isElectron) {
+                // 在 Electron 中，打开 oauth-proxy 页面而不是直接重定向到 GitHub
+                const proxyUrl = window.location.origin + window.location.pathname.replace(/\/gui\/.*$/, '/') + 'oauth-proxy.html';
+                window.open(proxyUrl, '_blank', 'width=600,height=800');
+                
+                // 启动轮询检查是否收到 token，并返回结果
+                return await this.pollForToken();
+            } else {
+                // 在浏览器环境中，生成 PKCE 挑战码
+                const codeVerifier = this.generateRandomString(128);
+                const codeChallenge = await this.sha256(codeVerifier);
 
-            // 保存到 sessionStorage
-            sessionStorage.setItem('code_verifier', codeVerifier);
-            sessionStorage.setItem('client_id', clientId);
+                // 保存到 sessionStorage
+                sessionStorage.setItem('code_verifier', codeVerifier);
+                sessionStorage.setItem('client_id', clientId);
 
-            // 构建授权 URL
-            const authUrl = new URL('https://github.com/login/oauth/authorize');
-            authUrl.searchParams.append('client_id', clientId);
-            authUrl.searchParams.append('redirect_uri', this.redirectUri);
-            authUrl.searchParams.append('scope', 'repo,admin:org,admin:public_key,admin:repo_hook,admin:org_hook,gist,notifications,user,delete_repo,write:packages,read:packages,delete:packages,admin:gpg_key,workflow');
-            authUrl.searchParams.append('code_challenge', codeChallenge);
-            authUrl.searchParams.append('code_challenge_method', 'S256');
-            authUrl.searchParams.append('state', this.generateRandomString(32));
+                // 构建授权 URL
+                const authUrl = new URL('https://github.com/login/oauth/authorize');
+                authUrl.searchParams.append('client_id', clientId);
+                authUrl.searchParams.append('redirect_uri', this.redirectUri);
+                authUrl.searchParams.append('scope', 'repo,admin:org,admin:public_key,admin:repo_hook,admin:org_hook,gist,notifications,user,delete_repo,write:packages,read:packages,delete:packages,admin:gpg_key,workflow');
+                authUrl.searchParams.append('code_challenge', codeChallenge);
+                authUrl.searchParams.append('code_challenge_method', 'S256');
+                authUrl.searchParams.append('state', this.generateRandomString(32));
 
-            // 保存 Client ID
-            localStorage.setItem(this.clientIdStorageKey, clientId);
+                // 保存 Client ID
+                localStorage.setItem(this.clientIdStorageKey, clientId);
 
-            // 重定向到 GitHub
-            window.location.href = authUrl.toString();
+                // 重定向到 GitHub
+                window.location.href = authUrl.toString();
+            }
         } catch (error) {
             console.error('OAuth start failed:', error);
             throw error;
         }
+    }
+
+    /**
+     * 轮询检查是否在 localStorage 中接收到 token
+     * @returns {Promise<Object>} 用户信息
+     */
+    async pollForToken() {
+        return new Promise((resolve, reject) => {
+            const maxAttempts = 60; // 最多等待 30 秒 (60 次 * 500ms)
+            let attempts = 0;
+            
+            const poll = async () => {
+                attempts++;
+                
+                if (attempts > maxAttempts) {
+                    reject(new Error('OAuth timeout: No token received within 30 seconds'));
+                    return;
+                }
+
+                try {
+                    // 检查是否在 localStorage 中存在 OAuth 相关信息
+                    const token = localStorage.getItem('oauth_token_received');
+                    const user = localStorage.getItem('github_user');
+                    const email = localStorage.getItem('github_email');
+
+                    if (token && user && email) {
+                        // 清除临时存储
+                        localStorage.removeItem('oauth_token_received');
+                        
+                        // 保存到正常的存储位置
+                        localStorage.setItem(this.tokenStorageKey, token);
+                        localStorage.setItem(this.userStorageKey, user);
+                        localStorage.setItem(this.emailStorageKey, email);
+
+                        // 返回用户信息
+                        const userInfo = JSON.parse(user);
+                        resolve({ user: userInfo, email, token });
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error checking for token:', error);
+                }
+
+                setTimeout(poll, 500); // 每 500ms 检查一次
+            };
+
+            poll();
+        });
     }
 
     /**

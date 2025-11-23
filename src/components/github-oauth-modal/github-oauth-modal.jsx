@@ -190,8 +190,22 @@ const GitHubOAuthModal = props => {
             setIsAuthenticating(true);
             setError('');
 
-            await githubOAuth.startOAuth(CLIENT_ID);
-            // 如果 startOAuth 成功，页面会重定向到 GitHub
+            // 检查是否在 Electron 环境中
+            const isElectron = typeof window.EditorPreload !== 'undefined';
+            
+            if (isElectron) {
+                // 在 Electron 环境中，使用轮询的方式处理 OAuth
+                const result = await githubOAuth.startOAuth(CLIENT_ID);
+                setUserInfo({
+                    ...result.user,
+                    email: result.email
+                });
+
+                onSuccess && onSuccess(result);
+            } else {
+                await githubOAuth.startOAuth(CLIENT_ID);
+                // 如果 startOAuth 成功，页面会重定向到 GitHub
+            }
         } catch (err) {
             console.error('OAuth start failed:', err);
             setError(err.message);
