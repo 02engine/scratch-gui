@@ -10688,17 +10688,10 @@ const GitHubOAuthModal = props => {
         }));
       }
 
-      // 检查是否在桌面环境中，如果是，检查是否有待处理的 OAuth 回调
-      const isDesktop = typeof EditorPreload !== 'undefined';
-      if (isDesktop) {
-        // 在桌面环境中，我们不依赖 URL 参数
-        // 而是依赖主进程发送的 token
-      } else {
-        // 检查 URL 参数是否包含 OAuth 回调
-        const params = new URLSearchParams(window.location.search);
-        if (params.has('code')) {
-          handleOAuthCallback();
-        }
+      // 检查 URL 参数是否包含 OAuth 回调
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('code')) {
+        handleOAuthCallback();
       }
     }
   }, [isOpen]);
@@ -10719,38 +10712,6 @@ const GitHubOAuthModal = props => {
       setIsAuthenticating(false);
     }
   };
-
-  // 桌面环境中的 OAuth 令牌接收处理
-  react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
-    let unsubscribe = null;
-    if (isOpen && typeof EditorPreload !== 'undefined') {
-      // 在桌面环境中监听来自主进程的 OAuth 令牌
-      unsubscribe = EditorPreload.receiveOAuthToken(async token => {
-        try {
-          setIsAuthenticating(true);
-          setError('');
-
-          // 使用接收到的令牌处理用户信息
-          const result = await _lib_github_oauth_js__WEBPACK_IMPORTED_MODULE_9__["default"].processToken(token);
-          setUserInfo(_objectSpread(_objectSpread({}, result.user), {}, {
-            email: result.email
-          }));
-          onSuccess && onSuccess(result);
-        } catch (err) {
-          console.error('OAuth token processing failed:', err);
-          setError(err.message);
-          onError && onError(err);
-        } finally {
-          setIsAuthenticating(false);
-        }
-      });
-    }
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, [isOpen]);
   const handleAuthenticate = async () => {
     try {
       setIsAuthenticating(true);
@@ -11855,8 +11816,7 @@ const GUIComponent = props => {
       onToggleLoginOpen: onToggleLoginOpen,
       onClickGitCommit: handleClickGitCommit,
       onGitQuickAction: handleGitQuickAction,
-      showGitQuickButtons: hasGitRepository() && hasGitToken(),
-      onClickGitHubOAuth: () => setIsOAuthModalOpen(true)
+      showGitQuickButtons: hasGitRepository() && hasGitToken()
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_23__["default"], {
       className: _gui_css__WEBPACK_IMPORTED_MODULE_48___default.a.bodyWrapper
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_23__["default"], {
@@ -12115,8 +12075,6 @@ GUIComponent.propTypes = {
   fontsModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   unknownPlatformModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   invalidProjectModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
-  githubOAuthModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
-  onClickGitHubOAuth: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   vm: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.instanceOf(scratch_vm__WEBPACK_IMPORTED_MODULE_9___default.a).isRequired
 };
 GUIComponent.defaultProps = {
@@ -14748,24 +14706,6 @@ class MenuBar extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Component {
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_3__["FormattedMessage"], {
       defaultMessage: "Git",
       id: "gui.menuBar.git"
-    })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
-      className: _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.menuBarItem
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
-      className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.menuBarItem, _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.hoverable),
-      onClick: this.props.onClickGitHubOAuth
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("svg", {
-      className: _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.githubIcon,
-      width: "20",
-      height: "20",
-      viewBox: "0 0 24 24",
-      fill: "currentColor"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("path", {
-      d: "M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("span", {
-      className: _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.collapsibleLabel
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_3__["FormattedMessage"], {
-      defaultMessage: "GitHub",
-      id: "gui.menuBar.github"
     })))), this.props.vm && this.props.vm.runtime && this.props.vm.runtime.platform && this.props.vm.runtime.platform.git && this.props.vm.runtime.platform.git.repository && this.props.vm.runtime.platform.git.repository.trim().length > 0 && this.props.showGitQuickButtons && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
       className: _menu_bar_css__WEBPACK_IMPORTED_MODULE_38___default.a.gitQuickButtonsGroup
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("button", {
@@ -14863,7 +14803,6 @@ MenuBar.propTypes = {
   onClickSaveAsCopy: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
   onClickSettings: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
   onClickSettingsModal: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
-  onClickGitHubOAuth: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
   onLogOut: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
   onOpenRegistration: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
   onOpenTipLibrary: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
@@ -30052,10 +29991,7 @@ class GUI extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component {
       } = _this$props,
       componentProps = _objectWithoutProperties(_this$props, _excluded);
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_components_gui_gui_jsx__WEBPACK_IMPORTED_MODULE_21__["default"], _extends({
-      loading: fetchingProject || isLoading || loadingStateVisible,
-      githubOAuthModalVisible: githubOAuthModalVisible,
-      onOpenGitHubOAuthModal: onOpenGitHubOAuthModal,
-      onRequestCloseGitHubOAuthModal: onRequestCloseGitHubOAuthModal
+      loading: fetchingProject || isLoading || loadingStateVisible
     }, componentProps), children);
   }
 }
@@ -30082,9 +30018,6 @@ GUI.propTypes = {
   projectHost: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.string,
   projectId: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.string, prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.number]),
   telemetryModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool,
-  githubOAuthModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool,
-  onOpenGitHubOAuthModal: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func,
-  onRequestCloseGitHubOAuthModal: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func,
   vm: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.instanceOf(scratch_vm__WEBPACK_IMPORTED_MODULE_5___default.a).isRequired
 };
 GUI.defaultProps = {
@@ -30125,7 +30058,6 @@ const mapStateToProps = state => {
     fontsModalVisible: state.scratchGui.modals.fontsModal,
     unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,
     invalidProjectModalVisible: state.scratchGui.modals.invalidProjectModal,
-    githubOAuthModalVisible: state.scratchGui.modals.githubOAuthModal,
     vm: state.scratchGui.vm
   };
 };
@@ -30136,9 +30068,7 @@ const mapDispatchToProps = dispatch => ({
   onActivateSoundsTab: () => dispatch(Object(_reducers_editor_tab__WEBPACK_IMPORTED_MODULE_9__["activateTab"])(_reducers_editor_tab__WEBPACK_IMPORTED_MODULE_9__["SOUNDS_TAB_INDEX"])),
   onRequestCloseBackdropLibrary: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_10__["closeBackdropLibrary"])()),
   onRequestCloseCostumeLibrary: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_10__["closeCostumeLibrary"])()),
-  onRequestCloseTelemetryModal: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_10__["closeTelemetryModal"])()),
-  onRequestOpenGitHubOAuthModal: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_10__["openGitHubOAuthModal"])()),
-  onRequestCloseGitHubOAuthModal: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_10__["closeGitHubOAuthModal"])())
+  onRequestCloseTelemetryModal: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_10__["closeTelemetryModal"])())
 });
 const ConnectedGUI = Object(react_intl__WEBPACK_IMPORTED_MODULE_6__["injectIntl"])(Object(react_redux__WEBPACK_IMPORTED_MODULE_3__["connect"])(mapStateToProps, mapDispatchToProps)(GUI));
 
@@ -42676,47 +42606,32 @@ class GitHubOAuthService {
     if (!clientId) {
       throw new Error('Client ID is required');
     }
+    try {
+      // 生成 PKCE 挑战码
+      const codeVerifier = this.generateRandomString(128);
+      const codeChallenge = await this.sha256(codeVerifier);
 
-    // 检查是否在桌面环境中运行
-    if (typeof EditorPreload !== 'undefined' && typeof EditorPreload.startGithubOAuth === 'function') {
-      // 在桌面环境中，启动外部 OAuth 流程
-      try {
-        await EditorPreload.startGithubOAuth();
-        // 保存客户端ID用于后续使用
-        localStorage.setItem(this.clientIdStorageKey, clientId);
-      } catch (error) {
-        console.error('Desktop OAuth start failed:', error);
-        throw error;
-      }
-    } else {
-      // 在浏览器环境中，继续原有流程
-      try {
-        // 生成 PKCE 挑战码
-        const codeVerifier = this.generateRandomString(128);
-        const codeChallenge = await this.sha256(codeVerifier);
+      // 保存到 sessionStorage
+      sessionStorage.setItem('code_verifier', codeVerifier);
+      sessionStorage.setItem('client_id', clientId);
 
-        // 保存到 sessionStorage
-        sessionStorage.setItem('code_verifier', codeVerifier);
-        sessionStorage.setItem('client_id', clientId);
+      // 构建授权 URL
+      const authUrl = new URL('https://github.com/login/oauth/authorize');
+      authUrl.searchParams.append('client_id', clientId);
+      authUrl.searchParams.append('redirect_uri', this.redirectUri);
+      authUrl.searchParams.append('scope', 'repo,admin:org,admin:public_key,admin:repo_hook,admin:org_hook,gist,notifications,user,delete_repo,write:packages,read:packages,delete:packages,admin:gpg_key,workflow');
+      authUrl.searchParams.append('code_challenge', codeChallenge);
+      authUrl.searchParams.append('code_challenge_method', 'S256');
+      authUrl.searchParams.append('state', this.generateRandomString(32));
 
-        // 构建授权 URL
-        const authUrl = new URL('https://github.com/login/oauth/authorize');
-        authUrl.searchParams.append('client_id', clientId);
-        authUrl.searchParams.append('redirect_uri', this.redirectUri);
-        authUrl.searchParams.append('scope', 'repo,admin:org,admin:public_key,admin:repo_hook,admin:org_hook,gist,notifications,user,delete_repo,write:packages,read:packages,delete:packages,admin:gpg_key,workflow');
-        authUrl.searchParams.append('code_challenge', codeChallenge);
-        authUrl.searchParams.append('code_challenge_method', 'S256');
-        authUrl.searchParams.append('state', this.generateRandomString(32));
+      // 保存 Client ID
+      localStorage.setItem(this.clientIdStorageKey, clientId);
 
-        // 保存 Client ID
-        localStorage.setItem(this.clientIdStorageKey, clientId);
-
-        // 重定向到 GitHub
-        window.location.href = authUrl.toString();
-      } catch (error) {
-        console.error('OAuth start failed:', error);
-        throw error;
-      }
+      // 重定向到 GitHub
+      window.location.href = authUrl.toString();
+    } catch (error) {
+      console.error('OAuth start failed:', error);
+      throw error;
     }
   }
 
@@ -42725,118 +42640,37 @@ class GitHubOAuthService {
    * @returns {Promise<Object>} 用户信息
    */
   async handleCallback() {
-    // 检查是否在桌面环境中运行
-    if (typeof EditorPreload !== 'undefined') {
-      // 在桌面环境中，我们没有 URL 参数，而是通过主进程接收 token
-      // 这个方法将被主进程调用，所以我们返回一个 Promise 并等待主进程发送 token
-      return new Promise((resolve, reject) => {
-        // 设置一个定时器，如果在一定时间内没有收到 token，则超时
-        const timeout = setTimeout(() => {
-          reject(new Error('OAuth token timeout'));
-        }, 30000); // 30秒超时
-
-        // 注册接收 token 的回调
-        const unsubscribe = EditorPreload.receiveOAuthToken(token => {
-          clearTimeout(timeout);
-          if (unsubscribe) unsubscribe(); // 清理监听器
-
-          // 使用接收到的 token 获取用户信息
-          this.processToken(token).then(result => {
-            resolve(result);
-          }).catch(error => {
-            reject(error);
-          });
-        });
-      });
-    } else {
-      // 在浏览器环境中，继续原有流程
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      const state = params.get('state');
-      if (!code) {
-        throw new Error('No authorization code received');
-      }
-      const codeVerifier = sessionStorage.getItem('code_verifier');
-      const clientId = sessionStorage.getItem('client_id');
-      if (!codeVerifier || !clientId) {
-        throw new Error('OAuth session data missing');
-      }
-      try {
-        // 交换授权码获取访问令牌
-        const response = await fetch(this.backendUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            code: code,
-            code_verifier: codeVerifier,
-            client_id: clientId,
-            redirect_uri: this.redirectUri
-          })
-        });
-        const data = await response.json();
-        if (!response.ok || data.error) {
-          throw new Error(data.error_description || data.error || 'Token exchange failed');
-        }
-        const token = data.access_token;
-
-        // 获取用户信息
-        const userResponse = await fetch('https://api.github.com/user', {
-          headers: {
-            'Authorization': "token ".concat(token),
-            'User-Agent': 'Scratch-GUI-OAuth'
-          }
-        });
-        if (!userResponse.ok) {
-          throw new Error('Failed to get user info');
-        }
-        const user = await userResponse.json();
-
-        // 获取用户邮箱
-        let email = user.email;
-        if (!email) {
-          var _emails$find;
-          const emailResponse = await fetch('https://api.github.com/user/emails', {
-            headers: {
-              'Authorization': "token ".concat(token),
-              'User-Agent': 'Scratch-GUI-OAuth'
-            }
-          });
-          const emails = await emailResponse.json();
-          email = ((_emails$find = emails.find(e => e.primary)) === null || _emails$find === void 0 ? void 0 : _emails$find.email) || 'Not public';
-        }
-
-        // 保存到本地存储
-        localStorage.setItem(this.tokenStorageKey, token);
-        localStorage.setItem(this.userStorageKey, JSON.stringify(user));
-        localStorage.setItem(this.emailStorageKey, email);
-
-        // 清理 sessionStorage
-        sessionStorage.removeItem('code_verifier');
-        sessionStorage.removeItem('client_id');
-
-        // 清理 URL 参数
-        window.history.replaceState({}, '', window.location.pathname);
-        return {
-          user,
-          email,
-          token
-        };
-      } catch (error) {
-        console.error('OAuth callback failed:', error);
-        throw error;
-      }
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    if (!code) {
+      throw new Error('No authorization code received');
     }
-  }
-
-  /**
-   * 使用接收到的 token 处理用户信息
-   * @param {string} token - GitHub 访问令牌
-   * @returns {Promise<Object>} 用户信息
-   */
-  async processToken(token) {
+    const codeVerifier = sessionStorage.getItem('code_verifier');
+    const clientId = sessionStorage.getItem('client_id');
+    if (!codeVerifier || !clientId) {
+      throw new Error('OAuth session data missing');
+    }
     try {
+      // 交换授权码获取访问令牌
+      const response = await fetch(this.backendUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          code: code,
+          code_verifier: codeVerifier,
+          client_id: clientId,
+          redirect_uri: this.redirectUri
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        throw new Error(data.error_description || data.error || 'Token exchange failed');
+      }
+      const token = data.access_token;
+
       // 获取用户信息
       const userResponse = await fetch('https://api.github.com/user', {
         headers: {
@@ -42852,7 +42686,7 @@ class GitHubOAuthService {
       // 获取用户邮箱
       let email = user.email;
       if (!email) {
-        var _emails$find2;
+        var _emails$find;
         const emailResponse = await fetch('https://api.github.com/user/emails', {
           headers: {
             'Authorization': "token ".concat(token),
@@ -42860,20 +42694,27 @@ class GitHubOAuthService {
           }
         });
         const emails = await emailResponse.json();
-        email = ((_emails$find2 = emails.find(e => e.primary)) === null || _emails$find2 === void 0 ? void 0 : _emails$find2.email) || 'Not public';
+        email = ((_emails$find = emails.find(e => e.primary)) === null || _emails$find === void 0 ? void 0 : _emails$find.email) || 'Not public';
       }
 
       // 保存到本地存储
       localStorage.setItem(this.tokenStorageKey, token);
       localStorage.setItem(this.userStorageKey, JSON.stringify(user));
       localStorage.setItem(this.emailStorageKey, email);
+
+      // 清理 sessionStorage
+      sessionStorage.removeItem('code_verifier');
+      sessionStorage.removeItem('client_id');
+
+      // 清理 URL 参数
+      window.history.replaceState({}, '', window.location.pathname);
       return {
         user,
         email,
         token
       };
     } catch (error) {
-      console.error('Process token failed:', error);
+      console.error('OAuth callback failed:', error);
       throw error;
     }
   }
@@ -53078,7 +52919,7 @@ const updateMicIndicator = function updateMicIndicator(visible) {
 /*!********************************!*\
   !*** ./src/reducers/modals.js ***!
   \********************************/
-/*! exports provided: default, modalsInitialState, openBackdropLibrary, openCostumeLibrary, openExtensionLibrary, openLoadingProject, openSoundLibrary, openSpriteLibrary, openSoundRecorder, openTelemetryModal, openTipsLibrary, openConnectionModal, openUsernameModal, openSettingsModal, openCustomExtensionModal, openRestorePointModal, openFontsModal, openUnknownPlatformModal, openInvalidProjectModal, openGitHubOAuthModal, closeBackdropLibrary, closeCostumeLibrary, closeExtensionLibrary, closeLoadingProject, closeSpriteLibrary, closeSoundLibrary, closeSoundRecorder, closeTelemetryModal, closeTipsLibrary, closeConnectionModal, closeUsernameModal, closeSettingsModal, closeCustomExtensionModal, closeRestorePointModal, closeFontsModal, closeUnknownPlatformModal, closeInvalidProjectModal, closeGitHubOAuthModal */
+/*! exports provided: default, modalsInitialState, openBackdropLibrary, openCostumeLibrary, openExtensionLibrary, openLoadingProject, openSoundLibrary, openSpriteLibrary, openSoundRecorder, openTelemetryModal, openTipsLibrary, openConnectionModal, openUsernameModal, openSettingsModal, openCustomExtensionModal, openRestorePointModal, openFontsModal, openUnknownPlatformModal, openInvalidProjectModal, closeBackdropLibrary, closeCostumeLibrary, closeExtensionLibrary, closeLoadingProject, closeSpriteLibrary, closeSoundLibrary, closeSoundRecorder, closeTelemetryModal, closeTipsLibrary, closeConnectionModal, closeUsernameModal, closeSettingsModal, closeCustomExtensionModal, closeRestorePointModal, closeFontsModal, closeUnknownPlatformModal, closeInvalidProjectModal */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -53102,7 +52943,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "openFontsModal", function() { return openFontsModal; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "openUnknownPlatformModal", function() { return openUnknownPlatformModal; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "openInvalidProjectModal", function() { return openInvalidProjectModal; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "openGitHubOAuthModal", function() { return openGitHubOAuthModal; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeBackdropLibrary", function() { return closeBackdropLibrary; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeCostumeLibrary", function() { return closeCostumeLibrary; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeExtensionLibrary", function() { return closeExtensionLibrary; });
@@ -53120,7 +52960,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeFontsModal", function() { return closeFontsModal; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeUnknownPlatformModal", function() { return closeUnknownPlatformModal; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeInvalidProjectModal", function() { return closeInvalidProjectModal; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeGitHubOAuthModal", function() { return closeGitHubOAuthModal; });
 const OPEN_MODAL = 'scratch-gui/modals/OPEN_MODAL';
 const CLOSE_MODAL = 'scratch-gui/modals/CLOSE_MODAL';
 const MODAL_BACKDROP_LIBRARY = 'backdropLibrary';
@@ -53140,7 +52979,6 @@ const MODAL_RESTORE_POINTS = 'restorePointModal';
 const MODAL_FONTS = 'fontsModal';
 const MODAL_UNKNOWN_PLATFORM = 'unknownPlatformModal';
 const MODAL_INVALID_PROJECT = 'invalidProjectModal';
-const MODAL_GITHUB_OAUTH = 'githubOAuthModal';
 const initialState = {
   [MODAL_BACKDROP_LIBRARY]: false,
   [MODAL_COSTUME_LIBRARY]: false,
@@ -53158,8 +52996,7 @@ const initialState = {
   [MODAL_RESTORE_POINTS]: false,
   [MODAL_FONTS]: false,
   [MODAL_UNKNOWN_PLATFORM]: false,
-  [MODAL_INVALID_PROJECT]: false,
-  [MODAL_GITHUB_OAUTH]: false
+  [MODAL_INVALID_PROJECT]: false
 };
 const reducer = function reducer(state, action) {
   if (typeof state === 'undefined') state = initialState;
@@ -53239,9 +53076,6 @@ const openUnknownPlatformModal = function openUnknownPlatformModal() {
 const openInvalidProjectModal = function openInvalidProjectModal() {
   return openModal(MODAL_INVALID_PROJECT);
 };
-const openGitHubOAuthModal = function openGitHubOAuthModal() {
-  return openModal(MODAL_GITHUB_OAUTH);
-};
 const closeBackdropLibrary = function closeBackdropLibrary() {
   return closeModal(MODAL_BACKDROP_LIBRARY);
 };
@@ -53292,9 +53126,6 @@ const closeUnknownPlatformModal = function closeUnknownPlatformModal() {
 };
 const closeInvalidProjectModal = function closeInvalidProjectModal() {
   return closeModal(MODAL_INVALID_PROJECT);
-};
-const closeGitHubOAuthModal = function closeGitHubOAuthModal() {
-  return closeModal(MODAL_GITHUB_OAUTH);
 };
 
 
