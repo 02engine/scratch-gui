@@ -26967,7 +26967,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
     _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__["default"].blockly = this.ScratchBlocks;
     _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__["default"].blocklyCallbacks.forEach(i => i());
     _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__["default"].blocklyCallbacks.length = [];
-    lodash_bindall__WEBPACK_IMPORTED_MODULE_0___default()(this, ['attachVM', 'detachVM', 'getToolboxXML', 'handleCategorySelected', 'handleConnectionModalStart', 'handleDrop', 'handleStatusButtonUpdate', 'handleOpenSoundRecorder', 'handlePromptStart', 'handlePromptCallback', 'handlePromptClose', 'handleCustomProceduresClose', 'onScriptGlowOn', 'onScriptGlowOff', 'onBlockGlowOn', 'onBlockGlowOff', 'handleMonitorsUpdate', 'handleExtensionAdded', 'handleBlocksInfoUpdate', 'onTargetsUpdate', 'onVisualReport', 'onWorkspaceUpdate', 'onWorkspaceMetricsChange', 'setBlocks', 'setLocale', 'handleEnableProcedureReturns']);
+    lodash_bindall__WEBPACK_IMPORTED_MODULE_0___default()(this, ['attachVM', 'detachVM', 'getToolboxXML', 'handleCategorySelected', 'handleConnectionModalStart', 'handleDrop', 'handleStatusButtonUpdate', 'handleOpenSoundRecorder', 'handlePromptStart', 'handlePromptCallback', 'handlePromptClose', 'handleCustomProceduresClose', 'onScriptGlowOn', 'onScriptGlowOff', 'onBlockGlowOn', 'onBlockGlowOff', 'handleMonitorsUpdate', 'handleExtensionAdded', 'handleBlocksInfoUpdate', 'injectExtensionContextMenu', 'checkExtensionUsage', 'handleDeleteExtension', 'onTargetsUpdate', 'onVisualReport', 'onWorkspaceUpdate', 'onWorkspaceMetricsChange', 'setBlocks', 'setLocale', 'handleEnableProcedureReturns']);
     this.ScratchBlocks.prompt = this.handlePromptStart;
     this.ScratchBlocks.statusButtonCallback = this.handleConnectionModalStart;
     this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
@@ -27002,6 +27002,37 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
     }, Blocks.defaultOptions);
     this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
     _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__["default"].blocklyWorkspace = this.workspace;
+
+    // Initialize extension context menu functionality
+    this.injectExtensionContextMenu();
+
+    // Add global test functions for debugging
+    if (typeof window !== 'undefined') {
+      window.testExtensionMenu = () => {
+        this.debugExtensionState();
+      };
+      window.testContextMenu = () => {
+        // Test the custom context menu
+        const testEvent = {
+          target: document.querySelector('.scratchCategoryMenuRow'),
+          preventDefault: () => {},
+          stopPropagation: () => {}
+        };
+        const testOptions = [{
+          text: 'Test Delete Extension',
+          enabled: true,
+          callback: () => {
+            alert('Test context menu works!');
+          }
+        }];
+        this.showContextMenu(testEvent, testOptions);
+      };
+    }
+
+    // Also run debug after a delay to ensure everything is loaded
+    setTimeout(() => {
+      this.debugExtensionState();
+    }, 2000);
 
     // Register buttons under new callback keys for creating variables,
     // lists, and procedures from extensions.
@@ -27111,6 +27142,21 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
 
     // Clear the flyout blocks so that they can be recreated on mount.
     this.props.vm.clearFlyoutBlocks();
+
+    // Clean up extension context menu event listeners
+    if (this._contextMenuHandler) {
+      const toolbox = this.workspace.getToolbox();
+      if (toolbox && toolbox.HtmlDiv) {
+        toolbox.HtmlDiv.removeEventListener('contextmenu', this._contextMenuHandler);
+      }
+      this._contextMenuHandler = null;
+    }
+
+    // Clean up mutation observer
+    if (this._mutationObserver) {
+      this._mutationObserver.disconnect();
+      this._mutationObserver = null;
+    }
     _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__["default"].blocklyWorkspace = null;
   }
   requestToolboxUpdate() {
@@ -27367,6 +27413,475 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
   handleBlocksInfoUpdate(categoryInfo) {
     // @todo Later we should replace this to avoid all the warnings from redefining blocks.
     this.handleExtensionAdded(categoryInfo);
+  }
+
+  // Extension management methods
+  debugExtensionState() {
+    if (this.props.vm && this.props.vm.runtime) {
+      const runtime = this.props.vm.runtime;
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('=== Extension Debug Info ===');
+
+      // Check _blockInfo
+      if (runtime._blockInfo) {
+        _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('Categories in _blockInfo:');
+        runtime._blockInfo.forEach(cat => {
+          _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("  - ".concat(cat.name, " (").concat(cat.id, ")"));
+        });
+      }
+
+      // Check extension manager
+      if (runtime.extensionManager) {
+        const loadedExtensions = Array.from(runtime.extensionManager._loadedExtensions.keys());
+        _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Loaded extensions: ".concat(loadedExtensions.join(', ')));
+
+        // Test isExtensionDeletable for each
+        loadedExtensions.forEach(extId => {
+          _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("  ".concat(extId, " is deletable: ").concat(this.isExtensionDeletable(extId)));
+        });
+      }
+
+      // Check DOM
+      const categoryRows = document.querySelectorAll('.scratchCategoryMenuRow, .scratchCategoryMenuItem');
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Found ".concat(categoryRows.length, " category rows in DOM"));
+      categoryRows.forEach((row, index) => {
+        const label = row.querySelector('.scratchCategoryMenuItemLabel');
+        const text = label ? label.textContent : 'No label';
+        _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("  Row ".concat(index, ": ").concat(text));
+      });
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('=== End Debug Info ===');
+    }
+  }
+  showContextMenu(event, menuOptions) {
+    // Create a simple context menu that doesn't interfere with Scratch Addons
+    try {
+      // Remove any existing menus
+      const existingMenus = document.querySelectorAll('.extension-context-menu');
+      existingMenus.forEach(menu => menu.remove());
+
+      // Create menu element
+      const menu = document.createElement('div');
+      menu.className = 'extension-context-menu';
+      menu.style.cssText = "\n                position: fixed;\n                background: white;\n                border: 1px solid #d0d0d0;\n                border-radius: 8px;\n                box-shadow: 0 4px 12px rgba(0,0,0,0.15);\n                z-index: 10000;\n                font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n                font-size: 12px;\n                min-width: 150px;\n            ";
+
+      // Add menu items
+      menuOptions.forEach((option, index) => {
+        const menuItem = document.createElement('div');
+        menuItem.style.cssText = "\n                    padding: 8px 16px;\n                    cursor: pointer;\n                    color: ".concat(option.enabled ? '#575e75' : '#b3b3b3', ";\n                    transition: background-color 0.2s;\n                    user-select: none;\n                    margin-bottom: 4px;\n                ");
+        menuItem.textContent = option.text;
+        if (option.enabled) {
+          menuItem.addEventListener('mouseenter', () => {
+            menuItem.style.backgroundColor = '#e6e6e6';
+          });
+          menuItem.addEventListener('mouseleave', () => {
+            menuItem.style.backgroundColor = 'transparent';
+          });
+          menuItem.addEventListener('click', () => {
+            option.callback();
+            menu.remove();
+          });
+        } else {
+          menuItem.style.cursor = 'not-allowed';
+        }
+        menu.appendChild(menuItem);
+
+        // Add separator except for last item
+        if (index < menuOptions.length - 1) {
+          const separator = document.createElement('div');
+          separator.style.cssText = "\n                        height: 1px;\n                        background: #e0e0e0;\n                        margin: 0 8px;\n                    ";
+          menu.appendChild(separator);
+        } else {
+          // Last item: remove bottom margin
+          menuItem.style.marginBottom = '0';
+        }
+      });
+
+      // Position menu
+      const rect = event.target.getBoundingClientRect();
+      menu.style.left = "".concat(rect.left + window.scrollX, "px");
+      menu.style.top = "".concat(rect.bottom + window.scrollY, "px");
+
+      // Add to DOM
+      document.body.appendChild(menu);
+
+      // Remove menu when clicking outside
+      const removeMenu = e => {
+        if (!menu.contains(e.target)) {
+          menu.remove();
+          document.removeEventListener('click', removeMenu);
+        }
+      };
+      setTimeout(() => {
+        document.addEventListener('click', removeMenu);
+      }, 100);
+
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        if (document.body.contains(menu)) {
+          menu.remove();
+        }
+      }, 5000);
+    } catch (error) {
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].error('Error showing context menu:', error);
+      // Fallback: try to use ScratchBlocks context menu
+      if (this.ScratchBlocks && this.ScratchBlocks.ContextMenu && this.ScratchBlocks.ContextMenu.show) {
+        try {
+          // Create a minimal context to avoid the error
+          const mockGesture = {
+            targetBlock_: null,
+            flyout_: false,
+            startBubble_: false
+          };
+
+          // Temporarily set the current gesture
+          const originalGesture = this.ScratchBlocks.mainWorkspace.currentGesture_;
+          this.ScratchBlocks.mainWorkspace.currentGesture_ = mockGesture;
+
+          // Call the original show method
+          this.ScratchBlocks.ContextMenu.show(event, menuOptions, this.workspace ? this.workspace.RTL : false);
+
+          // Restore the original gesture
+          this.ScratchBlocks.mainWorkspace.currentGesture_ = originalGesture;
+        } catch (fallbackError) {
+          _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].error('Fallback context menu also failed:', fallbackError);
+        }
+      }
+    }
+  }
+  injectExtensionContextMenu() {
+    if (!this.ScratchBlocks || !this.props.vm) return;
+    const ScratchBlocks = this.ScratchBlocks;
+    const self = this;
+
+    // Wait for DOM to be ready and workspace to be initialized
+    const setupContextMenu = () => {
+      // Try multiple approaches to find the toolbox
+      let toolboxElement = null;
+
+      // Method 1: Try to get from workspace
+      if (this.workspace && this.workspace.getToolbox) {
+        const toolbox = this.workspace.getToolbox();
+        if (toolbox && toolbox.HtmlDiv) {
+          toolboxElement = toolbox.HtmlDiv;
+          _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('Found toolbox via workspace.HtmlDiv');
+        }
+      }
+
+      // Method 2: Try to find by class name
+      if (!toolboxElement) {
+        toolboxElement = document.querySelector('.blocklyToolboxDiv');
+        if (toolboxElement) {
+          _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('Found toolbox via .blocklyToolboxDiv selector');
+        }
+      }
+
+      // Method 3: Try to find by ID
+      if (!toolboxElement) {
+        toolboxElement = document.getElementById('toolbox');
+        if (toolboxElement) {
+          _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('Found toolbox via #toolbox ID');
+        }
+      }
+      if (!toolboxElement) {
+        // Try again later
+        _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].warn('Toolbox element not found, retrying...');
+        setTimeout(setupContextMenu, 200);
+        return;
+      }
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('Setting up context menu for toolbox');
+
+      // Remove existing listener to avoid duplicates
+      if (self._contextMenuHandler) {
+        toolboxElement.removeEventListener('contextmenu', self._contextMenuHandler);
+      }
+
+      // Create context menu handler
+      self._contextMenuHandler = e => {
+        _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('Context menu triggered on:', e.target.className);
+
+        // Find the category element that was right-clicked
+        let categoryElement = null;
+
+        // Try different selectors for category rows
+        const selectors = ['.scratchCategoryMenuRow', '.scratchCategoryMenuItem', '.blocklyTreeRow', '[class*="scratchCategory"]'];
+        for (const selector of selectors) {
+          categoryElement = e.target.closest(selector);
+          if (categoryElement) {
+            _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Found category element with selector: ".concat(selector));
+            break;
+          }
+        }
+        if (categoryElement) {
+          const extensionId = self.getExtensionIdFromCategoryRow(categoryElement);
+          const extensionName = self.getExtensionNameFromCategoryRow(categoryElement);
+          _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Extension ID: ".concat(extensionId, ", Extension Name: ").concat(extensionName));
+          if (extensionId && self.isExtensionDeletable(extensionId)) {
+            _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('Extension is deletable, showing context menu');
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Create context menu
+            const menuOptions = [{
+              text: 'Delete Extension',
+              enabled: true,
+              callback: () => {
+                self.handleDeleteExtension(extensionId, extensionName);
+              }
+            }];
+
+            // Show context menu using a safer approach
+            self.showContextMenu(e, menuOptions);
+          } else {
+            _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('Extension is not deletable or not found');
+          }
+        } else {
+          _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('No category element found for right-click');
+        }
+      };
+
+      // Add the event listener
+      toolboxElement.addEventListener('contextmenu', self._contextMenuHandler);
+
+      // Also try to add listeners to dynamically created elements
+      self._setupMutationObserver(toolboxElement);
+    };
+
+    // Start the setup process
+    setTimeout(setupContextMenu, 1000);
+  }
+  _setupMutationObserver(toolboxElement) {
+    if (!window.MutationObserver) return;
+    const self = this;
+
+    // Create a mutation observer to handle dynamically added category elements
+    self._mutationObserver = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach(node => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              // Check if this is a category row
+              if (node.classList && (node.classList.contains('scratchCategoryMenuRow') || node.classList.contains('scratchCategoryMenuItem'))) {
+                // Re-add context menu listener if needed
+                if (self._contextMenuHandler) {
+                  node.addEventListener('contextmenu', self._contextMenuHandler);
+                }
+              }
+
+              // Also check child elements
+              const categoryRows = node.querySelectorAll('.scratchCategoryMenuRow, .scratchCategoryMenuItem');
+              categoryRows.forEach(row => {
+                if (self._contextMenuHandler) {
+                  row.addEventListener('contextmenu', self._contextMenuHandler);
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+
+    // Start observing the toolbox for changes
+    self._mutationObserver.observe(toolboxElement, {
+      childList: true,
+      subtree: true
+    });
+  }
+  getExtensionIdFromCategoryRow(categoryRow) {
+    if (!categoryRow) return null;
+
+    // Method 1: Check if this row has a category property (TurboWarp specific)
+    if (categoryRow.category_) {
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Found category via category_: ".concat(categoryRow.category_));
+      return categoryRow.category_;
+    }
+
+    // Method 2: Check for data attributes
+    const categoryId = categoryRow.getAttribute('data-category-id') || categoryRow.getAttribute('data-extension-id');
+    if (categoryId) {
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Found category via data attribute: ".concat(categoryId));
+      return categoryId;
+    }
+
+    // Method 3: Try to get from the label text and match with runtime extensions
+    const labelElement = categoryRow.querySelector('.scratchCategoryMenuItemLabel');
+    if (labelElement) {
+      const categoryText = labelElement.textContent || '';
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Category text: ".concat(categoryText));
+
+      // Get all loaded extensions from the runtime
+      if (this.props.vm && this.props.vm.runtime) {
+        const runtime = this.props.vm.runtime;
+
+        // Check _blockInfo for matching categories
+        if (runtime._blockInfo) {
+          for (const categoryInfo of runtime._blockInfo) {
+            if (categoryInfo.name === categoryText) {
+              _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Found category via _blockInfo: ".concat(categoryInfo.id));
+              return categoryInfo.id;
+            }
+          }
+        }
+
+        // Check extension manager for loaded extensions
+        if (runtime.extensionManager && runtime.extensionManager._loadedExtensions) {
+          const loadedExtensions = Array.from(runtime.extensionManager._loadedExtensions.keys());
+          _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Loaded extensions: ".concat(loadedExtensions.join(', ')));
+          for (const extensionId of loadedExtensions) {
+            // Try to find the extension's display name
+            const displayName = this.getExtensionDisplayName(extensionId);
+            if (displayName === categoryText) {
+              _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Found extension via display name: ".concat(extensionId));
+              return extensionId;
+            }
+          }
+        }
+
+        // Check if the category text matches any known extension names
+        const knownExtensions = ['pen', 'music', 'videoSensing', 'text2speech', 'translate', 'microbit', 'wedo2', 'boost', 'ev3', 'makeymakey', 'gdxfor'];
+        for (const extId of knownExtensions) {
+          if (runtime.extensionManager.isExtensionLoaded(extId)) {
+            const displayName = this.getExtensionDisplayName(extId);
+            if (displayName === categoryText) {
+              _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Found extension via known extensions: ".concat(extId));
+              return extId;
+            }
+          }
+        }
+      }
+    }
+    _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info('No extension ID found for this category');
+    return null;
+  }
+  getExtensionDisplayName(extensionId) {
+    // Try to get the display name for an extension ID
+    if (this.props.vm && this.props.vm.runtime && this.props.vm.runtime._blockInfo) {
+      for (const categoryInfo of this.props.vm.runtime._blockInfo) {
+        if (categoryInfo.id === extensionId) {
+          return categoryInfo.name;
+        }
+      }
+    }
+    return extensionId;
+  }
+  getExtensionNameFromCategoryRow(categoryRow) {
+    if (!categoryRow) return 'Unknown Extension';
+    const labelElement = categoryRow.querySelector('.scratchCategoryMenuItemLabel');
+    if (labelElement) {
+      return labelElement.textContent || 'Unknown Extension';
+    }
+    return 'Unknown Extension';
+  }
+  isExtensionDeletable(extensionId) {
+    if (!extensionId) return false;
+    const builtinExtensions = ['motion', 'looks', 'sound', 'events', 'control', 'sensing', 'operators', 'data', 'procedures', 'myBlocks'];
+    return !builtinExtensions.includes(extensionId);
+  }
+  checkExtensionUsage(extensionId) {
+    if (!this.props.vm || !this.props.vm.runtime) return false;
+    const vm = this.props.vm;
+    const allTargets = vm.runtime.targets || [];
+    const extensionPrefix = "".concat(extensionId, "_");
+    for (const target of allTargets) {
+      if (!target || !target.blocks || !target.blocks._blocks) continue;
+
+      // Check all blocks in the target
+      for (const blockId in target.blocks._blocks) {
+        const block = target.blocks._blocks[blockId];
+        if (block && block.opcode && block.opcode.startsWith(extensionPrefix)) {
+          return true;
+        }
+      }
+    }
+
+    // Also check the stage
+    try {
+      const stage = vm.runtime.getTargetForStage();
+      if (stage && stage.blocks && stage.blocks._blocks) {
+        for (const blockId in stage.blocks._blocks) {
+          const block = stage.blocks._blocks[blockId];
+          if (block && block.opcode && block.opcode.startsWith(extensionPrefix)) {
+            return true;
+          }
+        }
+      }
+    } catch (error) {
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].warn('Error checking stage blocks:', error);
+    }
+    return false;
+  }
+  handleDeleteExtension(extensionId, extensionName) {
+    const isInUse = this.checkExtensionUsage(extensionId);
+    if (isInUse) {
+      alert('Cannot delete extension: Extension blocks are still in use in this project. Remove all blocks using this extension first.');
+      return;
+    }
+    const confirmMessage = 'Are you sure you want to remove this extension?';
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+    try {
+      this.unloadExtension(extensionId);
+      this.removeExtensionFromToolbox(extensionId);
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Extension ".concat(extensionId, " removed successfully"));
+    } catch (error) {
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].error("Failed to remove extension ".concat(extensionId, ":"), error);
+      alert("Failed to remove extension: ".concat(error.message));
+    }
+  }
+  unloadExtension(extensionId) {
+    if (!this.props.vm || !this.props.vm.runtime) return;
+    const vm = this.props.vm;
+    const runtime = vm.runtime;
+    if (runtime.extensionManager && runtime.extensionManager.isExtensionLoaded && runtime.extensionManager.isExtensionLoaded(extensionId)) {
+      const serviceName = runtime.extensionManager._loadedExtensions && runtime.extensionManager._loadedExtensions.get && runtime.extensionManager._loadedExtensions.get(extensionId);
+      if (serviceName) {
+        runtime.extensionManager._loadedExtensions.delete(extensionId);
+
+        // Remove from block info
+        if (runtime._blockInfo) {
+          runtime._blockInfo = runtime._blockInfo.filter(categoryInfo => categoryInfo.id !== extensionId);
+        }
+
+        // Remove from cached block info
+        if (runtime._blockInfoCached) {
+          delete runtime._blockInfoCached[extensionId];
+        }
+
+        // Remove extension blocks from ScratchBlocks
+        if (this.ScratchBlocks && this.ScratchBlocks.Blocks) {
+          const extensionPrefix = "".concat(extensionId, "_");
+          for (const blockName in this.ScratchBlocks.Blocks) {
+            if (blockName.startsWith(extensionPrefix)) {
+              delete this.ScratchBlocks.Blocks[blockName];
+            }
+          }
+        }
+
+        // Force workspace update
+        if (vm.emitWorkspaceUpdate) {
+          vm.emitWorkspaceUpdate();
+        }
+
+        // Refresh toolbox
+        if (this.workspace && this.workspace.toolbox_) {
+          const toolbox = this.workspace.toolbox_;
+          if (toolbox.refreshSelection) {
+            toolbox.refreshSelection();
+          }
+        }
+      }
+    }
+  }
+  removeExtensionFromToolbox(extensionId) {
+    if (!this.ScratchBlocks || !this.workspace) return;
+    const workspace = this.workspace;
+    const toolbox = workspace.getToolbox();
+    if (toolbox && toolbox.removeCategory) {
+      toolbox.removeCategory(extensionId);
+    }
+    const toolboxXML = this.getToolboxXML();
+    if (toolboxXML && this.props.updateToolboxState) {
+      this.props.updateToolboxState(toolboxXML);
+    }
   }
   handleCategorySelected(categoryId) {
     const extension = _lib_libraries_extensions_index_jsx__WEBPACK_IMPORTED_MODULE_14__["default"].find(ext => ext.extensionId === categoryId);
