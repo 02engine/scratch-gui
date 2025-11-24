@@ -42913,12 +42913,16 @@ class GitHubOAuthService {
     try {
       // 检查是否在 Electron 环境中
       if (this.isElectron) {
-        // 在 Electron 中，使用 window.open 打开 oauth-proxy 页面
-        // 它会被 handleWindowOpen 捕获并正确配置
-        window.open('https://idyllic-kangaroo-a50663.netlify.app/', '_blank', 'width=600,height=800');
+        // 在 Electron 中，使用 shell.openExternal 打开系统浏览器
+        if (window.EditorPreload && typeof window.EditorPreload.openExternalUrl === 'function') {
+          await window.EditorPreload.openExternalUrl('https://idyllic-kangaroo-a50663.netlify.app/');
+        } else {
+          // 如果没有 openExternal 方法，则尝试使用 window.open，这将打开系统浏览器
+          window.open('https://idyllic-kangaroo-a50663.netlify.app/', '_system');
+        }
 
-        // 启动轮询检查是否收到 token，并返回结果
-        return await this.pollForToken();
+        // 启动轮询检查 localStorage 中的 token，并返回结果
+        return await this.pollForLocalStorageToken();
       } else {
         // 在浏览器环境中，生成 PKCE 挑战码
         const codeVerifier = this.generateRandomString(128);
@@ -42988,6 +42992,54 @@ class GitHubOAuthService {
           }
         } catch (error) {
           console.error('Error checking for token:', error);
+        }
+        setTimeout(poll, 500); // 每 500ms 检查一次
+      };
+
+      // 立即开始轮询，然后定期检查
+      poll();
+    });
+  }
+
+  /**
+   * 轮询检查 localStorage 中的 token
+   * @returns {Promise<Object>} 用户信息
+   */
+  async pollForLocalStorageToken() {
+    return new Promise((resolve, reject) => {
+      const maxAttempts = 180; // 最多等待 90 秒 (180 次 * 500ms)
+      let attempts = 0;
+      const poll = async () => {
+        attempts++;
+        if (attempts > maxAttempts) {
+          reject(new Error('OAuth timeout: No token received within 90 seconds'));
+          return;
+        }
+        try {
+          // 检查是否在 localStorage 中存在 OAuth 相关信息（从 oauth-proxy 页面写入的）
+          const token = localStorage.getItem('oauth_token_received');
+          const user = localStorage.getItem('github_user');
+          const email = localStorage.getItem('github_email');
+          if (token && user && email) {
+            // 清除临时存储
+            localStorage.removeItem('oauth_token_received');
+
+            // 保存到正常的存储位置
+            localStorage.setItem(this.tokenStorageKey, token);
+            localStorage.setItem(this.userStorageKey, user);
+            localStorage.setItem(this.emailStorageKey, email);
+
+            // 返回用户信息
+            const userInfo = JSON.parse(user);
+            resolve({
+              user: userInfo,
+              email,
+              token
+            });
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking for token in localStorage:', error);
         }
         setTimeout(poll, 500); // 每 500ms 检查一次
       };
