@@ -15,8 +15,20 @@
  */
 
 import addons from './generated/addon-manifests';
+import { getCustomAddonManifests } from './custom-addon-runtime.js';
 import upstreamMeta from './generated/upstream-meta.json';
 import EventTargetShim from './event-target';
+
+// Merge built-in and custom addons
+const getAllAddons = () => {
+    const customAddons = getCustomAddonManifests();
+    return {
+        ...addons,
+        ...customAddons
+    };
+};
+
+const allAddons = getAllAddons();
 
 const SETTINGS_KEY = 'tw:addons';
 const VERSION = 5;
@@ -108,7 +120,7 @@ const asArray = v => {
 };
 
 class SettingsStore extends EventTargetShim {
-    constructor () {
+    constructor() {
         super();
         this.store = this.createEmptyStore();
         this.remote = false;
@@ -117,15 +129,15 @@ class SettingsStore extends EventTargetShim {
     /**
      * @private
      */
-    createEmptyStore () {
+    createEmptyStore() {
         const result = {};
-        for (const addonId of Object.keys(addons)) {
+        for (const addonId of Object.keys(allAddons)) {
             result[addonId] = {};
         }
         return result;
     }
 
-    readLocalStorage () {
+    readLocalStorage() {
         const base = this.store;
         try {
             const local = localStorage.getItem(SETTINGS_KEY);
@@ -152,7 +164,7 @@ class SettingsStore extends EventTargetShim {
     /**
      * @private
      */
-    saveToLocalStorage () {
+    saveToLocalStorage() {
         if (this.remote) {
             return;
         }
@@ -160,7 +172,7 @@ class SettingsStore extends EventTargetShim {
             const result = {
                 _: VERSION
             };
-            for (const addonId of Object.keys(addons)) {
+            for (const addonId of Object.keys(allAddons)) {
                 const data = this.getAddonStorage(addonId);
                 if (Object.keys(data).length > 0) {
                     result[addonId] = data;
@@ -175,7 +187,7 @@ class SettingsStore extends EventTargetShim {
     /**
      * @private
      */
-    getAddonStorage (addonId) {
+    getAddonStorage(addonId) {
         if (this.store[addonId]) {
             return this.store[addonId];
         }
@@ -185,9 +197,9 @@ class SettingsStore extends EventTargetShim {
     /**
      * @private
      */
-    getAddonManifest (addonId) {
-        if (addons[addonId]) {
-            return addons[addonId];
+    getAddonManifest(addonId) {
+        if (allAddons[addonId]) {
+            return allAddons[addonId];
         }
         throw new Error(`Unknown addon: ${addonId}`);
     }
@@ -195,7 +207,7 @@ class SettingsStore extends EventTargetShim {
     /**
      * @private
      */
-    getAddonSettingObject (manifest, settingId) {
+    getAddonSettingObject(manifest, settingId) {
         if (!manifest.settings) {
             return null;
         }
@@ -207,7 +219,7 @@ class SettingsStore extends EventTargetShim {
         return null;
     }
 
-    getAddonEnabled (addonId) {
+    getAddonEnabled(addonId) {
         const manifest = this.getAddonManifest(addonId);
         if (manifest.unsupported) {
             return false;
@@ -219,7 +231,7 @@ class SettingsStore extends EventTargetShim {
         return !!manifest.enabledByDefault;
     }
 
-    getAddonSetting (addonId, settingId) {
+    getAddonSetting(addonId, settingId) {
         const storage = this.getAddonStorage(addonId);
         const manifest = this.getAddonManifest(addonId);
         const settingObject = this.getAddonSettingObject(manifest, settingId);
@@ -235,16 +247,16 @@ class SettingsStore extends EventTargetShim {
     /**
      * @private
      */
-    getDefaultSettings (addonId) {
+    getDefaultSettings(addonId) {
         const manifest = this.getAddonManifest(addonId);
         const result = {};
-        for (const {id, default: value} of manifest.settings) {
+        for (const { id, default: value } of manifest.settings) {
             result[id] = value;
         }
         return result;
     }
 
-    setAddonEnabled (addonId, enabled) {
+    setAddonEnabled(addonId, enabled) {
         const storage = this.getAddonStorage(addonId);
         const manifest = this.getAddonManifest(addonId);
         const oldValue = this.getAddonEnabled(addonId);
@@ -272,7 +284,7 @@ class SettingsStore extends EventTargetShim {
         }
     }
 
-    setAddonSetting (addonId, settingId, value) {
+    setAddonSetting(addonId, settingId, value) {
         const storage = this.getAddonStorage(addonId);
         const manifest = this.getAddonManifest(addonId);
         const settingObject = this.getAddonSettingObject(manifest, settingId);
@@ -326,9 +338,9 @@ class SettingsStore extends EventTargetShim {
         }
     }
 
-    applyAddonPreset (addonId, presetId) {
+    applyAddonPreset(addonId, presetId) {
         const manifest = this.getAddonManifest(addonId);
-        for (const {id, values} of manifest.presets) {
+        for (const { id, values } of manifest.presets) {
             if (id !== presetId) {
                 continue;
             }
@@ -344,8 +356,8 @@ class SettingsStore extends EventTargetShim {
         throw new Error(`Unknown preset: ${presetId}`);
     }
 
-    resetAllAddons () {
-        for (const addon of Object.keys(addons)) {
+    resetAllAddons() {
+        for (const addon of Object.keys(allAddons)) {
             this.resetAddon(addon, true);
         }
         // In case resetAddon missed some properties, do a hard reset on storage.
@@ -353,7 +365,7 @@ class SettingsStore extends EventTargetShim {
         this.saveToLocalStorage();
     }
 
-    resetAddon (addonId, resetEverything) {
+    resetAddon(addonId, resetEverything) {
         const storage = this.getAddonStorage(addonId);
         for (const setting of Object.keys(storage)) {
             if (setting === 'enabled') {
@@ -370,15 +382,15 @@ class SettingsStore extends EventTargetShim {
         }
     }
 
-    parseUrlParameter (parameter) {
+    parseUrlParameter(parameter) {
         this.remote = true;
         const enabled = parameter.split(',');
-        for (const id of Object.keys(addons)) {
+        for (const id of Object.keys(allAddons)) {
             this.setAddonEnabled(id, enabled.includes(id));
         }
     }
 
-    export ({theme}) {
+    export({ theme }) {
         const result = {
             core: {
                 // Upstream property. We don't use this.
@@ -388,11 +400,11 @@ class SettingsStore extends EventTargetShim {
             },
             addons: {}
         };
-        for (const [addonId, manifest] of Object.entries(addons)) {
+        for (const [addonId, manifest] of Object.entries(allAddons)) {
             const enabled = this.getAddonEnabled(addonId);
             const settings = {};
             if (manifest.settings) {
-                for (const {id} of manifest.settings) {
+                for (const { id } of manifest.settings) {
                     settings[id] = this.getAddonSetting(addonId, id);
                 }
             }
@@ -404,12 +416,12 @@ class SettingsStore extends EventTargetShim {
         return result;
     }
 
-    import (data) {
+    import(data) {
         for (const [addonId, value] of Object.entries(data.addons)) {
-            if (!Object.prototype.hasOwnProperty.call(addons, addonId)) {
+            if (!Object.prototype.hasOwnProperty.call(allAddons, addonId)) {
                 continue;
             }
-            const {enabled, settings} = value;
+            const { enabled, settings } = value;
             if (typeof enabled === 'boolean') {
                 this.setAddonEnabled(addonId, enabled);
             }
@@ -423,14 +435,14 @@ class SettingsStore extends EventTargetShim {
         }
     }
 
-    setStoreWithVersionCheck ({version, store}) {
+    setStoreWithVersionCheck({ version, store }) {
         if (version !== upstreamMeta.commit) {
             return;
         }
         this.setStore(store);
     }
 
-    setStore (newStore) {
+    setStore(newStore) {
         const oldStore = this.store;
         for (const addonId of Object.keys(oldStore)) {
             const oldSettings = oldStore[addonId];
@@ -463,7 +475,7 @@ class SettingsStore extends EventTargetShim {
      * @param {unknown} condition Condition from addon.json
      * @returns {boolean} True if the condition is met.
      */
-    evaluateCondition (addonId, condition) {
+    evaluateCondition(addonId, condition) {
         if (!condition) {
             // No condition. Default to true.
             return true;

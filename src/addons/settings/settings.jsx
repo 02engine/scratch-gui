@@ -24,7 +24,9 @@ import messagesByLocale from '../generated/l10n-settings-entries';
 import settingsTranslationsEnglish from './en.json';
 import settingsTranslationsOther from './translations.json';
 import upstreamMeta from '../generated/upstream-meta.json';
-import {detectLocale} from '../../lib/detect-locale';
+import CustomAddonImport from './custom-addon-import.jsx';
+import { getCustomAddonManifests, removeCustomAddon } from '../custom-addon-runtime.js';
+import { detectLocale } from '../../lib/detect-locale';
 import SettingsStore from '../settings-store-singleton';
 import Channels from '../channels';
 import extensionImage from './icons/extension.svg';
@@ -34,9 +36,9 @@ import expandImageBlack from './icons/expand.svg';
 import infoImage from './icons/info.svg';
 import TWFancyCheckbox from '../../components/tw-fancy-checkbox/checkbox.jsx';
 import styles from './settings.css';
-import {detectTheme} from '../../lib/themes/themePersistance.js';
-import {applyGuiColors} from '../../lib/themes/guiHelpers.js';
-import {APP_NAME} from '../../lib/brand.js';
+import { detectTheme } from '../../lib/themes/themePersistance.js';
+import { applyGuiColors } from '../../lib/themes/guiHelpers.js';
+import { APP_NAME } from '../../lib/brand.js';
 import '../../lib/normalize.css';
 
 /* eslint-disable no-alert */
@@ -74,10 +76,20 @@ const postThrottledSettingsChange = store => {
     }, 100);
 };
 
+// Merge custom addons with built-in addons
+const getAllAddons = () => {
+    const customAddons = getCustomAddonManifests();
+    return {
+        ...importedAddons,
+        ...customAddons
+    };
+};
+
 const filterAddonsBySupport = () => {
+    const allAddons = getAllAddons();
     const supported = {};
     const unsupported = {};
-    for (const [id, manifest] of Object.entries(importedAddons)) {
+    for (const [id, manifest] of Object.entries(allAddons)) {
         if (manifest.unsupported) {
             unsupported[id] = manifest;
         } else {
@@ -89,10 +101,15 @@ const filterAddonsBySupport = () => {
         unsupported
     };
 };
-const {supported: supportedAddons, unsupported: unsupportedAddons} = filterAddonsBySupport();
+const { supported: supportedAddons, unsupported: unsupportedAddons } = filterAddonsBySupport();
 
 const groupAddons = () => {
     const groups = {
+        custom: {
+            label: settingsTranslations.groupCustom || 'Custom Addons ({number})',
+            open: true,
+            addons: []
+        },
         new: {
             label: settingsTranslations.groupNew,
             open: true,
@@ -112,9 +129,11 @@ const groupAddons = () => {
     const manifests = Object.values(supportedAddons);
     for (let index = 0; index < manifests.length; index++) {
         const manifest = manifests[index];
-        if (manifest.tags.includes('new')) {
+        if (manifest.tags && manifest.tags.includes('custom')) {
+            groups.custom.addons.push(index);
+        } else if (manifest.tags && manifest.tags.includes('new')) {
             groups.new.addons.push(index);
-        } else if (manifest.tags.includes('danger') || manifest.noCompiler) {
+        } else if (manifest.tags && (manifest.tags.includes('danger') || manifest.noCompiler)) {
             groups.danger.addons.push(index);
         } else {
             groups.others.addons.push(index);
@@ -126,7 +145,7 @@ const groupedAddons = groupAddons();
 
 const getInitialSearch = () => {
     const hash = location.hash.substring(1);
-    
+
     // If the query is an addon ID, it's a better user experience to show the name of the addon
     // in the search bar instead of a ID they won't understand.
     if (Object.prototype.hasOwnProperty.call(importedAddons, hash)) {
@@ -145,7 +164,7 @@ const clearHash = () => {
     }
 };
 
-const CreditList = ({credits}) => (
+const CreditList = ({ credits }) => (
     credits.map((author, index) => {
         const isLast = index === credits.length - 1;
         return (
@@ -178,7 +197,7 @@ CreditList.propTypes = {
     }))
 };
 
-const Switch = ({onChange, value, ...props}) => (
+const Switch = ({ onChange, value, ...props }) => (
     <button
         className={styles.switch}
         state={value ? 'on' : 'off'}
@@ -207,7 +226,7 @@ const Select = ({
                 <button
                     key={id}
                     onClick={() => onChange(id)}
-                    className={classNames(styles.selectOption, {[styles.selected]: selected})}
+                    className={classNames(styles.selectOption, { [styles.selected]: selected })}
                 >
                     {potentialValue.name}
                 </button>
@@ -224,7 +243,7 @@ Select.propTypes = {
     }))
 };
 
-const Tags = ({manifest}) => (
+const Tags = ({ manifest }) => (
     <span className={styles.tagContainer}>
         {manifest.tags.includes('recommended') && (
             <span className={classNames(styles.tag, styles.tagRecommended)}>
@@ -260,7 +279,7 @@ Tags.propTypes = {
 };
 
 class TextInput extends React.Component {
-    constructor (props) {
+    constructor(props) {
         super(props);
         this.handleKeyPress = this.handleKeyPress.bind(this);
         this.handleFocus = this.handleFocus.bind(this);
@@ -271,18 +290,18 @@ class TextInput extends React.Component {
             focused: false
         };
     }
-    handleKeyPress (e) {
+    handleKeyPress(e) {
         if (e.key === 'Enter') {
             this.handleFlush(e);
             e.target.blur();
         }
     }
-    handleFocus () {
+    handleFocus() {
         this.setState({
             focused: true
         });
     }
-    handleFlush (e) {
+    handleFlush(e) {
         this.setState({
             focused: false
         });
@@ -301,18 +320,18 @@ class TextInput extends React.Component {
         } else {
             this.props.onChange(this.state.value);
         }
-        this.setState({value: null});
+        this.setState({ value: null });
     }
-    handleChange (e) {
+    handleChange(e) {
         e.persist();
-        this.setState({value: e.target.value}, () => {
+        this.setState({ value: e.target.value }, () => {
             // A change event can be fired when not focused by using the browser's number spinners
             if (!this.state.focused) {
                 this.handleFlush(e);
             }
         });
     }
-    render () {
+    render() {
         return (
             <input
                 {...this.props}
@@ -456,7 +475,7 @@ const Setting = ({
                     {label}
                     <Select
                         value={value}
-                        values={setting.potentialValues.map(({id, name}) => ({
+                        values={setting.potentialValues.map(({ id, name }) => ({
                             id,
                             name: addonTranslations[`${addonId}/@settings-select-${settingId}-${id}`] || name
                         }))}
@@ -553,9 +572,10 @@ const Addon = ({
     id,
     settings,
     manifest,
-    extended
+    extended,
+    onDelete
 }) => (
-    <div className={classNames(styles.addon, {[styles.addonDirty]: settings.dirty})}>
+    <div className={classNames(styles.addon, { [styles.addonDirty]: settings.dirty })}>
         <div className={styles.addonHeader}>
             <label className={styles.addonTitle}>
                 <div className={styles.addonSwitch}>
@@ -615,6 +635,19 @@ const Addon = ({
                             alt={settingsTranslations.reset}
                             draggable={false}
                         />
+                    </button>
+                )}
+                {manifest.tags && manifest.tags.includes('custom') && (
+                    <button
+                        className={classNames(styles.button, styles.deleteButton)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onDelete(id, manifest.name);
+                        }}
+                        title={settingsTranslations.customAddonDelete || 'Delete'}
+                    >
+                        {settingsTranslations.customAddonDelete || 'Delete'}
                     </button>
                 )}
             </div>
@@ -689,7 +722,8 @@ Addon.propTypes = {
         tags: PropTypes.arrayOf(PropTypes.string),
         noCompiler: PropTypes.bool
     }),
-    extended: PropTypes.bool
+    extended: PropTypes.bool,
+    onDelete: PropTypes.func
 };
 
 const Dirty = props => (
@@ -711,12 +745,12 @@ Dirty.propTypes = {
     onReloadNow: PropTypes.func
 };
 
-const UnsupportedAddons = ({addons: addonList}) => (
+const UnsupportedAddons = ({ addons: addonList }) => (
     <div className={styles.unsupportedContainer}>
         <span className={styles.unsupportedText}>
             {settingsTranslations.unsupported}
         </span>
-        {addonList.map(({id, manifest}, index) => (
+        {addonList.map(({ id, manifest }, index) => (
             <span
                 key={id}
                 className={styles.unsupportedAddon}
@@ -738,26 +772,27 @@ UnsupportedAddons.propTypes = {
     }))
 };
 
-const InternalAddonList = ({addons, extended}) => (
-    addons.map(({id, manifest, state}) => (
+const InternalAddonList = ({ addons, extended, onDelete }) => (
+    addons.map(({ id, manifest, state }) => (
         <Addon
             key={id}
             id={id}
             settings={state}
             manifest={manifest}
             extended={extended}
+            onDelete={onDelete}
         />
     ))
 );
 
 class AddonGroup extends React.Component {
-    constructor (props) {
+    constructor(props) {
         super(props);
         this.state = {
             open: props.open
         };
     }
-    render () {
+    render() {
         if (this.props.addons.length === 0) {
             return null;
         }
@@ -787,6 +822,7 @@ class AddonGroup extends React.Component {
                     <InternalAddonList
                         addons={this.props.addons}
                         extended={this.props.extended}
+                        onDelete={this.props.onDelete}
                     />
                 )}
             </div>
@@ -801,10 +837,11 @@ AddonGroup.propTypes = {
         state: PropTypes.shape({}).isRequired,
         manifest: PropTypes.shape({}).isRequired
     })).isRequired,
-    extended: PropTypes.bool.isRequired
+    extended: PropTypes.bool.isRequired,
+    onDelete: PropTypes.func
 };
 
-const addonToSearchItem = ({id, manifest}) => {
+const addonToSearchItem = ({ id, manifest }) => {
     const texts = new Set();
     const addText = (score, text) => {
         if (text) {
@@ -849,16 +886,16 @@ const addonToSearchItem = ({id, manifest}) => {
 };
 
 class AddonList extends React.Component {
-    constructor (props) {
+    constructor(props) {
         super(props);
         this.search = new Search(this.props.addons.map(addonToSearchItem));
         this.groups = [];
     }
-    render () {
+    render() {
         if (this.props.search) {
             const addons = this.search.search(this.props.search)
                 .slice(0, 20)
-                .map(({index}) => this.props.addons[index]);
+                .map(({ index }) => this.props.addons[index]);
             if (addons.length === 0) {
                 return (
                     <div className={styles.noResults}>
@@ -871,19 +908,21 @@ class AddonList extends React.Component {
                     <InternalAddonList
                         addons={addons}
                         extended={this.props.extended}
+                        onDelete={this.props.onDelete}
                     />
                 </div>
             );
         }
         return (
             <div>
-                {Object.entries(groupedAddons).map(([id, {label, addons, open}]) => (
+                {Object.entries(groupedAddons).map(([id, { label, addons, open }]) => (
                     <AddonGroup
                         key={id}
                         label={label}
                         open={open}
                         addons={addons.map(index => this.props.addons[index])}
                         extended={this.props.extended}
+                        onDelete={this.props.onDelete}
                     />
                 ))}
             </div>
@@ -897,11 +936,12 @@ AddonList.propTypes = {
         manifest: PropTypes.shape({}).isRequired
     })).isRequired,
     search: PropTypes.string.isRequired,
-    extended: PropTypes.bool.isRequired
+    extended: PropTypes.bool.isRequired,
+    onDelete: PropTypes.func
 };
 
 class AddonSettingsComponent extends React.Component {
-    constructor (props) {
+    constructor(props) {
         super(props);
         this.handleSettingStoreChanged = this.handleSettingStoreChanged.bind(this);
         this.handleReloadNow = this.handleReloadNow.bind(this);
@@ -912,6 +952,8 @@ class AddonSettingsComponent extends React.Component {
         this.handleSearch = this.handleSearch.bind(this);
         this.handleClickSearchButton = this.handleClickSearchButton.bind(this);
         this.handleClickVersion = this.handleClickVersion.bind(this);
+        this.handleCustomImportSuccess = this.handleCustomImportSuccess.bind(this);
+        this.handleCustomAddonDeleted = this.handleCustomAddonDeleted.bind(this);
         this.searchRef = this.searchRef.bind(this);
         this.searchBar = null;
         this.state = {
@@ -928,20 +970,20 @@ class AddonSettingsComponent extends React.Component {
             });
         }
     }
-    componentDidMount () {
+    componentDidMount() {
         SettingsStore.addEventListener('setting-changed', this.handleSettingStoreChanged);
         document.body.addEventListener('keydown', this.handleKeyDown);
     }
-    componentDidUpdate (prevProps, prevState) {
+    componentDidUpdate(prevProps, prevState) {
         if (this.state.search !== prevState.search) {
             clearHash();
         }
     }
-    componentWillUnmount () {
+    componentWillUnmount() {
         SettingsStore.removeEventListener('setting-changed', this.handleSettingStoreChanged);
         document.body.removeEventListener('keydown', this.handleKeyDown);
     }
-    readFullAddonState () {
+    readFullAddonState() {
         const result = {};
         for (const [id, manifest] of Object.entries(supportedAddons)) {
             const enabled = SettingsStore.getAddonEnabled(id);
@@ -958,8 +1000,8 @@ class AddonSettingsComponent extends React.Component {
         }
         return result;
     }
-    handleSettingStoreChanged (e) {
-        const {addonId, settingId, value} = e.detail;
+    handleSettingStoreChanged(e) {
+        const { addonId, settingId, value } = e.detail;
         // If channels are unavailable, every change requires reload.
         const reloadRequired = e.detail.reloadRequired || !Channels.changeChannel;
         this.setState(state => {
@@ -979,7 +1021,7 @@ class AddonSettingsComponent extends React.Component {
             postThrottledSettingsChange(SettingsStore.store);
         }
     }
-    handleReloadNow () {
+    handleReloadNow() {
         // Value posted does not matter
         Channels.reloadChannel.postMessage(0);
         this.setState({
@@ -996,7 +1038,7 @@ class AddonSettingsComponent extends React.Component {
             }
         }
     }
-    handleResetAll () {
+    handleResetAll() {
         if (confirm(settingsTranslations.confirmResetAll)) {
             SettingsStore.resetAllAddons();
             this.setState({
@@ -1004,13 +1046,13 @@ class AddonSettingsComponent extends React.Component {
             });
         }
     }
-    handleExport () {
+    handleExport() {
         const exportedData = SettingsStore.export({
             theme
         });
         this.props.onExportSettings(exportedData);
     }
-    handleImport () {
+    handleImport() {
         const fileSelector = document.createElement('input');
         fileSelector.type = 'file';
         fileSelector.accept = '.json';
@@ -1035,24 +1077,24 @@ class AddonSettingsComponent extends React.Component {
             }
         });
     }
-    handleSearch (e) {
+    handleSearch(e) {
         const value = e.target.value;
         this.setState({
             search: value
         });
     }
-    handleClickSearchButton () {
+    handleClickSearchButton() {
         this.setState({
             search: ''
         });
         this.searchBar.focus();
     }
-    handleClickVersion () {
+    handleClickVersion() {
         this.setState({
             extended: !this.state.extended
         });
     }
-    searchRef (searchBar) {
+    searchRef(searchBar) {
         this.searchBar = searchBar;
 
         // Only focus search bar if we have no initial search
@@ -1060,7 +1102,7 @@ class AddonSettingsComponent extends React.Component {
             searchBar.focus();
         }
     }
-    handleKeyDown (e) {
+    handleKeyDown(e) {
         const key = e.key;
         if (key.length === 1 && key !== ' ' && e.target === document.body && !(e.ctrlKey || e.metaKey || e.altKey)) {
             this.searchBar.focus();
@@ -1072,7 +1114,24 @@ class AddonSettingsComponent extends React.Component {
             e.preventDefault();
         }
     }
-    render () {
+    handleCustomImportSuccess(addonId) {
+        // Reload the page to show the new addon
+        window.location.reload();
+    }
+    handleCustomAddonDeleted(addonId, addonName) {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete "${addonName}"? This action cannot be undone.`
+        );
+
+        if (confirmed) {
+            removeCustomAddon(addonId).then(() => {
+                window.location.reload();
+            }).catch(err => {
+                alert(`Failed to delete addon: ${err.message}`);
+            });
+        }
+    }
+    render() {
         const addonState = Object.entries(supportedAddons).map(([id, manifest]) => ({
             id,
             manifest,
@@ -1121,10 +1180,23 @@ class AddonSettingsComponent extends React.Component {
                 <div className={styles.addons}>
                     {!this.state.loading && (
                         <div className={styles.section}>
+                            <CustomAddonImport
+                                translations={{
+                                    selectFolder: settingsTranslations.customAddonSelectFolder || 'Select Folder',
+                                    importZip: settingsTranslations.customAddonImportZip || 'Import ZIP',
+                                    importing: settingsTranslations.customAddonImporting || 'Importing...'
+                                }}
+                                onImportSuccess={this.handleCustomImportSuccess}
+                            />
+                        </div>
+                    )}
+                    {!this.state.loading && (
+                        <div className={styles.section}>
                             <AddonList
                                 addons={addonState}
                                 search={this.state.search}
                                 extended={this.state.extended}
+                                onDelete={this.handleCustomAddonDeleted}
                             />
                             <div className={styles.footerButtons}>
                                 <button

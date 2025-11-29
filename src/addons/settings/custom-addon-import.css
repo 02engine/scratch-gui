@@ -1,0 +1,75 @@
+.customImportContainer {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: var(--ui-white);
+    border: 1px solid var(--ui-black-transparent, hsla(0, 0%, 0%, 0.15));
+    border-radius: 0.5rem;
+}
+
+.importButtons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.button {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.importButton {
+    background: var(--motion-primary, hsla(215, 100%, 65%, 1));
+    color: white;
+}
+
+.importButton:hover:not(:disabled) {
+    filter: brightness(0.9);
+}
+
+.importButton:active:not(:disabled) {
+    filter: brightness(0.8);
+}
+
+.importButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.message {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.messageSuccess {
+    background: hsla(163, 85%, 40%, 0.15);
+    border: 1px solid hsla(163, 85%, 40%, 0.35);
+    color: hsla(163, 85%, 25%, 1);
+}
+
+[theme="dark"] .messageSuccess {
+    background: hsla(163, 85%, 40%, 0.25);
+    border-color: hsla(163, 85%, 40%, 0.45);
+    color: hsla(163, 85%, 80%, 1);
+}
+
+.messageError {
+    background: hsla(20, 100%, 55%, 0.15);
+    border: 1px solid hsla(20, 100%, 55%, 0.35);
+    color: hsla(20, 100%, 30%, 1);
+}
+
+[theme="dark"] .messageError {
+    background: hsla(20, 100%, 55%, 0.25);
+    border-color: hsla(20, 100%, 55%, 0.45);
+    color: hsla(20, 100%, 75%, 1);
+}

@@ -1,0 +1,124 @@
+.customAddonListContainer {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: var(--ui-white);
+    border: 1px solid var(--ui-black-transparent, hsla(0, 0%, 0%, 0.15));
+    border-radius: 0.5rem;
+}
+
+.listHeader {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary, hsla(225, 15%, 40%, 1));
+}
+
+[theme="dark"] .listHeader {
+    color: var(--text-primary-dark, hsla(0, 0%, 95%, 1));
+}
+
+.emptyMessage {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-primary-transparent, hsla(225, 15%, 40%, 0.6));
+    font-size: 0.875rem;
+}
+
+.addonList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.addonItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem;
+    background: var(--ui-secondary, hsla(0, 0%, 0%, 0.05));
+    border-radius: 0.375rem;
+    border: 1px solid var(--ui-black-transparent, hsla(0, 0%, 0%, 0.1));
+    transition: all 0.2s ease;
+}
+
+.addonItem:hover {
+    background: var(--ui-secondary-transparent, hsla(0, 0%, 0%, 0.08));
+}
+
+[theme="dark"] .addonItem {
+    background: hsla(0, 0%, 100%, 0.05);
+    border-color: hsla(0, 0%, 100%, 0.1);
+}
+
+[theme="dark"] .addonItem:hover {
+    background: hsla(0, 0%, 100%, 0.08);
+}
+
+.addonInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.addonName {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text-primary, hsla(225, 15%, 40%, 1));
+    margin-bottom: 0.25rem;
+}
+
+[theme="dark"] .addonName {
+    color: var(--text-primary-dark, hsla(0, 0%, 95%, 1));
+}
+
+.addonDescription {
+    font-size: 0.8125rem;
+    color: var(--text-primary-transparent, hsla(225, 15%, 40%, 0.75));
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+[theme="dark"] .addonDescription {
+    color: hsla(0, 0%, 95%, 0.75);
+}
+
+.addonId {
+    font-size: 0.75rem;
+    color: var(--text-primary-transparent, hsla(225, 15%, 40%, 0.5));
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+
+[theme="dark"] .addonId {
+    color: hsla(0, 0%, 95%, 0.5);
+}
+
+.button {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.deleteButton {
+    background: hsla(0, 90%, 60%, 1);
+    color: white;
+    min-width: 80px;
+}
+
+.deleteButton:hover:not(:disabled) {
+    background: hsla(0, 90%, 55%, 1);
+}
+
+.deleteButton:active:not(:disabled) {
+    background: hsla(0, 90%, 50%, 1);
+}
+
+.deleteButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
