@@ -199,18 +199,43 @@ const GitHubOAuthModal = props => {
             setError('');
 
             // 检查是否在 Electron 环境中
-            const isElectron = typeof window.EditorPreload !== 'undefined';
-            
-            if (isElectron) {
-                // 在 Electron 环境中，启动 OAuth 并等待结果
-                const result = await githubOAuth.startOAuth(CLIENT_ID);
-                setUserInfo({
-                    ...result.user,
-                    email: result.email
-                });
-
-                onSuccess && onSuccess(result);
-            } else {
+    const isElectron = typeof window.EditorPreload !== 'undefined';
+    
+    if (isElectron) {
+        // 在 Electron 环境中，设置事件监听器
+        const handleOAuthCompleted = (data) => {
+            console.log('收到桌面端OAuth完成事件:', data);
+            setUserInfo({
+                ...data.user,
+                email: data.email
+            });
+            setIsAuthenticating(false);
+            onSuccess && onSuccess(data);
+        };
+        
+        const handleOAuthError = (data) => {
+            console.error('收到桌面端OAuth错误事件:', data);
+            setError(data.error || 'OAuth认证失败');
+            setIsAuthenticating(false);
+            onError && onError(new Error(data.error || 'OAuth认证失败'));
+        };
+        
+        // 设置事件监听器
+        window.EditorPreload.onOAuthCompleted(handleOAuthCompleted);
+        window.EditorPreload.onOAuthError(handleOAuthError);
+        
+        // 启动 OAuth
+        const result = await githubOAuth.startOAuth(CLIENT_ID);
+        
+        // 如果startOAuth立即返回了结果（不应该发生），处理它
+        if (result) {
+            setUserInfo({
+                ...result.user,
+                email: result.email
+            });
+            onSuccess && onSuccess(result);
+        }
+    } else {
                 // 在浏览器环境中，启动 OAuth（这将重定向页面）
                 await githubOAuth.startOAuth(CLIENT_ID);
             }
