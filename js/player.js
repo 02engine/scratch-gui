@@ -11900,12 +11900,36 @@ const GitHubOAuthModal = props => {
       // 检查是否在 Electron 环境中
       const isElectron = typeof window.EditorPreload !== 'undefined';
       if (isElectron) {
-        // 在 Electron 环境中，启动 OAuth 并等待结果
+        // 在 Electron 环境中，设置事件监听器
+        const handleOAuthCompleted = data => {
+          console.log('收到桌面端OAuth完成事件:', data);
+          setUserInfo(_objectSpread(_objectSpread({}, data.user), {}, {
+            email: data.email
+          }));
+          setIsAuthenticating(false);
+          onSuccess && onSuccess(data);
+        };
+        const handleOAuthError = data => {
+          console.error('收到桌面端OAuth错误事件:', data);
+          setError(data.error || 'OAuth认证失败');
+          setIsAuthenticating(false);
+          onError && onError(new Error(data.error || 'OAuth认证失败'));
+        };
+
+        // 设置事件监听器
+        window.EditorPreload.onOAuthCompleted(handleOAuthCompleted);
+        window.EditorPreload.onOAuthError(handleOAuthError);
+
+        // 启动 OAuth
         const result = await _lib_github_oauth_js__WEBPACK_IMPORTED_MODULE_9__["default"].startOAuth(CLIENT_ID);
-        setUserInfo(_objectSpread(_objectSpread({}, result.user), {}, {
-          email: result.email
-        }));
-        onSuccess && onSuccess(result);
+
+        // 如果startOAuth立即返回了结果（不应该发生），处理它
+        if (result) {
+          setUserInfo(_objectSpread(_objectSpread({}, result.user), {}, {
+            email: result.email
+          }));
+          onSuccess && onSuccess(result);
+        }
       } else {
         // 在浏览器环境中，启动 OAuth（这将重定向页面）
         await _lib_github_oauth_js__WEBPACK_IMPORTED_MODULE_9__["default"].startOAuth(CLIENT_ID);
@@ -45287,16 +45311,19 @@ class GitHubOAuthService {
     try {
       // 检查是否在 Electron 环境中
       if (this.isElectron) {
-        // 在 Electron 中，使用 shell.openExternal 打开系统浏览器
-        if (window.EditorPreload && typeof window.EditorPreload.openExternalUrl === 'function') {
+        // 在 Electron 中，启动 OAuth 窗口
+        if (window.EditorPreload && typeof window.EditorPreload.openOAuthWindow === 'function') {
+          await window.EditorPreload.openOAuthWindow('https://idyllic-kangaroo-a50663.netlify.app/');
+        } else if (window.EditorPreload && typeof window.EditorPreload.openExternalUrl === 'function') {
+          // 备用方案：使用 openExternalUrl
           await window.EditorPreload.openExternalUrl('https://idyllic-kangaroo-a50663.netlify.app/');
         } else {
-          // 如果没有 openExternal 方法，则尝试使用 window.open，这将打开系统浏览器
+          // 如果没有相关方法，则尝试使用 window.open
           window.open('https://idyllic-kangaroo-a50663.netlify.app/', '_system');
         }
 
-        // 启动轮询检查 localStorage 中的 token，并返回结果
-        return await this.pollForLocalStorageToken();
+        // 监听桌面端的 OAuth 结果
+        return await this.listenForDesktopOAuth();
       } else {
         // 在浏览器环境中，生成 PKCE 挑战码
         const codeVerifier = this.generateRandomString(128);
@@ -45376,50 +45403,32 @@ class GitHubOAuthService {
   }
 
   /**
-   * 轮询检查 localStorage 中的 token
+   * 监听来自桌面端的 OAuth 结果
    * @returns {Promise<Object>} 用户信息
    */
-  async pollForLocalStorageToken() {
+  listenForDesktopOAuth() {
     return new Promise((resolve, reject) => {
+      if (!this.isElectron) {
+        reject(new Error('Not in Electron environment'));
+        return;
+      }
       const maxAttempts = 180; // 最多等待 90 秒 (180 次 * 500ms)
       let attempts = 0;
-      const poll = async () => {
+      const checkOAuthResult = () => {
         attempts++;
         if (attempts > maxAttempts) {
           reject(new Error('OAuth timeout: No token received within 90 seconds'));
           return;
         }
-        try {
-          // 检查是否在 localStorage 中存在 OAuth 相关信息（从 oauth-proxy 页面写入的）
-          const token = localStorage.getItem('oauth_token_received');
-          const user = localStorage.getItem('github_user');
-          const email = localStorage.getItem('github_email');
-          if (token && user && email) {
-            // 清除临时存储
-            localStorage.removeItem('oauth_token_received');
 
-            // 保存到正常的存储位置
-            localStorage.setItem(this.tokenStorageKey, token);
-            localStorage.setItem(this.userStorageKey, user);
-            localStorage.setItem(this.emailStorageKey, email);
-
-            // 返回用户信息
-            const userInfo = JSON.parse(user);
-            resolve({
-              user: userInfo,
-              email,
-              token
-            });
-            return;
-          }
-        } catch (error) {
-          console.error('Error checking for token in localStorage:', error);
-        }
-        setTimeout(poll, 500); // 每 500ms 检查一次
+        // 检查是否已经收到 OAuth 完成信号
+        // 这个检查由 GUI 的事件监听器处理
+        console.log("\u7B49\u5F85\u684C\u9762\u7AEFOAuth\u7ED3\u679C\uFF0C\u7B2C".concat(attempts, "\u6B21\u68C0\u67E5..."));
+        setTimeout(checkOAuthResult, 500); // 每 500ms 检查一次
       };
 
-      // 立即开始轮询，然后定期检查
-      poll();
+      // 立即开始检查
+      checkOAuthResult();
     });
   }
 
