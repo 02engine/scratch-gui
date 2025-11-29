@@ -4260,6 +4260,372 @@ const manifest = {
 
 /***/ }),
 
+/***/ "./src/addons/custom-addon-runtime.js":
+/*!********************************************!*\
+  !*** ./src/addons/custom-addon-runtime.js ***!
+  \********************************************/
+/*! exports provided: getCustomAddonManifests, getCustomAddonResources, isCustomAddon, getAllCustomAddonIds, removeCustomAddon, clearBlobURLCache, reloadCustomAddon */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getCustomAddonManifests", function() { return getCustomAddonManifests; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getCustomAddonResources", function() { return getCustomAddonResources; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isCustomAddon", function() { return isCustomAddon; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getAllCustomAddonIds", function() { return getAllCustomAddonIds; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "removeCustomAddon", function() { return removeCustomAddon; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "clearBlobURLCache", function() { return clearBlobURLCache; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "reloadCustomAddon", function() { return reloadCustomAddon; });
+/* harmony import */ var _custom_addon_storage_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./custom-addon-storage.js */ "./src/addons/custom-addon-storage.js");
+/**
+ * Custom Addon Runtime
+ * Provides runtime resources for custom addons
+ */
+
+
+
+// Cache for blob URLs to prevent recreating them
+const blobURLCache = new Map();
+
+/**
+ * Get custom addon manifests for settings
+ * @returns {Object} {addonId: manifest}
+ */
+function getCustomAddonManifests() {
+  return _custom_addon_storage_js__WEBPACK_IMPORTED_MODULE_0__["default"].getAllManifests();
+}
+
+/**
+ * Get runtime resources for a custom addon
+ * @param {string} addonId - Addon ID
+ * @returns {Promise<Object>} {resources: {filename: url}}
+ */
+async function getCustomAddonResources(addonId) {
+  // Check cache first
+  if (blobURLCache.has(addonId)) {
+    return {
+      resources: blobURLCache.get(addonId)
+    };
+  }
+
+  // Create blob URLs for addon files
+  const blobURLs = await _custom_addon_storage_js__WEBPACK_IMPORTED_MODULE_0__["default"].createBlobURLs(addonId);
+  if (!blobURLs) {
+    return null;
+  }
+
+  // Cache the blob URLs
+  blobURLCache.set(addonId, blobURLs);
+  return {
+    resources: blobURLs
+  };
+}
+
+/**
+ * Check if an addon is a custom addon
+ * @param {string} addonId - Addon ID
+ * @returns {boolean}
+ */
+function isCustomAddon(addonId) {
+  return _custom_addon_storage_js__WEBPACK_IMPORTED_MODULE_0__["default"].hasAddon(addonId);
+}
+
+/**
+ * Get all custom addon IDs
+ * @returns {Array<string>}
+ */
+function getAllCustomAddonIds() {
+  return _custom_addon_storage_js__WEBPACK_IMPORTED_MODULE_0__["default"].getAllAddonIds();
+}
+
+/**
+ * Remove a custom addon
+ * @param {string} addonId - Addon ID
+ * @returns {Promise<boolean>}
+ */
+async function removeCustomAddon(addonId) {
+  // Revoke blob URLs
+  if (blobURLCache.has(addonId)) {
+    const urls = blobURLCache.get(addonId);
+    Object.values(urls).forEach(url => URL.revokeObjectURL(url));
+    blobURLCache.delete(addonId);
+  }
+
+  // Remove from storage
+  return await _custom_addon_storage_js__WEBPACK_IMPORTED_MODULE_0__["default"].removeAddon(addonId);
+}
+
+/**
+ * Clear blob URL cache (for cleanup)
+ */
+function clearBlobURLCache() {
+  blobURLCache.forEach(urls => {
+    Object.values(urls).forEach(url => URL.revokeObjectURL(url));
+  });
+  blobURLCache.clear();
+}
+
+/**
+ * Reload a custom addon (recreate blob URLs)
+ * @param {string} addonId - Addon ID
+ */
+async function reloadCustomAddon(addonId) {
+  // Clear cache for this addon
+  if (blobURLCache.has(addonId)) {
+    const urls = blobURLCache.get(addonId);
+    Object.values(urls).forEach(url => URL.revokeObjectURL(url));
+    blobURLCache.delete(addonId);
+  }
+
+  // Recreate blob URLs
+  return await getCustomAddonResources(addonId);
+}
+
+/***/ }),
+
+/***/ "./src/addons/custom-addon-storage.js":
+/*!********************************************!*\
+  !*** ./src/addons/custom-addon-storage.js ***!
+  \********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * Custom Addon Storage Manager
+ * Manages persistent storage of custom addons using LocalStorage and IndexedDB
+ */
+
+const DB_NAME = 'CustomAddonsDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'addonFiles';
+const LOCALSTORAGE_KEY = 'customAddonsMetadata';
+class CustomAddonStorage {
+  constructor() {
+    this.db = null;
+    this.initPromise = this.initDB();
+  }
+
+  /**
+   * Initialize IndexedDB
+   */
+  async initDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve(this.db);
+      };
+      request.onupgradeneeded = event => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME);
+        }
+      };
+    });
+  }
+
+  /**
+   * Save a custom addon
+   * @param {string} id - Addon ID
+   * @param {Object} manifest - Addon manifest
+   * @param {Object} files - File contents {filename: content}
+   */
+  async saveAddon(id, manifest, files) {
+    await this.initPromise;
+
+    // Save files to IndexedDB
+    const transaction = this.db.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const filePromises = Object.entries(files).map(_ref => {
+      let [filename, content] = _ref;
+      const key = "".concat(id, "/").concat(filename);
+      return new Promise((resolve, reject) => {
+        const request = store.put(content, key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    });
+    await Promise.all(filePromises);
+
+    // Save metadata to LocalStorage
+    const metadata = this.getMetadata();
+    metadata[id] = {
+      manifest,
+      fileNames: Object.keys(files),
+      installTime: Date.now(),
+      enabled: true
+    };
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(metadata));
+    return true;
+  }
+
+  /**
+   * Get an addon's data
+   * @param {string} id - Addon ID
+   * @returns {Object} {manifest, files}
+   */
+  async getAddon(id) {
+    await this.initPromise;
+    const metadata = this.getMetadata();
+    const addonMeta = metadata[id];
+    if (!addonMeta) {
+      return null;
+    }
+
+    // Retrieve files from IndexedDB
+    const transaction = this.db.transaction([STORE_NAME], 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const files = {};
+    const filePromises = addonMeta.fileNames.map(filename => {
+      const key = "".concat(id, "/").concat(filename);
+      return new Promise((resolve, reject) => {
+        const request = store.get(key);
+        request.onsuccess = () => {
+          files[filename] = request.result;
+          resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
+    });
+    await Promise.all(filePromises);
+    return {
+      manifest: addonMeta.manifest,
+      files,
+      enabled: addonMeta.enabled,
+      installTime: addonMeta.installTime
+    };
+  }
+
+  /**
+   * Remove an addon
+   * @param {string} id - Addon ID
+   */
+  async removeAddon(id) {
+    await this.initPromise;
+    const metadata = this.getMetadata();
+    const addonMeta = metadata[id];
+    if (!addonMeta) {
+      return false;
+    }
+
+    // Remove files from IndexedDB
+    const transaction = this.db.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const deletePromises = addonMeta.fileNames.map(filename => {
+      const key = "".concat(id, "/").concat(filename);
+      return new Promise((resolve, reject) => {
+        const request = store.delete(key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    });
+    await Promise.all(deletePromises);
+
+    // Remove metadata
+    delete metadata[id];
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(metadata));
+    return true;
+  }
+
+  /**
+   * Get all custom addon IDs
+   * @returns {Array<string>}
+   */
+  getAllAddonIds() {
+    const metadata = this.getMetadata();
+    return Object.keys(metadata);
+  }
+
+  /**
+   * Get all custom addon manifests
+   * @returns {Object} {addonId: manifest}
+   */
+  getAllManifests() {
+    const metadata = this.getMetadata();
+    const manifests = {};
+    for (const [id, data] of Object.entries(metadata)) {
+      manifests[id] = data.manifest;
+    }
+    return manifests;
+  }
+
+  /**
+   * Check if an addon exists
+   * @param {string} id - Addon ID
+   * @returns {boolean}
+   */
+  hasAddon(id) {
+    const metadata = this.getMetadata();
+    return id in metadata;
+  }
+
+  /**
+   * Set addon enabled state
+   * @param {string} id - Addon ID
+   * @param {boolean} enabled - Enabled state
+   */
+  setAddonEnabled(id, enabled) {
+    const metadata = this.getMetadata();
+    if (metadata[id]) {
+      metadata[id].enabled = enabled;
+      localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(metadata));
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get metadata from LocalStorage
+   * @private
+   */
+  getMetadata() {
+    try {
+      const data = localStorage.getItem(LOCALSTORAGE_KEY);
+      return data ? JSON.parse(data) : {};
+    } catch (e) {
+      console.error('Error reading custom addons metadata:', e);
+      return {};
+    }
+  }
+
+  /**
+   * Create blob URLs for addon files
+   * @param {string} id - Addon ID
+   * @returns {Object} {filename: blobURL}
+   */
+  async createBlobURLs(id) {
+    const addon = await this.getAddon(id);
+    if (!addon) return null;
+    const blobURLs = {};
+    for (const [filename, content] of Object.entries(addon.files)) {
+      let mimeType = 'text/plain';
+      if (filename.endsWith('.js')) {
+        mimeType = 'application/javascript';
+      } else if (filename.endsWith('.css')) {
+        mimeType = 'text/css';
+      } else if (filename.endsWith('.svg')) {
+        mimeType = 'image/svg+xml';
+      } else if (filename.endsWith('.png')) {
+        mimeType = 'image/png';
+      }
+      const blob = new Blob([content], {
+        type: mimeType
+      });
+      blobURLs[filename] = URL.createObjectURL(blob);
+    }
+    return blobURLs;
+  }
+}
+
+// Create singleton instance
+const customAddonStorage = new CustomAddonStorage();
+/* harmony default export */ __webpack_exports__["default"] = (customAddonStorage);
+
+/***/ }),
+
 /***/ "./src/addons/environment.js":
 /*!***********************************!*\
   !*** ./src/addons/environment.js ***!
@@ -4619,9 +4985,10 @@ if (urlParameters.has('addons')) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _generated_addon_manifests__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/addon-manifests */ "./src/addons/generated/addon-manifests.js");
-/* harmony import */ var _generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./generated/upstream-meta.json */ "./src/addons/generated/upstream-meta.json");
-var _generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_1___namespace = /*#__PURE__*/__webpack_require__.t(/*! ./generated/upstream-meta.json */ "./src/addons/generated/upstream-meta.json", 1);
-/* harmony import */ var _event_target__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./event-target */ "./src/addons/event-target.js");
+/* harmony import */ var _custom_addon_runtime_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./custom-addon-runtime.js */ "./src/addons/custom-addon-runtime.js");
+/* harmony import */ var _generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./generated/upstream-meta.json */ "./src/addons/generated/upstream-meta.json");
+var _generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_2___namespace = /*#__PURE__*/__webpack_require__.t(/*! ./generated/upstream-meta.json */ "./src/addons/generated/upstream-meta.json", 1);
+/* harmony import */ var _event_target__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./event-target */ "./src/addons/event-target.js");
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
@@ -4646,6 +5013,14 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 
 
 
+
+
+// Merge built-in and custom addons
+const getAllAddons = () => {
+  const customAddons = Object(_custom_addon_runtime_js__WEBPACK_IMPORTED_MODULE_1__["getCustomAddonManifests"])();
+  return _objectSpread(_objectSpread({}, _generated_addon_manifests__WEBPACK_IMPORTED_MODULE_0__["default"]), customAddons);
+};
+const allAddons = getAllAddons();
 const SETTINGS_KEY = 'tw:addons';
 const VERSION = 5;
 const migrateSettings = settings => {
@@ -4732,7 +5107,7 @@ const asArray = v => {
   }
   return [v];
 };
-class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_2__["default"] {
+class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
   constructor() {
     super();
     this.store = this.createEmptyStore();
@@ -4744,7 +5119,7 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_2__["default"
    */
   createEmptyStore() {
     const result = {};
-    for (const addonId of Object.keys(_generated_addon_manifests__WEBPACK_IMPORTED_MODULE_0__["default"])) {
+    for (const addonId of Object.keys(allAddons)) {
       result[addonId] = {};
     }
     return result;
@@ -4784,7 +5159,7 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_2__["default"
       const result = {
         _: VERSION
       };
-      for (const addonId of Object.keys(_generated_addon_manifests__WEBPACK_IMPORTED_MODULE_0__["default"])) {
+      for (const addonId of Object.keys(allAddons)) {
         const data = this.getAddonStorage(addonId);
         if (Object.keys(data).length > 0) {
           result[addonId] = data;
@@ -4810,8 +5185,8 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_2__["default"
    * @private
    */
   getAddonManifest(addonId) {
-    if (_generated_addon_manifests__WEBPACK_IMPORTED_MODULE_0__["default"][addonId]) {
-      return _generated_addon_manifests__WEBPACK_IMPORTED_MODULE_0__["default"][addonId];
+    if (allAddons[addonId]) {
+      return allAddons[addonId];
     }
     throw new Error("Unknown addon: ".concat(addonId));
   }
@@ -4966,7 +5341,7 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_2__["default"
     throw new Error("Unknown preset: ".concat(presetId));
   }
   resetAllAddons() {
-    for (const addon of Object.keys(_generated_addon_manifests__WEBPACK_IMPORTED_MODULE_0__["default"])) {
+    for (const addon of Object.keys(allAddons)) {
       this.resetAddon(addon, true);
     }
     // In case resetAddon missed some properties, do a hard reset on storage.
@@ -4992,7 +5367,7 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_2__["default"
   parseUrlParameter(parameter) {
     this.remote = true;
     const enabled = parameter.split(',');
-    for (const id of Object.keys(_generated_addon_manifests__WEBPACK_IMPORTED_MODULE_0__["default"])) {
+    for (const id of Object.keys(allAddons)) {
       this.setAddonEnabled(id, enabled.includes(id));
     }
   }
@@ -5005,11 +5380,11 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_2__["default"
         // Upstream property. We don't use this.
         lightTheme: !theme.isDark(),
         // Doesn't matter what we set this to
-        version: "v1.0.0-tw-".concat(_generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_1__.commit)
+        version: "v1.0.0-tw-".concat(_generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_2__.commit)
       },
       addons: {}
     };
-    for (const [addonId, manifest] of Object.entries(_generated_addon_manifests__WEBPACK_IMPORTED_MODULE_0__["default"])) {
+    for (const [addonId, manifest] of Object.entries(allAddons)) {
       const enabled = this.getAddonEnabled(addonId);
       const settings = {};
       if (manifest.settings) {
@@ -5028,7 +5403,7 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_2__["default"
   }
   import(data) {
     for (const [addonId, value] of Object.entries(data.addons)) {
-      if (!Object.prototype.hasOwnProperty.call(_generated_addon_manifests__WEBPACK_IMPORTED_MODULE_0__["default"], addonId)) {
+      if (!Object.prototype.hasOwnProperty.call(allAddons, addonId)) {
         continue;
       }
       const {
@@ -5052,7 +5427,7 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_2__["default"
       version,
       store
     } = _ref2;
-    if (version !== _generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_1__.commit) {
+    if (version !== _generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_2__.commit) {
       return;
     }
     this.setStore(store);
