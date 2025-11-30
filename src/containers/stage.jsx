@@ -91,6 +91,11 @@ class Stage extends React.Component {
         this.attachMouseEvents(this.canvas);
         this.updateRect();
         this.props.vm.runtime.addListener('QUESTION', this.questionListener);
+        // Reset all addon seen elements and rerun userscripts to re-initialize after stage remount
+        if (window.addonAPI) {
+            window.addonAPI.resetAllSeenElements();
+            window.addonAPI.rerunAllUserscripts();
+        }
     }
     shouldComponentUpdate (nextProps, nextState) {
         return this.props.stageSize !== nextProps.stageSize ||

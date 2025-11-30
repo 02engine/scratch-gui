@@ -4,6 +4,7 @@ export default async function ({ addon, console, msg }) {
 
   const container = document.createElement("div");
   container.className = "sa-search-sprites-container";
+  container.dataset.saId = "addon-search-sprites-container";
   addon.tab.displayNoneWhileDisabled(container, {
     display: "flex",
   });

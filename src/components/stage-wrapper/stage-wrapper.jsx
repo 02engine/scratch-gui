@@ -68,4 +68,4 @@ StageWrapperComponent.propTypes = {
     vm: PropTypes.instanceOf(VM).isRequired
 };
 
-export default StageWrapperComponent;
+export default React.memo(StageWrapperComponent);

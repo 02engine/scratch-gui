@@ -7,6 +7,7 @@ export default async function ({ addon, console, msg }) {
   img.className = "pause-btn";
   img.draggable = false;
   img.title = msg("pause");
+  img.dataset.saId = `addon-pause-btn-${addon._id}`;
 
   const setSrc = () => {
     img.src = addon.self.getResource((isPaused() ? "/play.svg" : "/pause.svg")) /* rewritten by pull.js */;
