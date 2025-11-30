@@ -11939,7 +11939,7 @@ const GitHubOAuthModal = props => {
     _lib_github_oauth_js__WEBPACK_IMPORTED_MODULE_9__["default"].setBackendUrl(domainConfig.backendUrl);
   }, [domainConfig.backendUrl]);
 
-  // 组件初始化时检查是否已认证
+  // 组件初始化时检查是否已认证与订阅桌面端日志
   react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
     if (isOpen) {
       const savedUserInfo = _lib_github_oauth_js__WEBPACK_IMPORTED_MODULE_9__["default"].getUserInfo();
@@ -11954,6 +11954,20 @@ const GitHubOAuthModal = props => {
       if (params.has('code')) {
         handleOAuthCallback();
       }
+    }
+    // 订阅桌面端日志（仅在 Electron 环境）并通过 console.log 输出
+    if (isOpen && typeof window.EditorPreload !== 'undefined' && window.EditorPreload.onDesktopLog) {
+      const unsub = window.EditorPreload.onDesktopLog(data => {
+        try {
+          const line = "[".concat(new Date(data.timestamp).toLocaleTimeString(), "] ").concat(String(data.level).toUpperCase(), ": ").concat(data.message);
+          console.log('[Desktop OAuth]', line);
+        } catch (e) {
+          // ignore
+        }
+      });
+      return () => {
+        if (typeof unsub === 'function') unsub();
+      };
     }
   }, [isOpen]);
   const handleOAuthCallback = async () => {
@@ -11984,9 +11998,30 @@ const GitHubOAuthModal = props => {
         // 在 Electron 环境中，设置事件监听器
         const handleOAuthCompleted = data => {
           console.log('收到桌面端OAuth完成事件:', data);
-          setUserInfo(_objectSpread(_objectSpread({}, data.user), {}, {
-            email: data.email
-          }));
+          // 如果拿到 token，就存入 localStorage 并重载界面
+          if (data && data.token) {
+            try {
+              localStorage.setItem('github_token', data.token);
+              console.log('[Desktop OAuth] 存储 github_token 到 localStorage');
+            } catch (e) {
+              console.error('[Desktop OAuth] 存储 token 失败:', e);
+            }
+            // 小延迟后重载以让应用读取新 token
+            setTimeout(() => {
+              try {
+                window.location.reload();
+              } catch (e) {
+                console.error('[Desktop OAuth] 重载页面失败:', e);
+              }
+            }, 50);
+          }
+          if (data.user) {
+            setUserInfo(_objectSpread(_objectSpread({}, data.user), {}, {
+              email: data.email
+            }));
+          } else {
+            setUserInfo(null);
+          }
           setIsAuthenticating(false);
           onSuccess && onSuccess(data);
         };
@@ -45591,13 +45626,13 @@ class GitHubOAuthService {
       if (this.isElectron) {
         // 在 Electron 中，启动 OAuth 窗口
         if (window.EditorPreload && typeof window.EditorPreload.openOAuthWindow === 'function') {
-          await window.EditorPreload.openOAuthWindow('https://idyllic-kangaroo-a50663.netlify.app/');
+          await window.EditorPreload.openOAuthWindow('https://02engine-desktop-oauth-between.netlify.app/');
         } else if (window.EditorPreload && typeof window.EditorPreload.openExternalUrl === 'function') {
           // 备用方案：使用 openExternalUrl
-          await window.EditorPreload.openExternalUrl('https://idyllic-kangaroo-a50663.netlify.app/');
+          await window.EditorPreload.openExternalUrl('https://02engine-desktop-oauth-between.netlify.app/');
         } else {
           // 如果没有相关方法，则尝试使用 window.open
-          window.open('https://idyllic-kangaroo-a50663.netlify.app/', '_system');
+          window.open('https://02engine-desktop-oauth-between.netlify.app/', '_system');
         }
 
         // 监听桌面端的 OAuth 结果
@@ -45692,21 +45727,66 @@ class GitHubOAuthService {
       }
       const maxAttempts = 180; // 最多等待 90 秒 (180 次 * 500ms)
       let attempts = 0;
-      const checkOAuthResult = () => {
-        attempts++;
-        if (attempts > maxAttempts) {
+      let resolved = false;
+
+      // 设置超时处理
+      const timeoutHandle = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
           reject(new Error('OAuth timeout: No token received within 90 seconds'));
-          return;
         }
+      }, 90000);
 
-        // 检查是否已经收到 OAuth 完成信号
-        // 这个检查由 GUI 的事件监听器处理
-        console.log("\u7B49\u5F85\u684C\u9762\u7AEFOAuth\u7ED3\u679C\uFF0C\u7B2C".concat(attempts, "\u6B21\u68C0\u67E5..."));
-        setTimeout(checkOAuthResult, 500); // 每 500ms 检查一次
-      };
+      // 直接监听 IPC 事件，而不是盲目轮询
+      if (window.EditorPreload && typeof window.EditorPreload.onOAuthCompleted === 'function') {
+        window.EditorPreload.onOAuthCompleted(data => {
+          if (!resolved) {
+            var _data$token;
+            resolved = true;
+            clearTimeout(timeoutHandle);
+            console.log('[GitHub OAuth] Received token from desktop:', ((_data$token = data.token) === null || _data$token === void 0 ? void 0 : _data$token.substring(0, 20)) + '...');
 
-      // 立即开始检查
-      checkOAuthResult();
+            // 立即存入 localStorage（重复操作以确保）
+            if (data.token) {
+              localStorage.setItem(this.tokenStorageKey, data.token);
+              console.log('[GitHub OAuth] Token saved to localStorage');
+            }
+            resolve({
+              token: data.token
+            });
+          }
+        });
+      } else {
+        // 备用：轮询方案（如果 IPC 不可用）
+        const checkOAuthResult = () => {
+          attempts++;
+          if (attempts > maxAttempts) {
+            if (!resolved) {
+              resolved = true;
+              clearTimeout(timeoutHandle);
+              reject(new Error('OAuth timeout: No token received within 90 seconds'));
+            }
+            return;
+          }
+          console.log("[GitHub OAuth] Polling for token (attempt ".concat(attempts, "/").concat(maxAttempts, ")..."));
+
+          // 检查是否在 localStorage 中存在 token（备用方案）
+          const token = localStorage.getItem(this.tokenStorageKey);
+          if (token && !resolved) {
+            resolved = true;
+            clearTimeout(timeoutHandle);
+            console.log('[GitHub OAuth] Token found in localStorage via polling');
+            resolve({
+              token
+            });
+            return;
+          }
+          setTimeout(checkOAuthResult, 500); // 每 500ms 检查一次
+        };
+
+        // 立即开始检查
+        checkOAuthResult();
+      }
     });
   }
 
