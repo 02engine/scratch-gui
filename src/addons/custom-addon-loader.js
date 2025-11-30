@@ -3,7 +3,7 @@
  * Handles loading addons from folders and ZIP files
  */
 
-import JSZip from 'jszip';
+import JSZip from '@turbowarp/jszip';
 import customAddonStorage from './custom-addon-storage.js';
 import {
     validateManifest,
