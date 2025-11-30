@@ -153,7 +153,7 @@ const GitHubOAuthModal = props => {
         githubOAuth.setBackendUrl(domainConfig.backendUrl);
     }, [domainConfig.backendUrl]);
 
-    // 组件初始化时检查是否已认证
+    // 组件初始化时检查是否已认证与订阅桌面端日志
     React.useEffect(() => {
         if (isOpen) {
             const savedUserInfo = githubOAuth.getUserInfo();
@@ -169,6 +169,20 @@ const GitHubOAuthModal = props => {
             if (params.has('code')) {
                 handleOAuthCallback();
             }
+        }
+        // 订阅桌面端日志（仅在 Electron 环境）并通过 console.log 输出
+        if (isOpen && typeof window.EditorPreload !== 'undefined' && window.EditorPreload.onDesktopLog) {
+            const unsub = window.EditorPreload.onDesktopLog((data) => {
+                try {
+                    const line = `[${new Date(data.timestamp).toLocaleTimeString()}] ${String(data.level).toUpperCase()}: ${data.message}`;
+                    console.log('[Desktop OAuth]', line);
+                } catch (e) {
+                    // ignore
+                }
+            });
+            return () => {
+                if (typeof unsub === 'function') unsub();
+            };
         }
     }, [isOpen]);
 
@@ -205,10 +219,32 @@ const GitHubOAuthModal = props => {
         // 在 Electron 环境中，设置事件监听器
         const handleOAuthCompleted = (data) => {
             console.log('收到桌面端OAuth完成事件:', data);
-            setUserInfo({
-                ...data.user,
-                email: data.email
-            });
+            // 如果拿到 token，就存入 localStorage 并重载界面
+            if (data && data.token) {
+                try {
+                    localStorage.setItem('github_token', data.token);
+                    console.log('[Desktop OAuth] 存储 github_token 到 localStorage');
+                } catch (e) {
+                    console.error('[Desktop OAuth] 存储 token 失败:', e);
+                }
+                // 小延迟后重载以让应用读取新 token
+                setTimeout(() => {
+                    try {
+                        window.location.reload();
+                    } catch (e) {
+                        console.error('[Desktop OAuth] 重载页面失败:', e);
+                    }
+                }, 50);
+            }
+
+            if (data.user) {
+                setUserInfo({
+                    ...data.user,
+                    email: data.email
+                });
+            } else {
+                setUserInfo(null);
+            }
             setIsAuthenticating(false);
             onSuccess && onSuccess(data);
         };

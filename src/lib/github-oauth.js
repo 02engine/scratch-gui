@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GitHub OAuth 服务模块
  * 处理 GitHub OAuth 2.0 认证流程（使用 PKCE）
  */
@@ -70,13 +70,13 @@ class GitHubOAuthService {
             if (this.isElectron) {
                 // 在 Electron 中，启动 OAuth 窗口
                 if (window.EditorPreload && typeof window.EditorPreload.openOAuthWindow === 'function') {
-                    await window.EditorPreload.openOAuthWindow('https://idyllic-kangaroo-a50663.netlify.app/');
+                    await window.EditorPreload.openOAuthWindow('https://02engine-desktop-oauth-between.netlify.app/');
                 } else if (window.EditorPreload && typeof window.EditorPreload.openExternalUrl === 'function') {
                     // 备用方案：使用 openExternalUrl
-                    await window.EditorPreload.openExternalUrl('https://idyllic-kangaroo-a50663.netlify.app/');
+                    await window.EditorPreload.openExternalUrl('https://02engine-desktop-oauth-between.netlify.app/');
                 } else {
                     // 如果没有相关方法，则尝试使用 window.open
-                    window.open('https://idyllic-kangaroo-a50663.netlify.app/', '_system');
+                    window.open('https://02engine-desktop-oauth-between.netlify.app/', '_system');
                 }
                 
                 // 监听桌面端的 OAuth 结果
@@ -173,24 +173,66 @@ class GitHubOAuthService {
 
             const maxAttempts = 180; // 最多等待 90 秒 (180 次 * 500ms)
             let attempts = 0;
-            
-            const checkOAuthResult = () => {
-                attempts++;
-                
-                if (attempts > maxAttempts) {
+            let resolved = false;
+
+            // 设置超时处理
+            const timeoutHandle = setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
                     reject(new Error('OAuth timeout: No token received within 90 seconds'));
-                    return;
                 }
+            }, 90000);
 
-                // 检查是否已经收到 OAuth 完成信号
-                // 这个检查由 GUI 的事件监听器处理
-                console.log(`等待桌面端OAuth结果，第${attempts}次检查...`);
-                
-                setTimeout(checkOAuthResult, 500); // 每 500ms 检查一次
-            };
+            // 直接监听 IPC 事件，而不是盲目轮询
+            if (window.EditorPreload && typeof window.EditorPreload.onOAuthCompleted === 'function') {
+                window.EditorPreload.onOAuthCompleted((data) => {
+                    if (!resolved) {
+                        resolved = true;
+                        clearTimeout(timeoutHandle);
+                        
+                        console.log('[GitHub OAuth] Received token from desktop:', data.token?.substring(0, 20) + '...');
+                        
+                        // 立即存入 localStorage（重复操作以确保）
+                        if (data.token) {
+                            localStorage.setItem(this.tokenStorageKey, data.token);
+                            console.log('[GitHub OAuth] Token saved to localStorage');
+                        }
 
-            // 立即开始检查
-            checkOAuthResult();
+                        resolve({ token: data.token });
+                    }
+                });
+            } else {
+                // 备用：轮询方案（如果 IPC 不可用）
+                const checkOAuthResult = () => {
+                    attempts++;
+                    
+                    if (attempts > maxAttempts) {
+                        if (!resolved) {
+                            resolved = true;
+                            clearTimeout(timeoutHandle);
+                            reject(new Error('OAuth timeout: No token received within 90 seconds'));
+                        }
+                        return;
+                    }
+
+                    console.log(`[GitHub OAuth] Polling for token (attempt ${attempts}/${maxAttempts})...`);
+                    
+                    // 检查是否在 localStorage 中存在 token（备用方案）
+                    const token = localStorage.getItem(this.tokenStorageKey);
+                    if (token && !resolved) {
+                        resolved = true;
+                        clearTimeout(timeoutHandle);
+                        console.log('[GitHub OAuth] Token found in localStorage via polling');
+                        resolve({ token });
+                        return;
+                    }
+                    
+                    setTimeout(checkOAuthResult, 500); // 每 500ms 检查一次
+                };
+
+                // 立即开始检查
+                checkOAuthResult();
+            }
         });
     }
 
