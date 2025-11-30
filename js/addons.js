@@ -1219,6 +1219,7 @@ __webpack_require__.r(__webpack_exports__);
   img.className = "pause-btn";
   img.draggable = false;
   img.title = msg("pause");
+  img.dataset.saId = "addon-pause-btn-".concat(addon._id);
   const setSrc = () => {
     img.src = addon.self.getResource(Object(_debugger_module_js__WEBPACK_IMPORTED_MODULE_0__["isPaused"])() ? "/play.svg" : "/pause.svg") /* rewritten by pull.js */;
     img.title = Object(_debugger_module_js__WEBPACK_IMPORTED_MODULE_0__["isPaused"])() ? msg("play") : msg("pause");
@@ -1567,6 +1568,10 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
   get redux() {
     return _redux__WEBPACK_IMPORTED_MODULE_14__["default"];
   }
+  resetSeenElements() {
+    // Clear seen elements to allow re-detection after DOM changes
+    this._seenElements = new WeakSet();
+  }
   waitForElement(selector) {
     let {
       markAsSeen = false,
@@ -1634,6 +1639,14 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
       scope
     } = _ref2;
     const q = document.querySelector.bind(document);
+
+    // If element has a data-sa-id, remove any existing element with same id
+    if (element.dataset && element.dataset.saId) {
+      const existingElement = document.querySelector("[data-sa-id=\"".concat(element.dataset.saId, "\"]"));
+      if (existingElement) {
+        existingElement.remove();
+      }
+    }
     const SHARED_SPACES = {
       stageHeader: {
         // Non-fullscreen stage header only
@@ -2244,6 +2257,18 @@ class AddonRunner {
     }
     this.loading = false;
   }
+  rerunUserscripts() {
+    if (this.loading || !this.resources || !this.manifest.userscripts) {
+      return;
+    }
+    for (const userscript of this.manifest.userscripts) {
+      if (!_settings_store_singleton__WEBPACK_IMPORTED_MODULE_1__["default"].evaluateCondition(userscript.if)) {
+        continue;
+      }
+      const fn = this.resources[userscript.url];
+      fn(this.publicAPI);
+    }
+  }
 }
 AddonRunner.instances = [];
 const runAddon = addonId => {
@@ -2274,6 +2299,71 @@ for (const id of Object.keys(_generated_addon_manifests__WEBPACK_IMPORTED_MODULE
   }
   runAddon(id);
 }
+
+// Expose a global API for resetting addon state when stage is remounted
+window.addonAPI = {
+  resetAllSeenElements() {
+    for (const runner of AddonRunner.instances) {
+      if (runner.publicAPI && runner.publicAPI.addon && runner.publicAPI.addon.tab) {
+        runner.publicAPI.addon.tab.resetSeenElements();
+      }
+    }
+  },
+  // Addons that should NOT be re-run / cleaned by the global DOM cleanup
+  _rerunExclude: new Set([
+  // 默认排除：variable-manager, find-bar, block-count
+  'variable-manager', 'find-bar', 'block-count']),
+  addToRerunExclude(id) {
+    this._rerunExclude.add(id);
+  },
+  removeFromRerunExclude(id) {
+    this._rerunExclude.delete(id);
+  },
+  /**
+   * 全局清理插件注入的 DOM 元素（仅移除那些标记为 data-sa-id 的元素），
+   * 但会跳过位于 `_rerunExclude` 中的插件对应 DOM（避免移除被排除插件的 UI）。
+   */
+  cleanupAllAddonInjectedDOM() {
+    const injected = document.querySelectorAll('[data-sa-id]');
+    injected.forEach(el => {
+      if (!el || !el.parentNode) return;
+      // 如果元素明显属于被排除插件，则跳过
+      const saId = el.dataset.saId || '';
+      // 例如 data-sa-id = "addon-variable-manager" 或类似
+      for (const excludedId of this._rerunExclude) {
+        if (!excludedId) continue;
+        if (saId.includes(excludedId) || el.classList.contains("sa-".concat(excludedId))) {
+          return;
+        }
+      }
+      // 保护 body 下的直接子节点不被误删
+      if (el.parentNode === document.body) return;
+      el.remove();
+    });
+  },
+  /**
+   * 重新运行 userscripts，但会跳过在 `_rerunExclude` 中的 addon id。
+   */
+  rerunAllUserscripts() {
+    // 先清理（只会清理非排除项的 data-sa-id 元素）
+    this.cleanupAllAddonInjectedDOM();
+    for (const runner of AddonRunner.instances) {
+      try {
+        const id = runner.id;
+        if (this._rerunExclude.has(id)) {
+          // 跳过被列入排除名单的 addon
+          continue;
+        }
+        if (!runner.publicAPI.addon.self.disabled) {
+          runner.rerunUserscripts();
+        }
+      } catch (e) {
+        // 防止单个 addon 出错影响整体
+        console.error('Error while rerunning addon userscripts', e);
+      }
+    }
+  }
+};
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../node_modules/webpack/buildin/global.js */ "./node_modules/webpack/buildin/global.js")))
 
 /***/ }),

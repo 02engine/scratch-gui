@@ -21898,7 +21898,7 @@ StageWrapperComponent.propTypes = {
   stageSize: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.oneOf(Object.keys(_lib_layout_constants_js__WEBPACK_IMPORTED_MODULE_5__["STAGE_DISPLAY_SIZES"])).isRequired,
   vm: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.instanceOf(scratch_vm__WEBPACK_IMPORTED_MODULE_3___default.a).isRequired
 };
-/* harmony default export */ __webpack_exports__["default"] = (StageWrapperComponent);
+/* harmony default export */ __webpack_exports__["default"] = (/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.memo(StageWrapperComponent));
 
 /***/ }),
 
@@ -37497,6 +37497,11 @@ class Stage extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Component {
     this.attachMouseEvents(this.canvas);
     this.updateRect();
     this.props.vm.runtime.addListener('QUESTION', this.questionListener);
+    // Reset all addon seen elements and rerun userscripts to re-initialize after stage remount
+    if (window.addonAPI) {
+      window.addonAPI.resetAllSeenElements();
+      window.addonAPI.rerunAllUserscripts();
+    }
   }
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.stageSize !== nextProps.stageSize || this.props.isColorPicking !== nextProps.isColorPicking || this.state.colorInfo !== nextState.colorInfo || this.props.isFullScreen !== nextProps.isFullScreen || this.props.isWindowFullScreen !== nextProps.isWindowFullScreen || this.props.dimensions !== nextProps.dimensions || this.state.question !== nextState.question || this.props.micIndicator !== nextProps.micIndicator || this.props.isStarted !== nextProps.isStarted || this.props.customStageSize !== nextProps.customStageSize;
