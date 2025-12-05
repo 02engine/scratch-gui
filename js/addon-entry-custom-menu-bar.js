@@ -31,7 +31,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../node_modules/css-
 
 
 // module
-exports.push([module.i, "[class*=\"menu-bar_file-group\"] > [class*=\"menu-bar_hoverable\"] > img {\n  display: none;\n}\n\n[class*=\"menu-bar_hoverable\"] {\n  justify-content: center;\n}\n\n[class*=\"menu-bar_hoverable\"] > span {\n  margin: 0;\n  padding: 0;\n}\n\n@media (max-width: 1124px) {\n  [class*=\"menu-bar_file-group\"] > [class*=\"menu-bar_hoverable\"] > img {\n    display: block;\n  }\n}\n", ""]);
+exports.push([module.i, "[class*=\"menu-bar_file-group\"] > [class*=\"menu-bar_hoverable\"] > img {\n  display: none;\n}\n\n[class*=\"menu-bar_hoverable\"] {\n  justify-content: center;\n}\n\n[class*=\"menu-bar_hoverable\"] > span {\n  margin: 0;\n  padding: 0;\n}\n\n@media (max-width: 1024px) {\n  [class*=\"menu-bar_file-group\"] > [class*=\"menu-bar_hoverable\"] > img {\n    display: block;\n  }\n}\n", ""]);
 
 // exports
 

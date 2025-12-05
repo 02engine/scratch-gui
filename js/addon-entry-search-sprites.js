@@ -61,7 +61,6 @@ __webpack_require__.r(__webpack_exports__);
   let spriteSelectorContainer;
   const container = document.createElement("div");
   container.className = "sa-search-sprites-container";
-  container.dataset.saId = "addon-search-sprites-container";
   addon.tab.displayNoneWhileDisabled(container, {
     display: "flex"
   });
