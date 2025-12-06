@@ -107,6 +107,7 @@ __webpack_require__.r(__webpack_exports__);
   let preventUpdate = false;
   const manager = document.createElement("div");
   manager.classList.add(addon.tab.scratchClass("asset-panel_wrapper"), "sa-var-manager");
+  manager.dataset.saId = "addon-variable-manager";
   const searchBox = document.createElement("input");
   searchBox.placeholder = msg("search");
   searchBox.className = addon.tab.scratchClass("input_input-form", {
@@ -133,7 +134,6 @@ __webpack_require__.r(__webpack_exports__);
   const globalHeading = document.createElement("span");
   const globalList = document.createElement("table");
   globalHeading.className = "sa-var-manager-heading";
-  globalHeading.innerText = msg("for-all-sprites");
   globalVars.appendChild(globalHeading);
   globalVars.appendChild(globalList);
   manager.appendChild(localVars);

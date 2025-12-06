@@ -2974,12 +2974,14 @@ const resources = {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return BlockItem; });
 class BlockItem {
-  constructor(cls, procCode, labelID, y) {
+  constructor(cls, procCode, labelID, y, targetId, targetName) {
     this.cls = cls;
     this.procCode = procCode;
     this.labelID = labelID;
     this.y = y;
     this.lower = procCode.toLowerCase();
+    this.targetId = targetId;
+    this.targetName = targetName;
     /**
      * An Array of block ids
      * @type {Array.<string>}
@@ -3210,17 +3212,461 @@ __webpack_require__.r(__webpack_exports__);
     getScratchBlocks() {
       let myBlocks = [];
       let myBlocksByProcCode = {};
-      let topBlocks = this.workspace.getTopBlocks();
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
+
+      /**
+       * 生成积木的显示文本
+       * @param {object} block - 积木数据
+       * @param {object} target - 目标对象
+       * @returns {string} 积木的显示文本
+       */
+      function generateBlockText(block, target) {
+        if (!block || !block.opcode) return "";
+        const opcode = block.opcode;
+        const fields = block.fields || {};
+        const inputs = block.inputs || {};
+
+        // Helper function to get variable name by ID
+        const getVariableName = (varId, target) => {
+          if (!varId || !target) return varId;
+          const variable = target.variables[varId];
+          return variable ? variable.name : varId;
+        };
+
+        // Helper function to get list name by ID
+        const getListName = (listId, target) => {
+          if (!listId || !target) return listId;
+          const variable = target.variables[listId];
+          return variable ? variable.name : listId;
+        };
+
+        // Helper function to get input value content
+        const getInputValue = (input, target, blocks) => {
+          if (!input || !target) return "( )";
+          if (!blocks && target.blocks && target.blocks._blocks) {
+            blocks = target.blocks._blocks;
+          }
+          if (!blocks) return "( )";
+
+          // If it's a shadow block with a field value
+          if (input.shadow) {
+            const shadowBlockId = typeof input.shadow === 'string' ? input.shadow : input.shadow.id;
+            if (shadowBlockId && blocks[shadowBlockId]) {
+              const shadowBlock = blocks[shadowBlockId];
+              if (shadowBlock) {
+                // Handle text input
+                if (shadowBlock.fields && shadowBlock.fields.TEXT) {
+                  return "\"".concat(shadowBlock.fields.TEXT.value, "\"");
+                }
+                // Handle math number
+                if (shadowBlock.fields && shadowBlock.fields.NUM) {
+                  return shadowBlock.fields.NUM.value;
+                }
+                // Handle other field types
+                for (const fieldName of Object.keys(shadowBlock.fields || {})) {
+                  return shadowBlock.fields[fieldName].value;
+                }
+              }
+            }
+          }
+
+          // If it's a regular block
+          if (input.block) {
+            const blockId = typeof input.block === 'string' ? input.block : input.block.id;
+            const inputBlock = blocks[blockId];
+            if (inputBlock) {
+              // Handle text blocks
+              if (inputBlock.opcode === "text") {
+                return "\"".concat(inputBlock.fields.TEXT.value, "\"");
+              }
+              // Handle number blocks
+              if (inputBlock.opcode === "math_number") {
+                return inputBlock.fields.NUM.value;
+              }
+              // Handle variable reporters
+              if (inputBlock.opcode === "data_variable") {
+                const varId = inputBlock.fields.VARIABLE.value;
+                return getVariableName(varId, target);
+              }
+              // Handle list reporters
+              if (inputBlock.opcode === "data_listcontents") {
+                const listId = inputBlock.fields.LIST.value;
+                return getListName(listId, target);
+              }
+              // Handle color picker
+              if (inputBlock.opcode === "colour_picker") {
+                return inputBlock.fields.COLOUR.value;
+              }
+              // Handle boolean operators - return the structure
+              if (inputBlock.opcode.startsWith("operator_")) {
+                return generateBlockText(inputBlock, target);
+              }
+              // For other complex blocks, return a simplified representation
+              return "[".concat(inputBlock.opcode.replace(/_/g, ' '), "]");
+            }
+          }
+          return "( )";
+        };
+
+        // 处理事件类积木
+        if (opcode === "event_whenflagclicked") {
+          return "when flag clicked";
+        }
+        if (opcode === "event_whenthisspriteclicked") {
+          return "when this sprite clicked";
+        }
+        if (opcode === "event_whenstageclicked") {
+          return "when stage clicked";
+        }
+        if (opcode === "event_whenkeypressed") {
+          var _fields$KEY_OPTION;
+          const key = ((_fields$KEY_OPTION = fields.KEY_OPTION) === null || _fields$KEY_OPTION === void 0 ? void 0 : _fields$KEY_OPTION.value) || "any";
+          return "when key [".concat(key, "] pressed");
+        }
+        if (opcode === "event_whenbroadcastreceived") {
+          var _fields$BROADCAST_OPT;
+          const message = ((_fields$BROADCAST_OPT = fields.BROADCAST_OPTION) === null || _fields$BROADCAST_OPT === void 0 ? void 0 : _fields$BROADCAST_OPT.value) || "message1";
+          return "when I receive [".concat(message, "]");
+        }
+        if (opcode === "event_whenbackdropswitchesto") {
+          var _fields$BACKDROP;
+          const backdrop = ((_fields$BACKDROP = fields.BACKDROP) === null || _fields$BACKDROP === void 0 ? void 0 : _fields$BACKDROP.value) || "backdrop1";
+          return "when backdrop switches to [".concat(backdrop, "]");
+        }
+        if (opcode === "event_whengreaterthan") {
+          var _fields$WHENGREATERTH;
+          const option = ((_fields$WHENGREATERTH = fields.WHENGREATERTHANMENU) === null || _fields$WHENGREATERTH === void 0 ? void 0 : _fields$WHENGREATERTH.value) || "loudness";
+          const value = getInputValue(inputs.VALUE, target, target.blocks._blocks);
+          return "when [".concat(option, "] > ").concat(value);
+        }
+        if (opcode === "event_whenbroadcastreceived") {
+          var _fields$BROADCAST_OPT2;
+          const message = ((_fields$BROADCAST_OPT2 = fields.BROADCAST_OPTION) === null || _fields$BROADCAST_OPT2 === void 0 ? void 0 : _fields$BROADCAST_OPT2.value) || "message1";
+          return "when I receive [".concat(message, "]");
+        }
+        if (opcode === "control_start_as_clone") {
+          return "when I start as a clone";
+        }
+
+        // 处理控制类积木
+        if (opcode === "control_wait") {
+          const secs = getInputValue(inputs.DURATION, target, target.blocks._blocks);
+          return "wait ".concat(secs, " seconds");
+        }
+        if (opcode === "control_repeat") {
+          const times = getInputValue(inputs.TIMES, target, target.blocks._blocks);
+          return "repeat ".concat(times);
+        }
+        if (opcode === "control_if") {
+          return "if <> then";
+        }
+        if (opcode === "control_if_else") {
+          return "if <> then else";
+        }
+        if (opcode === "control_wait_until") {
+          return "wait until <>";
+        }
+        if (opcode === "control_repeat_until") {
+          return "repeat until <>";
+        }
+        if (opcode === "control_stop") {
+          var _fields$STOP_OPTION;
+          const option = ((_fields$STOP_OPTION = fields.STOP_OPTION) === null || _fields$STOP_OPTION === void 0 ? void 0 : _fields$STOP_OPTION.value) || "all";
+          return "stop [".concat(option, "]");
+        }
+        if (opcode === "control_create_clone_of") {
+          const option = getInputValue(inputs.CLONE_OPTION, target, target.blocks._blocks);
+          return "create clone of ".concat(option);
+        }
+        if (opcode === "control_delete_this_clone") {
+          return "delete this clone";
+        }
+
+        // 处理变量和列表
+        if (opcode === "data_setvariableto") {
+          var _fields$VARIABLE;
+          const varId = ((_fields$VARIABLE = fields.VARIABLE) === null || _fields$VARIABLE === void 0 ? void 0 : _fields$VARIABLE.value) || "";
+          const varName = getVariableName(varId, target);
+          const value = getInputValue(inputs.VALUE, target, target.blocks._blocks);
+          return "set [".concat(varName, "] to ").concat(value);
+        }
+        if (opcode === "data_changevariableby") {
+          var _fields$VARIABLE2;
+          const varId = ((_fields$VARIABLE2 = fields.VARIABLE) === null || _fields$VARIABLE2 === void 0 ? void 0 : _fields$VARIABLE2.value) || "";
+          const varName = getVariableName(varId, target);
+          const value = getInputValue(inputs.VALUE, target, target.blocks._blocks);
+          return "change [".concat(varName, "] by ").concat(value);
+        }
+        if (opcode === "data_showvariable") {
+          var _fields$VARIABLE3;
+          const varId = ((_fields$VARIABLE3 = fields.VARIABLE) === null || _fields$VARIABLE3 === void 0 ? void 0 : _fields$VARIABLE3.value) || "";
+          const varName = getVariableName(varId, target);
+          return "show variable [".concat(varName, "]");
+        }
+        if (opcode === "data_hidevariable") {
+          var _fields$VARIABLE4;
+          const varId = ((_fields$VARIABLE4 = fields.VARIABLE) === null || _fields$VARIABLE4 === void 0 ? void 0 : _fields$VARIABLE4.value) || "";
+          const varName = getVariableName(varId, target);
+          return "hide variable [".concat(varName, "]");
+        }
+        if (opcode === "data_addtolist") {
+          var _fields$LIST;
+          const listId = ((_fields$LIST = fields.LIST) === null || _fields$LIST === void 0 ? void 0 : _fields$LIST.value) || "";
+          const listName = getListName(listId, target);
+          const item = getInputValue(inputs.ITEM, target, target.blocks._blocks);
+          return "add ".concat(item, " to [").concat(listName, "]");
+        }
+        if (opcode === "data_deleteoflist") {
+          var _fields$LIST2;
+          const listId = ((_fields$LIST2 = fields.LIST) === null || _fields$LIST2 === void 0 ? void 0 : _fields$LIST2.value) || "";
+          const listName = getListName(listId, target);
+          const index = getInputValue(inputs.INDEX, target, target.blocks._blocks);
+          return "delete ".concat(index, " of [").concat(listName, "]");
+        }
+        if (opcode === "data_deletealloflist") {
+          var _fields$LIST3;
+          const listId = ((_fields$LIST3 = fields.LIST) === null || _fields$LIST3 === void 0 ? void 0 : _fields$LIST3.value) || "";
+          const listName = getListName(listId, target);
+          return "delete all of [".concat(listName, "]");
+        }
+        if (opcode === "data_insertatlist") {
+          var _fields$LIST4;
+          const listId = ((_fields$LIST4 = fields.LIST) === null || _fields$LIST4 === void 0 ? void 0 : _fields$LIST4.value) || "";
+          const listName = getListName(listId, target);
+          const item = getInputValue(inputs.ITEM, target, target.blocks._blocks);
+          const index = getInputValue(inputs.INDEX, target, target.blocks._blocks);
+          return "insert ".concat(item, " at ").concat(index, " of [").concat(listName, "]");
+        }
+        if (opcode === "data_replaceitemoflist") {
+          var _fields$LIST5;
+          const listId = ((_fields$LIST5 = fields.LIST) === null || _fields$LIST5 === void 0 ? void 0 : _fields$LIST5.value) || "";
+          const listName = getListName(listId, target);
+          const index = getInputValue(inputs.INDEX, target, target.blocks._blocks);
+          const item = getInputValue(inputs.ITEM, target, target.blocks._blocks);
+          return "replace item ".concat(index, " of [").concat(listName, "] with ").concat(item);
+        }
+        if (opcode === "data_itemoflist") {
+          var _fields$LIST6;
+          const listId = ((_fields$LIST6 = fields.LIST) === null || _fields$LIST6 === void 0 ? void 0 : _fields$LIST6.value) || "";
+          const listName = getListName(listId, target);
+          const index = getInputValue(inputs.INDEX, target, target.blocks._blocks);
+          return "item ".concat(index, " of [").concat(listName, "]");
+        }
+        if (opcode === "data_itemnumoflist") {
+          var _fields$LIST7;
+          const item = getInputValue(inputs.ITEM, target, target.blocks._blocks);
+          const listId = ((_fields$LIST7 = fields.LIST) === null || _fields$LIST7 === void 0 ? void 0 : _fields$LIST7.value) || "";
+          const listName = getListName(listId, target);
+          return "item # of ".concat(item, " in [").concat(listName, "]");
+        }
+        if (opcode === "data_lengthoflist") {
+          var _fields$LIST8;
+          const listId = ((_fields$LIST8 = fields.LIST) === null || _fields$LIST8 === void 0 ? void 0 : _fields$LIST8.value) || "";
+          const listName = getListName(listId, target);
+          return "length of [".concat(listName, "]");
+        }
+        if (opcode === "data_listcontainsitem") {
+          var _fields$LIST9;
+          const listId = ((_fields$LIST9 = fields.LIST) === null || _fields$LIST9 === void 0 ? void 0 : _fields$LIST9.value) || "";
+          const listName = getListName(listId, target);
+          const item = getInputValue(inputs.ITEM, target, target.blocks._blocks);
+          return "[".concat(listName, "] contains ").concat(item, "?");
+        }
+        if (opcode === "data_showlist") {
+          var _fields$LIST0;
+          const listId = ((_fields$LIST0 = fields.LIST) === null || _fields$LIST0 === void 0 ? void 0 : _fields$LIST0.value) || "";
+          const listName = getListName(listId, target);
+          return "show list [".concat(listName, "]");
+        }
+        if (opcode === "data_hidelist") {
+          var _fields$LIST1;
+          const listId = ((_fields$LIST1 = fields.LIST) === null || _fields$LIST1 === void 0 ? void 0 : _fields$LIST1.value) || "";
+          const listName = getListName(listId, target);
+          return "hide list [".concat(listName, "]");
+        }
+
+        // 处理运算类积木
+        if (opcode === "operator_add") {
+          const num1 = getInputValue(inputs.NUM1, target, target.blocks._blocks);
+          const num2 = getInputValue(inputs.NUM2, target, target.blocks._blocks);
+          return "(".concat(num1, " + ").concat(num2, ")");
+        }
+        if (opcode === "operator_subtract") {
+          const num1 = getInputValue(inputs.NUM1, target, target.blocks._blocks);
+          const num2 = getInputValue(inputs.NUM2, target, target.blocks._blocks);
+          return "(".concat(num1, " - ").concat(num2, ")");
+        }
+        if (opcode === "operator_multiply") {
+          const num1 = getInputValue(inputs.NUM1, target, target.blocks._blocks);
+          const num2 = getInputValue(inputs.NUM2, target, target.blocks._blocks);
+          return "(".concat(num1, " * ").concat(num2, ")");
+        }
+        if (opcode === "operator_divide") {
+          const num1 = getInputValue(inputs.NUM1, target, target.blocks._blocks);
+          const num2 = getInputValue(inputs.NUM2, target, target.blocks._blocks);
+          return "(".concat(num1, " / ").concat(num2, ")");
+        }
+        if (opcode === "operator_random") {
+          const from = getInputValue(inputs.FROM, target, target.blocks._blocks);
+          const to = getInputValue(inputs.TO, target, target.blocks._blocks);
+          return "pick random ".concat(from, " to ").concat(to);
+        }
+        if (opcode === "operator_lt") {
+          const value1 = getInputValue(inputs.OPERAND1, target, target.blocks._blocks);
+          const value2 = getInputValue(inputs.OPERAND2, target, target.blocks._blocks);
+          return "<".concat(value1, " < ").concat(value2, ">");
+        }
+        if (opcode === "operator_equals") {
+          const value1 = getInputValue(inputs.OPERAND1, target, target.blocks._blocks);
+          const value2 = getInputValue(inputs.OPERAND2, target, target.blocks._blocks);
+          return "<".concat(value1, " = ").concat(value2, ">");
+        }
+        if (opcode === "operator_gt") {
+          const value1 = getInputValue(inputs.OPERAND1, target, target.blocks._blocks);
+          const value2 = getInputValue(inputs.OPERAND2, target, target.blocks._blocks);
+          return "<".concat(value1, " > ").concat(value2, ">");
+        }
+        if (opcode === "operator_and") {
+          const value1 = getInputValue(inputs.OPERAND1, target, target.blocks._blocks);
+          const value2 = getInputValue(inputs.OPERAND2, target, target.blocks._blocks);
+          return "<".concat(value1, " and ").concat(value2, ">");
+        }
+        if (opcode === "operator_or") {
+          const value1 = getInputValue(inputs.OPERAND1, target, target.blocks._blocks);
+          const value2 = getInputValue(inputs.OPERAND2, target, target.blocks._blocks);
+          return "<".concat(value1, " or ").concat(value2, ">");
+        }
+        if (opcode === "operator_not") {
+          const value = getInputValue(inputs.OPERAND, target, target.blocks._blocks);
+          return "<not ".concat(value, ">");
+        }
+        if (opcode === "operator_join") {
+          const string1 = getInputValue(inputs.STRING1, target, target.blocks._blocks);
+          const string2 = getInputValue(inputs.STRING2, target, target.blocks._blocks);
+          return "join ".concat(string1, " and ").concat(string2);
+        }
+        if (opcode === "operator_letter_of") {
+          const letter = getInputValue(inputs.LETTER, target, target.blocks._blocks);
+          const string = getInputValue(inputs.STRING, target, target.blocks._blocks);
+          return "letter ".concat(letter, " of ").concat(string);
+        }
+        if (opcode === "operator_length") {
+          const string = getInputValue(inputs.STRING, target, target.blocks._blocks);
+          return "length of ".concat(string);
+        }
+        if (opcode === "operator_contains") {
+          const string1 = getInputValue(inputs.STRING1, target, target.blocks._blocks);
+          const string2 = getInputValue(inputs.STRING2, target, target.blocks._blocks);
+          return "<".concat(string1, " contains ").concat(string2, "?>");
+        }
+        if (opcode === "operator_mod") {
+          const num1 = getInputValue(inputs.NUM1, target, target.blocks._blocks);
+          const num2 = getInputValue(inputs.NUM2, target, target.blocks._blocks);
+          return "(".concat(num1, " mod ").concat(num2, ")");
+        }
+        if (opcode === "operator_round") {
+          const num = getInputValue(inputs.NUM, target, target.blocks._blocks);
+          return "round ".concat(num);
+        }
+        if (opcode === "operator_mathop") {
+          var _fields$OPERATOR;
+          const operator = ((_fields$OPERATOR = fields.OPERATOR) === null || _fields$OPERATOR === void 0 ? void 0 : _fields$OPERATOR.value) || "abs";
+          const num = getInputValue(inputs.NUM, target, target.blocks._blocks);
+          return "[".concat(operator, "] of ").concat(num);
+        }
+
+        // 处理自定义过程调用
+        if (opcode === "procedures_call") {
+          var _block$mutation, _block$mutation2;
+          const procCode = ((_block$mutation = block.mutation) === null || _block$mutation === void 0 ? void 0 : _block$mutation.proccode) || "custom block";
+          // 处理参数
+          let result = procCode;
+          const paramNames = ((_block$mutation2 = block.mutation) === null || _block$mutation2 === void 0 ? void 0 : _block$mutation2.argumentnames) || "[]";
+          const argNames = JSON.parse(paramNames);
+          for (let i = 0; i < argNames.length; i++) {
+            const argId = "input".concat(i);
+            const placeholder = "%".concat(i + 1, "s");
+            const value = getInputValue(inputs[argId], target, target.blocks._blocks);
+            result = result.replace(placeholder, value);
+          }
+          return result;
+        }
+
+        // 处理感知类积木
+        if (opcode === "sensing_touchingobject") {
+          const object = getInputValue(inputs.TOUCHINGOBJECTMENU, target, target.blocks._blocks);
+          return "<touching ".concat(object, "?>");
+        }
+        if (opcode === "sensing_touchingcolor") {
+          const color = getInputValue(inputs.COLOR, target, target.blocks._blocks);
+          return "<touching color ".concat(color, "?>");
+        }
+        if (opcode === "sensing_coloristouchingcolor") {
+          const color1 = getInputValue(inputs.COLOR, target, target.blocks._blocks);
+          const color2 = getInputValue(inputs.COLOR2, target, target.blocks._blocks);
+          return "<color ".concat(color1, " is touching ").concat(color2, "?>");
+        }
+        if (opcode === "sensing_distanceto") {
+          const object = getInputValue(inputs.DISTANCETOMENU, target, target.blocks._blocks);
+          return "distance to ".concat(object);
+        }
+        if (opcode === "sensing_keypressed") {
+          const key = getInputValue(inputs.KEY_OPTION, target, target.blocks._blocks);
+          return "<key [".concat(key, "] pressed?>");
+        }
+        if (opcode === "sensing_mousedown") {
+          return "<mouse down?>";
+        }
+        if (opcode === "sensing_mousex") {
+          return "mouse x";
+        }
+        if (opcode === "sensing_mousey") {
+          return "mouse y";
+        }
+        if (opcode === "sensing_timer") {
+          return "timer";
+        }
+        if (opcode === "sensing_resettimer") {
+          return "reset timer";
+        }
+        if (opcode === "sensing_of") {
+          var _fields$PROPERTY;
+          const property = ((_fields$PROPERTY = fields.PROPERTY) === null || _fields$PROPERTY === void 0 ? void 0 : _fields$PROPERTY.value) || "x position";
+          const object = getInputValue(inputs.OBJECT, target, target.blocks._blocks);
+          return "[".concat(property, "] of ").concat(object);
+        }
+        if (opcode === "sensing_current") {
+          var _fields$CURRENTMENU;
+          const option = ((_fields$CURRENTMENU = fields.CURRENTMENU) === null || _fields$CURRENTMENU === void 0 ? void 0 : _fields$CURRENTMENU.value) || "year";
+          return "current [".concat(option, "]");
+        }
+        if (opcode === "sensing_dayssince2000") {
+          return "days since 2000";
+        }
+        if (opcode === "sensing_username") {
+          return "username";
+        }
+        if (opcode === "sensing_loudness") {
+          return "loudness";
+        }
+
+        // 默认返回opcode
+        return opcode.replace(/_/g, ' ');
+      }
 
       /**
        * @param cls
-       * @param txt
-       * @param root
+       * @param block
+       * @param targetId
+       * @param targetName
        * @returns BlockItem
        */
-      function addBlock(cls, txt, root) {
-        let id = root.id ? root.id : root.getId ? root.getId() : null;
-        let clone = myBlocksByProcCode[txt];
+      function addBlock(cls, block, targetId, targetName, target) {
+        let id = block.id;
+        const blockText = generateBlockText(block, target);
+        const displayName = targetName ? "[".concat(targetName, "] ").concat(blockText) : blockText;
+        let clone = myBlocksByProcCode[displayName];
         if (clone) {
           if (!clone.clones) {
             clone.clones = [];
@@ -3228,84 +3674,103 @@ __webpack_require__.r(__webpack_exports__);
           clone.clones.push(id);
           return clone;
         }
-        let items = new _blockly_BlockItem_js__WEBPACK_IMPORTED_MODULE_0__["default"](cls, txt, id, 0);
-        items.y = root.getRelativeToSurfaceXY ? root.getRelativeToSurfaceXY().y : null;
+        let items = new _blockly_BlockItem_js__WEBPACK_IMPORTED_MODULE_0__["default"](cls, displayName, id, 0, targetId, targetName);
         myBlocks.push(items);
-        myBlocksByProcCode[txt] = items;
+        myBlocksByProcCode[displayName] = items;
         return items;
       }
-      function getDescFromField(root) {
-        let fields = root.inputList[0];
-        let desc;
-        for (const fieldRow of fields.fieldRow) {
-          desc = desc ? desc + " " : "";
-          if (fieldRow instanceof Blockly.FieldImage && fieldRow.src_.endsWith("green-flag.svg")) {
-            desc += msg("/_general/blocks/green-flag");
-          } else {
-            desc += fieldRow.getText();
-          }
-        }
-        return desc;
-      }
-      for (const root of topBlocks) {
-        if (root.type === "procedures_definition") {
-          const label = root.getChildren()[0];
-          const procCode = label.getProcCode();
-          if (!procCode) {
+
+      // 遍历所有目标（精灵和舞台）
+      for (const target of targets) {
+        if (!target.isOriginal) continue; // 跳过克隆体
+
+        const targetName = target.isStage ? "Stage" : target.sprite.name;
+        const targetId = target.id;
+
+        // 获取目标的积木
+        const blocks = target.blocks._blocks;
+        const blockIds = Object.keys(blocks);
+        for (const blockId of blockIds) {
+          const block = blocks[blockId];
+          const blockType = block.opcode;
+          if (blockType === "procedures_definition") {
+            addBlock("define", block, targetId, targetName, target);
             continue;
           }
-          const indexOfLabel = root.inputList.findIndex(i => i.fieldRow.length > 0);
-          if (indexOfLabel === -1) {
+          if (blockType.startsWith("event_")) {
+            addBlock("event", block, targetId, targetName, target);
             continue;
           }
-          const translatedDefine = root.inputList[indexOfLabel].fieldRow[0].getText();
-          const message = indexOfLabel === 0 ? "".concat(translatedDefine, " ").concat(procCode) : "".concat(procCode, " ").concat(translatedDefine);
-          addBlock("define", message, root);
-          continue;
+          if (blockType === "control_start_as_clone") {
+            addBlock("event", block, targetId, targetName, target);
+            continue;
+          }
+
+          // 其他类型的积木也添加到搜索结果中
+          if (blockType && !blockType.startsWith("procedures_")) {
+            // 根据积木类型分类
+            let cls = "stack";
+            if (blockType.startsWith("data_")) {
+              cls = blockType.includes("list") ? "list" : "var";
+            } else if (blockType.startsWith("control_")) {
+              cls = "control";
+            } else if (blockType.startsWith("operator_")) {
+              cls = "operator";
+            } else if (blockType.startsWith("sensing_")) {
+              cls = "sensing";
+            } else if (blockType.startsWith("looks_")) {
+              cls = "looks";
+            } else if (blockType.startsWith("motion_")) {
+              cls = "motion";
+            } else if (blockType.startsWith("sound_")) {
+              cls = "sound";
+            } else if (blockType.startsWith("pen_")) {
+              cls = "pen";
+            }
+            addBlock(cls, block, targetId, targetName, target);
+          }
         }
-        if (root.type === "event_whenflagclicked") {
-          addBlock("flag", getDescFromField(root), root); // "When Flag Clicked"
-          continue;
+
+        // 收集变量和列表
+        const variableMap = target.variables;
+        for (const varId of Object.keys(variableMap)) {
+          const variable = variableMap[varId];
+          if (variable.type === "") {
+            // 普通变量
+            const isLocal = !target.isStage; // 舞台变量是全局的，精灵变量是局部的
+            const cls = isLocal ? "var" : "VAR";
+            const procCode = isLocal ? msg("var-local", {
+              name: variable.name
+            }) : msg("var-global", {
+              name: variable.name
+            });
+            addBlock(cls, procCode, {
+              id: varId
+            }, targetId, targetName, target);
+          } else if (variable.type === "list") {
+            // 列表
+            const isLocal = !target.isStage;
+            const cls = isLocal ? "list" : "LIST";
+            const procCode = isLocal ? msg("list-local", {
+              name: variable.name
+            }) : msg("list-global", {
+              name: variable.name
+            });
+            addBlock(cls, procCode, {
+              id: varId
+            }, targetId, targetName, target);
+          }
         }
-        if (root.type === "event_whenbroadcastreceived") {
-          const fieldRow = root.inputList[0].fieldRow;
-          let eventName = fieldRow.find(input => input.name === "BROADCAST_OPTION").getText();
-          addBlock("receive", msg("event", {
-            name: eventName
-          }), root).eventName = eventName;
-          continue;
-        }
-        if (root.type.substr(0, 10) === "event_when") {
-          addBlock("event", getDescFromField(root), root); // "When Flag Clicked"
-          continue;
-        }
-        if (root.type === "control_start_as_clone") {
-          addBlock("event", getDescFromField(root), root); // "when I start as a clone"
-          continue;
-        }
-      }
-      let map = this.workspace.getVariableMap();
-      let vars = map.getVariablesOfType("");
-      for (const row of vars) {
-        addBlock(row.isLocal ? "var" : "VAR", row.isLocal ? msg("var-local", {
-          name: row.name
-        }) : msg("var-global", {
-          name: row.name
-        }), row);
-      }
-      let lists = map.getVariablesOfType("list");
-      for (const row of lists) {
-        addBlock(row.isLocal ? "list" : "LIST", row.isLocal ? msg("list-local", {
-          name: row.name
-        }) : msg("list-global", {
-          name: row.name
-        }), row);
       }
       const events = this.getCallsToEvents();
       for (const event of events) {
-        addBlock("receive", msg("event", {
+        var _targets$find, _targets$find$sprite;
+        const targetName = event.targetId === this.utils.getEditingTarget().id ? null : (_targets$find = targets.find(t => t.id === event.targetId)) === null || _targets$find === void 0 ? void 0 : (_targets$find$sprite = _targets$find.sprite) === null || _targets$find$sprite === void 0 ? void 0 : _targets$find$sprite.name;
+        const eventTarget = targets.find(t => t.id === event.targetId);
+        const item = addBlock("receive", msg("event", {
           name: event.eventName
-        }), event.block).eventName = event.eventName;
+        }), event.block, event.targetId, targetName, eventTarget);
+        item.eventName = event.eventName;
       }
       const clsOrder = {
         flag: 0,
@@ -3333,50 +3798,85 @@ __webpack_require__.r(__webpack_exports__);
       return myBlocks;
     }
     getScratchCostumes() {
-      let costumes = this.utils.getEditingTarget().getCostumes();
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
       let items = [];
       let i = 0;
-      for (const costume of costumes) {
-        let item = new _blockly_BlockItem_js__WEBPACK_IMPORTED_MODULE_0__["default"]("costume", costume.name, costume.assetId, i);
-        items.push(item);
-        i++;
+
+      // 遍历所有目标
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        const targetName = target.isStage ? "Stage" : target.sprite.name;
+        const targetId = target.id;
+        const costumes = target.getCostumes();
+        for (const costume of costumes) {
+          const displayName = target.isStage ? costume.name : "[".concat(targetName, "] ").concat(costume.name);
+          let item = new _blockly_BlockItem_js__WEBPACK_IMPORTED_MODULE_0__["default"]("costume", displayName, costume.assetId, i, targetId, targetName);
+          items.push(item);
+          i++;
+        }
       }
       return items;
     }
     getScratchSounds() {
-      let sounds = this.utils.getEditingTarget().getSounds();
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
       let items = [];
       let i = 0;
-      for (const sound of sounds) {
-        let item = new _blockly_BlockItem_js__WEBPACK_IMPORTED_MODULE_0__["default"]("sound", sound.name, sound.assetId, i);
-        items.push(item);
-        i++;
+
+      // 遍历所有目标
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        const targetName = target.isStage ? "Stage" : target.sprite.name;
+        const targetId = target.id;
+        const sounds = target.getSounds();
+        for (const sound of sounds) {
+          const displayName = target.isStage ? sound.name : "[".concat(targetName, "] ").concat(sound.name);
+          let item = new _blockly_BlockItem_js__WEBPACK_IMPORTED_MODULE_0__["default"]("sound", displayName, sound.assetId, i, targetId, targetName);
+          items.push(item);
+          i++;
+        }
       }
       return items;
     }
     getCallsToEvents() {
       const uses = [];
       const alreadyFound = new Set();
-      for (const block of this.workspace.getAllBlocks()) {
-        if (block.type !== "event_broadcast" && block.type !== "event_broadcastandwait") {
-          continue;
-        }
-        const broadcastInput = block.getChildren()[0];
-        if (!broadcastInput) {
-          continue;
-        }
-        let eventName = "";
-        if (broadcastInput.type === "event_broadcast_menu") {
-          eventName = broadcastInput.inputList[0].fieldRow[0].getText();
-        } else {
-          eventName = msg("complex-broadcast");
-        }
-        if (!alreadyFound.has(eventName)) {
-          alreadyFound.add(eventName);
-          uses.push({
-            eventName: eventName,
-            block: block
-          });
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
+
+      // 遍历所有目标
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        const targetId = target.id;
+        const blocks = target.blocks._blocks;
+        for (const blockId of Object.keys(blocks)) {
+          var _block$inputs$BROADCA;
+          const block = blocks[blockId];
+          if (block.opcode !== "event_broadcast" && block.opcode !== "event_broadcastandwait") {
+            continue;
+          }
+          let eventName = "";
+          const broadcastInputBlockId = (_block$inputs$BROADCA = block.inputs.BROADCAST_INPUT) === null || _block$inputs$BROADCA === void 0 ? void 0 : _block$inputs$BROADCA.block;
+          if (broadcastInputBlockId) {
+            const broadcastInputBlock = blocks[broadcastInputBlockId];
+            if (broadcastInputBlock && broadcastInputBlock.opcode === "event_broadcast_menu") {
+              var _broadcastInputBlock$;
+              eventName = ((_broadcastInputBlock$ = broadcastInputBlock.fields.BROADCAST_OPTION) === null || _broadcastInputBlock$ === void 0 ? void 0 : _broadcastInputBlock$.value) || "";
+            } else {
+              eventName = msg("complex-broadcast");
+            }
+          }
+          if (eventName && !alreadyFound.has(eventName)) {
+            alreadyFound.add(eventName);
+            uses.push({
+              eventName: eventName,
+              block: {
+                id: blockId
+              },
+              targetId: targetId
+            });
+          }
         }
       }
       return uses;
@@ -3446,6 +3946,8 @@ __webpack_require__.r(__webpack_exports__);
       const item = document.createElement("li");
       item.innerText = proc.procCode;
       item.data = proc;
+      item.title = proc.procCode; // 添加title属性，鼠标悬浮时显示完整文本
+
       const colorIds = {
         receive: "events",
         event: "events",
@@ -3455,7 +3957,15 @@ __webpack_require__.r(__webpack_exports__);
         list: "data-lists",
         LIST: "data-lists",
         costume: "looks",
-        sound: "sounds"
+        sound: "sounds",
+        stack: "control",
+        control: "control",
+        operator: "operators",
+        sensing: "sensing",
+        looks: "looks",
+        motion: "motion",
+        sound: "sounds",
+        pen: "pen"
       };
       if (proc.cls === "flag") {
         item.className = "sa-find-flag";
@@ -3482,6 +3992,17 @@ __webpack_require__.r(__webpack_exports__);
         item.classList.add("sel");
         this.selected = item;
       }
+
+      // 切换到目标（如果需要）
+      if (item.data.targetId && item.data.targetId !== this.utils.getEditingTarget().id) {
+        this.utils.setEditingTarget(item.data.targetId);
+        // 等待目标切换完成
+        setTimeout(() => this.onItemClickAfterTargetSwitch(item, instanceBlock), 100);
+        return;
+      }
+      this.onItemClickAfterTargetSwitch(item, instanceBlock);
+    }
+    onItemClickAfterTargetSwitch(item, instanceBlock) {
       let cls = item.data.cls;
       if (cls === "costume" || cls === "sound") {
         // Viewing costumes/sounds - jump to selected costume/sound
@@ -3491,14 +4012,16 @@ __webpack_require__.r(__webpack_exports__);
           const reactProps = reactInstance.child.stateNode.props;
           reactProps.onItemClick(item.data.y);
           const selectorList = assetPanel.firstChild.firstChild;
-          selectorList.children[item.data.y].scrollIntoView({
-            behavior: "auto",
-            block: "center",
-            inline: "start"
-          });
+          if (selectorList.children[item.data.y]) {
+            selectorList.children[item.data.y].scrollIntoView({
+              behavior: "auto",
+              block: "center",
+              inline: "start"
+            });
+          }
           // The wrapper seems to scroll when we use the function above.
           let wrapper = assetPanel.closest("div[class*=gui_flex-wrapper]");
-          wrapper.scrollTop = 0;
+          if (wrapper) wrapper.scrollTop = 0;
         }
       } else if (cls === "var" || cls === "VAR" || cls === "list" || cls === "LIST") {
         // Search now for all instances
@@ -3508,15 +4031,6 @@ __webpack_require__.r(__webpack_exports__);
         let blocks = this.getCallsToProcedureById(item.data.labelID);
         this.carousel.build(item, blocks, instanceBlock);
       } else if (cls === "receive") {
-        /*
-          let blocks = [this.workspace.getBlockById(li.data.labelID)];
-          if (li.data.clones) {
-              for (const cloneID of li.data.clones) {
-                  blocks.push(this.workspace.getBlockById(cloneID))
-              }
-          }
-          blocks = blocks.concat(getCallsToEventsByName(li.data.eventName));
-        */
         // Now, fetch the events from the scratch runtime instead of blockly
         let blocks = this.getCallsToEventsByName(item.data.eventName);
         if (!instanceBlock) {
@@ -3543,17 +4057,43 @@ __webpack_require__.r(__webpack_exports__);
     }
     getVariableUsesById(id) {
       let uses = [];
-      let topBlocks = this.workspace.getTopBlocks();
-      for (const topBlock of topBlocks) {
-        /** @type {!Array<!Blockly.Block>} */
-        let kids = topBlock.getDescendants();
-        for (const block of kids) {
-          /** @type {!Array<!Blockly.VariableModel>} */
-          let blockVariables = block.getVarModels();
-          if (blockVariables) {
-            for (const blockVar of blockVariables) {
-              if (blockVar.getId() === id) {
-                uses.push(block);
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
+
+      // 遍历所有目标
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        const blocks = target.blocks._blocks;
+        for (const blockId of Object.keys(blocks)) {
+          const block = blocks[blockId];
+
+          // 检查积木是否使用了该变量
+          if (block.fields) {
+            for (const fieldName of Object.keys(block.fields)) {
+              const field = block.fields[fieldName];
+              if (field.value === id) {
+                uses.push(new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](target, block));
+                break;
+              }
+            }
+          }
+
+          // 检查输入中是否使用了该变量
+          if (block.inputs) {
+            for (const inputName of Object.keys(block.inputs)) {
+              const input = block.inputs[inputName];
+              const blockId = typeof input.block === 'string' ? input.block : input.block.id;
+              if (blockId && blocks[blockId]) {
+                const inputBlock = blocks[blockId];
+                if (inputBlock && inputBlock.fields) {
+                  for (const fieldName of Object.keys(inputBlock.fields)) {
+                    const field = inputBlock.fields[fieldName];
+                    if (field.value === id) {
+                      uses.push(new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](target, block));
+                      break;
+                    }
+                  }
+                }
               }
             }
           }
@@ -3562,18 +4102,45 @@ __webpack_require__.r(__webpack_exports__);
       return uses;
     }
     getCallsToProcedureById(id) {
-      let procBlock = this.workspace.getBlockById(id);
-      let label = procBlock.getChildren()[0];
-      let procCode = label.getProcCode();
-      let uses = [procBlock]; // Definition First, then calls to it
-      let topBlocks = this.workspace.getTopBlocks();
-      for (const topBlock of topBlocks) {
-        /** @type {!Array<!Blockly.Block>} */
-        let kids = topBlock.getDescendants();
-        for (const block of kids) {
-          if (block.type === "procedures_call") {
-            if (block.getProcCode() === procCode) {
-              uses.push(block);
+      const runtime = addon.tab.traps.vm.runtime;
+      const targets = runtime.targets;
+      let procCode = null;
+      let targetId = null;
+
+      // 首先找到该过程的定义以获取 procCode
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        const blocks = target.blocks._blocks;
+        if (blocks[id] && blocks[id].opcode === "procedures_definition") {
+          var _definitionBlock$inpu;
+          const definitionBlock = blocks[id];
+          const protopypeBlockId = (_definitionBlock$inpu = definitionBlock.inputs.custom_block) === null || _definitionBlock$inpu === void 0 ? void 0 : _definitionBlock$inpu.block;
+          if (protopypeBlockId) {
+            var _protopypeBlock$mutat;
+            const protopypeBlock = blocks[protopypeBlockId];
+            procCode = (_protopypeBlock$mutat = protopypeBlock.mutation) === null || _protopypeBlock$mutat === void 0 ? void 0 : _protopypeBlock$mutat.proccode;
+            targetId = target.id;
+            break;
+          }
+        }
+      }
+      if (!procCode || !targetId) {
+        return [];
+      }
+      let uses = [new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](targets.find(t => t.id === targetId), {
+        id: id
+      })]; // Definition First, then calls to it
+
+      // 遍历所有目标查找调用
+      for (const target of targets) {
+        if (!target.isOriginal) continue;
+        const blocks = target.blocks._blocks;
+        for (const blockId of Object.keys(blocks)) {
+          const block = blocks[blockId];
+          if (block.opcode === "procedures_call") {
+            var _block$mutation3;
+            if (((_block$mutation3 = block.mutation) === null || _block$mutation3 === void 0 ? void 0 : _block$mutation3.proccode) === procCode) {
+              uses.push(new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](target, block));
             }
           }
         }
@@ -3586,30 +4153,50 @@ __webpack_require__.r(__webpack_exports__);
       const runtime = addon.tab.traps.vm.runtime;
       const targets = runtime.targets; // The sprites / stage
 
+      // 首先找到所有接收该广播的事件定义
       for (const target of targets) {
         if (!target.isOriginal) {
           continue; // Skip clones
         }
-        const blocks = target.blocks;
-        if (!blocks._blocks) {
+        const blocks = target.blocks._blocks;
+        if (!blocks) {
           continue;
         }
-        for (const id of Object.keys(blocks._blocks)) {
-          const block = blocks._blocks[id];
-          if (block.opcode === "event_whenbroadcastreceived" && block.fields.BROADCAST_OPTION.value === name) {
+        for (const id of Object.keys(blocks)) {
+          const block = blocks[id];
+          if (block.opcode === "event_whenbroadcastreceived" && block.fields.BROADCAST_OPTION && block.fields.BROADCAST_OPTION.value === name) {
             uses.push(new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](target, block));
-          } else if (block.opcode === "event_broadcast" || block.opcode === "event_broadcastandwait") {
-            const broadcastInputBlockId = block.inputs.BROADCAST_INPUT.block;
-            const broadcastInputBlock = blocks._blocks[broadcastInputBlockId];
-            if (broadcastInputBlock) {
-              let eventName;
-              if (broadcastInputBlock.opcode === "event_broadcast_menu") {
-                eventName = broadcastInputBlock.fields.BROADCAST_OPTION.value;
-              } else {
-                eventName = msg("complex-broadcast");
-              }
-              if (eventName === name) {
-                uses.push(new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](target, block));
+          }
+        }
+      }
+
+      // 然后找到所有发送该广播的积木
+      for (const target of targets) {
+        if (!target.isOriginal) {
+          continue; // Skip clones
+        }
+        const blocks = target.blocks._blocks;
+        if (!blocks) {
+          continue;
+        }
+        for (const id of Object.keys(blocks)) {
+          const block = blocks[id];
+          if (block.opcode === "event_broadcast" || block.opcode === "event_broadcastandwait") {
+            var _block$inputs$BROADCA2;
+            const broadcastInputBlockId = (_block$inputs$BROADCA2 = block.inputs.BROADCAST_INPUT) === null || _block$inputs$BROADCA2 === void 0 ? void 0 : _block$inputs$BROADCA2.block;
+            if (broadcastInputBlockId) {
+              const broadcastInputBlock = blocks[broadcastInputBlockId];
+              if (broadcastInputBlock) {
+                let eventName;
+                if (broadcastInputBlock.opcode === "event_broadcast_menu") {
+                  var _broadcastInputBlock$2;
+                  eventName = (_broadcastInputBlock$2 = broadcastInputBlock.fields.BROADCAST_OPTION) === null || _broadcastInputBlock$2 === void 0 ? void 0 : _broadcastInputBlock$2.value;
+                } else {
+                  eventName = msg("complex-broadcast");
+                }
+                if (eventName === name) {
+                  uses.push(new _blockly_BlockInstance_js__WEBPACK_IMPORTED_MODULE_1__["default"](target, block));
+                }
               }
             }
           }
@@ -6593,7 +7180,6 @@ class TokenTypeBlock extends TokenType {
           strings.push(...blockPart.toLowerCase().split(" "));
         } else if (blockPart.type === _BlockTypeInfo_js__WEBPACK_IMPORTED_MODULE_0__["BlockInputType"].ENUM) {
           for (const enumValue of blockPart.values) {
-            if (_this.stringForms.length >= WorkspaceQuerier.MAX_RESULTS) return;
             _enumerateStringForms(partIdx + 1, [...strings, ...enumValue.string.toLowerCase().split(" ")], [...inputs, enumValue], length + enumValue.string.length);
           }
           return;
@@ -6608,10 +7194,6 @@ class TokenTypeBlock extends TokenType {
       });
     };
     _enumerateStringForms();
-    if (this.stringForms.length >= WorkspaceQuerier.MAX_STRING_FORMS) {
-      console.warn("Warning: Block '" + this.block.id + "' has too many string forms. Search results may not be very good.");
-      this.stringForms.length = 0;
-    }
   }
 
   /**
@@ -7018,11 +7600,11 @@ class WorkspaceQuerier {
       }
       ++query.resultCount;
       if (!limited && query.resultCount >= WorkspaceQuerier.MAX_RESULTS) {
-        console.warn("Warning: Workspace query exceeded maximum result count.");
+        console.log("Warning: Workspace query exceeded maximum result count.");
         limited = true;
       }
       if (!query.canCreateMoreTokens()) {
-        console.warn("Warning: Workspace query exceeded maximum token count.");
+        console.log("Warning: Workspace query exceeded maximum token count.");
         limited = true;
         break;
       }
@@ -7208,11 +7790,7 @@ _defineProperty(WorkspaceQuerier, "MAX_RESULTS", 2000);
 /**
  * The maximum number of tokens to find before giving up.
  */
-_defineProperty(WorkspaceQuerier, "MAX_TOKENS", 100000);
-/**
- * The maximum number of string forms a block can have before we give up.
- */
-_defineProperty(WorkspaceQuerier, "MAX_STRING_FORMS", 500);
+_defineProperty(WorkspaceQuerier, "MAX_TOKENS", 10000);
 
 /***/ }),
 

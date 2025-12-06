@@ -540,7 +540,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _turbowarp_jszip__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_turbowarp_jszip__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _custom_addon_storage_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./custom-addon-storage.js */ "./src/addons/custom-addon-storage.js");
 /* harmony import */ var _custom_addon_validator_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./custom-addon-validator.js */ "./src/addons/custom-addon-validator.js");
-/* harmony import */ var _custom_addon_validator_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_custom_addon_validator_js__WEBPACK_IMPORTED_MODULE_2__);
 /**
  * Custom Addon Loader
  * Handles loading addons from folders and ZIP files
@@ -894,9 +893,15 @@ function blobToDataURL(blob) {
 /*!**********************************************!*\
   !*** ./src/addons/custom-addon-validator.js ***!
   \**********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! exports provided: validateManifest, validateAddonId, validateFiles, normalizeManifest */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "validateManifest", function() { return validateManifest; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "validateAddonId", function() { return validateAddonId; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "validateFiles", function() { return validateFiles; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "normalizeManifest", function() { return normalizeManifest; });
 /**
  * Custom Addon Validator
  * Validates addon manifests and files
@@ -1061,15 +1066,9 @@ function validateFiles(files, manifest) {
 /**
  * Normalize manifest to standard format
  * @param {Object} manifest - Raw manifest
- * @param {Object} options - Options for normalization
- * @param {boolean} options.isBuildTime - Whether this is a build-time addon
  * @returns {Object} Normalized manifest
  */
 function normalizeManifest(manifest) {
-  let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  const {
-    isBuildTime = false
-  } = options;
   const normalized = {
     name: manifest.name || 'Unnamed Addon',
     description: manifest.description || '',
@@ -1083,21 +1082,12 @@ function normalizeManifest(manifest) {
     dynamicEnable: manifest.dynamicEnable === true
   };
 
-  // Add custom tag only for runtime addons (not build-time addons)
-  // Build-time addons should appear in "Others" section
-  if (!isBuildTime && !normalized.tags.includes('custom')) {
+  // Add custom tag to identify custom addons
+  if (!normalized.tags.includes('custom')) {
     normalized.tags.push('custom');
   }
   return normalized;
 }
-
-// Export functions for CommonJS
-module.exports = {
-  validateManifest,
-  validateAddonId,
-  validateFiles,
-  normalizeManifest
-};
 
 /***/ }),
 

@@ -84,8 +84,7 @@ const manifest = {
       "name": "Shrink to fit canvas"
     }],
     "default": "fit"
-  }],
-  "enabledByDefault": false
+  }]
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -568,8 +567,7 @@ const manifest = {
   }],
   "userstyles": [{
     "url": "style.css"
-  }],
-  "enabledByDefault": false
+  }]
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -632,7 +630,6 @@ const manifest = {
     "name": "GarboMuffin",
     "link": "https://scratch.mit.edu/users/GarboMuffin/"
   }],
-  "enabledByDefault": true,
   "dynamicDisable": true,
   "userscripts": [{
     "url": "userscript.js"
@@ -648,7 +645,7 @@ const manifest = {
     "id": "paddingSize",
     "type": "integer",
     "min": 50,
-    "default": 100,
+    "default": 70,
     "max": 200
   }, {
     "dynamic": true,
@@ -656,7 +653,7 @@ const manifest = {
     "id": "cornerSize",
     "type": "integer",
     "min": 0,
-    "default": 100,
+    "default": 300,
     "max": 300
   }, {
     "dynamic": true,
@@ -664,7 +661,7 @@ const manifest = {
     "id": "notchSize",
     "type": "integer",
     "min": 0,
-    "default": 100,
+    "default": 0,
     "max": 150
   }],
   "presets": [{
@@ -703,7 +700,8 @@ const manifest = {
       "cornerSize": 0,
       "notchSize": 0
     }
-  }]
+  }],
+  "enabledByDefault": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -849,7 +847,6 @@ const manifest = {
     "name": "ErrorGamer2000",
     "link": "https://scratch.mit.edu/users/ErrorGamer2000/"
   }],
-  "enabledByDefault": true,
   "userscripts": [{
     "url": "userscript.js"
   }],
@@ -862,7 +859,7 @@ const manifest = {
     "id": "maxZoom",
     "type": "integer",
     "min": 100,
-    "default": 300,
+    "default": 500,
     "max": 500
   }, {
     "dynamic": true,
@@ -870,7 +867,7 @@ const manifest = {
     "id": "minZoom",
     "type": "integer",
     "min": 1,
-    "default": 30,
+    "default": 1,
     "max": 100
   }, {
     "dynamic": true,
@@ -917,7 +914,8 @@ const manifest = {
         "autohide": true
       }
     }
-  }]
+  }],
+  "enabledByDefault": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -1239,8 +1237,7 @@ const manifest = {
   "dynamicDisable": true,
   "userstyles": [{
     "url": "userstyle.css"
-  }],
-  "enabledByDefault": false
+  }]
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -1493,7 +1490,7 @@ const manifest = {
     "id": "shiftKeysWarn"
   }, {
     "type": "warning",
-    "text": "The \"TurboWarp keys\" will only work in TurboWarp, not in Scratch.",
+    "text": "The \"TurboWarp keys\" will only work in TurboWarp or 02Engine, not in Scratch.",
     "id": "twKeysWarn"
   }],
   "settings": [{
@@ -1518,8 +1515,7 @@ const manifest = {
   "userscripts": [{
     "url": "userscript.js"
   }],
-  "dynamicDisable": true,
-  "enabledByDefault": false
+  "dynamicDisable": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -1674,8 +1670,7 @@ const manifest = {
   }, {
     "name": "World_Languages"
   }],
-  "dynamicDisable": true,
-  "enabledByDefault": false
+  "dynamicDisable": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -1785,8 +1780,7 @@ const manifest = {
     "type": "boolean",
     "default": false
   }],
-  "dynamicDisable": true,
-  "enabledByDefault": false
+  "dynamicDisable": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -2659,8 +2653,7 @@ const manifest = {
     "url": "userscript.js"
   }],
   "tags": [],
-  "dynamicDisable": true,
-  "enabledByDefault": false
+  "dynamicDisable": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -2838,8 +2831,7 @@ const manifest = {
     "default": false
   }],
   "dynamicDisable": true,
-  "tags": [],
-  "enabledByDefault": false
+  "tags": []
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -3029,8 +3021,7 @@ const manifest = {
     "url": "userscript.js"
   }],
   "dynamicDisable": true,
-  "tags": [],
-  "enabledByDefault": false
+  "tags": []
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -3124,8 +3115,7 @@ const manifest = {
   "userscripts": [{
     "url": "userscript.js"
   }],
-  "dynamicDisable": true,
-  "enabledByDefault": false
+  "dynamicDisable": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -3465,8 +3455,7 @@ const manifest = {
     "min": 4,
     "max": 100
   }],
-  "dynamicDisable": true,
-  "enabledByDefault": false
+  "dynamicDisable": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -3932,8 +3921,7 @@ const manifest = {
   }],
   "userstyles": [{
     "url": "userstyle.css"
-  }],
-  "enabledByDefault": false
+  }]
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -4193,8 +4181,7 @@ const manifest = {
     "default": false
   }],
   "dynamicDisable": true,
-  "tags": ["recommended"],
-  "enabledByDefault": false
+  "tags": ["recommended"]
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -4267,8 +4254,7 @@ const manifest = {
       }
     }
   }],
-  "dynamicDisable": true,
-  "enabledByDefault": false
+  "dynamicDisable": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
@@ -4963,7 +4949,7 @@ __webpack_require__.r(__webpack_exports__);
 /*! exports provided: commit, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"commit\":\"f41d6de\"}");
+module.exports = JSON.parse("{\"commit\":\"df5f51e\"}");
 
 /***/ }),
 
