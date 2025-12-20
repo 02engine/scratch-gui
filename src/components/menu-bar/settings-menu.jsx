@@ -4,7 +4,7 @@ import {FormattedMessage} from 'react-intl';
 
 import LanguageMenu from './language-menu.jsx';
 import MenuBarMenu from './menu-bar-menu.jsx';
-import {MenuSection} from '../menu/menu.jsx';
+import {MenuItem, MenuSection} from '../menu/menu.jsx';
 import MenuLabel from './tw-menu-label.jsx';
 import TWAccentThemeMenu from './tw-theme-accent.jsx';
 import TWGuiThemeMenu from './tw-theme-gui.jsx';
@@ -25,6 +25,8 @@ const SettingsMenu = ({
     onOpenCustomSettings,
     onRequestClose,
     onRequestOpen,
+    onSetDefaultProject,
+    onRestoreDefaultProject,
     settingsMenuOpen
 }) => (
     <MenuLabel
@@ -68,6 +70,28 @@ const SettingsMenu = ({
                     </React.Fragment>
                 )}
                 {onClickDesktopSettings && <TWDesktopSettings onClick={onClickDesktopSettings} />}
+                {onSetDefaultProject && (
+                    <MenuItem
+                        onClick={onSetDefaultProject}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Set as default project"
+                            description="Menu item to set current project as default"
+                            id="gui.menuBar.setDefaultProject"
+                        />
+                    </MenuItem>
+                )}
+                {onRestoreDefaultProject && (
+                    <MenuItem
+                        onClick={onRestoreDefaultProject}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Restore to original default project"
+                            description="Menu item to restore original default project"
+                            id="gui.menuBar.restoreDefaultProject"
+                        />
+                    </MenuItem>
+                )}
             </MenuSection>
         </MenuBarMenu>
     </MenuLabel>
@@ -81,6 +105,8 @@ SettingsMenu.propTypes = {
     onOpenCustomSettings: PropTypes.func,
     onRequestClose: PropTypes.func,
     onRequestOpen: PropTypes.func,
+    onSetDefaultProject: PropTypes.func,
+    onRestoreDefaultProject: PropTypes.func,
     settingsMenuOpen: PropTypes.bool
 };
 

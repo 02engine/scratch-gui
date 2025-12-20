@@ -9,6 +9,7 @@ import defaultProject from './default-project';
 class Storage extends ScratchStorage {
     constructor () {
         super();
+        this.CUSTOM_DEFAULT_PROJECT_KEY = 'scratch-gui.customDefaultProject';
         this.cacheDefaultProject();
     }
     addOfficialScratchWebStores () {
@@ -72,14 +73,87 @@ class Storage extends ScratchStorage {
         this.translator = translator;
         this.cacheDefaultProject();
     }
+    setCustomDefaultProject (projectData) {
+        // projectData should be ArrayBuffer of SB3 file
+        try {
+            console.log('setCustomDefaultProject received projectData:', typeof projectData, projectData.byteLength);
+            if (!projectData || projectData.byteLength === 0) {
+                console.error('Project data is empty');
+                return;
+            }
+            const uint8Array = new Uint8Array(projectData);
+            console.log('Uint8Array length:', uint8Array.length);
+            const dataArray = Array.from(uint8Array);
+            console.log('Array length:', dataArray.length);
+            const storageData = JSON.stringify({
+                data: dataArray
+            });
+            console.log('Storage data string length:', storageData.length);
+            localStorage.setItem(this.CUSTOM_DEFAULT_PROJECT_KEY, storageData);
+            console.log('Saved to localStorage, key:', this.CUSTOM_DEFAULT_PROJECT_KEY);
+            
+            // Verify the stored data
+            const stored = localStorage.getItem(this.CUSTOM_DEFAULT_PROJECT_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                console.log('Verified stored data array length:', parsed.data ? parsed.data.length : 0);
+            }
+            
+            this.cacheDefaultProject();
+        } catch (error) {
+            console.error('Failed to save custom default project:', error);
+        }
+    }
+    removeCustomDefaultProject () {
+        try {
+            localStorage.removeItem(this.CUSTOM_DEFAULT_PROJECT_KEY);
+            this.cacheDefaultProject();
+        } catch (error) {
+            console.error('Failed to remove custom default project:', error);
+        }
+    }
     cacheDefaultProject () {
-        const defaultProjectAssets = defaultProject(this.translator);
-        defaultProjectAssets.forEach(asset => this.builtinHelper._store(
-            this.AssetType[asset.assetType],
-            this.DataFormat[asset.dataFormat],
-            asset.data,
-            asset.id
-        ));
+        // Check for custom default project in localStorage
+        let customProjectData = null;
+        try {
+            const stored = localStorage.getItem(this.CUSTOM_DEFAULT_PROJECT_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (parsed.data && Array.isArray(parsed.data)) {
+                    customProjectData = new Uint8Array(parsed.data).buffer;
+                    console.log('Loaded custom default project from localStorage, size:', customProjectData.byteLength);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load custom default project:', error);
+        }
+
+        if (customProjectData && customProjectData.byteLength > 0) {
+            // Use custom default project
+            console.log('Using custom default project');
+            const asset = {
+                id: 0,
+                assetType: 'Project',
+                dataFormat: 'JSON',
+                data: customProjectData
+            };
+            this.builtinHelper._store(
+                this.AssetType[asset.assetType],
+                this.DataFormat[asset.dataFormat],
+                asset.data,
+                asset.id
+            );
+        } else {
+            // Use built-in default project
+            console.log('Using built-in default project');
+            const defaultProjectAssets = defaultProject(this.translator);
+            defaultProjectAssets.forEach(asset => this.builtinHelper._store(
+                this.AssetType[asset.assetType],
+                this.DataFormat[asset.dataFormat],
+                asset.data,
+                asset.id
+            ));
+        }
     }
 }
 

@@ -3,5 +3,15 @@
     "id": "gui.menuBar.settings",
     "description": "Settings menu",
     "defaultMessage": "Settings"
+  },
+  {
+    "id": "gui.menuBar.setDefaultProject",
+    "description": "Menu item to set current project as default",
+    "defaultMessage": "Set as default project"
+  },
+  {
+    "id": "gui.menuBar.restoreDefaultProject",
+    "description": "Menu item to restore original default project",
+    "defaultMessage": "Restore to original default project"
   }
 ]

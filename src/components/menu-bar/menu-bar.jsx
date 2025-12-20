@@ -8,6 +8,8 @@ import bowser from 'bowser';
 import React from 'react';
 
 import VM from 'scratch-vm';
+import storage from '../../lib/storage';
+import JSZip from '@turbowarp/jszip';
 
 import Box from '../box/box.jsx';
 import Button from '../button/button.jsx';
@@ -231,7 +233,9 @@ class MenuBar extends React.Component {
             'handleKeyPress',
             'handleRestoreOption',
             'getSaveToComputerHandler',
-            'restoreOptionMessage'
+            'restoreOptionMessage',
+            'handleSetDefaultProject',
+            'handleRestoreDefaultProject'
         ]);
     }
     componentDidMount () {
@@ -396,6 +400,99 @@ class MenuBar extends React.Component {
     }
     handleClickGitCommit () {
         this.props.onClickGitCommit && this.props.onClickGitCommit();
+    }
+    async handleSetDefaultProject () {
+        // Save current project as default
+        if (!this.props.vm) {
+            console.error('VM not available');
+            alert('Cannot save default project: VM not available');
+            return;
+        }
+
+        try {
+            // Check if VM has targets
+            if (!this.props.vm.runtime || !this.props.vm.runtime.targets || this.props.vm.runtime.targets.length === 0) {
+                console.warn('VM has no targets, project may be empty');
+            }
+
+            // Check if saveProjectSb3 method exists
+            if (typeof this.props.vm.saveProjectSb3 !== 'function') {
+                console.error('saveProjectSb3 is not a function on VM');
+                throw new Error('saveProjectSb3 method not available');
+            }
+
+            console.log('Calling saveProjectSb3 with arraybuffer parameter...');
+            
+            // Try saveProjectSb3 first -参考 git-quick-modal 和 tw-packager-integration-hoc 中的用法
+            let arrayBuffer;
+            try {
+                // 参考 git-quick-modal.jsx: const projectData = await vm.saveProjectSb3();
+                // 参考 tw-packager-integration-hoc.jsx: this.props.vm.saveProjectSb3('arraybuffer')
+                // 尝试两种调用方式
+                if (this.props.vm.saveProjectSb3.length > 0) {
+                    // 如果函数有参数，使用 'arraybuffer' 参数
+                    arrayBuffer = await this.props.vm.saveProjectSb3('arraybuffer');
+                } else {
+                    // 否则无参数调用
+                    arrayBuffer = await this.props.vm.saveProjectSb3();
+                }
+                console.log('saveProjectSb3 returned:', typeof arrayBuffer, arrayBuffer ? arrayBuffer.byteLength : 'undefined');
+                
+                if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+                    console.warn('saveProjectSb3 returned empty or undefined, trying saveProjectSb3DontZip');
+                    throw new Error('Empty project data from saveProjectSb3');
+                }
+                
+                // 保存到 storage
+                storage.setCustomDefaultProject(arrayBuffer);
+                console.log('Current project saved as default via saveProjectSb3, size:', arrayBuffer.byteLength);
+                alert('当前作品已设置为默认作品，下次启动时将加载此作品。');
+                
+            } catch (firstError) {
+                console.warn('First method failed, trying saveProjectSb3DontZip:', firstError.message);
+                
+                // Try alternative method using saveProjectSb3DontZip (参考 tw-restore-point-api.js)
+                if (typeof this.props.vm.saveProjectSb3DontZip === 'function') {
+                    const projectFiles = this.props.vm.saveProjectSb3DontZip();
+                    console.log('saveProjectSb3DontZip returned files:', Object.keys(projectFiles));
+                    
+                    if (!projectFiles || Object.keys(projectFiles).length === 0) {
+                        throw new Error('No project files returned from saveProjectSb3DontZip');
+                    }
+                    
+                    // Convert to SB3 using jszip (参考 git 中的模式)
+                    const zip = new JSZip();
+                    for (const [filename, data] of Object.entries(projectFiles)) {
+                        zip.file(filename, data);
+                    }
+                    const sb3Buffer = await zip.generateAsync({type: 'arraybuffer'});
+                    console.log('Generated SB3 buffer size:', sb3Buffer.byteLength);
+                    
+                    storage.setCustomDefaultProject(sb3Buffer);
+                    console.log('Current project saved as default via saveProjectSb3DontZip, size:', sb3Buffer.byteLength);
+                    alert('当前作品已设置为默认作品，下次启动时将加载此作品。');
+                } else {
+                    throw new Error('Both saveProjectSb3 and saveProjectSb3DontZip methods failed');
+                }
+            }
+            
+        } catch (error) {
+            console.error('Failed to save project as default:', error);
+            alert('保存默认作品失败: ' + error.message);
+        }
+        
+        if (this.props.onSetDefaultProject) {
+            this.props.onSetDefaultProject();
+        }
+    }
+    handleRestoreDefaultProject () {
+        // Restore to original default project
+        storage.removeCustomDefaultProject();
+        console.log('Restored to original default project');
+        alert('Default project has been restored to original. It will load on next startup.');
+        if (this.props.onRestoreDefaultProject) {
+            this.props.onRestoreDefaultProject();
+        }
     }
     buildAboutMenu (onClickAbout) {
         if (!onClickAbout) {
@@ -566,6 +663,8 @@ class MenuBar extends React.Component {
                             }
                             onRequestClose={this.props.onRequestCloseSettings}
                             onRequestOpen={this.props.onClickSettings}
+                            onSetDefaultProject={this.handleSetDefaultProject}
+                            onRestoreDefaultProject={this.handleRestoreDefaultProject}
                             settingsMenuOpen={this.props.settingsMenuOpen}
                         />)}
                         {(this.props.canManageFiles) && (
@@ -1181,6 +1280,8 @@ MenuBar.propTypes = {
     onClickAccount: PropTypes.func,
     onClickAddonSettings: PropTypes.func,
     onClickDesktopSettings: PropTypes.func,
+    onSetDefaultProject: PropTypes.func,
+    onRestoreDefaultProject: PropTypes.func,
     onClickPackager: PropTypes.func,
     onClickRestorePoints: PropTypes.func,
     onClickEdit: PropTypes.func,
