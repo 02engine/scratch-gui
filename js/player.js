@@ -2576,7 +2576,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */\n\n/* layout contants from `layout-constants.js` */\n\n/* overridden by src/lib/themes/guiHelpers.js */\n\n/*\n    Contains constants for the z-index values of elements that are part of the global stack context.\n    In other words, z-index values that are \"inside\" a component are not added here.\n    This prevents conflicts between identical z-index values in different components.\n*/\n\n/* Toolbox z-index: 40; set in scratch-blocks */\n\n/* tooltips should go over add buttons if they overlap */\n\n/* monitors go over add buttons */\n\n/* \"ask\" block text input goes above monitors */\n\n/* menu-bar should go over monitors, alerts and tutorials */\n\n/* behind menu-bar */\n\n/* Block drag z-index: 1000; default 50 is overriden in blocks.css */\n\n/* so it is draggable into other panes */\n\n/* behind modals */\n\n/* behind modals */\n\n/* above menu-bar when dragging */\n\n/* in most interfaces, the context menu is always on top */\n\n.stage-header_stage-header-wrapper_1F4gT {\n    position: absolute;\n    top: 0;\n}\n\n[dir=\"ltr\"] .stage-header_stage-header-wrapper_1F4gT {\n    left: 0;\n}\n\n[dir=\"rtl\"] .stage-header_stage-header-wrapper_1F4gT {\n    right: 0;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa {\n    position: fixed;\n    background-color: var(--fullscreen-accent);\n    top: 0;\n    left: 0;\n    right: 0;\n    z-index: 500;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa.stage-header_embedded_nhDjw {\n    background-color: transparent;\n}\n\n.stage-header_stage-menu-wrapper_15JJt {\n    display: flex;\n    margin: auto;\n    justify-content: space-between;\n    flex-shrink: 0;\n    align-items: center;\n    height: 2.75rem;\n    padding-top: 0.5rem;\n    padding-bottom: 0.5rem;\n}\n\n.stage-header_stage-size-row_14N65 {\n    display: flex;\n}\n\n.stage-header_stage-size-toggle-group_17LtK {\n    display: flex;\n}\n\n.stage-header_stage-size-row_14N65 > *, .stage-header_unselect-wrapper_1leRy {\n    /* Use a white background so semi-transparent selection states look correct */\n    background-color: var(--ui-white);\n    border-radius: calc(0.5rem / 2);\n}\n\n[dir=\"ltr\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"ltr\"] .stage-header_settings-button_3t4e7 {\n    margin-right: .2rem;\n}\n\n[dir=\"rtl\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"rtl\"] .stage-header_settings-button_3t4e7 {\n    margin-left: .2rem;\n}\n\n.stage-header_stage-button_hkl9B {\n    display: block;\n    border: 1px solid var(--ui-black-transparent);\n    border-radius: calc(0.5rem / 2);\n    width: calc(2rem + 2px);\n    height: calc(2rem + 2px);\n    background: var(--ui-white);\n    padding: 0.375rem;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    cursor: pointer;\n}\n\n.stage-header_stage-button_hkl9B:active {\n    background-color: var(--looks-transparent);\n}\n\n.stage-header_stage-button-icon_3zzFK {\n    width: 100%;\n    height: 100%;\n    filter: var(--filter-icon-gray);\n}\n\n[dir=\"rtl\"] .stage-header_stage-button-icon_3zzFK {\n    transform: scaleX(-1);\n}\n\n.stage-header_fullscreen-buttons-row_j3xTR {\n    /* relied on by addons */\n    display: flex;\n}\n\n.stage-header_btn_32l-4{\n    padding:4px;\n    color:white;\n    font-size:10px;\n    background: rgb(23, 23, 23);\n    border: 1px solid rgb(61, 61, 61);\n    border-radius: 5px;\n}\n\n.stage-header_btn_32l-4:not(.stage-header_droppable_1hk3N):dragover {\n  display: none; /* 隐藏元素 */\n}", ""]);
+exports.push([module.i, "/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */\n\n/* layout contants from `layout-constants.js` */\n\n/* overridden by src/lib/themes/guiHelpers.js */\n\n/*\n    Contains constants for the z-index values of elements that are part of the global stack context.\n    In other words, z-index values that are \"inside\" a component are not added here.\n    This prevents conflicts between identical z-index values in different components.\n*/\n\n/* Toolbox z-index: 40; set in scratch-blocks */\n\n/* tooltips should go over add buttons if they overlap */\n\n/* monitors go over add buttons */\n\n/* \"ask\" block text input goes above monitors */\n\n/* menu-bar should go over monitors, alerts and tutorials */\n\n/* behind menu-bar */\n\n/* Block drag z-index: 1000; default 50 is overriden in blocks.css */\n\n/* so it is draggable into other panes */\n\n/* behind modals */\n\n/* behind modals */\n\n/* above menu-bar when dragging */\n\n/* in most interfaces, the context menu is always on top */\n\n.stage-header_stage-header-wrapper_1F4gT {\n    position: absolute;\n    top: 0;\n}\n\n[dir=\"ltr\"] .stage-header_stage-header-wrapper_1F4gT {\n    left: 0;\n}\n\n[dir=\"rtl\"] .stage-header_stage-header-wrapper_1F4gT {\n    right: 0;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa {\n    position: fixed;\n    background-color: var(--fullscreen-accent);\n    top: 0;\n    left: 0;\n    right: 0;\n    z-index: 500;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa.stage-header_embedded_nhDjw {\n    background-color: transparent;\n}\n\n.stage-header_stage-menu-wrapper_15JJt {\n    display: flex;\n    margin: auto;\n    justify-content: space-between;\n    flex-shrink: 0;\n    align-items: center;\n    height: 2.75rem;\n    padding-top: 0.5rem;\n    padding-bottom: 0.5rem;\n}\n\n.stage-header_stage-size-row_14N65 {\n    display: flex;\n}\n\n.stage-header_stage-size-toggle-group_17LtK {\n    display: flex;\n}\n\n.stage-header_stage-size-row_14N65 > *, .stage-header_unselect-wrapper_1leRy {\n    /* Use a white background so semi-transparent selection states look correct */\n    background-color: var(--ui-white);\n    border-radius: calc(0.5rem / 2);\n}\n\n[dir=\"ltr\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"ltr\"] .stage-header_settings-button_3t4e7 {\n    margin-right: .2rem;\n}\n\n[dir=\"rtl\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"rtl\"] .stage-header_settings-button_3t4e7 {\n    margin-left: .2rem;\n}\n\n.stage-header_stage-button_hkl9B {\n    display: block;\n    border: 1px solid var(--ui-black-transparent);\n    border-radius: calc(0.5rem / 2);\n    width: calc(2rem + 2px);\n    height: calc(2rem + 2px);\n    background: var(--ui-white);\n    padding: 0.375rem;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    cursor: pointer;\n}\n\n.stage-header_stage-button_hkl9B:active {\n    background-color: var(--looks-transparent);\n}\n\n.stage-header_stage-button-icon_3zzFK {\n    width: 100%;\n    height: 100%;\n    filter: var(--filter-icon-gray);\n}\n\n[dir=\"rtl\"] .stage-header_stage-button-icon_3zzFK {\n    transform: scaleX(-1);\n}\n\n.stage-header_fullscreen-buttons-row_j3xTR {\n    /* relied on by addons */\n    display: flex;\n}\n\n.stage-header_btn_32l-4{\n    padding:4px;\n    color:white;\n    font-size:10px;\n    background: rgb(23, 23, 23);\n    border: 1px solid rgb(61, 61, 61);\n    border-radius: 5px;\n}\n\n.stage-header_btn_32l-4:not(.stage-header_droppable_1hk3N):dragover {\n  display: none; /* 隐藏元素 */\n}\n\n.stage-header_openInEditorContainer_JdqHH {\n    display: flex;\n    align-items: center;\n    /* Provide horizontal spacing between Open in Editor and adjacent buttons */\n    margin-right: .5rem;\n}\n\n.stage-header_openInEditorLink_2cTmR {\n    font-weight: bold;\n    text-decoration: none;\n    color: var(--ui-black-transparent);\n}\n\n[dir=\"rtl\"] .stage-header_openInEditorContainer_JdqHH {\n    /* Mirror spacing for RTL */\n    margin-right: 0;\n    margin-left: .5rem;\n}", ""]);
 
 // exports
 exports.locals = {
@@ -2602,7 +2602,9 @@ exports.locals = {
 	"fullscreen-buttons-row": "stage-header_fullscreen-buttons-row_j3xTR",
 	"fullscreenButtonsRow": "stage-header_fullscreen-buttons-row_j3xTR",
 	"btn": "stage-header_btn_32l-4",
-	"droppable": "stage-header_droppable_1hk3N"
+	"droppable": "stage-header_droppable_1hk3N",
+	"openInEditorContainer": "stage-header_openInEditorContainer_JdqHH",
+	"openInEditorLink": "stage-header_openInEditorLink_2cTmR"
 };
 
 /***/ }),
@@ -3713,7 +3715,7 @@ exports = module.exports = __webpack_require__(/*! ../../node_modules/css-loader
 
 
 // module
-exports.push([module.i, "/* overridden by src/lib/themes/guiHelpers.js */\n\n/* Base styles used by Scratch https://github.com/LLK/scratch-www/blob/develop/src/main.scss */\n\nh1,\nh2,\nh3,\nh4,\nh5,\np {\n    margin: 0;\n    padding: 0;\n    border: 0;\n}\n\nh1,\nh2,\nh3,\nh4,\nh5 {\n    font-weight: bold;\n    line-height: 1.7em;\n}\n\nh1 {\n    font-weight: 2.5rem;\n}\n\nh2 {\n    font-weight: 2rem;\n}\n\nh3 {\n    font-size: 1.4rem;\n}\n\nh4 {\n    font-size: 1rem;\n}\n\na {\n    color: var(--link-color);\n    cursor: pointer;\n    text-decoration: underline;\n}\n\n.interface_container_2nBns {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    background-color: var(--page-background);\n}\n\n.interface_editor_3jGyG {\n    height: 100%;\n}\n\n.interface_editor_3jGyG .interface_center_2d9_b {\n    height: 100%;\n}\n\n.interface_player-only_38SyA .interface_center_2d9_b {\n    margin: auto;\n}\n\n.interface_menu_3K-Q2 {\n    margin-bottom: 8px;\n}\n\n.interface_section_3pFkT {\n    margin: 8px 0 8px 0;\n}\n\n.interface_footer_3JeCN {\n    padding: 10px 0;\n    margin-top: 10px;\n    border-top: 2px solid var(--ui-black-transparent);\n}\n\n.interface_footer_3JeCN a {\n    font-weight: bold;\n    text-decoration: none;\n}\n\n.interface_footer-content_1aIC- {\n    max-width: 600px;\n    margin: auto;\n}\n\n.interface_footer-text_IgwDU {\n    text-align: center;\n    margin: 5px 0 10px 0;\n}\n\n.interface_footer-columns_1SUSg {\n    display: flex;\n    justify-content: center;\n    justify-items: center;\n    flex-wrap: wrap;\n}\n\n.interface_footer-section_11lCO {\n    display: flex;\n    flex-direction: column;\n    width: 200px;\n    margin-bottom: 10px;\n}\n\n.interface_footer-section_11lCO > * {\n    margin-bottom: 10px;\n}\n\n.interface_infobox_1B2Hp {\n    line-height: 1.5em;\n    padding: 0.5rem;\n    margin: 5px 0 8px 0;\n    border-radius: 0.5rem;\n    border: 1px solid #b9d6ff;\n    background-color: #dbebff;\n}\n\n.interface_infobox_1B2Hp p {\n    margin: 4px 0;\n}\n\n.interface_infobox_1B2Hp a {\n    font-weight: bold;\n    text-decoration: none;\n}\n\n.interface_unshared-update_i7deb {\n    border-color: #ff52526e;\n    background-color: #ff525240;\n}\n", ""]);
+exports.push([module.i, "/* overridden by src/lib/themes/guiHelpers.js */\n\n/* Base styles used by Scratch https://github.com/LLK/scratch-www/blob/develop/src/main.scss */\n\nh1,\nh2,\nh3,\nh4,\nh5,\np {\n    margin: 0;\n    padding: 0;\n    border: 0;\n}\n\nh1,\nh2,\nh3,\nh4,\nh5 {\n    font-weight: bold;\n    line-height: 1.7em;\n}\n\nh1 {\n    font-weight: 2.5rem;\n}\n\nh2 {\n    font-weight: 2rem;\n}\n\nh3 {\n    font-size: 1.4rem;\n}\n\nh4 {\n    font-size: 1rem;\n}\n\na {\n    color: var(--link-color);\n    cursor: pointer;\n    text-decoration: underline;\n}\n\n.interface_container_2nBns {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    background-color: var(--page-background);\n}\n\n.interface_editor_3jGyG {\n    height: 100%;\n}\n\n.interface_editor_3jGyG .interface_center_2d9_b {\n    height: 100%;\n}\n\n.interface_player-only_38SyA .interface_center_2d9_b {\n    margin: auto;\n}\n\n.interface_menu_3K-Q2 {\n    margin-bottom: 8px;\n}\n\n.interface_openInEditorTop_AQsaR {\n    display: flex;\n    justify-content: flex-end;\n    padding: 6px 12px;\n}\n\n.interface_openInEditorTop_AQsaR a {\n    font-weight: bold;\n    text-decoration: none;\n}\n\n.interface_section_3pFkT {\n    margin: 8px 0 8px 0;\n}\n\n.interface_footer_3JeCN {\n    padding: 10px 0;\n    margin-top: 10px;\n    border-top: 2px solid var(--ui-black-transparent);\n}\n\n.interface_footer_3JeCN a {\n    font-weight: bold;\n    text-decoration: none;\n}\n\n.interface_footer-content_1aIC- {\n    max-width: 600px;\n    margin: auto;\n}\n\n.interface_footer-text_IgwDU {\n    text-align: center;\n    margin: 5px 0 10px 0;\n}\n\n.interface_footer-columns_1SUSg {\n    display: flex;\n    justify-content: center;\n    justify-items: center;\n    flex-wrap: wrap;\n}\n\n.interface_footer-section_11lCO {\n    display: flex;\n    flex-direction: column;\n    width: 200px;\n    margin-bottom: 10px;\n}\n\n.interface_footer-section_11lCO > * {\n    margin-bottom: 10px;\n}\n\n.interface_infobox_1B2Hp {\n    line-height: 1.5em;\n    padding: 0.5rem;\n    margin: 5px 0 8px 0;\n    border-radius: 0.5rem;\n    border: 1px solid #b9d6ff;\n    background-color: #dbebff;\n}\n\n.interface_infobox_1B2Hp p {\n    margin: 4px 0;\n}\n\n.interface_infobox_1B2Hp a {\n    font-weight: bold;\n    text-decoration: none;\n}\n\n.interface_unshared-update_i7deb {\n    border-color: #ff52526e;\n    background-color: #ff525240;\n}\n", ""]);
 
 // exports
 exports.locals = {
@@ -3723,6 +3725,7 @@ exports.locals = {
 	"player-only": "interface_player-only_38SyA",
 	"playerOnly": "interface_player-only_38SyA",
 	"menu": "interface_menu_3K-Q2",
+	"openInEditorTop": "interface_openInEditorTop_AQsaR",
 	"section": "interface_section_3pFkT",
 	"footer": "interface_footer_3JeCN",
 	"footer-content": "interface_footer-content_1aIC-",
@@ -21527,6 +21530,10 @@ const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["defineMessages"
   openSettingsMessage: {
     "id": "tw.openAdvanced",
     "defaultMessage": "Open advanced settings"
+  },
+  openInEditorMessage: {
+    "id": "tw.stageHeader.openInEditor",
+    "defaultMessage": "Open in Editor"
   }
 });
 const enableSettingsButton = new URLSearchParams(location.search).has('settings-button');
@@ -21554,6 +21561,13 @@ const StageHeaderComponent = function StageHeaderComponent(props) {
   } = props;
   let header = null;
   const stageDimensions = Object(_lib_screen_utils__WEBPACK_IMPORTED_MODULE_10__["getStageDimensions"])(stageSize, customStageSize, isFullScreen || isEmbedded);
+  const projectUrl = new URLSearchParams(location.search).get('project_url');
+  const openInEditorElement = isEmbedded && projectUrl ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.openInEditorContainer
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
+    className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.openInEditorLink,
+    href: "".concat("", "editor?project_url=").concat(encodeURIComponent(projectUrl))
+  }, props.intl.formatMessage(messages.openInEditorMessage))) : null;
   if (isFullScreen || isEmbedded) {
     const settingsButton = isEmbedded && enableSettingsButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.settingsButton, _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.unselectWrapper)
@@ -21605,7 +21619,7 @@ const StageHeaderComponent = function StageHeaderComponent(props) {
       key: "fullscreen" // addons require the HTML element to be not be re-used by in-editor buttons
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_controls_jsx__WEBPACK_IMPORTED_MODULE_9__["default"], {
       vm: vm
-    }), settingsButton, fullscreenButton)));
+    }), openInEditorElement, settingsButton, fullscreenButton)));
   } else {
     const stageControls = isPlayerOnly ? [] : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageSizeToggleGroup
@@ -21618,7 +21632,7 @@ const StageHeaderComponent = function StageHeaderComponent(props) {
     }, "\u7F29\u5C0F\u5B57\u4F53"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
       className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.btn,
       onClick: onZoomInCoordinateFontSize
-    }, "\u653E\u5927\u5B57\u4F53")) : null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_toggle_buttons_toggle_buttons_jsx__WEBPACK_IMPORTED_MODULE_8__["default"], {
+    }, "\u653E\u5927\u5B57\u4F53"), openInEditorElement) : null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_toggle_buttons_toggle_buttons_jsx__WEBPACK_IMPORTED_MODULE_8__["default"], {
       buttons: [{
         handleClick: onSetStageSmall,
         icon: _lib_tw_recolor_build_icon_small_stage_svg__WEBPACK_IMPORTED_MODULE_15__["default"],
@@ -41030,7 +41044,18 @@ const AppStateHOC = function AppStateHOC(WrappedComponent, localesOnly) {
       let reducers = {};
       let enhancer;
       let initializedLocales = _reducers_locales__WEBPACK_IMPORTED_MODULE_6__["localesInitialState"];
-      const locale = Object(_detect_locale__WEBPACK_IMPORTED_MODULE_9__["detectLocale"])(Object.keys(_turbowarp_scratch_l10n__WEBPACK_IMPORTED_MODULE_8__["default"]));
+      // Determine initial locale. Preference order:
+      // 1. `locale` query parameter (e.g., embed.html?locale=zh)
+      // 2. Detected browser/editor locale
+      const urlParams = typeof URLSearchParams === 'undefined' ? null : new URLSearchParams(location.search);
+      let locale = Object(_detect_locale__WEBPACK_IMPORTED_MODULE_9__["detectLocale"])(Object.keys(_turbowarp_scratch_l10n__WEBPACK_IMPORTED_MODULE_8__["default"]));
+      if (urlParams && urlParams.has('locale')) {
+        const requested = urlParams.get('locale');
+        // Only accept the override if the locale is supported
+        if (Object.prototype.hasOwnProperty.call(_turbowarp_scratch_l10n__WEBPACK_IMPORTED_MODULE_8__["default"], requested)) {
+          locale = requested;
+        }
+      }
       if (locale !== 'en') {
         initializedLocales = Object(_reducers_locales__WEBPACK_IMPORTED_MODULE_6__["initLocale"])(initializedLocales, locale);
       }
@@ -56604,7 +56629,12 @@ const Footer = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.c
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"], {
   defaultMessage: "Documentation",
   id: "tw.footer.documentation"
-}))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+})), isInvalidEmbed && new URLSearchParams(location.search).has('project_url') ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
+  href: "".concat("", "editor?project_url=").concat(encodeURIComponent(new URLSearchParams(location.search).get('project_url')))
+}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"], {
+  defaultMessage: "Open in Editor",
+  id: "tw.footer.openInEditor"
+})) : null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
   className: _interface_css__WEBPACK_IMPORTED_MODULE_28___default.a.footerSection
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
   href: "https://qm.qq.com/q/PBB5Pgjmqk"
@@ -56665,7 +56695,13 @@ class Interface extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Component {
         [_interface_css__WEBPACK_IMPORTED_MODULE_28___default.a.editor]: isEditor
       }),
       dir: isRtl ? 'rtl' : 'ltr'
-    }, isHomepage ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+    }, isInvalidEmbed && new URLSearchParams(location.search).has('project_url') ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+      className: _interface_css__WEBPACK_IMPORTED_MODULE_28___default.a.openInEditorTop
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
+      href: "".concat("", "editor?project_url=").concat(encodeURIComponent(new URLSearchParams(location.search).get('project_url')))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"], {
+      id: "tw.footer.openInEditor"
+    }))) : null, isHomepage ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: _interface_css__WEBPACK_IMPORTED_MODULE_28___default.a.menu
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(WrappedMenuBar, {
       canChangeLanguage: true,
