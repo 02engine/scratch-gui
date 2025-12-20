@@ -35,6 +35,11 @@
     "defaultMessage": "Documentation"
   },
   {
+    "id": "tw.footer.openInEditor",
+    "description": "Open the embedded project in the editor using project_url",
+    "defaultMessage": "Open in Editor"
+  },
+  {
     "id": "tw.feedback",
     "description": "Link to feedback/bugs page",
     "defaultMessage": "Feedback & Bugs"

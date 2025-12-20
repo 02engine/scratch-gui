@@ -33,5 +33,10 @@
     "id": "tw.openAdvanced",
     "description": "Button to open advanced settings in embeds",
     "defaultMessage": "Open advanced settings"
+  },
+  {
+    "id": "tw.stageHeader.openInEditor",
+    "description": "Link to open the embedded project in the editor",
+    "defaultMessage": "Open in Editor"
   }
 ]

@@ -1,10 +1,9 @@
 import classNames from 'classnames';
-import {defineMessages, injectIntl, intlShape} from 'react-intl';
+import {defineMessages, injectIntl, intlShape, FormattedMessage} from 'react-intl';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {connect} from 'react-redux';
 import VM from 'scratch-vm';
-
 import Box from '../box/box.jsx';
 import Button from '../button/button.jsx';
 import ToggleButtons from '../toggle-buttons/toggle-buttons.jsx';
@@ -59,6 +58,12 @@ const messages = defineMessages({
         description: 'Button to open advanced settings in embeds',
         id: 'tw.openAdvanced'
     }
+    ,
+    openInEditorMessage: {
+        defaultMessage: 'Open in Editor',
+        description: 'Link to open the embedded project in the editor',
+        id: 'tw.stageHeader.openInEditor'
+    }
 });
 
 const enableSettingsButton = new URLSearchParams(location.search).has('settings-button');
@@ -90,6 +95,17 @@ const StageHeaderComponent = function (props) {
     let header = null;
 
     const stageDimensions = getStageDimensions(stageSize, customStageSize, isFullScreen || isEmbedded);
+    const projectUrl = new URLSearchParams(location.search).get('project_url');
+    const openInEditorElement = isEmbedded && projectUrl ? (
+        <div className={styles.openInEditorContainer}>
+            <a
+                className={styles.openInEditorLink}
+                href={`${process.env.ROOT}editor?project_url=${encodeURIComponent(projectUrl)}`}
+            >
+                {props.intl.formatMessage(messages.openInEditorMessage)}
+            </a>
+        </div>
+    ) : null;
 
     if (isFullScreen || isEmbedded) {
         const settingsButton = isEmbedded && enableSettingsButton ? (
@@ -155,6 +171,7 @@ const StageHeaderComponent = function (props) {
                         key="fullscreen" // addons require the HTML element to be not be re-used by in-editor buttons
                     >
                         <Controls vm={vm} />
+                        {openInEditorElement}
                         {settingsButton}
                         {fullscreenButton}
                     </div>
@@ -183,6 +200,7 @@ const StageHeaderComponent = function (props) {
                                         className={styles.btn}
                                         onClick={onZoomInCoordinateFontSize}
                                     >放大字体</button>
+                    {openInEditorElement}
                                 </>
                             ) : null
                         }

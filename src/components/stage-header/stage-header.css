@@ -102,3 +102,21 @@
 .btn:not(.droppable):dragover {
   display: none; /* 隐藏元素 */
 }
+
+.openInEditorContainer {
+    display: flex;
+    align-items: center;
+    /* Provide horizontal spacing between Open in Editor and adjacent buttons */
+    margin-right: .5rem;
+}
+.openInEditorLink {
+    font-weight: bold;
+    text-decoration: none;
+    color: $ui-black-transparent;
+}
+
+[dir="rtl"] .openInEditorContainer {
+    /* Mirror spacing for RTL */
+    margin-right: 0;
+    margin-left: .5rem;
+}

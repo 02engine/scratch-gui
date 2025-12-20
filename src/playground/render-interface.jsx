@@ -116,7 +116,7 @@ const Footer = () => (
                 />
             </div>
 
-            <div className={styles.footerColumns}>
+                <div className={styles.footerColumns}>
                 <div className={styles.footerSection}>
                     <a href="credits.html">
                         <FormattedMessage
@@ -156,6 +156,17 @@ const Footer = () => (
                             id="tw.footer.documentation"
                         />
                     </a>
+                    {isInvalidEmbed && new URLSearchParams(location.search).has('project_url') ? (
+                        <a
+                            href={`${process.env.ROOT}editor?project_url=${encodeURIComponent(new URLSearchParams(location.search).get('project_url'))}`}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Open in Editor"
+                                description="Open the embedded project in the editor using project_url"
+                                id="tw.footer.openInEditor"
+                            />
+                        </a>
+                    ) : null}
                 </div>
                 <div className={styles.footerSection}>
                     <a href="https://qm.qq.com/q/PBB5Pgjmqk">
@@ -230,6 +241,18 @@ class Interface extends React.Component {
                 })}
                 dir={isRtl ? 'rtl' : 'ltr'}
             >
+                    {/* Top-level 'Open in Editor' link for embedded projects with project_url */}
+                    {isInvalidEmbed && new URLSearchParams(location.search).has('project_url') ? (
+                        <div className={styles.openInEditorTop}>
+                            <a
+                                href={`${process.env.ROOT}editor?project_url=${encodeURIComponent(new URLSearchParams(location.search).get('project_url'))}`}
+                            >
+                                <FormattedMessage
+                                    id="tw.footer.openInEditor"
+                                />
+                            </a>
+                        </div>
+                    ) : null}
                 {isHomepage ? (
                     <div className={styles.menu}>
                         <WrappedMenuBar
@@ -240,6 +263,7 @@ class Interface extends React.Component {
                             onClickAddonSettings={handleClickAddonSettings}
                         />
                     </div>
+                    
                 ) : null}
                 <div
                     className={styles.center}

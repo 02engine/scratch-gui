@@ -32,7 +32,18 @@ const AppStateHOC = function (WrappedComponent, localesOnly) {
             let enhancer;
 
             let initializedLocales = localesInitialState;
-            const locale = detectLocale(Object.keys(locales));
+            // Determine initial locale. Preference order:
+            // 1. `locale` query parameter (e.g., embed.html?locale=zh)
+            // 2. Detected browser/editor locale
+            const urlParams = typeof URLSearchParams === 'undefined' ? null : new URLSearchParams(location.search);
+            let locale = detectLocale(Object.keys(locales));
+            if (urlParams && urlParams.has('locale')) {
+                const requested = urlParams.get('locale');
+                // Only accept the override if the locale is supported
+                if (Object.prototype.hasOwnProperty.call(locales, requested)) {
+                    locale = requested;
+                }
+            }
             if (locale !== 'en') {
                 initializedLocales = initLocale(initializedLocales, locale);
             }

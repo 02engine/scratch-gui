@@ -58,6 +58,16 @@ a {
 .menu {
     margin-bottom: 8px;
 }
+
+.openInEditorTop {
+    display: flex;
+    justify-content: flex-end;
+    padding: 6px 12px;
+}
+.openInEditorTop a {
+    font-weight: bold;
+    text-decoration: none;
+}
 .section {
     margin: 8px 0 8px 0;
 }
