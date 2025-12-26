@@ -42540,44 +42540,56 @@ const initializeBlockDisableExtension = vm => {
   vmBlockDisableManager = new _vm_block_disable__WEBPACK_IMPORTED_MODULE_1__["default"](vm);
 
   // Add context menu item for blocks using addons API
-  // Add context menu item for blocks using addons API
+  console.log('Initializing block disable extension with VM:', vm);
   if (window.addon && window.addon.tab && window.addon.tab.createBlockContextMenu) {
+    console.log('Using addons API for context menu');
     window.addon.tab.createBlockContextMenu((items, ctx) => {
+      console.log('Context menu callback called, ctx:', ctx, 'block:', ctx ? ctx.block : 'none');
       if (!ctx || !ctx.block) return items;
-      const isDisabled = vm.getBlockDisabledState && vm.getBlockDisabledState(ctx.block.id);
-      items.push({
-        text: isDisabled ? 'Enable Block' : 'Disable Block',
-        callback: () => {
-          const newDisabledState = !isDisabled;
-          if (vm.setBlockDisabledState) {
-            vm.setBlockDisabledState(ctx.block.id, newDisabledState);
 
-            // Update visual appearance
-            if (ctx.block.setDisabled) {
-              ctx.block.setDisabled(newDisabledState);
-            }
-
-            // Recursively update child blocks
-            const updateBlockTree = (block, disabled) => {
-              if (block && block.setDisabled) {
-                block.setDisabled(disabled);
-              }
-              if (block && block.getChildren) {
-                block.getChildren().forEach(child => {
-                  if (child instanceof Blockly.Block) {
-                    updateBlockTree(child, disabled);
-                  }
-                });
-              }
-            };
-            updateBlockTree(ctx.block, newDisabledState);
-            if (ctx.block.workspace && ctx.block.workspace.render) {
-              ctx.block.workspace.render();
-            }
-          }
-        },
-        separator: true
+      // Add "Copy JS Code" option for hat blocks (top-level blocks)
+      // Check if this is a hat block (no previous block)
+      const isHatBlock = !ctx.block.getPreviousBlock();
+      console.log('Checking Copy JS Code option:', {
+        blockId: ctx.block.id,
+        isHatBlock: isHatBlock,
+        hasGetPreviousBlock: typeof ctx.block.getPreviousBlock,
+        previousBlock: ctx.block.getPreviousBlock(),
+        hasGetBlockCompiledSource: !!vm.getBlockCompiledSource
       });
+      if (isHatBlock && vm.getBlockCompiledSource) {
+        console.log('Adding Copy JS Code menu item for block:', ctx.block.id);
+        items.push({
+          enabled: true,
+          text: 'Copy JS Code',
+          callback: () => {
+            try {
+              const jsCode = vm.getBlockCompiledSource(ctx.block.id);
+              if (jsCode) {
+                // Copy to clipboard
+                navigator.clipboard.writeText(jsCode).then(() => {
+                  console.log('JavaScript code copied to clipboard:', jsCode);
+                  // Optional: Show a notification
+                  if (window.addon && window.addon.tab && window.addon.tab.redux && window.addon.tab.redux.dispatch) {
+                    window.addon.tab.redux.dispatch({
+                      type: 'alerts/addAlert',
+                      message: 'JavaScript code copied to clipboard',
+                      alertType: 'info'
+                    });
+                  }
+                }).catch(err => {
+                  console.error('Failed to copy to clipboard:', err);
+                });
+              } else {
+                console.warn('No compiled JavaScript code available for block:', ctx.block.id);
+              }
+            } catch (error) {
+              console.error('Error getting compiled JavaScript code:', error);
+            }
+          },
+          separator: true
+        });
+      }
       return items;
     }, {
       blocks: true
@@ -42585,76 +42597,80 @@ const initializeBlockDisableExtension = vm => {
   } else {
     // Fallback: Use direct context menu patching
     console.warn('Addon API not available, using fallback block disable menu');
+    console.log('Checking for ScratchBlocks/Blockly:', {
+      hasWindowScratchBlocks: !!window.ScratchBlocks,
+      hasWindowBlockly: !!window.Blockly,
+      ScratchBlocks: window.ScratchBlocks ? 'present' : 'missing',
+      Blockly: window.Blockly ? 'present' : 'missing'
+    });
 
-    // Patch Blockly context menu directly
-    if (window.Blockly && Blockly.ContextMenu && Blockly.ContextMenu.show && typeof Blockly.ContextMenu.show === 'function') {
-      const originalShow = Blockly.ContextMenu.show;
-      Blockly.ContextMenu.show = function (event, items, rtl) {
-        const gesture = Blockly.mainWorkspace && Blockly.mainWorkspace.currentGesture_;
+    // Patch ScratchBlocks context menu directly
+    // Use ScratchBlocks instead of Blockly as global variable
+    const ScratchBlocks = window.ScratchBlocks || window.Blockly;
+    if (ScratchBlocks && ScratchBlocks.ContextMenu && ScratchBlocks.ContextMenu.show && typeof ScratchBlocks.ContextMenu.show === 'function') {
+      console.log('Patching ScratchBlocks.ContextMenu.show');
+      const originalShow = ScratchBlocks.ContextMenu.show;
+      ScratchBlocks.ContextMenu.show = function (event, items, rtl) {
+        console.log('Patched ContextMenu.show called, gesture:', ScratchBlocks.mainWorkspace ? ScratchBlocks.mainWorkspace.currentGesture_ : 'no workspace');
+        const gesture = ScratchBlocks.mainWorkspace && ScratchBlocks.mainWorkspace.currentGesture_;
         const block = gesture && gesture.targetBlock_;
         if (block) {
-          const isDisabled = vm.getBlockDisabledState && vm.getBlockDisabledState(block.id);
-          items.push({
-            text: isDisabled ? 'Enable Block' : 'Disable Block',
-            callback: () => {
-              const newDisabledState = !isDisabled;
-              if (vm.setBlockDisabledState) {
-                vm.setBlockDisabledState(block.id, newDisabledState);
-                if (block.setDisabled) {
-                  block.setDisabled(newDisabledState);
-                }
-                if (block.workspace && block.workspace.render) {
-                  block.workspace.render();
-                }
-              }
-            },
-            separator: true
+          console.log('Context menu for block:', block.id, 'type:', block.type);
+
+          // Add "Copy JS Code" option for hat blocks (top-level blocks)
+          // Check if this is a hat block (no previous block)
+          const isHatBlock = !block.getPreviousBlock();
+          console.log('Fallback: Checking Copy JS Code option:', {
+            blockId: block.id,
+            blockType: block.type,
+            isHatBlock: isHatBlock,
+            hasGetPreviousBlock: typeof block.getPreviousBlock,
+            previousBlock: block.getPreviousBlock(),
+            hasGetBlockCompiledSource: !!vm.getBlockCompiledSource,
+            vmMethods: {
+              getBlockCompiledSource: !!vm.getBlockCompiledSource,
+              getBlockDisabledState: !!vm.getBlockDisabledState,
+              setBlockDisabledState: !!vm.setBlockDisabledState
+            }
           });
+          if (isHatBlock && vm.getBlockCompiledSource) {
+            items.push({
+              enabled: true,
+              text: 'Copy JS Code',
+              callback: () => {
+                try {
+                  const jsCode = vm.getBlockCompiledSource(block.id);
+                  if (jsCode) {
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(jsCode).then(() => {
+                      console.log('JavaScript code copied to clipboard:', jsCode);
+                      // Optional: Show a notification
+                      if (window.addon && window.addon.tab && window.addon.tab.redux && window.addon.tab.redux.dispatch) {
+                        window.addon.tab.redux.dispatch({
+                          type: 'alerts/addAlert',
+                          message: 'JavaScript code copied to clipboard',
+                          alertType: 'info'
+                        });
+                      }
+                    }).catch(err => {
+                      console.error('Failed to copy to clipboard:', err);
+                    });
+                  } else {
+                    console.warn('No compiled JavaScript code available for block:', block.id);
+                  }
+                } catch (error) {
+                  console.error('Error getting compiled JavaScript code:', error);
+                }
+              },
+              separator: true
+            });
+          }
         }
         return originalShow.call(this, event, items, rtl);
       };
+    } else {
+      console.warn('ScratchBlocks/Blockly not available for context menu patching');
     }
-  }
-
-  // Patch Blockly to add disabled visual styling
-  if (window.addon) {
-    window.addon.tab.traps.getBlockly().then(ScratchBlocks => {
-      const originalRender = ScratchBlocks.BlockSvg.prototype.render;
-      ScratchBlocks.BlockSvg.prototype.render = function () {
-        originalRender.call(this);
-        const isDisabled = vm.getBlockDisabledState && vm.getBlockDisabledState(this.id);
-        if (isDisabled) {
-          this.svgPath_.setAttribute('fill-opacity', '0.5');
-          this.svgPath_.setAttribute('stroke-opacity', '0.5');
-
-          // Gray out all text elements
-          const textElements = this.svgGroup_.querySelectorAll('text');
-          textElements.forEach(text => {
-            text.setAttribute('fill', '#888');
-          });
-        } else {
-          this.svgPath_.removeAttribute('fill-opacity');
-          this.svgPath_.removeAttribute('stroke-opacity');
-
-          // Restore original text colors
-          const textElements = this.svgGroup_.querySelectorAll('text');
-          textElements.forEach(text => {
-            text.removeAttribute('fill');
-          });
-        }
-      };
-
-      // Add isDisabled property to blocks
-      ScratchBlocks.BlockSvg.prototype.setDisabled = function (disabled) {
-        if (vm.setBlockDisabledState) {
-          vm.setBlockDisabledState(this.id, disabled);
-        }
-        this.render();
-      };
-      ScratchBlocks.BlockSvg.prototype.getDisabled = function () {
-        return vm.getBlockDisabledState && vm.getBlockDisabledState(this.id) || false;
-      };
-    });
   }
 };
 /* harmony default export */ __webpack_exports__["default"] = (initializeBlockDisableExtension);
