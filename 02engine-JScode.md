@@ -203,32 +203,6 @@ while (true) {
 }
 ```
 
-#### 示例 3：粒子效果
-```javascript
-// 创建爆炸粒子效果
-for (let i = 0; i < 30; i++) {
-  const angle = Math.random() * 360;
-  const speed = 5 + Math.random() * 10;
-  const clone = runtime.createClone(target);
-  const cloneTarget = clone.target;
-  
-  // 设置粒子初始状态
-  cloneTarget.setXY(target.x, target.y);
-  cloneTarget.setDirection(angle);
-  cloneTarget._moveSteps(speed, cloneTarget);
-  
-  // 淡出效果
-  (async function() {
-    for (let j = 0; j < 20; j++) {
-      cloneTarget.setEffect("ghost", j * 5);
-      yield;
-    }
-    runtime.stopForTarget(cloneTarget);
-  })();
-}
-yield;
-```
-
 ### 高级示例
 
 #### 示例 4：访问扩展
@@ -279,9 +253,9 @@ async function fetchData() {
   try {
     const response = await fetch('https://api.example.com/data');
     const data = await response.json();
-    target.say(`数据: ${JSON.stringify(data)}`);
+    console.log(`数据: ${JSON.stringify(data)}`);
   } catch (error) {
-    target.say(`错误: ${error.message}`);
+    console.log(`错误: ${error.message}`);
   }
 }
 
@@ -305,7 +279,6 @@ try {
   target.someUndefinedMethod();
 } catch (error) {
   console.error('执行错误:', error);
-  target.say(`错误: ${error.message}`);
 }
 ```
 
@@ -431,23 +404,6 @@ scratch-vm/
 
 ## 更新日志
 
-### v1.0.0 (初始实现)
-- 添加 `#code` 注释支持
-- 修改编译器支持自定义 JavaScript 代码
-- 添加完整的 API 访问能力
-- 支持生成器函数和 `yield` 关键字
-
-## 贡献指南
-
-如果您发现任何问题或有改进建议，请：
-1. 在项目中创建 Issue
-2. 描述具体问题和重现步骤
-3. 如果可能，提供修复方案
-
 ## 许可证
 
 本功能基于 Scratch 开源项目开发，遵循相应的开源许可证。请确保遵守 Scratch 项目的使用条款。
-
----
-
-*本文档最后更新：2025年12月26日*
