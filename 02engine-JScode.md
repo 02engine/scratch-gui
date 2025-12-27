@@ -208,6 +208,21 @@ while (true) {
 }
 ```
 
+### 示例 3: 循环输出数字
+```javascript
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function test(){
+  for(let i=0;i<10;i++){
+    block.looks_sayforsecs({MESSAGE: i, SECS: 2},{target:target});
+    await delay(2000);
+  }
+}
+test();
+```
+
 ### 高级示例
 
 #### 示例 4：访问扩展
