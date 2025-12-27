@@ -29,6 +29,11 @@ target.setXY(100, 50);
 #code console.log("单行代码");
 ```
 
+你可以直接使用“block”函数来调用积木，例如
+```
+block.looks_sayforsecs({MESSAGE: "你好", SECS: 2},{target:target});
+```
+
 ### 2. 注释规则
 - `#code` 必须独占一行或作为行的开头
 - `#code` 后的所有行都将被视为 JavaScript 代码
