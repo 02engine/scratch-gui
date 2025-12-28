@@ -42633,6 +42633,7 @@ const initializeBlockDisableExtension = vm => {
               setBlockDisabledState: !!vm.setBlockDisabledState
             }
           });
+          //console.log(block);
           if (isHatBlock && vm.getBlockCompiledSource) {
             items.push({
               enabled: true,
@@ -42656,7 +42657,18 @@ const initializeBlockDisableExtension = vm => {
                       console.error('Failed to copy to clipboard:', err);
                     });
                   } else {
-                    console.warn('No compiled JavaScript code available for block:', block.id);
+                    console.warn('No compiled JavaScript code available for block,copy id to clipboard:', block.id);
+                    navigator.clipboard.writeText(block.id).then(() => {
+                      console.log('Block ID copied to clipboard:', block.id);
+                      // Optional: Show a notification
+                      if (window.addon && window.addon.tab && window.addon.tab.redux && window.addon.tab.redux.dispatch) {
+                        window.addon.tab.redux.dispatch({
+                          type: 'alerts/addAlert',
+                          message: 'Block id copied to clipboard',
+                          alertType: 'info'
+                        });
+                      }
+                    });
                   }
                 } catch (error) {
                   console.error('Error getting compiled JavaScript code:', error);
