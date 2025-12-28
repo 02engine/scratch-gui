@@ -34,14 +34,15 @@ target.setXY(100, 50);
 block.looks_sayforsecs({MESSAGE: "你好", SECS: 2},{target:target});
 ```
 
-你可以直接使用“vars”函数快速调取变量，例如：
+你可以直接使用“vars.stage/vars.target”函数快速调取变量，例如：
 ```
 //调取列表
-list=vars("我的列表","list");
+list=vars.stage("我的列表","list");//获取公共列表
 list.value.push(123);
 list._monitorUpToDate = false;//刷新显示
 //调取变量
-variable=vars("我的变量");
+variable=vars.stage("我的变量");//获取共有变量
+selfvar=vars.target("私有变量");//获取私有变量
 variable.value++;
 variable._monitorUpToDate = false;
 ```
@@ -370,7 +371,7 @@ while (true) {
 ### Q2: 如何访问精灵的变量？
 ```javascript
 // 获取变量
-const myVar = runtime.getVariable(target.id, "变量名");
+const myVar = runtime.getVariable(target.id, "变量id");
 if (myVar) {
   console.log('变量值:', myVar.value);
   myVar.value = 100; // 修改变量值
