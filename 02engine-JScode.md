@@ -34,6 +34,18 @@ target.setXY(100, 50);
 block.looks_sayforsecs({MESSAGE: "你好", SECS: 2},{target:target});
 ```
 
+你可以直接使用“vars”函数快速调取变量，例如：
+```
+//调取列表
+list=vars("我的列表","list");
+list.value.push(123);
+list._monitorUpToDate = false;//刷新显示
+//调取变量
+variable=vars("我的变量");
+variable.value++;
+variable._monitorUpToDate = false;
+```
+
 ### 2. 注释规则
 - `#code` 必须独占一行或作为行的开头
 - `#code` 后的所有行都将被视为 JavaScript 代码
