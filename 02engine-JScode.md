@@ -46,6 +46,17 @@ variable.value++;
 variable._monitorUpToDate = false;
 ```
 
+你可以直接使用“yield* wait”函数实现等待，例如：
+```
+yield* wait(1000);//单位是毫秒
+```
+
+每个代码都因以“retire();return;”结束
+```
+retire();//结束该thread
+return;//结束代码
+```
+
 ### 2. 注释规则
 - `#code` 必须独占一行或作为行的开头
 - `#code` 后的所有行都将被视为 JavaScript 代码
@@ -222,17 +233,12 @@ while (true) {
 
 ### 示例 3: 循环输出数字
 ```javascript
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+target.setXY(0,0);
+for(let i=0;i<10;i++){
+block.looks_sayforsecs({"MESSAGE":i,"SECS":0.5});
+yield* wait(500);
 }
-
-async function test(){
-  for(let i=0;i<10;i++){
-    block.looks_sayforsecs({MESSAGE: i, SECS: 2},{target:target});
-    await delay(2000);
-  }
-}
-test();
+retire();return;
 ```
 
 ### 高级示例
