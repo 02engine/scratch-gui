@@ -42527,20 +42527,14 @@ const jpegThumbnail = dataUrl => new Promise((resolve, reject) => {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _addons_contextmenu__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../addons/contextmenu */ "./src/addons/contextmenu.js");
-/* harmony import */ var _vm_block_disable__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./vm-block-disable */ "./src/lib/vm-block-disable.js");
 
-
-let blockDisableExtensionInitialized = false;
-let vmBlockDisableManager = null;
+let copyJsCodeExtensionInitialized = false;
 const initializeBlockDisableExtension = vm => {
-  if (blockDisableExtensionInitialized) return;
-  blockDisableExtensionInitialized = true;
-
-  // Initialize VM block disable manager
-  vmBlockDisableManager = new _vm_block_disable__WEBPACK_IMPORTED_MODULE_1__["default"](vm);
+  if (copyJsCodeExtensionInitialized) return;
+  copyJsCodeExtensionInitialized = true;
 
   // Add context menu item for blocks using addons API
-  console.log('Initializing block disable extension with VM:', vm);
+  console.log('Initializing Copy JS Code extension with VM:', vm);
   if (window.addon && window.addon.tab && window.addon.tab.createBlockContextMenu) {
     console.log('Using addons API for context menu');
     window.addon.tab.createBlockContextMenu((items, ctx) => {
@@ -42596,7 +42590,7 @@ const initializeBlockDisableExtension = vm => {
     });
   } else {
     // Fallback: Use direct context menu patching
-    console.warn('Addon API not available, using fallback block disable menu');
+    console.warn('Addon API not available, using fallback context menu');
     console.log('Checking for ScratchBlocks/Blockly:', {
       hasWindowScratchBlocks: !!window.ScratchBlocks,
       hasWindowBlockly: !!window.Blockly,
@@ -42626,14 +42620,8 @@ const initializeBlockDisableExtension = vm => {
             isHatBlock: isHatBlock,
             hasGetPreviousBlock: typeof block.getPreviousBlock,
             previousBlock: block.getPreviousBlock(),
-            hasGetBlockCompiledSource: !!vm.getBlockCompiledSource,
-            vmMethods: {
-              getBlockCompiledSource: !!vm.getBlockCompiledSource,
-              getBlockDisabledState: !!vm.getBlockDisabledState,
-              setBlockDisabledState: !!vm.setBlockDisabledState
-            }
+            hasGetBlockCompiledSource: !!vm.getBlockCompiledSource
           });
-          //console.log(block);
           if (isHatBlock && vm.getBlockCompiledSource) {
             items.push({
               enabled: true,
@@ -55545,85 +55533,6 @@ class VideoProvider {
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (VideoProvider);
-
-/***/ }),
-
-/***/ "./src/lib/vm-block-disable.js":
-/*!*************************************!*\
-  !*** ./src/lib/vm-block-disable.js ***!
-  \*************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-class VMBlockDisableManager {
-  constructor(vm) {
-    this.vm = vm;
-    this.disabledBlocks = new Set();
-
-    // Patch VM to handle disabled blocks
-    this.patchVM();
-  }
-  patchVM() {
-    const originalStepThreads = this.vm.runtime.sequencer.stepThreads;
-    const self = this;
-    this.vm.runtime.sequencer.stepThreads = function (threads) {
-      if (!threads || !Array.isArray(threads)) {
-        return originalStepThreads.call(this, threads);
-      }
-      const activeThreads = threads.filter(thread => {
-        if (self.isBlockDisabled(thread.topBlock)) {
-          return false;
-        }
-        return true;
-      });
-      return originalStepThreads.call(this, activeThreads);
-    };
-
-    // Add methods to VM
-    this.vm.setBlockDisabledState = (blockId, disabled) => {
-      if (disabled) {
-        this.disabledBlocks.add(blockId);
-      } else {
-        this.disabledBlocks.delete(blockId);
-      }
-    };
-    this.vm.getBlockDisabledState = blockId => this.disabledBlocks.has(blockId);
-    this.vm.clearAllDisabledBlocks = () => {
-      this.disabledBlocks.clear();
-    };
-  }
-  isBlockDisabled(block) {
-    if (!block) return false;
-
-    // Check if this block is disabled
-    if (this.disabledBlocks.has(block.id)) {
-      return true;
-    }
-
-    // Check if any parent block is disabled
-    let parent = block.getParent();
-    while (parent) {
-      if (this.disabledBlocks.has(parent.id)) {
-        return true;
-      }
-      parent = parent.getParent();
-    }
-    return false;
-  }
-
-  // Recursively disable/enable a block and all its children
-  setBlockTreeDisabled(block, disabled) {
-    this.vm.setBlockDisabledState(block.id, disabled);
-    block.getChildren().forEach(child => {
-      if (child instanceof Blockly.Block) {
-        this.setBlockTreeDisabled(child, disabled);
-      }
-    });
-  }
-}
-/* harmony default export */ __webpack_exports__["default"] = (VMBlockDisableManager);
 
 /***/ }),
 
