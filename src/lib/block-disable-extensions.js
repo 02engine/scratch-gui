@@ -1,25 +1,18 @@
 import {addContextMenu} from '../addons/contextmenu';
-import VMBlockDisableManager from './vm-block-disable';
 
-let blockDisableExtensionInitialized = false;
-let vmBlockDisableManager = null;
+let copyJsCodeExtensionInitialized = false;
 
 const initializeBlockDisableExtension = vm => {
-    if (blockDisableExtensionInitialized) return;
-    blockDisableExtensionInitialized = true;
-
-    // Initialize VM block disable manager
-    vmBlockDisableManager = new VMBlockDisableManager(vm);
+    if (copyJsCodeExtensionInitialized) return;
+    copyJsCodeExtensionInitialized = true;
 
     // Add context menu item for blocks using addons API
-    console.log('Initializing block disable extension with VM:', vm);
+    console.log('Initializing Copy JS Code extension with VM:', vm);
     if (window.addon && window.addon.tab && window.addon.tab.createBlockContextMenu) {
         console.log('Using addons API for context menu');
         window.addon.tab.createBlockContextMenu((items, ctx) => {
             console.log('Context menu callback called, ctx:', ctx, 'block:', ctx ? ctx.block : 'none');
             if (!ctx || !ctx.block) return items;
-            
-
             
             // Add "Copy JS Code" option for hat blocks (top-level blocks)
             // Check if this is a hat block (no previous block)
@@ -69,7 +62,7 @@ const initializeBlockDisableExtension = vm => {
         }, {blocks: true});
     } else {
         // Fallback: Use direct context menu patching
-        console.warn('Addon API not available, using fallback block disable menu');
+        console.warn('Addon API not available, using fallback context menu');
         console.log('Checking for ScratchBlocks/Blockly:', {
             hasWindowScratchBlocks: !!window.ScratchBlocks,
             hasWindowBlockly: !!window.Blockly,
@@ -91,7 +84,6 @@ const initializeBlockDisableExtension = vm => {
                 if (block) {
                     console.log('Context menu for block:', block.id, 'type:', block.type);
 
-                    
                     // Add "Copy JS Code" option for hat blocks (top-level blocks)
                     // Check if this is a hat block (no previous block)
                     const isHatBlock = !block.getPreviousBlock();
@@ -101,14 +93,8 @@ const initializeBlockDisableExtension = vm => {
                         isHatBlock: isHatBlock,
                         hasGetPreviousBlock: typeof block.getPreviousBlock,
                         previousBlock: block.getPreviousBlock(),
-                        hasGetBlockCompiledSource: !!vm.getBlockCompiledSource,
-                        vmMethods: {
-                            getBlockCompiledSource: !!vm.getBlockCompiledSource,
-                            getBlockDisabledState: !!vm.getBlockDisabledState,
-                            setBlockDisabledState: !!vm.setBlockDisabledState
-                        }
+                        hasGetBlockCompiledSource: !!vm.getBlockCompiledSource
                     });
-                    //console.log(block);
                     if (isHatBlock && vm.getBlockCompiledSource) {
                         items.push({
                             enabled: true,
@@ -160,8 +146,6 @@ const initializeBlockDisableExtension = vm => {
             console.warn('ScratchBlocks/Blockly not available for context menu patching');
         }
     }
-
-
 };
 
 export default initializeBlockDisableExtension;
