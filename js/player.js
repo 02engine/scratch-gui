@@ -2785,7 +2785,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */\n\n/* layout contants from `layout-constants.js` */\n\n.target-pane_target-pane_3S5E6 {\n    /* Makes columns for the sprite library selector + and the stage selector */\n    display: flex;\n    flex-direction: row;\n    flex-grow: 1;\n}\n\n.target-pane_stage-selector-wrapper_qekSW {\n    display: flex;\n    flex-basis: 72px;\n    flex-shrink: 0;\n}\n\n[dir=\"ltr\"] .target-pane_stage-selector-wrapper_qekSW {\n    margin-left: calc(0.5rem / 2);\n}\n\n[dir=\"rtl\"] .target-pane_stage-selector-wrapper_qekSW {\n    margin-right: calc(0.5rem / 2);\n}\n", ""]);
+exports.push([module.i, "/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */\n\n/* layout contants from `layout-constants.js` */\n\n.target-pane_target-pane_3S5E6 {\n    /* Makes columns for the sprite library selector + and the stage selector */\n    display: flex;\n    flex-direction: row;\n    flex-grow: 1;\n    width: 100%;\n    height: 100%;\n    box-sizing: border-box;\n}\n\n.target-pane_stage-selector-wrapper_qekSW {\n    display: flex;\n    flex-basis: 72px;\n    flex-shrink: 0;\n}\n\n[dir=\"ltr\"] .target-pane_stage-selector-wrapper_qekSW {\n    margin-left: calc(0.5rem / 2);\n}\n\n[dir=\"rtl\"] .target-pane_stage-selector-wrapper_qekSW {\n    margin-right: calc(0.5rem / 2);\n}\n", ""]);
 
 // exports
 exports.locals = {
@@ -4729,6 +4729,111 @@ if (typeof BroadcastChannel !== 'undefined') {
   changeChannel,
   reloadChannel
 });
+
+/***/ }),
+
+/***/ "./src/addons/contextmenu.js":
+/*!***********************************!*\
+  !*** ./src/addons/contextmenu.js ***!
+  \***********************************/
+/*! exports provided: addContextMenu */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addContextMenu", function() { return addContextMenu; });
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+// This file is imported from
+// https://github.com/ScratchAddons/ScratchAddons/blob/master/addon-api/content-script/contextmenu.js
+
+/* eslint-disable */
+
+let initialized = false;
+let hasDynamicContextMenu = false;
+let contextMenus = [];
+const onReactContextMenu = function onReactContextMenu(e) {
+  var _ctxTarget$this$traps0, _ctxTarget$this$traps1, _ctxTarget$this$traps10, _ctxTarget$this$traps11, _ctxTarget$this$traps12, _ctxTarget$this$traps13;
+  if (!e.target) return;
+  const ctxTarget = e.target.closest(".react-contextmenu-wrapper");
+  if (!ctxTarget) return;
+  let ctxMenu = ctxTarget.querySelector("nav.react-contextmenu");
+  let type;
+  const extra = {};
+  if (false) { var _ctxTarget$this$traps, _ctxTarget$this$traps2, _ctxTarget$this$traps3, _ctxTarget$this$traps4, _ctxTarget$this$traps5, _ctxTarget$this$traps6, _ctxTarget$this$traps7, _ctxTarget$this$traps8, _ctxTarget$this$traps9; } else if ((_ctxTarget$this$traps0 = ctxTarget[this.traps.getInternalKey(ctxTarget)]) !== null && _ctxTarget$this$traps0 !== void 0 && (_ctxTarget$this$traps1 = _ctxTarget$this$traps0.return) !== null && _ctxTarget$this$traps1 !== void 0 && (_ctxTarget$this$traps10 = _ctxTarget$this$traps1.return) !== null && _ctxTarget$this$traps10 !== void 0 && (_ctxTarget$this$traps11 = _ctxTarget$this$traps10.return) !== null && _ctxTarget$this$traps11 !== void 0 && (_ctxTarget$this$traps12 = _ctxTarget$this$traps11.stateNode) !== null && _ctxTarget$this$traps12 !== void 0 && (_ctxTarget$this$traps13 = _ctxTarget$this$traps12.props) !== null && _ctxTarget$this$traps13 !== void 0 && _ctxTarget$this$traps13.dragType) {
+    // SpriteSelectorItem which despite its name is used for costumes, sounds, backpacked script etc
+    const props = ctxTarget[this.traps.getInternalKey(ctxTarget)].return.return.return.stateNode.props;
+    type = props.dragType.toLowerCase();
+    extra.name = props.name;
+    extra.itemId = props.id;
+    extra.index = props.index;
+  } else {
+    return;
+  }
+  const ctx = _objectSpread({
+    menuItem: ctxMenu,
+    target: ctxTarget,
+    type
+  }, extra);
+  Array.from(ctxMenu.children).forEach(existing => {
+    if (existing.classList.contains("sa-ctx-menu")) existing.remove();
+  });
+  for (const item of hasDynamicContextMenu ? contextMenus.flatMap(menu => typeof menu === "function" ? menu(type, ctx) : menu) : contextMenus) {
+    if (!item) continue;
+    if (item.types && !item.types.some(itemType => type === itemType)) continue;
+    if (item.condition && !item.condition(ctx)) continue;
+    const itemElem = document.createElement("div");
+    const classes = ["context-menu_menu-item"];
+    if (item.border) classes.push("context-menu_menu-item-bordered");
+    if (item.dangerous) classes.push("context-menu_menu-item-danger");
+    itemElem.className = this.scratchClass(...classes, {
+      others: ["react-contextmenu-item", "sa-ctx-menu", item.className || ""]
+    });
+    const label = document.createElement("span");
+    label.textContent = item.label;
+    itemElem.append(label);
+    this.displayNoneWhileDisabled(itemElem, {
+      display: "block"
+    });
+    itemElem.addEventListener("click", e => {
+      e.stopPropagation();
+      window.dispatchEvent(new CustomEvent("REACT_CONTEXTMENU_HIDE", {
+        detail: {
+          action: "REACT_CONTEXTMENU_HIDE"
+        }
+      }));
+      item.callback(ctx);
+    });
+    this.appendToSharedSpace({
+      space: item.position,
+      order: item.order,
+      scope: ctxMenu,
+      element: itemElem
+    });
+  }
+  return;
+};
+const initialize = tab => {
+  if (initialized) return;
+  initialized = true;
+  document.body.addEventListener("contextmenu", e => onReactContextMenu.call(tab, e), {
+    capture: true
+  });
+};
+const addContextMenu = (tab, callback, opts) => {
+  if (typeof opts === "undefined") {
+    contextMenus.push(callback);
+    hasDynamicContextMenu = true;
+  } else {
+    contextMenus.push(_objectSpread(_objectSpread({}, opts), {}, {
+      callback
+    }));
+  }
+  initialize(tab);
+};
 
 /***/ }),
 
@@ -29428,36 +29533,38 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_blocks__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../lib/blocks */ "./src/lib/blocks.js");
 /* harmony import */ var scratch_vm__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! scratch-vm */ "./node_modules/scratch-vm/src/index.js");
 /* harmony import */ var scratch_vm__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(scratch_vm__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var _lib_log_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../lib/log.js */ "./src/lib/log.js");
-/* harmony import */ var _prompt_jsx__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./prompt.jsx */ "./src/containers/prompt.jsx");
-/* harmony import */ var _components_blocks_blocks_jsx__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../components/blocks/blocks.jsx */ "./src/components/blocks/blocks.jsx");
-/* harmony import */ var _extension_library_jsx__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./extension-library.jsx */ "./src/containers/extension-library.jsx");
-/* harmony import */ var _lib_libraries_extensions_index_jsx__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../lib/libraries/extensions/index.jsx */ "./src/lib/libraries/extensions/index.jsx");
-/* harmony import */ var _custom_procedures_jsx__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./custom-procedures.jsx */ "./src/containers/custom-procedures.jsx");
-/* harmony import */ var _lib_error_boundary_hoc_jsx__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../lib/error-boundary-hoc.jsx */ "./src/lib/error-boundary-hoc.jsx");
-/* harmony import */ var _lib_layout_constants__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../lib/layout-constants */ "./src/lib/layout-constants.js");
-/* harmony import */ var _lib_drop_area_hoc_jsx__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../lib/drop-area-hoc.jsx */ "./src/lib/drop-area-hoc.jsx");
-/* harmony import */ var _lib_drag_constants__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../lib/drag-constants */ "./src/lib/drag-constants.js");
-/* harmony import */ var _lib_define_dynamic_block__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../lib/define-dynamic-block */ "./src/lib/define-dynamic-block.js");
-/* harmony import */ var _lib_themes__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../lib/themes */ "./src/lib/themes/index.js");
-/* harmony import */ var _lib_themes_blockHelpers__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../lib/themes/blockHelpers */ "./src/lib/themes/blockHelpers.js");
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-/* harmony import */ var _reducers_toolbox__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../reducers/toolbox */ "./src/reducers/toolbox.js");
-/* harmony import */ var _reducers_color_picker__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../reducers/color-picker */ "./src/reducers/color-picker.js");
-/* harmony import */ var _reducers_modals__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../reducers/modals */ "./src/reducers/modals.js");
-/* harmony import */ var _reducers_custom_procedures__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ../reducers/custom-procedures */ "./src/reducers/custom-procedures.js");
-/* harmony import */ var _reducers_connection_modal__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ../reducers/connection-modal */ "./src/reducers/connection-modal.js");
-/* harmony import */ var _reducers_workspace_metrics__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ../reducers/workspace-metrics */ "./src/reducers/workspace-metrics.js");
-/* harmony import */ var _reducers_time_travel__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ../reducers/time-travel */ "./src/reducers/time-travel.js");
-/* harmony import */ var _reducers_editor_tab__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../reducers/editor-tab */ "./src/reducers/editor-tab.js");
-/* harmony import */ var _addons_hooks_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../addons/hooks.js */ "./src/addons/hooks.js");
-/* harmony import */ var _lib_tw_load_scratch_blocks_hoc_jsx__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ../lib/tw-load-scratch-blocks-hoc.jsx */ "./src/lib/tw-load-scratch-blocks-hoc.jsx");
-/* harmony import */ var _lib_backpack_code_payload_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ../lib/backpack/code-payload.js */ "./src/lib/backpack/code-payload.js");
-/* harmony import */ var _lib_tw_persistent_storage_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../lib/tw-persistent-storage.js */ "./src/lib/tw-persistent-storage.js");
+/* harmony import */ var _lib_block_disable_extensions__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../lib/block-disable-extensions */ "./src/lib/block-disable-extensions.js");
+/* harmony import */ var _lib_log_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../lib/log.js */ "./src/lib/log.js");
+/* harmony import */ var _prompt_jsx__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./prompt.jsx */ "./src/containers/prompt.jsx");
+/* harmony import */ var _components_blocks_blocks_jsx__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../components/blocks/blocks.jsx */ "./src/components/blocks/blocks.jsx");
+/* harmony import */ var _extension_library_jsx__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./extension-library.jsx */ "./src/containers/extension-library.jsx");
+/* harmony import */ var _lib_libraries_extensions_index_jsx__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../lib/libraries/extensions/index.jsx */ "./src/lib/libraries/extensions/index.jsx");
+/* harmony import */ var _custom_procedures_jsx__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./custom-procedures.jsx */ "./src/containers/custom-procedures.jsx");
+/* harmony import */ var _lib_error_boundary_hoc_jsx__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../lib/error-boundary-hoc.jsx */ "./src/lib/error-boundary-hoc.jsx");
+/* harmony import */ var _lib_layout_constants__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../lib/layout-constants */ "./src/lib/layout-constants.js");
+/* harmony import */ var _lib_drop_area_hoc_jsx__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../lib/drop-area-hoc.jsx */ "./src/lib/drop-area-hoc.jsx");
+/* harmony import */ var _lib_drag_constants__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../lib/drag-constants */ "./src/lib/drag-constants.js");
+/* harmony import */ var _lib_define_dynamic_block__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../lib/define-dynamic-block */ "./src/lib/define-dynamic-block.js");
+/* harmony import */ var _lib_themes__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../lib/themes */ "./src/lib/themes/index.js");
+/* harmony import */ var _lib_themes_blockHelpers__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../lib/themes/blockHelpers */ "./src/lib/themes/blockHelpers.js");
+/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+/* harmony import */ var _reducers_toolbox__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../reducers/toolbox */ "./src/reducers/toolbox.js");
+/* harmony import */ var _reducers_color_picker__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../reducers/color-picker */ "./src/reducers/color-picker.js");
+/* harmony import */ var _reducers_modals__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ../reducers/modals */ "./src/reducers/modals.js");
+/* harmony import */ var _reducers_custom_procedures__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ../reducers/custom-procedures */ "./src/reducers/custom-procedures.js");
+/* harmony import */ var _reducers_connection_modal__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ../reducers/connection-modal */ "./src/reducers/connection-modal.js");
+/* harmony import */ var _reducers_workspace_metrics__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ../reducers/workspace-metrics */ "./src/reducers/workspace-metrics.js");
+/* harmony import */ var _reducers_time_travel__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../reducers/time-travel */ "./src/reducers/time-travel.js");
+/* harmony import */ var _reducers_editor_tab__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../reducers/editor-tab */ "./src/reducers/editor-tab.js");
+/* harmony import */ var _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ../addons/hooks.js */ "./src/addons/hooks.js");
+/* harmony import */ var _lib_tw_load_scratch_blocks_hoc_jsx__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ../lib/tw-load-scratch-blocks-hoc.jsx */ "./src/lib/tw-load-scratch-blocks-hoc.jsx");
+/* harmony import */ var _lib_backpack_code_payload_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../lib/backpack/code-payload.js */ "./src/lib/backpack/code-payload.js");
+/* harmony import */ var _lib_tw_persistent_storage_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../lib/tw-persistent-storage.js */ "./src/lib/tw-persistent-storage.js");
 const _excluded = ["anyModalVisible", "canUseCloud", "customStageSize", "customProceduresVisible", "extensionLibraryVisible", "options", "stageSize", "vm", "isRtl", "isVisible", "onActivateColorPicker", "onOpenConnectionModal", "onOpenSoundRecorder", "onOpenCustomExtensionModal", "reduxOnOpenCustomExtensionModal", "updateToolboxState", "onActivateCustomProcedures", "onRequestCloseExtensionLibrary", "onRequestCloseCustomProcedures", "toolboxXML", "updateMetrics", "useCatBlocks", "workspaceMetrics"];
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
+
 
 
 
@@ -29524,15 +29631,15 @@ const addFunctionListener = (object, property, callback) => {
     return result;
   };
 };
-const DroppableBlocks = Object(_lib_drop_area_hoc_jsx__WEBPACK_IMPORTED_MODULE_17__["default"])([_lib_drag_constants__WEBPACK_IMPORTED_MODULE_18__["default"].BACKPACK_CODE])(_components_blocks_blocks_jsx__WEBPACK_IMPORTED_MODULE_11__["default"]);
+const DroppableBlocks = Object(_lib_drop_area_hoc_jsx__WEBPACK_IMPORTED_MODULE_18__["default"])([_lib_drag_constants__WEBPACK_IMPORTED_MODULE_19__["default"].BACKPACK_CODE])(_components_blocks_blocks_jsx__WEBPACK_IMPORTED_MODULE_12__["default"]);
 class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
   constructor(props) {
     super(props);
     this.ScratchBlocks = Object(_lib_blocks__WEBPACK_IMPORTED_MODULE_7__["default"])(props.vm, false);
     window.ScratchBlocks = this.ScratchBlocks;
-    _addons_hooks_js__WEBPACK_IMPORTED_MODULE_31__["default"].blockly = this.ScratchBlocks;
-    _addons_hooks_js__WEBPACK_IMPORTED_MODULE_31__["default"].blocklyCallbacks.forEach(i => i());
-    _addons_hooks_js__WEBPACK_IMPORTED_MODULE_31__["default"].blocklyCallbacks.length = [];
+    _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__["default"].blockly = this.ScratchBlocks;
+    _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__["default"].blocklyCallbacks.forEach(i => i());
+    _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__["default"].blocklyCallbacks.length = [];
     lodash_bindall__WEBPACK_IMPORTED_MODULE_0___default()(this, ['attachVM', 'detachVM', 'getToolboxXML', 'handleCategorySelected', 'handleConnectionModalStart', 'handleDrop', 'handleStatusButtonUpdate', 'handleOpenSoundRecorder', 'handlePromptStart', 'handlePromptCallback', 'handlePromptClose', 'handleCustomProceduresClose', 'onScriptGlowOn', 'onScriptGlowOff', 'onBlockGlowOn', 'onBlockGlowOff', 'handleMonitorsUpdate', 'handleExtensionAdded', 'handleBlocksInfoUpdate', 'injectExtensionContextMenu', 'checkExtensionUsage', 'handleDeleteExtension', 'onTargetsUpdate', 'onVisualReport', 'onWorkspaceUpdate', 'onWorkspaceMetricsChange', 'setBlocks', 'setLocale', 'handleEnableProcedureReturns']);
     this.ScratchBlocks.prompt = this.handlePromptStart;
     this.ScratchBlocks.statusButtonCallback = this.handleConnectionModalStart;
@@ -29567,7 +29674,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
       }
     }, Blocks.defaultOptions);
     this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
-    _addons_hooks_js__WEBPACK_IMPORTED_MODULE_31__["default"].blocklyWorkspace = this.workspace;
+    _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__["default"].blocklyWorkspace = this.workspace;
 
     // Register buttons under new callback keys for creating variables,
     // lists, and procedures from extensions.
@@ -29624,7 +29731,10 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
     for (const category of this.props.vm.runtime._blockInfo) {
       this.handleExtensionAdded(category);
     }
-    Object(_lib_tw_persistent_storage_js__WEBPACK_IMPORTED_MODULE_34__["gentlyRequestPersistentStorage"])();
+    Object(_lib_tw_persistent_storage_js__WEBPACK_IMPORTED_MODULE_35__["gentlyRequestPersistentStorage"])();
+
+    // Initialize block disable(now copy JS code) functionality
+    Object(_lib_block_disable_extensions__WEBPACK_IMPORTED_MODULE_9__["default"])(this.props.vm);
 
     // Initialize extension context menu functionality
     this.injectExtensionContextMenu();
@@ -29692,7 +29802,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
       this._mutationObserver.disconnect();
       this._mutationObserver = null;
     }
-    _addons_hooks_js__WEBPACK_IMPORTED_MODULE_31__["default"].blocklyWorkspace = null;
+    _addons_hooks_js__WEBPACK_IMPORTED_MODULE_32__["default"].blocklyWorkspace = null;
   }
   requestToolboxUpdate() {
     clearTimeout(this.toolboxUpdateTimeout);
@@ -29836,7 +29946,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
       const stageCostumes = stage.getCostumes();
       const targetCostumes = target.getCostumes();
       const targetSounds = target.getSounds();
-      const dynamicBlocksXML = Object(_lib_themes_blockHelpers__WEBPACK_IMPORTED_MODULE_21__["injectExtensionCategoryTheme"])(this.props.vm.runtime.getBlocksXML(target), this.props.theme);
+      const dynamicBlocksXML = Object(_lib_themes_blockHelpers__WEBPACK_IMPORTED_MODULE_22__["injectExtensionCategoryTheme"])(this.props.vm.runtime.getBlocksXML(target), this.props.theme);
       return Object(_lib_make_toolbox_xml__WEBPACK_IMPORTED_MODULE_3__["default"])(false, target.isStage, target.id, dynamicBlocksXML, targetCostumes[targetCostumes.length - 1].name, stageCostumes[stageCostumes.length - 1].name, targetSounds.length > 0 ? targetSounds[targetSounds.length - 1].name : '', this.props.theme.getBlockColors());
     } catch (_unused) {
       return null;
@@ -29870,7 +29980,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
       if (error.message) {
         error.message = "Workspace Update Error: ".concat(error.message);
       }
-      _lib_log_js__WEBPACK_IMPORTED_MODULE_9__["default"].error(error);
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].error(error);
     }
     this.workspace.addChangeListener(this.props.vm.blockListener);
     if (this.props.vm.editingTarget && this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id]) {
@@ -29917,7 +30027,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
           if (blockInfo.info && blockInfo.info.isDynamic) {
             dynamicBlocksInfo.push(blockInfo);
           } else if (blockInfo.json) {
-            staticBlocksJson.push(Object(_lib_themes_blockHelpers__WEBPACK_IMPORTED_MODULE_21__["injectExtensionBlockTheme"])(blockInfo.json, this.props.theme));
+            staticBlocksJson.push(Object(_lib_themes_blockHelpers__WEBPACK_IMPORTED_MODULE_22__["injectExtensionBlockTheme"])(blockInfo.json, this.props.theme));
           }
           // otherwise it's a non-block entry such as '---'
         });
@@ -29927,7 +30037,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
           // The factory should only know static info about the block: the category info and the opcode.
           // Anything else will be picked up from the XML attached to the block instance.
           const extendedOpcode = "".concat(categoryInfo.id, "_").concat(blockInfo.info.opcode);
-          const blockDefinition = Object(_lib_define_dynamic_block__WEBPACK_IMPORTED_MODULE_19__["default"])(this.ScratchBlocks, categoryInfo, blockInfo, extendedOpcode, this.props.theme);
+          const blockDefinition = Object(_lib_define_dynamic_block__WEBPACK_IMPORTED_MODULE_20__["default"])(this.ScratchBlocks, categoryInfo, blockInfo, extendedOpcode, this.props.theme);
           this.ScratchBlocks.Blocks[extendedOpcode] = blockDefinition;
         });
       }
@@ -30074,7 +30184,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
         document.addEventListener('click', removeMenu);
       }, 100);
     } catch (error) {
-      _lib_log_js__WEBPACK_IMPORTED_MODULE_9__["default"].error('Error showing context menu:', error);
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].error('Error showing context menu:', error);
     }
   }
   getExtensionIdFromCategoryRow(categoryRow) {
@@ -30151,9 +30261,9 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
     try {
       this.unloadExtension(extensionId);
       this.removeExtensionFromToolbox(extensionId);
-      _lib_log_js__WEBPACK_IMPORTED_MODULE_9__["default"].info("Extension ".concat(extensionId, " removed successfully"));
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].info("Extension ".concat(extensionId, " removed successfully"));
     } catch (error) {
-      _lib_log_js__WEBPACK_IMPORTED_MODULE_9__["default"].error("Failed to remove extension ".concat(extensionId, ":"), error);
+      _lib_log_js__WEBPACK_IMPORTED_MODULE_10__["default"].error("Failed to remove extension ".concat(extensionId, ":"), error);
       alert("Failed to remove extension: ".concat(error.message));
     }
   }
@@ -30209,7 +30319,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
     }
   }
   handleCategorySelected(categoryId) {
-    const extension = _lib_libraries_extensions_index_jsx__WEBPACK_IMPORTED_MODULE_13__["default"].find(ext => ext.extensionId === categoryId);
+    const extension = _lib_libraries_extensions_index_jsx__WEBPACK_IMPORTED_MODULE_14__["default"].find(ext => ext.extensionId === categoryId);
     if (extension && extension.launchPeripheralConnectionFlow) {
       this.handleConnectionModalStart(categoryId);
     }
@@ -30269,7 +30379,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
   handleDrop(dragInfo) {
     fetch(dragInfo.payload.bodyUrl).then(response => response.json()).then(payload => {
       // based on https://github.com/ScratchAddons/ScratchAddons/pull/7028
-      const topBlock = Object(_lib_backpack_code_payload_js__WEBPACK_IMPORTED_MODULE_33__["findTopBlock"])(payload);
+      const topBlock = Object(_lib_backpack_code_payload_js__WEBPACK_IMPORTED_MODULE_34__["findTopBlock"])(payload);
       if (topBlock) {
         const metrics = this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id];
         if (metrics) {
@@ -30331,7 +30441,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_5___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(DroppableBlocks, _extends({
       componentRef: this.setBlocks,
       onDrop: this.handleDrop
-    }, props)), this.state.prompt ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_prompt_jsx__WEBPACK_IMPORTED_MODULE_10__["default"], {
+    }, props)), this.state.prompt ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_prompt_jsx__WEBPACK_IMPORTED_MODULE_11__["default"], {
       defaultValue: this.state.prompt.defaultValue,
       isStage: vm.runtime.getEditingTarget().isStage,
       showListMessage: this.state.prompt.varType === this.ScratchBlocks.LIST_VARIABLE_TYPE,
@@ -30342,13 +30452,13 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
       vm: vm,
       onCancel: this.handlePromptClose,
       onOk: this.handlePromptCallback
-    }) : null, extensionLibraryVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_extension_library_jsx__WEBPACK_IMPORTED_MODULE_12__["default"], {
+    }) : null, extensionLibraryVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_extension_library_jsx__WEBPACK_IMPORTED_MODULE_13__["default"], {
       vm: vm,
       onCategorySelected: this.handleCategorySelected,
       onEnableProcedureReturns: this.handleEnableProcedureReturns,
       onRequestClose: onRequestCloseExtensionLibrary,
       onOpenCustomExtensionModal: onOpenCustomExtensionModal || reduxOnOpenCustomExtensionModal
-    }) : null, customProceduresVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_custom_procedures_jsx__WEBPACK_IMPORTED_MODULE_14__["default"], {
+    }) : null, customProceduresVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_custom_procedures_jsx__WEBPACK_IMPORTED_MODULE_15__["default"], {
       options: {
         media: options.media
       },
@@ -30388,8 +30498,8 @@ Blocks.propTypes = {
     comments: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.bool,
     collapse: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.bool
   }),
-  stageSize: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.oneOf(Object.keys(_lib_layout_constants__WEBPACK_IMPORTED_MODULE_16__["STAGE_DISPLAY_SIZES"])).isRequired,
-  theme: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.instanceOf(_lib_themes__WEBPACK_IMPORTED_MODULE_20__["Theme"]),
+  stageSize: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.oneOf(Object.keys(_lib_layout_constants__WEBPACK_IMPORTED_MODULE_17__["STAGE_DISPLAY_SIZES"])).isRequired,
+  theme: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.instanceOf(_lib_themes__WEBPACK_IMPORTED_MODULE_21__["Theme"]),
   toolboxXML: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.string,
   updateMetrics: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
   updateToolboxState: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
@@ -30403,7 +30513,7 @@ Blocks.defaultOptions = {
   zoom: {
     controls: true,
     wheel: true,
-    startScale: _lib_layout_constants__WEBPACK_IMPORTED_MODULE_16__["BLOCKS_DEFAULT_SCALE"]
+    startScale: _lib_layout_constants__WEBPACK_IMPORTED_MODULE_17__["BLOCKS_DEFAULT_SCALE"]
   },
   grid: {
     spacing: 40,
@@ -30417,7 +30527,7 @@ Blocks.defaultOptions = {
 Blocks.defaultProps = {
   isVisible: true,
   options: Blocks.defaultOptions,
-  theme: _lib_themes__WEBPACK_IMPORTED_MODULE_20__["Theme"].light
+  theme: _lib_themes__WEBPACK_IMPORTED_MODULE_21__["Theme"].light
 };
 const mapStateToProps = state => ({
   anyModalVisible: Object.keys(state.scratchGui.modals).some(key => state.scratchGui.modals[key]) || state.scratchGui.mode.isFullScreen,
@@ -30429,34 +30539,34 @@ const mapStateToProps = state => ({
   toolboxXML: state.scratchGui.toolbox.toolboxXML,
   customProceduresVisible: state.scratchGui.customProcedures.active,
   workspaceMetrics: state.scratchGui.workspaceMetrics,
-  useCatBlocks: Object(_reducers_time_travel__WEBPACK_IMPORTED_MODULE_29__["isTimeTravel2020"])(state)
+  useCatBlocks: Object(_reducers_time_travel__WEBPACK_IMPORTED_MODULE_30__["isTimeTravel2020"])(state)
 });
 const mapDispatchToProps = dispatch => ({
-  onActivateColorPicker: callback => dispatch(Object(_reducers_color_picker__WEBPACK_IMPORTED_MODULE_24__["activateColorPicker"])(callback)),
-  onActivateCustomProcedures: (data, callback) => dispatch(Object(_reducers_custom_procedures__WEBPACK_IMPORTED_MODULE_26__["activateCustomProcedures"])(data, callback)),
+  onActivateColorPicker: callback => dispatch(Object(_reducers_color_picker__WEBPACK_IMPORTED_MODULE_25__["activateColorPicker"])(callback)),
+  onActivateCustomProcedures: (data, callback) => dispatch(Object(_reducers_custom_procedures__WEBPACK_IMPORTED_MODULE_27__["activateCustomProcedures"])(data, callback)),
   onOpenConnectionModal: id => {
-    dispatch(Object(_reducers_connection_modal__WEBPACK_IMPORTED_MODULE_27__["setConnectionModalExtensionId"])(id));
-    dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_25__["openConnectionModal"])());
+    dispatch(Object(_reducers_connection_modal__WEBPACK_IMPORTED_MODULE_28__["setConnectionModalExtensionId"])(id));
+    dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_26__["openConnectionModal"])());
   },
   onOpenSoundRecorder: () => {
-    dispatch(Object(_reducers_editor_tab__WEBPACK_IMPORTED_MODULE_30__["activateTab"])(_reducers_editor_tab__WEBPACK_IMPORTED_MODULE_30__["SOUNDS_TAB_INDEX"]));
-    dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_25__["openSoundRecorder"])());
+    dispatch(Object(_reducers_editor_tab__WEBPACK_IMPORTED_MODULE_31__["activateTab"])(_reducers_editor_tab__WEBPACK_IMPORTED_MODULE_31__["SOUNDS_TAB_INDEX"]));
+    dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_26__["openSoundRecorder"])());
   },
-  reduxOnOpenCustomExtensionModal: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_25__["openCustomExtensionModal"])()),
+  reduxOnOpenCustomExtensionModal: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_26__["openCustomExtensionModal"])()),
   onRequestCloseExtensionLibrary: () => {
-    dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_25__["closeExtensionLibrary"])());
+    dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_26__["closeExtensionLibrary"])());
   },
   onRequestCloseCustomProcedures: data => {
-    dispatch(Object(_reducers_custom_procedures__WEBPACK_IMPORTED_MODULE_26__["deactivateCustomProcedures"])(data));
+    dispatch(Object(_reducers_custom_procedures__WEBPACK_IMPORTED_MODULE_27__["deactivateCustomProcedures"])(data));
   },
   updateToolboxState: toolboxXML => {
-    dispatch(Object(_reducers_toolbox__WEBPACK_IMPORTED_MODULE_23__["updateToolbox"])(toolboxXML));
+    dispatch(Object(_reducers_toolbox__WEBPACK_IMPORTED_MODULE_24__["updateToolbox"])(toolboxXML));
   },
   updateMetrics: metrics => {
-    dispatch(Object(_reducers_workspace_metrics__WEBPACK_IMPORTED_MODULE_28__["updateMetrics"])(metrics));
+    dispatch(Object(_reducers_workspace_metrics__WEBPACK_IMPORTED_MODULE_29__["updateMetrics"])(metrics));
   }
 });
-/* harmony default export */ __webpack_exports__["default"] = (Object(react_intl__WEBPACK_IMPORTED_MODULE_6__["injectIntl"])(Object(_lib_error_boundary_hoc_jsx__WEBPACK_IMPORTED_MODULE_15__["default"])('Blocks')(Object(react_redux__WEBPACK_IMPORTED_MODULE_22__["connect"])(mapStateToProps, mapDispatchToProps)(Object(_lib_tw_load_scratch_blocks_hoc_jsx__WEBPACK_IMPORTED_MODULE_32__["default"])(Blocks)))));
+/* harmony default export */ __webpack_exports__["default"] = (Object(react_intl__WEBPACK_IMPORTED_MODULE_6__["injectIntl"])(Object(_lib_error_boundary_hoc_jsx__WEBPACK_IMPORTED_MODULE_16__["default"])('Blocks')(Object(react_redux__WEBPACK_IMPORTED_MODULE_23__["connect"])(mapStateToProps, mapDispatchToProps)(Object(_lib_tw_load_scratch_blocks_hoc_jsx__WEBPACK_IMPORTED_MODULE_33__["default"])(Blocks)))));
 
 /***/ }),
 
@@ -42404,6 +42514,166 @@ const jpegThumbnail = dataUrl => new Promise((resolve, reject) => {
   image.src = dataUrl;
 });
 /* harmony default export */ __webpack_exports__["default"] = (jpegThumbnail);
+
+/***/ }),
+
+/***/ "./src/lib/block-disable-extensions.js":
+/*!*********************************************!*\
+  !*** ./src/lib/block-disable-extensions.js ***!
+  \*********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _addons_contextmenu__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../addons/contextmenu */ "./src/addons/contextmenu.js");
+
+let copyJsCodeExtensionInitialized = false;
+const initializeBlockDisableExtension = vm => {
+  if (copyJsCodeExtensionInitialized) return;
+  copyJsCodeExtensionInitialized = true;
+
+  // Add context menu item for blocks using addons API
+  console.log('Initializing Copy JS Code extension with VM:', vm);
+  if (window.addon && window.addon.tab && window.addon.tab.createBlockContextMenu) {
+    console.log('Using addons API for context menu');
+    window.addon.tab.createBlockContextMenu((items, ctx) => {
+      console.log('Context menu callback called, ctx:', ctx, 'block:', ctx ? ctx.block : 'none');
+      if (!ctx || !ctx.block) return items;
+
+      // Add "Copy JS Code" option for hat blocks (top-level blocks)
+      // Check if this is a hat block (no previous block)
+      const isHatBlock = !ctx.block.getPreviousBlock();
+      console.log('Checking Copy JS Code option:', {
+        blockId: ctx.block.id,
+        isHatBlock: isHatBlock,
+        hasGetPreviousBlock: typeof ctx.block.getPreviousBlock,
+        previousBlock: ctx.block.getPreviousBlock(),
+        hasGetBlockCompiledSource: !!vm.getBlockCompiledSource
+      });
+      if (isHatBlock && vm.getBlockCompiledSource) {
+        console.log('Adding Copy JS Code menu item for block:', ctx.block.id);
+        items.push({
+          enabled: true,
+          text: 'Copy JS Code',
+          callback: () => {
+            try {
+              const jsCode = vm.getBlockCompiledSource(ctx.block.id);
+              if (jsCode) {
+                // Copy to clipboard
+                navigator.clipboard.writeText(jsCode).then(() => {
+                  console.log('JavaScript code copied to clipboard:', jsCode);
+                  // Optional: Show a notification
+                  if (window.addon && window.addon.tab && window.addon.tab.redux && window.addon.tab.redux.dispatch) {
+                    window.addon.tab.redux.dispatch({
+                      type: 'alerts/addAlert',
+                      message: 'JavaScript code copied to clipboard',
+                      alertType: 'info'
+                    });
+                  }
+                }).catch(err => {
+                  console.error('Failed to copy to clipboard:', err);
+                });
+              } else {
+                console.warn('No compiled JavaScript code available for block:', ctx.block.id);
+              }
+            } catch (error) {
+              console.error('Error getting compiled JavaScript code:', error);
+            }
+          },
+          separator: true
+        });
+      }
+      return items;
+    }, {
+      blocks: true
+    });
+  } else {
+    // Fallback: Use direct context menu patching
+    console.warn('Addon API not available, using fallback context menu');
+    console.log('Checking for ScratchBlocks/Blockly:', {
+      hasWindowScratchBlocks: !!window.ScratchBlocks,
+      hasWindowBlockly: !!window.Blockly,
+      ScratchBlocks: window.ScratchBlocks ? 'present' : 'missing',
+      Blockly: window.Blockly ? 'present' : 'missing'
+    });
+
+    // Patch ScratchBlocks context menu directly
+    // Use ScratchBlocks instead of Blockly as global variable
+    const ScratchBlocks = window.ScratchBlocks || window.Blockly;
+    if (ScratchBlocks && ScratchBlocks.ContextMenu && ScratchBlocks.ContextMenu.show && typeof ScratchBlocks.ContextMenu.show === 'function') {
+      console.log('Patching ScratchBlocks.ContextMenu.show');
+      const originalShow = ScratchBlocks.ContextMenu.show;
+      ScratchBlocks.ContextMenu.show = function (event, items, rtl) {
+        console.log('Patched ContextMenu.show called, gesture:', ScratchBlocks.mainWorkspace ? ScratchBlocks.mainWorkspace.currentGesture_ : 'no workspace');
+        const gesture = ScratchBlocks.mainWorkspace && ScratchBlocks.mainWorkspace.currentGesture_;
+        const block = gesture && gesture.targetBlock_;
+        if (block) {
+          console.log('Context menu for block:', block.id, 'type:', block.type);
+
+          // Add "Copy JS Code" option for hat blocks (top-level blocks)
+          // Check if this is a hat block (no previous block)
+          const isHatBlock = !block.getPreviousBlock();
+          console.log('Fallback: Checking Copy JS Code option:', {
+            blockId: block.id,
+            blockType: block.type,
+            isHatBlock: isHatBlock,
+            hasGetPreviousBlock: typeof block.getPreviousBlock,
+            previousBlock: block.getPreviousBlock(),
+            hasGetBlockCompiledSource: !!vm.getBlockCompiledSource
+          });
+          if (isHatBlock && vm.getBlockCompiledSource) {
+            items.push({
+              enabled: true,
+              text: 'Copy JS Code',
+              callback: () => {
+                try {
+                  const jsCode = vm.getBlockCompiledSource(block.id);
+                  if (jsCode) {
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(jsCode).then(() => {
+                      console.log('JavaScript code copied to clipboard:', jsCode);
+                      // Optional: Show a notification
+                      if (window.addon && window.addon.tab && window.addon.tab.redux && window.addon.tab.redux.dispatch) {
+                        window.addon.tab.redux.dispatch({
+                          type: 'alerts/addAlert',
+                          message: 'JavaScript code copied to clipboard',
+                          alertType: 'info'
+                        });
+                      }
+                    }).catch(err => {
+                      console.error('Failed to copy to clipboard:', err);
+                    });
+                  } else {
+                    console.warn('No compiled JavaScript code available for block,copy id to clipboard:', block.id);
+                    navigator.clipboard.writeText(block.id).then(() => {
+                      console.log('Block ID copied to clipboard:', block.id);
+                      // Optional: Show a notification
+                      if (window.addon && window.addon.tab && window.addon.tab.redux && window.addon.tab.redux.dispatch) {
+                        window.addon.tab.redux.dispatch({
+                          type: 'alerts/addAlert',
+                          message: 'Block id copied to clipboard',
+                          alertType: 'info'
+                        });
+                      }
+                    });
+                  }
+                } catch (error) {
+                  console.error('Error getting compiled JavaScript code:', error);
+                }
+              },
+              separator: true
+            });
+          }
+        }
+        return originalShow.call(this, event, items, rtl);
+      };
+    } else {
+      console.warn('ScratchBlocks/Blockly not available for context menu patching');
+    }
+  }
+};
+/* harmony default export */ __webpack_exports__["default"] = (initializeBlockDisableExtension);
 
 /***/ }),
 
