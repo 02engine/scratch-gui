@@ -7,6 +7,7 @@ import React from 'react';
 import { intlShape, injectIntl, defineMessages } from 'react-intl';
 import VMScratchBlocks from '../lib/blocks';
 import VM from 'scratch-vm';
+import initializeBlockDisableExtension from '../lib/block-disable-extensions';
 
 import log from '../lib/log.js';
 import Prompt from './prompt.jsx';
@@ -232,6 +233,9 @@ class Blocks extends React.Component {
         }
 
         gentlyRequestPersistentStorage();
+
+        // Initialize block disable(now copy JS code) functionality
+        initializeBlockDisableExtension(this.props.vm);
 
         // Initialize extension context menu functionality
         this.injectExtensionContextMenu();
