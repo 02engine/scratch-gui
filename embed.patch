@@ -1,0 +1,1076 @@
+diff --git a/src/components/draggable-window/draggable-window.jsx b/src/components/draggable-window/draggable-window.jsx
+index 898045c..d4ca25b 100644
+--- a/src/components/draggable-window/draggable-window.jsx
++++ b/src/components/draggable-window/draggable-window.jsx
+@@ -314,4 +314,4 @@ DraggableWindow.propTypes = {
+     zIndex: PropTypes.number
+ };
+ 
+-export default DraggableWindow;
++export default DraggableWindow;
+\ No newline at end of file
+diff --git a/src/components/stage-header/stage-header.jsx b/src/components/stage-header/stage-header.jsx
+index d3616ca..de3f28b 100644
+--- a/src/components/stage-header/stage-header.jsx
++++ b/src/components/stage-header/stage-header.jsx
+@@ -84,7 +84,7 @@ const StageHeaderComponent = function (props) {
+         isShowCoordinate,
+         onTriggerCoordinate,
+         onZoomOutCoordinateFontSize,
+-        onZoomInCoordinateFontSize
++        onZoomInCoordinateFontSize,
+     } = props;
+ 
+     let header = null;
+@@ -168,27 +168,19 @@ const StageHeaderComponent = function (props) {
+             ) : (
+                 <div className={styles.stageSizeToggleGroup}>
+                     <div>
+-                        <button
+-                            className={styles.btn}
+-                            onClick={onTriggerCoordinate}
+-                        >{isShowCoordinate ? '关闭坐标' : '开启坐标'}</button>
++                        <button className={styles.btn} onClick={onTriggerCoordinate}>{isShowCoordinate ? '关闭坐标' : '开启坐标'}</button>
+                         {
+-                            isShowCoordinate && stageSizeMode !== STAGE_SIZE_MODES.small ? (
++                            isShowCoordinate&&stageSizeMode!==STAGE_SIZE_MODES.small ? (
+                                 <>
+-                                    <button
+-                                        className={styles.btn}
+-                                        onClick={onZoomOutCoordinateFontSize}
+-                                    >缩小字体</button>
+-                                    <button
+-                                        className={styles.btn}
+-                                        onClick={onZoomInCoordinateFontSize}
+-                                    >放大字体</button>
++                                    <button className={styles.btn} onClick={onZoomOutCoordinateFontSize}>缩小字体</button>
++                                    <button className={styles.btn} onClick={onZoomInCoordinateFontSize}>放大字体</button>
+                                 </>
+                             ) : null
+                         }
+                     </div>
+ 
+ 
++
+                     <ToggleButtons
+                         buttons={[
+                             {
+@@ -286,7 +278,7 @@ StageHeaderComponent.propTypes = {
+     isShowCoordinate: PropTypes.bool.isRequired, // 标识是否显示网格坐标
+     onTriggerCoordinate: PropTypes.func.isRequired, // 控制是否显示网格坐标
+     onZoomOutCoordinateFontSize: PropTypes.func.isRequired, // 缩小网格坐标系的字体大小
+-    onZoomInCoordinateFontSize: PropTypes.func.isRequired // 放大网格坐标系的字体大小
++    onZoomInCoordinateFontSize: PropTypes.func.isRequired, // 放大网格坐标系的字体大小
+ };
+ 
+ StageHeaderComponent.defaultProps = {
+diff --git a/src/components/stage-wrapper/stage-wrapper.css b/src/components/stage-wrapper/stage-wrapper.css
+index 17b0634..4fd1c54 100644
+--- a/src/components/stage-wrapper/stage-wrapper.css
++++ b/src/components/stage-wrapper/stage-wrapper.css
+@@ -25,7 +25,7 @@
+     left: 0;
+     right: 0;
+     bottom: 0;
+-    z-index: 1000; /* Increased z-index for fullscreen mode */
++    z-index: $z-index-stage-wrapper-overlay;
+     background-color: $fullscreen-background;
+     /* spacing between stage and control bar (on the top), or between
+     stage and window edges (on left/right/bottom) */
+diff --git a/src/components/target-pane/target-pane.css b/src/components/target-pane/target-pane.css
+index eda0408..07b07cb 100644
+--- a/src/components/target-pane/target-pane.css
++++ b/src/components/target-pane/target-pane.css
+@@ -5,9 +5,6 @@
+     display: flex;
+     flex-direction: row;
+     flex-grow: 1;
+-    width: 100%;
+-    height: 100%;
+-    box-sizing: border-box;
+ }
+ 
+ .stage-selector-wrapper {
+diff --git a/src/components/tw-framerate-indicator/framerate-indicator.jsx b/src/components/tw-framerate-indicator/framerate-indicator.jsx
+index 0d24ab7..f19736d 100644
+--- a/src/components/tw-framerate-indicator/framerate-indicator.jsx
++++ b/src/components/tw-framerate-indicator/framerate-indicator.jsx
+@@ -1,10 +1,10 @@
+-import React, {useEffect} from 'react';
++import React, { useEffect } from 'react';
+ import PropTypes from 'prop-types';
+ import {FormattedMessage} from 'react-intl';
+ import {connect} from 'react-redux';
+ import styles from './framerate-indicator.css';
+ import VM from 'scratch-vm';
+-import {setOpsPerFrameState} from '../../reducers/tw';
++import { setOpsPerFrameState } from '../../reducers/tw'; 
+ 
+ const FramerateIndicator = ({
+     framerate,
+@@ -84,10 +84,10 @@ FramerateIndicator.propTypes = {
+ };
+ 
+ const mapDispatchToProps = dispatch => ({
+-    setOpsPerFrame: value => dispatch(setOpsPerFrameState(value))
++    setOpsPerFrame: (value) => dispatch(setOpsPerFrameState(value))
+ });
+ 
+-const mapStateToProps = state => ({
++const mapStateToProps = (state) => ({
+     opsPerFrame: state.scratchGui.tw.opsPerFrame,
+     framerate: state.scratchGui.tw.framerate,
+     interpolation: state.scratchGui.tw.interpolation,
+diff --git a/src/components/tw-invalid-embed/invalid-embed.css b/src/components/tw-invalid-embed/invalid-embed.css
+index 8fcce8c..8e937cb 100644
+--- a/src/components/tw-invalid-embed/invalid-embed.css
++++ b/src/components/tw-invalid-embed/invalid-embed.css
+@@ -10,7 +10,7 @@
+ 
+     /* this is an error, so we want it to stand out and always be readable regardless of what the site */
+     /* embedding us looks like */
+-    background-color: #ff4c4c;
++    background-color: #00baad;
+     color: white;
+ 
+     box-sizing: border-box;
+diff --git a/src/components/tw-project-input/project-input.jsx b/src/components/tw-project-input/project-input.jsx
+index 9007ea4..fc88a36 100644
+--- a/src/components/tw-project-input/project-input.jsx
++++ b/src/components/tw-project-input/project-input.jsx
+@@ -48,8 +48,8 @@ class ProjectInput extends React.Component {
+         }
+     }
+     extractProjectId (text) {
+-        // const numberMatch = text.match(/\d+/);
+-        // return numberMatch ? numberMatch[0] : null;
++        //const numberMatch = text.match(/\d+/);
++        //return numberMatch ? numberMatch[0] : null;
+         return text;
+     }
+     readProjectId (e) {
+diff --git a/src/containers/blocks.jsx b/src/containers/blocks.jsx
+index 86871d6..1a93708 100644
+--- a/src/containers/blocks.jsx
++++ b/src/containers/blocks.jsx
+@@ -7,7 +7,6 @@ import React from 'react';
+ import {intlShape, injectIntl, defineMessages} from 'react-intl';
+ import VMScratchBlocks from '../lib/blocks';
+ import VM from 'scratch-vm';
+-import initializeBlockDisableExtension from '../lib/block-disable-extensions';
+ 
+ import log from '../lib/log.js';
+ import Prompt from './prompt.jsx';
+@@ -230,9 +229,6 @@ class Blocks extends React.Component {
+         }
+ 
+         gentlyRequestPersistentStorage();
+-        
+-        // Initialize block disable functionality
+-        initializeBlockDisableExtension(this.props.vm);
+     }
+     shouldComponentUpdate (nextProps, nextState) {
+         return (
+diff --git a/src/containers/costume-tab.jsx b/src/containers/costume-tab.jsx
+index 51da7f4..d4b6855 100644
+--- a/src/containers/costume-tab.jsx
++++ b/src/containers/costume-tab.jsx
+@@ -163,45 +163,45 @@ class CostumeTab extends React.Component {
+         }));
+     }
+     async handleNewBlankCostume () {
+-        console.log('addcostume');
+-        function base64ToUint8Array (base64String) {
+-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+-            const base64 = (base64String + padding)
+-                .replace(/\-/g, '+')
+-                .replace(/_/g, '/');
++        console.log("addcostume");
++        function base64ToUint8Array(base64String) {
++        　　　　const padding = '='.repeat((4 - base64String.length % 4) % 4);
++               const base64 = (base64String + padding)
++                            .replace(/\-/g, '+')
++                            .replace(/_/g, '/');
+         
+-            const rawData = window.atob(base64);
+-            const outputArray = new Uint8Array(rawData.length);
++               const rawData = window.atob(base64);
++               const outputArray = new Uint8Array(rawData.length);
+         
+-            for (let i = 0; i < rawData.length; ++i) {
+-                outputArray[i] = rawData.charCodeAt(i);
+-            }
+-            return outputArray;
++               for (let i = 0; i < rawData.length; ++i) {
++                    outputArray[i] = rawData.charCodeAt(i);
++               }
++               return outputArray;
+         }
+ 
+-        const vm = this.props.vm;
+-        const runtime = vm.runtime;
++const vm=this.props.vm;
++const runtime=vm.runtime;
+ 
+-        const targetId = vm.runtime.getEditingTarget().id;
+-        const assetName = this.props.vm.editingTarget.isStage ?
++const targetId = vm.runtime.getEditingTarget().id;
++      const assetName = this.props.vm.editingTarget.isStage ?
+             this.props.intl.formatMessage(messages.backdrop, {index: 1}) :
+             this.props.intl.formatMessage(messages.costume, {index: 1});
+ 
+-        // const res =base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4=');
+-        // const blob = await res.blob();
++      //const res =base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4=');
++      //const blob = await res.blob();
+ 
+-        /* if (!(this._typeIsBitmap(blob.type) || blob.type === "image/svg+xml")) {
++      /*if (!(this._typeIsBitmap(blob.type) || blob.type === "image/svg+xml")) {
+         console.error(`Invalid MIME type: ${blob.type}`);
+         return;
+       }*/
+-        const assetType = runtime.storage.AssetType.ImageVector;
++      const assetType =runtime.storage.AssetType.ImageVector;
+ 
+-        // Bitmap data format is not actually enforced, but setting it to something that isn't in scratch-parser's
+-        // known format list will throw an error when someone tries to load the project.
+-        // (https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L51)
+-        const dataType = runtime.storage.DataFormat.SVG;
++      // Bitmap data format is not actually enforced, but setting it to something that isn't in scratch-parser's
++      // known format list will throw an error when someone tries to load the project.
++      // (https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L51)
++      const dataType =runtime.storage.DataFormat.SVG
+ 
+-        /* const arrayBuffer = await new Promise((resolve, reject) => {
++      /*const arrayBuffer = await new Promise((resolve, reject) => {
+         const fr = new FileReader();
+         fr.onload = () => resolve(fr.result);
+         fr.onerror = () =>
+@@ -209,31 +209,31 @@ class CostumeTab extends React.Component {
+         fr.readAsArrayBuffer(blob);
+       });*/
+ 
+-        const asset = runtime.storage.createAsset(
+-            assetType,
+-            dataType,
+-            base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4='),
+-            null,
+-            true
+-        );
+-        const md5ext = `${asset.assetId}.${asset.dataFormat}`;
++      const asset = runtime.storage.createAsset(
++        assetType,
++        dataType,
++        base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4='),
++        null,
++        true
++      );
++      const md5ext = `${asset.assetId}.${asset.dataFormat}`;
+ 
+-        try {
++      try {
+         
+-            await vm.addCostume(
+-                md5ext,
+-                {
+-                    asset,
+-                    md5ext,
+-                    name: assetName
+-                },
+-                targetId
+-            );
+-        } catch (e) {
+-            console.error(e);
+-        }
++        await vm.addCostume(
++          md5ext,
++          {
++            asset,
++            md5ext,
++            name: assetName,
++          },
++          targetId
++        );
++      } catch (e) {
++        console.error(e);
++      }
+          
+-        /*
++      /*
+         
+         const name = this.props.vm.editingTarget.isStage ?
+             this.props.intl.formatMessage(messages.backdrop, {index: 1}) :
+diff --git a/src/containers/stage-header.jsx b/src/containers/stage-header.jsx
+index 2ec5db1..d534297 100644
+--- a/src/containers/stage-header.jsx
++++ b/src/containers/stage-header.jsx
+@@ -27,8 +27,8 @@ class StageHeader extends React.Component {
+         this.coordinateFontSize = 14;
+ 
+         this.state = {
+-            isShowCoordinate: false // 是否显示坐标网格
+-            // stageNativeSizePopoverOpen: false,
++            isShowCoordinate: false, // 是否显示坐标网格
++           // stageNativeSizePopoverOpen: false,
+         };
+     }
+     componentDidMount () {
+@@ -46,10 +46,10 @@ class StageHeader extends React.Component {
+         }
+     }
+ 
+-    /**
++/**
+      * 触发坐标网格的显示 or 隐藏
+      */
+-    handleTriggerCoordinate () {
++     handleTriggerCoordinate () {
+         const visible = !this.state.isShowCoordinate;
+ 
+         this.props.vm.runtime.triggerCoordinate(visible);
+@@ -62,7 +62,7 @@ class StageHeader extends React.Component {
+     /**
+      * 缩小坐标系的字体
+      */
+-    handleZoomOutCoordinateFontSize () {
++     handleZoomOutCoordinateFontSize () {
+         let temp = this.coordinateFontSize - 1;
+ 
+         temp = temp >= this.minCoordinateFontSize ? temp : this.minCoordinateFontSize;
+@@ -75,7 +75,7 @@ class StageHeader extends React.Component {
+     /**
+      * 放大坐标系的字体
+      */
+-    handleZoomInCoordinateFontSize () {
++     handleZoomInCoordinateFontSize () {
+         let temp = this.coordinateFontSize + 1;
+ 
+         temp = temp <= this.maxCoordinateFontSize ? temp : this.maxCoordinateFontSize;
+@@ -85,6 +85,7 @@ class StageHeader extends React.Component {
+     }
+ 
+ 
++
+     checkInvalidStageSizeMode () {
+         // Switch from "large" to "full" when the large option isn't even displayed in the interface
+         if (this.props.stageSizeMode === STAGE_SIZE_MODES.large && !this.showFixedLargeSize()) {
+diff --git a/src/containers/stage-selector.jsx b/src/containers/stage-selector.jsx
+index eea02be..b9ac1d6 100644
+--- a/src/containers/stage-selector.jsx
++++ b/src/containers/stage-selector.jsx
+@@ -101,43 +101,43 @@ class StageSelector extends React.Component {
+     async handleEmptyBackdrop (e) {
+         e.stopPropagation(); // Prevent click from falling through to stage selector, select it manually below
+         this.props.vm.setEditingTarget(this.props.id);
+-        console.log('add back');
+-        function base64ToUint8Array (base64String) {
+-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+-            const base64 = (base64String + padding)
+-                .replace(/\-/g, '+')
+-                .replace(/_/g, '/');
++                console.log("add back");
++        function base64ToUint8Array(base64String) {
++        　　　　const padding = '='.repeat((4 - base64String.length % 4) % 4);
++               const base64 = (base64String + padding)
++                            .replace(/\-/g, '+')
++                            .replace(/_/g, '/');
+         
+-            const rawData = window.atob(base64);
+-            const outputArray = new Uint8Array(rawData.length);
++               const rawData = window.atob(base64);
++               const outputArray = new Uint8Array(rawData.length);
+         
+-            for (let i = 0; i < rawData.length; ++i) {
+-                outputArray[i] = rawData.charCodeAt(i);
+-            }
+-            return outputArray;
++               for (let i = 0; i < rawData.length; ++i) {
++                    outputArray[i] = rawData.charCodeAt(i);
++               }
++               return outputArray;
+         }
+ 
+-        const vm = this.props.vm;
+-        const runtime = vm.runtime;
++const vm=this.props.vm;
++const runtime=vm.runtime;
+ 
+-        const targetId = vm.runtime.getEditingTarget().id;
+-        const assetName = this.props.intl.formatMessage(sharedMessages.backdrop, {index: 1});
++const targetId = vm.runtime.getEditingTarget().id;
++      const assetName = this.props.intl.formatMessage(sharedMessages.backdrop, {index: 1});
+ 
+-        // const res =base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4=');
+-        // const blob = await res.blob();
++      //const res =base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4=');
++      //const blob = await res.blob();
+ 
+-        /* if (!(this._typeIsBitmap(blob.type) || blob.type === "image/svg+xml")) {
++      /*if (!(this._typeIsBitmap(blob.type) || blob.type === "image/svg+xml")) {
+         console.error(`Invalid MIME type: ${blob.type}`);
+         return;
+       }*/
+-        const assetType = runtime.storage.AssetType.ImageVector;
++      const assetType =runtime.storage.AssetType.ImageVector;
+ 
+-        // Bitmap data format is not actually enforced, but setting it to something that isn't in scratch-parser's
+-        // known format list will throw an error when someone tries to load the project.
+-        // (https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L51)
+-        const dataType = runtime.storage.DataFormat.SVG;
++      // Bitmap data format is not actually enforced, but setting it to something that isn't in scratch-parser's
++      // known format list will throw an error when someone tries to load the project.
++      // (https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L51)
++      const dataType =runtime.storage.DataFormat.SVG
+ 
+-        /* const arrayBuffer = await new Promise((resolve, reject) => {
++      /*const arrayBuffer = await new Promise((resolve, reject) => {
+         const fr = new FileReader();
+         fr.onload = () => resolve(fr.result);
+         fr.onerror = () =>
+@@ -145,31 +145,31 @@ class StageSelector extends React.Component {
+         fr.readAsArrayBuffer(blob);
+       });*/
+ 
+-        const asset = runtime.storage.createAsset(
+-            assetType,
+-            dataType,
+-            base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4='),
+-            null,
+-            true
+-        );
+-        const md5ext = `${asset.assetId}.${asset.dataFormat}`;
++      const asset = runtime.storage.createAsset(
++        assetType,
++        dataType,
++        base64ToUint8Array('PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIHZpZXdCb3g9IjAgMCAwIDAiPgogIDwhLS0gRXhwb3J0ZWQgYnkgU2NyYXRjaCAtIGh0dHA6Ly9zY3JhdGNoLm1pdC5lZHUvIC0tPgo8L3N2Zz4='),
++        null,
++        true
++      );
++      const md5ext = `${asset.assetId}.${asset.dataFormat}`;
+ 
+-        try {
++      try {
+         
+-            await vm.addBackdrop(
+-                md5ext,
+-                {
+-                    asset,
+-                    md5ext,
+-                    name: assetName
+-                },
+-                targetId
+-            );
+-        } catch (e) {
+-            console.error(e);
+-        }
++        await vm.addBackdrop(
++          md5ext,
++          {
++            asset,
++            md5ext,
++            name: assetName,
++          },
++          targetId
++        );
++      } catch (e) {
++        console.error(e);
++      }
+ 
+-        // this.handleNewBackdrop(emptyCostume(this.props.intl.formatMessage(sharedMessages.backdrop, {index: 1})));
++        //this.handleNewBackdrop(emptyCostume(this.props.intl.formatMessage(sharedMessages.backdrop, {index: 1})));
+     }
+     handleBackdropUpload (e) {
+         const vm = this.props.vm;
+diff --git a/src/containers/target-pane.jsx b/src/containers/target-pane.jsx
+index 853e92e..de2badc 100644
+--- a/src/containers/target-pane.jsx
++++ b/src/containers/target-pane.jsx
+@@ -118,22 +118,23 @@ class TargetPane extends React.Component {
+             .then(this.handleActivateBlocksTab);
+     }
+     handlePaintSpriteClick () {
++
+         
+ 
+-        function base64ToUint8Array (base64String) {
+-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+-            const base64 = (base64String + padding)
+-                .replace(/\-/g, '+')
+-                .replace(/_/g, '/');
++function base64ToUint8Array(base64String) {
++　　　　const padding = '='.repeat((4 - base64String.length % 4) % 4);
++       const base64 = (base64String + padding)
++                    .replace(/\-/g, '+')
++                    .replace(/_/g, '/');
+ 
+-            const rawData = window.atob(base64);
+-            const outputArray = new Uint8Array(rawData.length);
++       const rawData = window.atob(base64);
++       const outputArray = new Uint8Array(rawData.length);
+ 
+-            for (let i = 0; i < rawData.length; ++i) {
+-                outputArray[i] = rawData.charCodeAt(i);
+-            }
+-            return outputArray;
+-        }
++       for (let i = 0; i < rawData.length; ++i) {
++            outputArray[i] = rawData.charCodeAt(i);
++       }
++       return outputArray;
++}
+         /*
+         const formatMessage = this.props.intl.formatMessage;
+         const emptyItem = emptySprite(
+@@ -142,8 +143,8 @@ class TargetPane extends React.Component {
+             formatMessage(sharedMessages.costume, {index: 1})
+         );
+         */
+-        // this.props.vm.addSprite(JSON.stringify(emptyItem)).then(() => {
+-        const empt = 'UEsDBAoAAAAIAPtDEFvpQGoKHgEAAMUBAAALAAAAc3ByaXRlLmpzb26NkcFKxDAQhl9F5lykbey67XVB8OpeFPEwadISTBtJ0rJrKXgVbz6AePPuOwnrWzjptog3b/NPvpl/ZjKAcluPtYSiQu1kBC02JODw8Xp4/kwggh6tQq6lg2IYI9DK+Tnk1qAo8VdrU97PcWmaRrbLS9lZS2pjnO9C+zgAU0zA7bCYfj+9f729BFOufIMPV9IZ3XllWiiSCAR6vDC2QU+s62vi0DnpLwVpxliOaZ4xZLxapZyvY5mdVVV2ngleSkFwIzK58/9gT4/NrfEYzDc0urTX09h/czeUG+8icKZrRViF4p5GDtskMeG9copuB4W3HR13BwVbRbCHIl1TlXpcOKGsLI+L5kFarGucCudvWXy3fh+ygFqfoA22MP4AUEsDBAoAAAAIAPtDEFtvxALBkgAAAMgAAAAkAAAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnbY5NDoIwFIT3nOL59v1BVxBgQeIJPIHShjYCJe2zrbcXwaWZzWTmS2aaEEfI87SEFg3RWguRUuLpwp0fxVlKKTYCD6TOk12e/8CyqiqxtwhR+2Dd0mLJS4RkFZkWJYLRdjS022h16l3ePOzCrgBoTozBNa/Ok1bweMNt8HcaDDD4DYYj4LMlrtVLAGNd0XwPdh9QSwECFAAKAAAACAD7QxBb6UBqCh4BAADFAQAACwAAAAAAAAAAAAAAAAAAAAAAc3ByaXRlLmpzb25QSwECFAAKAAAACAD7QxBbb8QCwZIAAADIAAAAJAAAAAAAAAAAAAAAAABHAQAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnUEsFBgAAAAACAAIAiwAAABsCAAAAAA==';
++        //this.props.vm.addSprite(JSON.stringify(emptyItem)).then(() => {
++        const empt="UEsDBAoAAAAIAPtDEFvpQGoKHgEAAMUBAAALAAAAc3ByaXRlLmpzb26NkcFKxDAQhl9F5lykbey67XVB8OpeFPEwadISTBtJ0rJrKXgVbz6AePPuOwnrWzjptog3b/NPvpl/ZjKAcluPtYSiQu1kBC02JODw8Xp4/kwggh6tQq6lg2IYI9DK+Tnk1qAo8VdrU97PcWmaRrbLS9lZS2pjnO9C+zgAU0zA7bCYfj+9f729BFOufIMPV9IZ3XllWiiSCAR6vDC2QU+s62vi0DnpLwVpxliOaZ4xZLxapZyvY5mdVVV2ngleSkFwIzK58/9gT4/NrfEYzDc0urTX09h/czeUG+8icKZrRViF4p5GDtskMeG9copuB4W3HR13BwVbRbCHIl1TlXpcOKGsLI+L5kFarGucCudvWXy3fh+ygFqfoA22MP4AUEsDBAoAAAAIAPtDEFtvxALBkgAAAMgAAAAkAAAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnbY5NDoIwFIT3nOL59v1BVxBgQeIJPIHShjYCJe2zrbcXwaWZzWTmS2aaEEfI87SEFg3RWguRUuLpwp0fxVlKKTYCD6TOk12e/8CyqiqxtwhR+2Dd0mLJS4RkFZkWJYLRdjS022h16l3ePOzCrgBoTozBNa/Ok1bweMNt8HcaDDD4DYYj4LMlrtVLAGNd0XwPdh9QSwECFAAKAAAACAD7QxBb6UBqCh4BAADFAQAACwAAAAAAAAAAAAAAAAAAAAAAc3ByaXRlLmpzb25QSwECFAAKAAAACAD7QxBbb8QCwZIAAADIAAAAJAAAAAAAAAAAAAAAAABHAQAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnUEsFBgAAAAACAAIAiwAAABsCAAAAAA==";
+         this.props.vm.addSprite(base64ToUint8Array(empt)).then(() => {
+             setTimeout(() => { // Wait for targets update to propagate before tab switching
+                 this.props.onActivateTab(COSTUMES_TAB_INDEX);
+diff --git a/src/containers/tw-settings-modal.jsx b/src/containers/tw-settings-modal.jsx
+index 5c610aa..4873649 100644
+--- a/src/containers/tw-settings-modal.jsx
++++ b/src/containers/tw-settings-modal.jsx
+@@ -6,7 +6,7 @@ import {connect} from 'react-redux';
+ import {closeSettingsModal} from '../reducers/modals';
+ import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
+ import {defaultStageSize} from '../reducers/custom-stage-size';
+-import {setOpsPerFrameState} from '../reducers/tw';
++import { setOpsPerFrameState } from '../reducers/tw'; 
+  
+ const messages = defineMessages({
+     newFramerate: {
+@@ -192,7 +192,7 @@ const mapStateToProps = state => ({
+ 
+ const mapDispatchToProps = dispatch => ({
+     onClose: () => dispatch(closeSettingsModal()),
+-    setOpsPerFrame: value => dispatch(setOpsPerFrameState(value))
++    setOpsPerFrame: (value) => dispatch(setOpsPerFrameState(value))
+ });
+ 
+ export default injectIntl(connect(
+diff --git a/src/lib/block-disable-extensions.js b/src/lib/block-disable-extensions.js
+deleted file mode 100644
+index c4ac688..0000000
+--- a/src/lib/block-disable-extensions.js
++++ /dev/null
+@@ -1,143 +0,0 @@
+-import {addContextMenu} from '../addons/contextmenu';
+-import VMBlockDisableManager from './vm-block-disable';
+-
+-let blockDisableExtensionInitialized = false;
+-let vmBlockDisableManager = null;
+-
+-const initializeBlockDisableExtension = vm => {
+-    if (blockDisableExtensionInitialized) return;
+-    blockDisableExtensionInitialized = true;
+-
+-    // Initialize VM block disable manager
+-    vmBlockDisableManager = new VMBlockDisableManager(vm);
+-
+-    // Add context menu item for blocks using addons API
+-    // Add context menu item for blocks using addons API
+-    if (window.addon && window.addon.tab && window.addon.tab.createBlockContextMenu) {
+-        window.addon.tab.createBlockContextMenu((items, ctx) => {
+-            if (!ctx || !ctx.block) return items;
+-            
+-            const isDisabled = vm.getBlockDisabledState && vm.getBlockDisabledState(ctx.block.id);
+-            
+-            items.push({
+-                text: isDisabled ? 'Enable Block' : 'Disable Block',
+-                callback: () => {
+-                    const newDisabledState = !isDisabled;
+-                    if (vm.setBlockDisabledState) {
+-                        vm.setBlockDisabledState(ctx.block.id, newDisabledState);
+-                        
+-                        // Update visual appearance
+-                        if (ctx.block.setDisabled) {
+-                            ctx.block.setDisabled(newDisabledState);
+-                        }
+-                        
+-                        // Recursively update child blocks
+-                        const updateBlockTree = (block, disabled) => {
+-                            if (block && block.setDisabled) {
+-                                block.setDisabled(disabled);
+-                            }
+-                            if (block && block.getChildren) {
+-                                block.getChildren().forEach(child => {
+-                                    if (child instanceof Blockly.Block) {
+-                                        updateBlockTree(child, disabled);
+-                                    }
+-                                });
+-                            }
+-                        };
+-                        updateBlockTree(ctx.block, newDisabledState);
+-                        
+-                        if (ctx.block.workspace && ctx.block.workspace.render) {
+-                            ctx.block.workspace.render();
+-                        }
+-                    }
+-                },
+-                separator: true
+-            });
+-            
+-            return items;
+-        }, {blocks: true});
+-    } else {
+-        // Fallback: Use direct context menu patching
+-        console.warn('Addon API not available, using fallback block disable menu');
+-        
+-        // Patch Blockly context menu directly
+-        if (window.Blockly && Blockly.ContextMenu && Blockly.ContextMenu.show && typeof Blockly.ContextMenu.show === 'function') {
+-            const originalShow = Blockly.ContextMenu.show;
+-            Blockly.ContextMenu.show = function (event, items, rtl) {
+-                const gesture = Blockly.mainWorkspace && Blockly.mainWorkspace.currentGesture_;
+-                const block = gesture && gesture.targetBlock_;
+-                
+-                if (block) {
+-                    const isDisabled = vm.getBlockDisabledState && vm.getBlockDisabledState(block.id);
+-                    
+-                    items.push({
+-                        text: isDisabled ? 'Enable Block' : 'Disable Block',
+-                        callback: () => {
+-                            const newDisabledState = !isDisabled;
+-                            if (vm.setBlockDisabledState) {
+-                                vm.setBlockDisabledState(block.id, newDisabledState);
+-                                
+-                                if (block.setDisabled) {
+-                                    block.setDisabled(newDisabledState);
+-                                }
+-                                
+-                                if (block.workspace && block.workspace.render) {
+-                                    block.workspace.render();
+-                                }
+-                            }
+-                        },
+-                        separator: true
+-                    });
+-                }
+-                
+-                return originalShow.call(this, event, items, rtl);
+-            };
+-        }
+-    }
+-
+-    // Patch Blockly to add disabled visual styling
+-    if (window.addon) {
+-        window.addon.tab.traps.getBlockly().then(ScratchBlocks => {
+-            const originalRender = ScratchBlocks.BlockSvg.prototype.render;
+-            ScratchBlocks.BlockSvg.prototype.render = function () {
+-                originalRender.call(this);
+-                
+-                const isDisabled = vm.getBlockDisabledState && vm.getBlockDisabledState(this.id);
+-                
+-                if (isDisabled) {
+-                    this.svgPath_.setAttribute('fill-opacity', '0.5');
+-                    this.svgPath_.setAttribute('stroke-opacity', '0.5');
+-                    
+-                    // Gray out all text elements
+-                    const textElements = this.svgGroup_.querySelectorAll('text');
+-                    textElements.forEach(text => {
+-                        text.setAttribute('fill', '#888');
+-                    });
+-                } else {
+-                    this.svgPath_.removeAttribute('fill-opacity');
+-                    this.svgPath_.removeAttribute('stroke-opacity');
+-                    
+-                    // Restore original text colors
+-                    const textElements = this.svgGroup_.querySelectorAll('text');
+-                    textElements.forEach(text => {
+-                        text.removeAttribute('fill');
+-                    });
+-                }
+-            };
+-
+-            // Add isDisabled property to blocks
+-            ScratchBlocks.BlockSvg.prototype.setDisabled = function (disabled) {
+-                if (vm.setBlockDisabledState) {
+-                    vm.setBlockDisabledState(this.id, disabled);
+-                }
+-                this.render();
+-            };
+-
+-            ScratchBlocks.BlockSvg.prototype.getDisabled = function () {
+-                return (vm.getBlockDisabledState && vm.getBlockDisabledState(this.id)) || false;
+-            };
+-        });
+-    }
+-};
+-
+-export default initializeBlockDisableExtension;
+diff --git a/src/lib/block-disable-menu.js b/src/lib/block-disable-menu.js
+deleted file mode 100644
+index ad63e39..0000000
+--- a/src/lib/block-disable-menu.js
++++ /dev/null
+@@ -1,40 +0,0 @@
+-import {addContextMenu} from '../addons/contextmenu';
+-
+-let blockDisableMenuInitialized = false;
+-
+-const initializeBlockDisableMenu = tab => {
+-    if (blockDisableMenuInitialized) return;
+-    blockDisableMenuInitialized = true;
+-
+-    addContextMenu(tab, ctx => {
+-        if (ctx.type !== 'blocks') return null;
+-        
+-        return {
+-            label: ctx.block?.isDisabled ? 'Enable Block' : 'Disable Block',
+-            callback: () => {
+-                if (ctx.block) {
+-                    const newDisabledState = !ctx.block.isDisabled;
+-                    ctx.block.setDisabled(newDisabledState);
+-                    
+-                    // Recursively disable/enable all child blocks
+-                    const toggleBlockTree = block => {
+-                        block.setDisabled(newDisabledState);
+-                        block.getChildren().forEach(child => {
+-                            if (child instanceof Blockly.Block) {
+-                                toggleBlockTree(child);
+-                            }
+-                        });
+-                    };
+-                    toggleBlockTree(ctx.block);
+-                    
+-                    // Refresh workspace to show visual changes
+-                    ctx.block.workspace.render();
+-                }
+-            },
+-            types: ['blocks'],
+-            order: 100
+-        };
+-    });
+-};
+-
+-export default initializeBlockDisableMenu;
+diff --git a/src/lib/default-project/index.js b/src/lib/default-project/index.js
+index e208ef2..6c58d30 100644
+--- a/src/lib/default-project/index.js
++++ b/src/lib/default-project/index.js
+@@ -14,7 +14,7 @@ const defaultProject = translator => {
+             assetType: 'Project',
+             dataFormat: 'JSON',
+             data: overrideDefaultProject
+-        }];
++        }]; 
+     }
+ 
+     let _TextEncoder;
+diff --git a/src/lib/empty-assets.js b/src/lib/empty-assets.js
+index dbe187f..23d7c02 100644
+--- a/src/lib/empty-assets.js
++++ b/src/lib/empty-assets.js
+@@ -11,7 +11,7 @@
+ const emptyCostume = name => ({
+     name: name,
+     md5: 'cd21514d0531fdffb22204e0ec5ed84a.svg',
+-    // assetId:'cd21514d0531fdffb22204e0ec5ed84a.svg',
++    //assetId:'cd21514d0531fdffb22204e0ec5ed84a.svg',
+     rotationCenterX: 0,
+     rotationCenterY: 0,
+     bitmapResolution: 1,
+@@ -34,7 +34,7 @@ const emptySprite = (name, soundName, costumeName) => ({
+             costumeName: costumeName,
+             baseLayerID: -1,
+             baseLayerMD5: 'cd21514d0531fdffb22204e0ec5ed84a.svg',
+-            // assetId:'cd21514d0531fdffb22204e0ec5ed84a.svg',
++            //assetId:'cd21514d0531fdffb22204e0ec5ed84a.svg',
+             bitmapResolution: 1,
+             rotationCenterX: 0,
+             rotationCenterY: 0
+diff --git a/src/lib/hash-parser-hoc.jsx b/src/lib/hash-parser-hoc.jsx
+index abdfc03..ab26e24 100644
+--- a/src/lib/hash-parser-hoc.jsx
++++ b/src/lib/hash-parser-hoc.jsx
+@@ -36,22 +36,22 @@ const HashParserHOC = function (WrappedComponent) {
+         componentWillUnmount () {
+             window.removeEventListener('hashchange', this.handleHashChange);
+         }
+-        handleHashChange () {
+-            const hashMatch = window.location.hash.match(/#([^?]+)/);
+-            let hashProjectId;
++handleHashChange () {
++    const hashMatch = window.location.hash.match(/#([^?]+)/);
++    let hashProjectId;
+     
+-            if (hashMatch === null) {
+-                hashProjectId = defaultProjectId;
+-            } else {
+-                // 提取#后面的内容，但排除可能存在的查询参数部分
+-                const hashContent = hashMatch[1];
+-                // 如果包含问号，只取问号之前的部分
+-                const projectIdPart = hashContent.split('?')[0];
+-                hashProjectId = projectIdPart;
+-            }
++    if (hashMatch === null) {
++        hashProjectId = defaultProjectId;
++    } else {
++        // 提取#后面的内容，但排除可能存在的查询参数部分
++        const hashContent = hashMatch[1];
++        // 如果包含问号，只取问号之前的部分
++        const projectIdPart = hashContent.split('?')[0];
++        hashProjectId = projectIdPart;
++    }
+     
+-            this.props.setProjectId(hashProjectId.toString());
+-        }
++    this.props.setProjectId(hashProjectId.toString());
++}
+         render () {
+             const {
+                 /* eslint-disable no-unused-vars */
+diff --git a/src/lib/libraries/extensions/index.jsx b/src/lib/libraries/extensions/index.jsx
+index bbf2738..677cd7a 100644
+--- a/src/lib/libraries/extensions/index.jsx
++++ b/src/lib/libraries/extensions/index.jsx
+@@ -360,7 +360,7 @@ export default [
+     {
+         name: (
+             <FormattedMessage
+-                defaultMessage="{APP_NAME} Blocks"
++                defaultMessage="TurboWarp Blocks"
+                 description="Name of the strange 'TurboWarp Blocks' extension"
+                 id="tw.twExtension.name"
+                 values={{
+@@ -407,7 +407,7 @@ export default [
+ export const galleryLoading = {
+     name: (
+         <FormattedMessage
+-            defaultMessage="{APP_NAME} Extension Gallery"
++            defaultMessage="TurboWarp Extension Gallery"
+             description="Name of extensions.turbowarp.org in extension library"
+             id="tw.extensionGallery.name"
+             values={{
+@@ -433,7 +433,7 @@ export const galleryLoading = {
+ export const galleryMore = {
+     name: (
+         <FormattedMessage
+-            defaultMessage="{APP_NAME} Extension Gallery"
++            defaultMessage="TurboWarp Extension Gallery"
+             description="Name of extensions.turbowarp.org in extension library"
+             id="tw.extensionGallery.name"
+             values={{
+@@ -459,7 +459,7 @@ export const galleryMore = {
+ export const galleryError = {
+     name: (
+         <FormattedMessage
+-            defaultMessage="{APP_NAME} Extension Gallery"
++            defaultMessage="TurboWarp Extension Gallery"
+             description="Name of extensions.turbowarp.org in extension library"
+             id="tw.extensionGallery.name"
+             values={{
+diff --git a/src/lib/make-toolbox-xml.js b/src/lib/make-toolbox-xml.js
+index 42abd65..bf420c8 100644
+--- a/src/lib/make-toolbox-xml.js
++++ b/src/lib/make-toolbox-xml.js
+@@ -748,7 +748,7 @@ const myBlocks = function (isInitialSetup, isStage, targetId, colors) {
+ // eslint-disable-next-line max-len
+ const extraTurboWarpBlocks = `
+ <block type="argument_reporter_boolean"><field name="VALUE">is compiled?</field></block>
+-<block type="argument_reporter_boolean"><field name="VALUE">is TurboWarp?</field></block>
++<block type="argument_reporter_boolean"><field name="VALUE">is TurboWarp or 02Engine?</field></block>
+ `;
+ /* eslint-enable no-unused-vars */
+ 
+diff --git a/src/lib/project-fetcher-hoc.jsx b/src/lib/project-fetcher-hoc.jsx
+index 9654ba9..0e755cd 100644
+--- a/src/lib/project-fetcher-hoc.jsx
++++ b/src/lib/project-fetcher-hoc.jsx
+@@ -128,31 +128,32 @@ const ProjectFetcherHOC = function (WrappedComponent) {
+                     .then(buffer => ({data: buffer}));
+             } else {
+                 // TW: Temporary hack for project tokens
+-                if (/^\d+$/.test(projectId)){
++                if(/^\d+$/.test(projectId)){
+                     assetPromise = fetchProjectToken(projectId)
+-                        .then(token => {
+-                            storage.setProjectToken(token);
+-                            return storage.load(storage.AssetType.Project, projectId, storage.DataFormat.JSON);
+-                        });
+-                } else {
+-                    projectUrl = projectId;
+-                    if (
+-                        !projectUrl.startsWith('http:') &&
++                    .then(token => {
++                        storage.setProjectToken(token);
++                        return storage.load(storage.AssetType.Project, projectId, storage.DataFormat.JSON);
++                    });
++                }
++                else{
++                    projectUrl=projectId;
++                                    if (
++                    !projectUrl.startsWith('http:') &&
+                     !projectUrl.startsWith('https:') &&
+                     !projectUrl.startsWith('data:')
+-                    ) {
+-                        projectUrl = `https://${projectUrl}`;
+-                    }
+-                    assetPromise = fetch(projectUrl)
+-                        .then(r => {
+-                            if (!r.ok) {
+-                                throw new Error(`Request returned status ${r.status}`);
+-                            }
+-                            return r.arrayBuffer();
+-                        })
+-                        .then(buffer => ({data: buffer}));
++                ) {
++                    projectUrl = `https://${projectUrl}`;
++                }
++                assetPromise = fetch(projectUrl)
++                    .then(r => {
++                        if (!r.ok) {
++                            throw new Error(`Request returned status ${r.status}`);
++                        }
++                        return r.arrayBuffer();
++                    })
++                    .then(buffer => ({data: buffer}));
+                 }
+-                console.log('project', projectId);
++                    console.log("project",projectId);
+             }
+ 
+             return assetPromise
+diff --git a/src/lib/vm-block-disable.js b/src/lib/vm-block-disable.js
+deleted file mode 100644
+index 9776792..0000000
+--- a/src/lib/vm-block-disable.js
++++ /dev/null
+@@ -1,75 +0,0 @@
+-class VMBlockDisableManager {
+-    constructor (vm) {
+-        this.vm = vm;
+-        this.disabledBlocks = new Set();
+-        
+-        // Patch VM to handle disabled blocks
+-        this.patchVM();
+-    }
+-
+-    patchVM () {
+-        const originalStepThreads = this.vm.runtime.sequencer.stepThreads;
+-        const self = this;
+-
+-        this.vm.runtime.sequencer.stepThreads = function (threads) {
+-            if (!threads || !Array.isArray(threads)) {
+-                return originalStepThreads.call(this, threads);
+-            }
+-            const activeThreads = threads.filter(thread => {
+-                if (self.isBlockDisabled(thread.topBlock)) {
+-                    return false;
+-                }
+-                return true;
+-            });
+-            return originalStepThreads.call(this, activeThreads);
+-        };
+-
+-        // Add methods to VM
+-        this.vm.setBlockDisabledState = (blockId, disabled) => {
+-            if (disabled) {
+-                this.disabledBlocks.add(blockId);
+-            } else {
+-                this.disabledBlocks.delete(blockId);
+-            }
+-        };
+-
+-        this.vm.getBlockDisabledState = blockId => this.disabledBlocks.has(blockId);
+-
+-        this.vm.clearAllDisabledBlocks = () => {
+-            this.disabledBlocks.clear();
+-        };
+-    }
+-
+-    isBlockDisabled (block) {
+-        if (!block) return false;
+-        
+-        // Check if this block is disabled
+-        if (this.disabledBlocks.has(block.id)) {
+-            return true;
+-        }
+-
+-        // Check if any parent block is disabled
+-        let parent = block.getParent();
+-        while (parent) {
+-            if (this.disabledBlocks.has(parent.id)) {
+-                return true;
+-            }
+-            parent = parent.getParent();
+-        }
+-
+-        return false;
+-    }
+-
+-    // Recursively disable/enable a block and all its children
+-    setBlockTreeDisabled (block, disabled) {
+-        this.vm.setBlockDisabledState(block.id, disabled);
+-        
+-        block.getChildren().forEach(child => {
+-            if (child instanceof Blockly.Block) {
+-                this.setBlockTreeDisabled(child, disabled);
+-            }
+-        });
+-    }
+-}
+-
+-export default VMBlockDisableManager;
+diff --git a/src/playground/embed.ejs b/src/playground/embed.ejs
+index 57851b4..3870abd 100644
+--- a/src/playground/embed.ejs
++++ b/src/playground/embed.ejs
+@@ -12,7 +12,7 @@
+         height: 100%;
+         top: 0;
+         left: 0;
+-        background-color: #ff4c4c;
++        background-color: #00baad;
+         color: white;
+         display: flex;
+         flex-direction: column;
+diff --git a/src/playground/index.ejs b/src/playground/index.ejs
+index f7998b8..e435056 100644
+--- a/src/playground/index.ejs
++++ b/src/playground/index.ejs
+@@ -98,7 +98,7 @@
+         'use strict';
+ 
+         var theme = '';
+-        var accent = '#ff4c4c';
++        var accent = '#00baad';
+ 
+         try {
+           var themeSetting = localStorage.getItem('tw:theme');
+diff --git a/src/playground/render-interface.jsx b/src/playground/render-interface.jsx
+index 3cae805..cff8dd6 100644
+--- a/src/playground/render-interface.jsx
++++ b/src/playground/render-interface.jsx
+@@ -316,7 +316,7 @@ class Interface extends React.Component {
+                                     <CloudVariableBadge />
+                                 </div>
+                             )}
+-                            {/* description.instructions || description.credits ? (
++                            {/*description.instructions || description.credits ? (
+                                 <div className={styles.section}>
+                                     <Description
+                                         instructions={description.instructions}
+@@ -327,7 +327,7 @@ class Interface extends React.Component {
+                             ) : null*/}
+                             <div className={styles.section}>
+                                 <p>
+-                                    {/* <FormattedMessage
++                                    {/*<FormattedMessage
+                                         // eslint-disable-next-line max-len
+                                         defaultMessage="{APP_NAME} is a Scratch mod that compiles projects to JavaScript to make them run really fast. Try it out by inputting a project ID or URL above or choosing a featured project below."
+                                         description="Description of TurboWarp on the homepage"
+@@ -339,7 +339,7 @@ class Interface extends React.Component {
+                                 </p>
+                             </div>
+                             <div className={styles.section}>
+-                                {/* <FeaturedProjects studio="27205657" />*/}
++                                {/*<FeaturedProjects studio="27205657" />*/}
+                             </div>
+                         </React.Fragment>
+                     ) : null}

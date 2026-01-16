@@ -6,7 +6,7 @@ import {connect} from 'react-redux';
 import {closeSettingsModal} from '../reducers/modals';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
 import {defaultStageSize} from '../reducers/custom-stage-size';
-import {setOpsPerFrameState, setCustomUIState} from '../reducers/tw';
+import { setOpsPerFrameState, setCustomUIState } from '../reducers/tw';
 import windowStateStorage from '../lib/window-state-storage';
  
 const messages = defineMessages({
@@ -211,8 +211,8 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeSettingsModal()),
-    setOpsPerFrame: value => dispatch(setOpsPerFrameState(value))
-    ,setCustomUI: value => dispatch(setCustomUIState(value))
+    setOpsPerFrame: (value) => dispatch(setOpsPerFrameState(value)),
+    setCustomUI: value => dispatch(setCustomUIState(value))
 });
 
 export default injectIntl(connect(
