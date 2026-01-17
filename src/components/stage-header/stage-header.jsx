@@ -96,11 +96,19 @@ const StageHeaderComponent = function (props) {
 
     const stageDimensions = getStageDimensions(stageSize, customStageSize, isFullScreen || isEmbedded);
     const projectUrl = new URLSearchParams(location.search).get('project_url');
+    const handleOpenInEditor = (event) => {
+        event.preventDefault();
+        if (projectUrl) {
+            const editorUrl = `${process.env.ROOT}editor?project_url=${encodeURIComponent(projectUrl)}`;
+            window.open(editorUrl, '_blank', 'noopener,noreferrer');
+        }
+    };
     const openInEditorElement = isEmbedded && projectUrl ? (
         <div className={styles.openInEditorContainer}>
             <a
                 className={styles.openInEditorLink}
                 href={`${process.env.ROOT}editor?project_url=${encodeURIComponent(projectUrl)}`}
+                onClick={handleOpenInEditor}
             >
                 {props.intl.formatMessage(messages.openInEditorMessage)}
             </a>

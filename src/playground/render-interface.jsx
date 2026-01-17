@@ -81,6 +81,15 @@ if (AddonChannels.changeChannel) {
 
 runAddons();
 
+const handleOpenInEditorFooter = (event) => {
+    event.preventDefault();
+    const projectUrl = new URLSearchParams(location.search).get('project_url');
+    if (projectUrl) {
+        const editorUrl = `${process.env.ROOT}editor?project_url=${encodeURIComponent(projectUrl)}`;
+        window.open(editorUrl, '_blank', 'noopener,noreferrer');
+    }
+};
+
 const Footer = () => (
     <footer className={styles.footer}>
         <div className={styles.footerContent}>
@@ -159,6 +168,7 @@ const Footer = () => (
                     {isInvalidEmbed && new URLSearchParams(location.search).has('project_url') ? (
                         <a
                             href={`${process.env.ROOT}editor?project_url=${encodeURIComponent(new URLSearchParams(location.search).get('project_url'))}`}
+                            onClick={handleOpenInEditorFooter}
                         >
                             <FormattedMessage
                                 defaultMessage="Open in Editor"
@@ -200,6 +210,7 @@ class Interface extends React.Component {
     constructor (props) {
         super(props);
         this.handleUpdateProjectTitle = this.handleUpdateProjectTitle.bind(this);
+        this.handleOpenInEditor = this.handleOpenInEditor.bind(this);
     }
     componentDidUpdate (prevProps) {
         if (prevProps.isLoading && !this.props.isLoading) {
@@ -211,6 +222,14 @@ class Interface extends React.Component {
             document.title = `${APP_NAME} - ${this.props.intl.formatMessage(messages.defaultTitle)}`;
         } else {
             document.title = `${title} - ${APP_NAME}`;
+        }
+    }
+    handleOpenInEditor (event) {
+        event.preventDefault();
+        const projectUrl = new URLSearchParams(location.search).get('project_url');
+        if (projectUrl) {
+            const editorUrl = `${process.env.ROOT}editor?project_url=${encodeURIComponent(projectUrl)}`;
+            window.open(editorUrl, '_blank', 'noopener,noreferrer');
         }
     }
     render () {
@@ -246,6 +265,7 @@ class Interface extends React.Component {
                         <div className={styles.openInEditorTop}>
                             <a
                                 href={`${process.env.ROOT}editor?project_url=${encodeURIComponent(new URLSearchParams(location.search).get('project_url'))}`}
+                                onClick={this.handleOpenInEditor}
                             >
                                 <FormattedMessage
                                     id="tw.footer.openInEditor"
