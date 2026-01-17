@@ -21562,11 +21562,19 @@ const StageHeaderComponent = function StageHeaderComponent(props) {
   let header = null;
   const stageDimensions = Object(_lib_screen_utils__WEBPACK_IMPORTED_MODULE_10__["getStageDimensions"])(stageSize, customStageSize, isFullScreen || isEmbedded);
   const projectUrl = new URLSearchParams(location.search).get('project_url');
+  const handleOpenInEditor = event => {
+    event.preventDefault();
+    if (projectUrl) {
+      const editorUrl = "".concat("", "editor?project_url=").concat(encodeURIComponent(projectUrl));
+      window.open(editorUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
   const openInEditorElement = isEmbedded && projectUrl ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
     className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.openInEditorContainer
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
     className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.openInEditorLink,
-    href: "".concat("", "editor?project_url=").concat(encodeURIComponent(projectUrl))
+    href: "".concat("", "editor?project_url=").concat(encodeURIComponent(projectUrl)),
+    onClick: handleOpenInEditor
   }, props.intl.formatMessage(messages.openInEditorMessage))) : null;
   if (isFullScreen || isEmbedded) {
     const settingsButton = isEmbedded && enableSettingsButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
@@ -56508,6 +56516,14 @@ if (_addons_channels__WEBPACK_IMPORTED_MODULE_23__["default"].changeChannel) {
   });
 }
 Object(_addons_entry__WEBPACK_IMPORTED_MODULE_25__["default"])();
+const handleOpenInEditorFooter = event => {
+  event.preventDefault();
+  const projectUrl = new URLSearchParams(location.search).get('project_url');
+  if (projectUrl) {
+    const editorUrl = "".concat("", "editor?project_url=").concat(encodeURIComponent(projectUrl));
+    window.open(editorUrl, '_blank', 'noopener,noreferrer');
+  }
+};
 const Footer = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("footer", {
   className: _interface_css__WEBPACK_IMPORTED_MODULE_28___default.a.footer
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
@@ -56567,7 +56583,8 @@ const Footer = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.c
   defaultMessage: "Documentation",
   id: "tw.footer.documentation"
 })), isInvalidEmbed && new URLSearchParams(location.search).has('project_url') ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-  href: "".concat("", "editor?project_url=").concat(encodeURIComponent(new URLSearchParams(location.search).get('project_url')))
+  href: "".concat("", "editor?project_url=").concat(encodeURIComponent(new URLSearchParams(location.search).get('project_url'))),
+  onClick: handleOpenInEditorFooter
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"], {
   defaultMessage: "Open in Editor",
   id: "tw.footer.openInEditor"
@@ -56593,6 +56610,7 @@ class Interface extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Component {
   constructor(props) {
     super(props);
     this.handleUpdateProjectTitle = this.handleUpdateProjectTitle.bind(this);
+    this.handleOpenInEditor = this.handleOpenInEditor.bind(this);
   }
   componentDidUpdate(prevProps) {
     if (prevProps.isLoading && !this.props.isLoading) {
@@ -56604,6 +56622,14 @@ class Interface extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Component {
       document.title = "".concat(_lib_brand_js__WEBPACK_IMPORTED_MODULE_27__["APP_NAME"], " - ").concat(this.props.intl.formatMessage(messages.defaultTitle));
     } else {
       document.title = "".concat(title, " - ").concat(_lib_brand_js__WEBPACK_IMPORTED_MODULE_27__["APP_NAME"]);
+    }
+  }
+  handleOpenInEditor(event) {
+    event.preventDefault();
+    const projectUrl = new URLSearchParams(location.search).get('project_url');
+    if (projectUrl) {
+      const editorUrl = "".concat("", "editor?project_url=").concat(encodeURIComponent(projectUrl));
+      window.open(editorUrl, '_blank', 'noopener,noreferrer');
     }
   }
   render() {
@@ -56635,7 +56661,8 @@ class Interface extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Component {
     }, isInvalidEmbed && new URLSearchParams(location.search).has('project_url') ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: _interface_css__WEBPACK_IMPORTED_MODULE_28___default.a.openInEditorTop
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-      href: "".concat("", "editor?project_url=").concat(encodeURIComponent(new URLSearchParams(location.search).get('project_url')))
+      href: "".concat("", "editor?project_url=").concat(encodeURIComponent(new URLSearchParams(location.search).get('project_url'))),
+      onClick: this.handleOpenInEditor
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"], {
       id: "tw.footer.openInEditor"
     }))) : null, isHomepage ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {

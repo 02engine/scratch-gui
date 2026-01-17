@@ -20307,11 +20307,19 @@ const StageHeaderComponent = function StageHeaderComponent(props) {
   let header = null;
   const stageDimensions = Object(_lib_screen_utils__WEBPACK_IMPORTED_MODULE_10__["getStageDimensions"])(stageSize, customStageSize, isFullScreen || isEmbedded);
   const projectUrl = new URLSearchParams(location.search).get('project_url');
+  const handleOpenInEditor = event => {
+    event.preventDefault();
+    if (projectUrl) {
+      const editorUrl = "".concat("", "editor?project_url=").concat(encodeURIComponent(projectUrl));
+      window.open(editorUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
   const openInEditorElement = isEmbedded && projectUrl ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
     className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.openInEditorContainer
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
     className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.openInEditorLink,
-    href: "".concat("", "editor?project_url=").concat(encodeURIComponent(projectUrl))
+    href: "".concat("", "editor?project_url=").concat(encodeURIComponent(projectUrl)),
+    onClick: handleOpenInEditor
   }, props.intl.formatMessage(messages.openInEditorMessage))) : null;
   if (isFullScreen || isEmbedded) {
     const settingsButton = isEmbedded && enableSettingsButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
