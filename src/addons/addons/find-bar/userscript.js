@@ -809,7 +809,7 @@ export default async function ({ addon, msg, console }) {
         
         for (const sound of sounds) {
           const displayName = target.isStage ? sound.name : `[${targetName}] ${sound.name}`;
-          let item = new BlockItem("sound", displayName, sound.assetId, i, targetId, targetName);
+          let item = new BlockItem("sound_", displayName, sound.assetId, i, targetId, targetName);
           items.push(item);
           i++;
         }
@@ -947,7 +947,7 @@ export default async function ({ addon, msg, console }) {
         sensing: "sensing",
         looks: "looks",
         motion: "motion",
-        sound: "sounds",
+        sound_: "sounds",
         pen: "pen",
       };
       if (proc.cls === "flag") {
@@ -990,7 +990,7 @@ export default async function ({ addon, msg, console }) {
 
       onItemClickAfterTargetSwitch(item, instanceBlock) {
         let cls = item.data.cls;
-        if (cls === "costume" || cls === "sound") {
+        if (cls === "costume" || cls === "sound_") {
           // Viewing costumes/sounds - jump to selected costume/sound
           const assetPanel = document.querySelector("[class^=asset-panel_wrapper]");
           if (assetPanel) {
