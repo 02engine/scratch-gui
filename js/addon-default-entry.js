@@ -3832,7 +3832,7 @@ __webpack_require__.r(__webpack_exports__);
         const sounds = target.getSounds();
         for (const sound of sounds) {
           const displayName = target.isStage ? sound.name : "[".concat(targetName, "] ").concat(sound.name);
-          let item = new _blockly_BlockItem_js__WEBPACK_IMPORTED_MODULE_0__["default"]("sound", displayName, sound.assetId, i, targetId, targetName);
+          let item = new _blockly_BlockItem_js__WEBPACK_IMPORTED_MODULE_0__["default"]("sound_", displayName, sound.assetId, i, targetId, targetName);
           items.push(item);
           i++;
         }
@@ -3964,7 +3964,7 @@ __webpack_require__.r(__webpack_exports__);
         sensing: "sensing",
         looks: "looks",
         motion: "motion",
-        sound: "sounds",
+        sound_: "sounds",
         pen: "pen"
       };
       if (proc.cls === "flag") {
@@ -4004,7 +4004,7 @@ __webpack_require__.r(__webpack_exports__);
     }
     onItemClickAfterTargetSwitch(item, instanceBlock) {
       let cls = item.data.cls;
-      if (cls === "costume" || cls === "sound") {
+      if (cls === "costume" || cls === "sound_") {
         // Viewing costumes/sounds - jump to selected costume/sound
         const assetPanel = document.querySelector("[class^=asset-panel_wrapper]");
         if (assetPanel) {
