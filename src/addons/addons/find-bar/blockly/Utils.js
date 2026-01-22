@@ -62,6 +62,7 @@ export default class Utils {
    * @param blockOrId {Blockly.Block|{id}|BlockInstance} A Blockly Block, a block id, or a BlockInstance
    */
   scrollBlockIntoView(blockOrId) {
+    console.log(blockOrId);
     let workspace = this.getWorkspace();
     /** @type {Blockly.Block} */
     let block; // or is it really a Blockly.BlockSvg?
