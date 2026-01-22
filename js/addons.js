@@ -871,6 +871,7 @@ class Utils {
    */
   scrollBlockIntoView(blockOrId) {
     var _this$blockly;
+    console.log(blockOrId);
     let workspace = this.getWorkspace();
     /** @type {Blockly.Block} */
     let block; // or is it really a Blockly.BlockSvg?

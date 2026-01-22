@@ -3730,71 +3730,7 @@ __webpack_require__.r(__webpack_exports__);
             addBlock(cls, block, targetId, targetName, target);
           }
         }
-
-        // 收集变量和列表
-        const variableMap = target.variables;
-        for (const varId of Object.keys(variableMap)) {
-          const variable = variableMap[varId];
-          if (variable.type === "") {
-            // 普通变量
-            const isLocal = !target.isStage; // 舞台变量是全局的，精灵变量是局部的
-            const cls = isLocal ? "var" : "VAR";
-            const procCode = isLocal ? msg("var-local", {
-              name: variable.name
-            }) : msg("var-global", {
-              name: variable.name
-            });
-            addBlock(cls, procCode, {
-              id: varId
-            }, targetId, targetName, target);
-          } else if (variable.type === "list") {
-            // 列表
-            const isLocal = !target.isStage;
-            const cls = isLocal ? "list" : "LIST";
-            const procCode = isLocal ? msg("list-local", {
-              name: variable.name
-            }) : msg("list-global", {
-              name: variable.name
-            });
-            addBlock(cls, procCode, {
-              id: varId
-            }, targetId, targetName, target);
-          }
-        }
       }
-      const events = this.getCallsToEvents();
-      for (const event of events) {
-        var _targets$find, _targets$find$sprite;
-        const targetName = event.targetId === this.utils.getEditingTarget().id ? null : (_targets$find = targets.find(t => t.id === event.targetId)) === null || _targets$find === void 0 ? void 0 : (_targets$find$sprite = _targets$find.sprite) === null || _targets$find$sprite === void 0 ? void 0 : _targets$find$sprite.name;
-        const eventTarget = targets.find(t => t.id === event.targetId);
-        const item = addBlock("receive", msg("event", {
-          name: event.eventName
-        }), event.block, event.targetId, targetName, eventTarget);
-        item.eventName = event.eventName;
-      }
-      const clsOrder = {
-        flag: 0,
-        receive: 1,
-        event: 2,
-        define: 3,
-        var: 4,
-        VAR: 5,
-        list: 6,
-        LIST: 7
-      };
-      myBlocks.sort((a, b) => {
-        let t = clsOrder[a.cls] - clsOrder[b.cls];
-        if (t !== 0) {
-          return t;
-        }
-        if (a.lower < b.lower) {
-          return -1;
-        }
-        if (a.lower > b.lower) {
-          return 1;
-        }
-        return a.y - b.y;
-      });
       return myBlocks;
     }
     getScratchCostumes() {
@@ -4023,10 +3959,6 @@ __webpack_require__.r(__webpack_exports__);
           let wrapper = assetPanel.closest("div[class*=gui_flex-wrapper]");
           if (wrapper) wrapper.scrollTop = 0;
         }
-      } else if (cls === "var" || cls === "VAR" || cls === "list" || cls === "LIST") {
-        // Search now for all instances
-        let blocks = this.getVariableUsesById(item.data.labelID);
-        this.carousel.build(item, blocks, instanceBlock);
       } else if (cls === "define") {
         let blocks = this.getCallsToProcedureById(item.data.labelID);
         this.carousel.build(item, blocks, instanceBlock);
