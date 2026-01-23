@@ -10240,7 +10240,7 @@ const DraggableWindow = props => {
       const rect = windowRef.current.getBoundingClientRect();
       const currentWidth = rect.width;
       const currentHeight = rect.height;
-      const extBarWidth = 60;
+      const extBarWidth = 62;
       const targetX = Math.max(extBarWidth, Math.min(window.innerWidth - currentWidth, newX));
       // 限制窗口不能被拖动到顶栏之上 (顶栏高度为 3rem = 48px)
       const menuBarHeight = 93; // 3rem = 48px (based on $menu-bar-height in units.css)
@@ -50270,12 +50270,12 @@ const guiColors = {
   'motion-primary-transparent': '#00BAADe6',
   'motion-tertiary': '#009388',
   'looks-secondary': '#00BAAD',
-  'looks-transparent': '#007F76',
-  'looks-light-transparent': '#004540',
+  'looks-transparent': '#00BAAD59',
+  'looks-light-transparent': '#00BAAD26',
   'looks-secondary-dark': '#009388',
   'extensions-primary': '#009388',
   'extensions-tertiary': '#006C64',
-  'extensions-transparent': '#004540',
+  'extensions-transparent': '#00938859',
   'extensions-light': '#00BAAD',
   'drop-highlight': '#00BAAD'
 };

@@ -62,6 +62,7 @@ const manifest = {
     "link": "https://scratch.mit.edu/users/Sheep_maker/"
   }],
   "dynamicDisable": true,
+  "enabledByDefault": true,
   "userscripts": [{
     "url": "userscript.js"
   }],
@@ -4038,7 +4039,7 @@ const manifest = {
   }],
   "tags": ["danger"],
   "dynamicDisable": true,
-  "enabledByDefault": false
+  "enabledByDefault": true
 };
 /* harmony default export */ __webpack_exports__["default"] = (manifest);
 
