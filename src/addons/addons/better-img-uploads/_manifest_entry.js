@@ -30,6 +30,7 @@ const manifest = {
     }
   ],
   "dynamicDisable": true,
+  "enabledByDefault": true,
   "userscripts": [
     {
       "url": "userscript.js"

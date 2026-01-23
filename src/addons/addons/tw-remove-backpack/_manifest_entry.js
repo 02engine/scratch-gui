@@ -17,6 +17,6 @@ const manifest = {
     "danger"
   ],
   "dynamicDisable": true,
-  "enabledByDefault": false
+  "enabledByDefault": true
 };
 export default manifest;
