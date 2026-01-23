@@ -47,7 +47,7 @@
 
 .stage-size-row > *, .unselect-wrapper {
     /* Use a white background so semi-transparent selection states look correct */
-    background-color: $ui-white;
+    background-color: $ui-secondary;
     border-radius: $form-radius;
 }
 
@@ -90,6 +90,9 @@
 .fullscreen-buttons-row {
     /* relied on by addons */
     display: flex;
+}
+.fullscreen-buttons-row:last-child {
+    margin-right: .2rem;
 }
 .btn{
     padding:4px;

@@ -26,6 +26,8 @@ const DraggableWindow = props => {
         windowId,
         zIndex = 1,
         enableStatePersistence = true,
+        allowResize = true, // 默认允许调整大小
+        allowMaximize = true, // 默认允许最大化
         ...componentProps
     } = props;
 
@@ -90,6 +92,25 @@ const DraggableWindow = props => {
     React.useEffect(() => {
         saveWindowState();
     }, [position, size, isMinimized, isFullScreen, saveWindowState]);
+    
+    // 清理函数，在组件卸载时调用
+    React.useEffect(() => {
+        // 组件卸载时不需要重置状态，因为组件实例会被销毁
+        // 这里可以添加其他需要清理的资源
+        return () => {
+            // 组件卸载时的清理逻辑
+        };
+    }, []);
+    
+    // 监听最小化状态变化，确保在最小化时清理状态
+    React.useEffect(() => {
+        if (isMinimized) {
+            // 最小化时清理拖拽和调整大小状态
+            setIsDragging(false);
+            setIsResizing(false);
+            setResizeHandle(null);
+        }
+    }, [isMinimized]);
 
     const handleMouseDown = React.useCallback(e => {
         if (!isDraggable) return;
@@ -119,10 +140,16 @@ const DraggableWindow = props => {
             const newX = moveClientX - offset.x;
             const newY = moveClientY - offset.y;
             
-            const targetX = Math.max(0, Math.min(window.innerWidth - size.width, newX));
+            // 使用实时的窗口尺寸来计算限制
+            const rect = windowRef.current.getBoundingClientRect();
+            const currentWidth = rect.width;
+            const currentHeight = rect.height;
+            
+            const extBarWidth = 60;
+            const targetX = Math.max(extBarWidth, Math.min(window.innerWidth - currentWidth, newX));
             // 限制窗口不能被拖动到顶栏之上 (顶栏高度为 3rem = 48px)
-            const menuBarHeight = 48; // 3rem = 48px (based on $menu-bar-height in units.css)
-            const targetY = Math.max(menuBarHeight, Math.min(window.innerHeight - size.height, newY));
+            const menuBarHeight = 93; // 3rem = 48px (based on $menu-bar-height in units.css)
+            const targetY = Math.max(menuBarHeight, Math.min(window.innerHeight - currentHeight, newY));
             
             const newPosition = {
                 x: targetX,
@@ -173,6 +200,7 @@ const DraggableWindow = props => {
             let newWidth = size.width;
             let newHeight = size.height;
             
+            if (!allowResize) return;
             switch (resizeHandle) {
             case 'e':
                 newWidth = Math.max(minSize.width, Math.min(maxSize.width, e.clientX - rect.left));
@@ -226,6 +254,7 @@ const DraggableWindow = props => {
             let newWidth = size.width;
             let newHeight = size.height;
             
+            if (!allowResize) return;
             switch (handle) {
                 case 'e':
                     newWidth = Math.max(minSize.width, Math.min(maxSize.width, moveClientX - rect.left));
@@ -283,8 +312,17 @@ const DraggableWindow = props => {
                 setIsMinimized(false);
                 setPosition(originalPosition);
                 setSize(originalSize);
+                setIsDragging(false);
+                setIsResizing(false);
+                setResizeHandle(null);
                 onMinimizeToggle && onMinimizeToggle(windowId, false);
             } else {
+                // 清理所有全局事件监听器，防止内存泄漏
+                // 注意：这里我们无法直接访问内部事件监听器，但可以通过重置状态来防止问题
+                setIsDragging(false);
+                setIsResizing(false);
+                setResizeHandle(null);
+                
                 // 最小化时记录当前位置和尺寸
                 setOriginalPosition(position);
                 setOriginalSize(size);
@@ -353,19 +391,21 @@ const DraggableWindow = props => {
                     >
                         −
                     </button>
-                    <button
-                        className={styles.controlButton}
-                        onClick={handleToggleFullScreen}
-                        title="全屏"
-                    >
-                        □
-                    </button>
+                    {allowMaximize && (
+                        <button
+                            className={styles.controlButton}
+                            onClick={handleToggleFullScreen}
+                            title="全屏"
+                        >
+                            □
+                        </button>
+                    )}
                 </div>
             </div>
             <div className={styles.windowContent}>
                 {children}
             </div>
-            {isResizable && (
+            {isResizable && allowResize && (
                 <>
                     <div
                         className={styles.resizeHandleE}
@@ -419,7 +459,9 @@ DraggableWindow.propTypes = {
     title: PropTypes.string.isRequired,
     windowId: PropTypes.string.isRequired,
     zIndex: PropTypes.number,
-    enableStatePersistence: PropTypes.bool
+    enableStatePersistence: PropTypes.bool,
+    allowResize: PropTypes.bool,
+    allowMaximize: PropTypes.bool
 };
 
 export default DraggableWindow;

@@ -1032,7 +1032,9 @@ window.addonAPI = {
         // 默认排除：variable-manager, find-bar, block-count
         'variable-manager',
         'find-bar',
-        'block-count'
+        'block-count',
+        'data-category-tweaks-v2',
+        'debugger'
     ]),
 
     addToRerunExclude (id) {

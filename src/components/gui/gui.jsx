@@ -170,11 +170,11 @@ const GUIComponent = props => {
         ...componentProps
     } = omit(props, 'dispatch');
 
-    const [stageWindowPosition, setStageWindowPosition] = React.useState({x: 100, y: 100});
-    const [stageWindowSize, setStageWindowSize] = React.useState({width: 480, height: 360});
+    const [stageWindowPosition, setStageWindowPosition] = React.useState({x: 1426, y: 48});
+    const [stageWindowSize, setStageWindowSize] = React.useState({width: 485, height: 483});
     const [stageWindowMinimized, setStageWindowMinimized] = React.useState(false);
-    const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({x: 600, y: 100});
-    const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({width: 240, height: 360});
+    const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({x: 1426, y: 483});
+    const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({width: 485, height: 447});
     const [targetPaneWindowMinimized, setTargetPaneWindowMinimized] = React.useState(false);
 
     // Git 状态跟踪
@@ -945,9 +945,11 @@ const GUIComponent = props => {
                                     windowId="stage"
                                     title="Stage"
                                     defaultPosition={stageWindowPosition}
-                                    defaultSize={stageWindowSize}
-                                    minSize={{width: 200, height: 150}}
-                                    maxSize={{width: window.innerWidth - 100, height: window.innerHeight - 100}}
+                                    defaultSize={{width: stageWindowSize[0]+2, height: stageWindowSize[1]+122}}
+                                    minSize={{width: stageWindowSize[0]+2, height: stageWindowSize[1]+122}}
+                                    maxSize={{width: stageWindowSize[0]+2, height: stageWindowSize[1]+122}}
+                                    allowResize={false}
+                                    allowMaximize={false}
                                     onDragStop={(id, position) => setStageWindowPosition(position)}
                                     onResizeStop={(id, size) => setStageWindowSize(size)}
                                     onMinimizeToggle={(id, minimized) => setStageWindowMinimized(minimized)}
@@ -969,12 +971,12 @@ const GUIComponent = props => {
                                     title="Sprites"
                                     defaultPosition={targetPaneWindowPosition}
                                     defaultSize={targetPaneWindowSize}
-                                    minSize={{width: 200, height: 200}}
+                                    minSize={{width: 471, height: 211}}
                                     maxSize={{width: 600, height: 800}}
                                     onDragStop={(id, position) => setTargetPaneWindowPosition(position)}
                                     onResizeStop={(id, size) => setTargetPaneWindowSize(size)}
                                     onMinimizeToggle={(id, minimized) => setTargetPaneWindowMinimized(minimized)}
-                                    zIndex={90}
+                                    zIndex={0}
                                     enableStatePersistence={true}
                                 >
                                     <TargetPane
