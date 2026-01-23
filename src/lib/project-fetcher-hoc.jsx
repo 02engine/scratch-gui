@@ -46,7 +46,7 @@ const fetchProjectToken = async projectId => {
         return metadata.project_token;
     } catch (e) {
         log.error(e);
-        throw new Error('Cannot access project token. Project is probably unshared. See https://docs.turbowarp.org/unshared-projects');
+        throw new Error('Cannot access project token. Project is probably unshared. See https://docs.02engine.org/unshared-projects');
     }
 };
 

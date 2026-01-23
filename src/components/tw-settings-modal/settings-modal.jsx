@@ -226,7 +226,7 @@ const CustomOPF = props => (
                 }}
             />
         }
-        slug="custom-opf"
+        slug="opf"
     />
 );
 CustomOPF.propTypes = {
@@ -253,7 +253,7 @@ const CustomUI = props => (
                 id="tw.settingsModal.customUIHelp"
             />
         )}
-        slug="custom-ui"
+        slug="new-ui"
     />
 );
 CustomUI.propTypes = {
