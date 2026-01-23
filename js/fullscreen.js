@@ -1123,7 +1123,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, ".draggable-window_draggableWindow_2Ssr9 {\n    position: absolute;\n    background-color: #fff;\n    border: 1px solid #ddd;\n    border-radius: 8px;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n    overflow: hidden;\n    display: flex;\n    flex-direction: column;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.draggable-window_windowHeader_IPYmF {\n    background-color: #00BAAD;\n    color: white;\n    padding: 4px 8px;\n    cursor: move;\n    font-weight: bold;\n    font-size: 13px;\n    border-bottom: 1px solid #ddd;\n    display: flex;\n    align-items: center;\n    min-height: 24px;\n}\n\n.draggable-window_windowHeader_IPYmF:hover {\n    background-color: #00998d;\n}\n\n.draggable-window_windowTitle_33hm6 {\n    flex: 1;\n}\n\n.draggable-window_windowContent_3Xq2i {\n    flex: 1;\n    overflow: auto;\n    position: relative;\n}\n\n.draggable-window_resizeHandleE_3R9h5,\n.draggable-window_resizeHandleS_SKbaf,\n.draggable-window_resizeHandleSE_1l8Vg {\n    position: absolute;\n    background: transparent;\n}\n\n.draggable-window_resizeHandleE_3R9h5 {\n    right: 0;\n    top: 0;\n    bottom: 0;\n    width: 4px;\n    cursor: ew-resize;\n}\n\n.draggable-window_resizeHandleS_SKbaf {\n    bottom: 0;\n    left: 0;\n    right: 0;\n    height: 4px;\n    cursor: ns-resize;\n}\n\n.draggable-window_resizeHandleSE_1l8Vg {\n    right: 0;\n    bottom: 0;\n    width: 12px;\n    height: 12px;\n    cursor: nwse-resize;\n}\n\n.draggable-window_resizeHandleE_3R9h5:hover,\n.draggable-window_resizeHandleS_SKbaf:hover,\n.draggable-window_resizeHandleSE_1l8Vg:hover {\n    background-color: rgba(0, 186, 173, 0.3);\n}\n\n.draggable-window_windowControls_3h3pg {\n    display: flex;\n    gap: 4px;\n}\n\n.draggable-window_controlButton_1hbjV {\n    background: none;\n    border: none;\n    color: white;\n    cursor: pointer;\n    font-size: 12px;\n    width: 18px;\n    height: 18px;\n    border-radius: 2px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.draggable-window_controlButton_1hbjV:hover {\n    background-color: rgba(255, 255, 255, 0.2);\n}\n\n.draggable-window_minimizedBar_3EvsI {\n    position: fixed;\n    top: 12px;\n    right: 18px;\n    width: auto;\n    min-height: 0;\n    display: flex;\n    flex-direction: row;\n    align-items: flex-start;\n    justify-content: flex-end;\n    gap: 8px;\n    padding: 0;\n    background: none;\n    box-shadow: none;\n    z-index: 9999;\n    pointer-events: none;\n    overflow: visible;\n}\n\n.draggable-window_minimizedWindow_1_Af3 {\n    position: static;\n    width: 32px;\n    height: 32px;\n    min-width: 32px;\n    min-height: 32px;\n    max-width: 32px;\n    max-height: 32px;\n    background: #00BAAD;\n    color: #fff;\n    border-radius: 8px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-weight: 500;\n    font-size: 16px;\n    cursor: pointer;\n    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    margin: 0;\n    padding: 0;\n    transition: box-shadow 0.2s, transform 0.2s;\n    pointer-events: auto;\n    overflow: hidden;\n    gap: 0;\n    flex-shrink: 0;\n}\n\n.draggable-window_minimizedWindow_1_Af3:hover {\n    background: #00998d;\n    box-shadow: 0 4px 16px rgba(0,0,0,0.18);\n    transform: scale(1.08);\n}\n\n.draggable-window_minimizedWindowIcon_QIYKh {\n    width: 20px;\n    height: 20px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background: none;\n    border-radius: 0;\n    margin: 0;\n    font-size: 16px;\n}\n\n.draggable-window_minimizedWindowTitle_fcBPO {\n    display: none;\n}", ""]);
+exports.push([module.i, ".draggable-window_draggableWindow_2Ssr9 {\n    position: absolute;\n    background-color: var(--ui-secondary);\n    border: 1px solid #ddd;\n    border-radius: 8px;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n    overflow: hidden;\n    display: flex;\n    flex-direction: column;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.draggable-window_windowHeader_IPYmF {\n    background-color: #00BAAD;\n    color: white;\n    padding: 4px 8px;\n    cursor: move;\n    font-weight: bold;\n    font-size: 13px;\n    border-bottom: 1px solid #ddd;\n    display: flex;\n    align-items: center;\n    min-height: 24px;\n}\n\n.draggable-window_windowHeader_IPYmF:hover {\n    background-color: #00998d;\n}\n\n.draggable-window_windowTitle_33hm6 {\n    flex: 1;\n}\n\n.draggable-window_windowContent_3Xq2i {\n    flex: 1;\n    overflow: hidden;\n    position: relative;\n}\n\n.draggable-window_resizeHandleE_3R9h5,\n.draggable-window_resizeHandleS_SKbaf,\n.draggable-window_resizeHandleSE_1l8Vg {\n    position: absolute;\n    background: transparent;\n}\n\n.draggable-window_resizeHandleE_3R9h5 {\n    right: 0;\n    top: 0;\n    bottom: 0;\n    width: 4px;\n    cursor: ew-resize;\n}\n\n.draggable-window_resizeHandleS_SKbaf {\n    bottom: 0;\n    left: 0;\n    right: 0;\n    height: 4px;\n    cursor: ns-resize;\n}\n\n.draggable-window_resizeHandleSE_1l8Vg {\n    right: 0;\n    bottom: 0;\n    width: 12px;\n    height: 12px;\n    cursor: nwse-resize;\n}\n\n.draggable-window_resizeHandleE_3R9h5:hover,\n.draggable-window_resizeHandleS_SKbaf:hover,\n.draggable-window_resizeHandleSE_1l8Vg:hover {\n    background-color: rgba(0, 186, 173, 0.3);\n}\n\n.draggable-window_windowControls_3h3pg {\n    display: flex;\n    gap: 4px;\n}\n\n.draggable-window_controlButton_1hbjV {\n    background: none;\n    border: none;\n    color: white;\n    cursor: pointer;\n    font-size: 12px;\n    width: 18px;\n    height: 18px;\n    border-radius: 2px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.draggable-window_controlButton_1hbjV:hover {\n    background-color: rgba(255, 255, 255, 0.2);\n}\n\n.draggable-window_minimizedBar_3EvsI {\n    position: fixed;\n    top: 12px;\n    right: 18px;\n    width: auto;\n    min-height: 0;\n    display: flex;\n    flex-direction: row;\n    align-items: flex-start;\n    justify-content: flex-end;\n    gap: 8px;\n    padding: 0;\n    background: none;\n    box-shadow: none;\n    z-index: 9999;\n    pointer-events: none;\n    overflow: visible;\n}\n\n.draggable-window_minimizedWindow_1_Af3 {\n    position: static;\n    width: 32px;\n    height: 32px;\n    min-width: 32px;\n    min-height: 32px;\n    max-width: 32px;\n    max-height: 32px;\n    background: #00BAAD;\n    color: #fff;\n    border-radius: 8px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-weight: 500;\n    font-size: 16px;\n    cursor: pointer;\n    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    margin: 0;\n    padding: 0;\n    transition: box-shadow 0.2s, transform 0.2s;\n    pointer-events: auto;\n    overflow: hidden;\n    gap: 0;\n    flex-shrink: 0;\n}\n\n.draggable-window_minimizedWindow_1_Af3:hover {\n    background: #00998d;\n    box-shadow: 0 4px 16px rgba(0,0,0,0.18);\n    transform: scale(1.08);\n}\n\n.draggable-window_minimizedWindowIcon_QIYKh {\n    width: 20px;\n    height: 20px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background: none;\n    border-radius: 0;\n    margin: 0;\n    font-size: 16px;\n}\n\n.draggable-window_minimizedWindowTitle_fcBPO {\n    display: none;\n}", ""]);
 
 // exports
 exports.locals = {
@@ -2576,7 +2576,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */\n\n/* layout contants from `layout-constants.js` */\n\n/* overridden by src/lib/themes/guiHelpers.js */\n\n/*\n    Contains constants for the z-index values of elements that are part of the global stack context.\n    In other words, z-index values that are \"inside\" a component are not added here.\n    This prevents conflicts between identical z-index values in different components.\n*/\n\n/* Toolbox z-index: 40; set in scratch-blocks */\n\n/* tooltips should go over add buttons if they overlap */\n\n/* monitors go over add buttons */\n\n/* \"ask\" block text input goes above monitors */\n\n/* menu-bar should go over monitors, alerts and tutorials */\n\n/* behind menu-bar */\n\n/* Block drag z-index: 1000; default 50 is overriden in blocks.css */\n\n/* so it is draggable into other panes */\n\n/* behind modals */\n\n/* behind modals */\n\n/* above menu-bar when dragging */\n\n/* in most interfaces, the context menu is always on top */\n\n.stage-header_stage-header-wrapper_1F4gT {\n    position: absolute;\n    top: 0;\n}\n\n[dir=\"ltr\"] .stage-header_stage-header-wrapper_1F4gT {\n    left: 0;\n}\n\n[dir=\"rtl\"] .stage-header_stage-header-wrapper_1F4gT {\n    right: 0;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa {\n    position: fixed;\n    background-color: var(--fullscreen-accent);\n    top: 0;\n    left: 0;\n    right: 0;\n    z-index: 500;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa.stage-header_embedded_nhDjw {\n    background-color: transparent;\n}\n\n.stage-header_stage-menu-wrapper_15JJt {\n    display: flex;\n    margin: auto;\n    justify-content: space-between;\n    flex-shrink: 0;\n    align-items: center;\n    height: 2.75rem;\n    padding-top: 0.5rem;\n    padding-bottom: 0.5rem;\n}\n\n.stage-header_stage-size-row_14N65 {\n    display: flex;\n}\n\n.stage-header_stage-size-toggle-group_17LtK {\n    display: flex;\n}\n\n.stage-header_stage-size-row_14N65 > *, .stage-header_unselect-wrapper_1leRy {\n    /* Use a white background so semi-transparent selection states look correct */\n    background-color: var(--ui-white);\n    border-radius: calc(0.5rem / 2);\n}\n\n[dir=\"ltr\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"ltr\"] .stage-header_settings-button_3t4e7 {\n    margin-right: .2rem;\n}\n\n[dir=\"rtl\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"rtl\"] .stage-header_settings-button_3t4e7 {\n    margin-left: .2rem;\n}\n\n.stage-header_stage-button_hkl9B {\n    display: block;\n    border: 1px solid var(--ui-black-transparent);\n    border-radius: calc(0.5rem / 2);\n    width: calc(2rem + 2px);\n    height: calc(2rem + 2px);\n    background: var(--ui-white);\n    padding: 0.375rem;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    cursor: pointer;\n}\n\n.stage-header_stage-button_hkl9B:active {\n    background-color: var(--looks-transparent);\n}\n\n.stage-header_stage-button-icon_3zzFK {\n    width: 100%;\n    height: 100%;\n    filter: var(--filter-icon-gray);\n}\n\n[dir=\"rtl\"] .stage-header_stage-button-icon_3zzFK {\n    transform: scaleX(-1);\n}\n\n.stage-header_fullscreen-buttons-row_j3xTR {\n    /* relied on by addons */\n    display: flex;\n}\n\n.stage-header_btn_32l-4{\n    padding:4px;\n    color:white;\n    font-size:10px;\n    background: rgb(23, 23, 23);\n    border: 1px solid rgb(61, 61, 61);\n    border-radius: 5px;\n}\n\n.stage-header_btn_32l-4:not(.stage-header_droppable_1hk3N):dragover {\n  display: none; /* 隐藏元素 */\n}\n\n.stage-header_openInEditorContainer_JdqHH {\n    display: flex;\n    align-items: center;\n    /* Provide horizontal spacing between Open in Editor and adjacent buttons */\n    margin-right: .5rem;\n}\n\n.stage-header_openInEditorLink_2cTmR {\n    font-weight: bold;\n    text-decoration: none;\n    color: var(--ui-black-transparent);\n}\n\n[dir=\"rtl\"] .stage-header_openInEditorContainer_JdqHH {\n    /* Mirror spacing for RTL */\n    margin-right: 0;\n    margin-left: .5rem;\n}", ""]);
+exports.push([module.i, "/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */\n\n/* layout contants from `layout-constants.js` */\n\n/* overridden by src/lib/themes/guiHelpers.js */\n\n/*\n    Contains constants for the z-index values of elements that are part of the global stack context.\n    In other words, z-index values that are \"inside\" a component are not added here.\n    This prevents conflicts between identical z-index values in different components.\n*/\n\n/* Toolbox z-index: 40; set in scratch-blocks */\n\n/* tooltips should go over add buttons if they overlap */\n\n/* monitors go over add buttons */\n\n/* \"ask\" block text input goes above monitors */\n\n/* menu-bar should go over monitors, alerts and tutorials */\n\n/* behind menu-bar */\n\n/* Block drag z-index: 1000; default 50 is overriden in blocks.css */\n\n/* so it is draggable into other panes */\n\n/* behind modals */\n\n/* behind modals */\n\n/* above menu-bar when dragging */\n\n/* in most interfaces, the context menu is always on top */\n\n.stage-header_stage-header-wrapper_1F4gT {\n    position: absolute;\n    top: 0;\n}\n\n[dir=\"ltr\"] .stage-header_stage-header-wrapper_1F4gT {\n    left: 0;\n}\n\n[dir=\"rtl\"] .stage-header_stage-header-wrapper_1F4gT {\n    right: 0;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa {\n    position: fixed;\n    background-color: var(--fullscreen-accent);\n    top: 0;\n    left: 0;\n    right: 0;\n    z-index: 500;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa.stage-header_embedded_nhDjw {\n    background-color: transparent;\n}\n\n.stage-header_stage-menu-wrapper_15JJt {\n    display: flex;\n    margin: auto;\n    justify-content: space-between;\n    flex-shrink: 0;\n    align-items: center;\n    height: 2.75rem;\n    padding-top: 0.5rem;\n    padding-bottom: 0.5rem;\n}\n\n.stage-header_stage-size-row_14N65 {\n    display: flex;\n}\n\n.stage-header_stage-size-toggle-group_17LtK {\n    display: flex;\n}\n\n.stage-header_stage-size-row_14N65 > *, .stage-header_unselect-wrapper_1leRy {\n    /* Use a white background so semi-transparent selection states look correct */\n    background-color: var(--ui-secondary);\n    border-radius: calc(0.5rem / 2);\n}\n\n[dir=\"ltr\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"ltr\"] .stage-header_settings-button_3t4e7 {\n    margin-right: .2rem;\n}\n\n[dir=\"rtl\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"rtl\"] .stage-header_settings-button_3t4e7 {\n    margin-left: .2rem;\n}\n\n.stage-header_stage-button_hkl9B {\n    display: block;\n    border: 1px solid var(--ui-black-transparent);\n    border-radius: calc(0.5rem / 2);\n    width: calc(2rem + 2px);\n    height: calc(2rem + 2px);\n    background: var(--ui-white);\n    padding: 0.375rem;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    cursor: pointer;\n}\n\n.stage-header_stage-button_hkl9B:active {\n    background-color: var(--looks-transparent);\n}\n\n.stage-header_stage-button-icon_3zzFK {\n    width: 100%;\n    height: 100%;\n    filter: var(--filter-icon-gray);\n}\n\n[dir=\"rtl\"] .stage-header_stage-button-icon_3zzFK {\n    transform: scaleX(-1);\n}\n\n.stage-header_fullscreen-buttons-row_j3xTR {\n    /* relied on by addons */\n    display: flex;\n}\n\n.stage-header_fullscreen-buttons-row_j3xTR:last-child {\n    margin-right: .2rem;\n}\n\n.stage-header_btn_32l-4{\n    padding:4px;\n    color:white;\n    font-size:10px;\n    background: rgb(23, 23, 23);\n    border: 1px solid rgb(61, 61, 61);\n    border-radius: 5px;\n}\n\n.stage-header_btn_32l-4:not(.stage-header_droppable_1hk3N):dragover {\n  display: none; /* 隐藏元素 */\n}\n\n.stage-header_openInEditorContainer_JdqHH {\n    display: flex;\n    align-items: center;\n    /* Provide horizontal spacing between Open in Editor and adjacent buttons */\n    margin-right: .5rem;\n}\n\n.stage-header_openInEditorLink_2cTmR {\n    font-weight: bold;\n    text-decoration: none;\n    color: var(--ui-black-transparent);\n}\n\n[dir=\"rtl\"] .stage-header_openInEditorContainer_JdqHH {\n    /* Mirror spacing for RTL */\n    margin-right: 0;\n    margin-left: .5rem;\n}", ""]);
 
 // exports
 exports.locals = {
@@ -10079,7 +10079,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _draggable_window_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./draggable-window.css */ "./src/components/draggable-window/draggable-window.css");
 /* harmony import */ var _draggable_window_css__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_draggable_window_css__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _lib_window_state_storage__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../lib/window-state-storage */ "./src/lib/window-state-storage.js");
-const _excluded = ["children", "className", "defaultPosition", "defaultSize", "isDraggable", "isResizable", "minSize", "maxSize", "onDragStart", "onDrag", "onDragStop", "onResizeStart", "onResize", "onResizeStop", "onMinimizeToggle", "title", "windowId", "zIndex", "enableStatePersistence"];
+const _excluded = ["children", "className", "defaultPosition", "defaultSize", "isDraggable", "isResizable", "minSize", "maxSize", "onDragStart", "onDrag", "onDragStop", "onResizeStart", "onResize", "onResizeStop", "onMinimizeToggle", "title", "windowId", "zIndex", "enableStatePersistence", "allowResize", "allowMaximize"];
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
@@ -10120,7 +10120,10 @@ const DraggableWindow = props => {
       title,
       windowId,
       zIndex = 1,
-      enableStatePersistence = true
+      enableStatePersistence = true,
+      allowResize = true,
+      // 默认允许调整大小
+      allowMaximize = true // 默认允许最大化
     } = props,
     componentProps = _objectWithoutProperties(props, _excluded);
 
@@ -10189,6 +10192,25 @@ const DraggableWindow = props => {
   react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
     saveWindowState();
   }, [position, size, isMinimized, isFullScreen, saveWindowState]);
+
+  // 清理函数，在组件卸载时调用
+  react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
+    // 组件卸载时不需要重置状态，因为组件实例会被销毁
+    // 这里可以添加其他需要清理的资源
+    return () => {
+      // 组件卸载时的清理逻辑
+    };
+  }, []);
+
+  // 监听最小化状态变化，确保在最小化时清理状态
+  react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(() => {
+    if (isMinimized) {
+      // 最小化时清理拖拽和调整大小状态
+      setIsDragging(false);
+      setIsResizing(false);
+      setResizeHandle(null);
+    }
+  }, [isMinimized]);
   const handleMouseDown = react__WEBPACK_IMPORTED_MODULE_1___default.a.useCallback(e => {
     if (!isDraggable) return;
     if (!e.touches && e.button !== 0) return; // 只在非触摸事件时检查鼠标按钮
@@ -10213,10 +10235,16 @@ const DraggableWindow = props => {
       const moveClientY = moveTouch ? moveTouch.clientY : moveEvent.clientY;
       const newX = moveClientX - offset.x;
       const newY = moveClientY - offset.y;
-      const targetX = Math.max(0, Math.min(window.innerWidth - size.width, newX));
+
+      // 使用实时的窗口尺寸来计算限制
+      const rect = windowRef.current.getBoundingClientRect();
+      const currentWidth = rect.width;
+      const currentHeight = rect.height;
+      const extBarWidth = 60;
+      const targetX = Math.max(extBarWidth, Math.min(window.innerWidth - currentWidth, newX));
       // 限制窗口不能被拖动到顶栏之上 (顶栏高度为 3rem = 48px)
-      const menuBarHeight = 48; // 3rem = 48px (based on $menu-bar-height in units.css)
-      const targetY = Math.max(menuBarHeight, Math.min(window.innerHeight - size.height, newY));
+      const menuBarHeight = 93; // 3rem = 48px (based on $menu-bar-height in units.css)
+      const targetY = Math.max(menuBarHeight, Math.min(window.innerHeight - currentHeight, newY));
       const newPosition = {
         x: targetX,
         y: targetY
@@ -10264,6 +10292,7 @@ const DraggableWindow = props => {
       const rect = windowRef.current.getBoundingClientRect();
       let newWidth = size.width;
       let newHeight = size.height;
+      if (!allowResize) return;
       switch (resizeHandle) {
         case 'e':
           newWidth = Math.max(minSize.width, Math.min(maxSize.width, e.clientX - rect.left));
@@ -10314,6 +10343,7 @@ const DraggableWindow = props => {
       const rect = windowRef.current.getBoundingClientRect();
       let newWidth = size.width;
       let newHeight = size.height;
+      if (!allowResize) return;
       switch (handle) {
         case 'e':
           newWidth = Math.max(minSize.width, Math.min(maxSize.width, moveClientX - rect.left));
@@ -10374,8 +10404,17 @@ const DraggableWindow = props => {
         setIsMinimized(false);
         setPosition(originalPosition);
         setSize(originalSize);
+        setIsDragging(false);
+        setIsResizing(false);
+        setResizeHandle(null);
         onMinimizeToggle && onMinimizeToggle(windowId, false);
       } else {
+        // 清理所有全局事件监听器，防止内存泄漏
+        // 注意：这里我们无法直接访问内部事件监听器，但可以通过重置状态来防止问题
+        setIsDragging(false);
+        setIsResizing(false);
+        setResizeHandle(null);
+
         // 最小化时记录当前位置和尺寸
         setOriginalPosition(position);
         setOriginalSize(size);
@@ -10446,13 +10485,13 @@ const DraggableWindow = props => {
     className: _draggable_window_css__WEBPACK_IMPORTED_MODULE_3___default.a.controlButton,
     onClick: handleToggleMinimize,
     title: "\u6700\u5C0F\u5316"
-  }, "\u2212"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
+  }, "\u2212"), allowMaximize && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
     className: _draggable_window_css__WEBPACK_IMPORTED_MODULE_3___default.a.controlButton,
     onClick: handleToggleFullScreen,
     title: "\u5168\u5C4F"
   }, "\u25A1"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
     className: _draggable_window_css__WEBPACK_IMPORTED_MODULE_3___default.a.windowContent
-  }, children), isResizable && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+  }, children), isResizable && allowResize && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
     className: _draggable_window_css__WEBPACK_IMPORTED_MODULE_3___default.a.resizeHandleE,
     onMouseDown: e => handleResizeMouseDown('e', e),
     onTouchStart: e => handleResizeMouseDown('e', e)
@@ -10497,7 +10536,9 @@ DraggableWindow.propTypes = {
   title: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.string.isRequired,
   windowId: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.string.isRequired,
   zIndex: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.number,
-  enableStatePersistence: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool
+  enableStatePersistence: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool,
+  allowResize: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool,
+  allowMaximize: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool
 };
 /* harmony default export */ __webpack_exports__["default"] = (DraggableWindow);
 
@@ -12537,21 +12578,21 @@ const GUIComponent = props => {
     } = _omit,
     componentProps = _objectWithoutProperties(_omit, _excluded);
   const [stageWindowPosition, setStageWindowPosition] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState({
-    x: 100,
-    y: 100
+    x: 1426,
+    y: 48
   });
   const [stageWindowSize, setStageWindowSize] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState({
-    width: 480,
-    height: 360
+    width: 485,
+    height: 483
   });
   const [stageWindowMinimized, setStageWindowMinimized] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState(false);
   const [targetPaneWindowPosition, setTargetPaneWindowPosition] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState({
-    x: 600,
-    y: 100
+    x: 1426,
+    y: 483
   });
   const [targetPaneWindowSize, setTargetPaneWindowSize] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState({
-    width: 240,
-    height: 360
+    width: 485,
+    height: 447
   });
   const [targetPaneWindowMinimized, setTargetPaneWindowMinimized] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState(false);
 
@@ -13238,15 +13279,20 @@ const GUIComponent = props => {
       windowId: "stage",
       title: "Stage",
       defaultPosition: stageWindowPosition,
-      defaultSize: stageWindowSize,
+      defaultSize: {
+        width: stageWindowSize[0] + 2,
+        height: stageWindowSize[1] + 122
+      },
       minSize: {
-        width: 200,
-        height: 150
+        width: stageWindowSize[0] + 2,
+        height: stageWindowSize[1] + 122
       },
       maxSize: {
-        width: window.innerWidth - 100,
-        height: window.innerHeight - 100
+        width: stageWindowSize[0] + 2,
+        height: stageWindowSize[1] + 122
       },
+      allowResize: false,
+      allowMaximize: false,
       onDragStop: (id, position) => setStageWindowPosition(position),
       onResizeStop: (id, size) => setStageWindowSize(size),
       onMinimizeToggle: (id, minimized) => setStageWindowMinimized(minimized),
@@ -13264,8 +13310,8 @@ const GUIComponent = props => {
       defaultPosition: targetPaneWindowPosition,
       defaultSize: targetPaneWindowSize,
       minSize: {
-        width: 200,
-        height: 200
+        width: 471,
+        height: 211
       },
       maxSize: {
         width: 600,
@@ -13274,7 +13320,7 @@ const GUIComponent = props => {
       onDragStop: (id, position) => setTargetPaneWindowPosition(position),
       onResizeStop: (id, size) => setTargetPaneWindowSize(size),
       onMinimizeToggle: (id, minimized) => setTargetPaneWindowMinimized(minimized),
-      zIndex: 90,
+      zIndex: 0,
       enableStatePersistence: true
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_target_pane_jsx__WEBPACK_IMPORTED_MODULE_19__["default"], {
       stageSize: stageSize,
@@ -21622,12 +21668,12 @@ const StageHeaderComponent = function StageHeaderComponent(props) {
       style: {
         width: stageDimensions.width
       }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.fullscreenButtonsRow,
-      key: "fullscreen" // addons require the HTML element to be not be re-used by in-editor buttons
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_controls_jsx__WEBPACK_IMPORTED_MODULE_9__["default"], {
       vm: vm
-    }), openInEditorElement, settingsButton, fullscreenButton)));
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.fullscreenButtonsRow,
+      key: "fullscreen" // addons require the HTML element to be not be re-used by in-editor buttons
+    }, openInEditorElement, settingsButton, fullscreenButton)));
   } else {
     const stageControls = isPlayerOnly ? [] : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageSizeToggleGroup
@@ -21670,13 +21716,13 @@ const StageHeaderComponent = function StageHeaderComponent(props) {
       }
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
       className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageMenuWrapper
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageSizeRow,
-      key: "editor" // addons require the HTML element to be not be re-used by in-editor buttons
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_controls_jsx__WEBPACK_IMPORTED_MODULE_9__["default"], {
       vm: vm,
       isSmall: stageSizeMode === _lib_layout_constants__WEBPACK_IMPORTED_MODULE_11__["STAGE_SIZE_MODES"].small
-    }), stageControls, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageSizeRow,
+      key: "editor" // addons require the HTML element to be not be re-used by in-editor buttons
+    }, stageControls, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
       className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButton,
       onClick: onSetStageFullScreen
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
