@@ -29732,10 +29732,18 @@ const toLibraryItem = extension => {
   }
   return extension;
 };
-const translateGalleryItem = (extension, locale) => _objectSpread(_objectSpread({}, extension), {}, {
-  name: extension.nameTranslations[locale] || extension.name,
-  description: extension.descriptionTranslations[locale] || extension.description
-});
+const translateGalleryItem = (extension, locale) => {
+  var _extension$nameTransl, _extension$descriptio;
+  // 如果是分割线，直接返回
+  if (extension === '---') {
+    return extension;
+  }
+  // 处理扩展对象
+  return _objectSpread(_objectSpread({}, extension), {}, {
+    name: ((_extension$nameTransl = extension.nameTranslations) === null || _extension$nameTransl === void 0 ? void 0 : _extension$nameTransl[locale]) || extension.name,
+    description: ((_extension$descriptio = extension.descriptionTranslations) === null || _extension$descriptio === void 0 ? void 0 : _extension$descriptio[locale]) || extension.description
+  });
+};
 let cachedGallery = null;
 const fetchLibrary = async () => {
   // 辅助函数：安全获取数据
@@ -30297,7 +30305,39 @@ const fetchLibrary = async () => {
   })())]);
 
   // 合并所有数据
-  return [...ztdata, ...twdata, ...pmdata, ...mistdata, ...spdata];
+  const result = [];
+  // 扩展来源列表，方便以后添加新的来源
+  const sources = [{
+    data: twdata,
+    name: 'turbowarp'
+  }, {
+    data: ztdata,
+    name: 'ztengine'
+  }, {
+    data: pmdata,
+    name: 'penguinmod'
+  }, {
+    data: mistdata,
+    name: 'mist'
+  }, {
+    data: spdata,
+    name: 'sharkpool'
+  }];
+
+  // 遍历所有来源，添加扩展和分割线
+  for (let i = 0; i < sources.length; i++) {
+    const {
+      data
+    } = sources[i];
+    if (data.length > 0) {
+      result.push(...data);
+      // 不是最后一个来源且有数据时，添加分割线
+      if (i < sources.length - 1) {
+        result.push('---');
+      }
+    }
+  }
+  return result;
 };
 class ExtensionLibrary extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComponent {
   constructor(props) {
