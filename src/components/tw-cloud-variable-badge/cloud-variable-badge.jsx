@@ -114,7 +114,7 @@ const CloudVariableBadge = props => {
             <a
                 target="_blank"
                 rel="noreferrer"
-                href="https://docs.turbowarp.org/cloud-variables"
+                href="https://docs.02engine.org/cloud-variables"
             >
                 <FormattedMessage
                     defaultMessage="Learn more about cloud variables."

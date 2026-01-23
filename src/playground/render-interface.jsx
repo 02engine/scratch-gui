@@ -144,21 +144,21 @@ const Footer = () => (
                         {/* Do not translate */}
                         {'02Engine Packager'}
                     </a>
-                    <a href="https://docs.turbowarp.org/embedding">
+                    <a href="https://docs.02engine.org/embedding">
                         <FormattedMessage
                             defaultMessage="Embedding"
                             description="Link in footer to embedding documentation for embedding link"
                             id="tw.footer.embed"
                         />
                     </a>
-                    <a href="https://docs.turbowarp.org/url-parameters">
+                    <a href="https://docs.02engine.org/url-parameters">
                         <FormattedMessage
                             defaultMessage="URL Parameters"
                             description="Link in footer to URL parameters documentation"
                             id="tw.footer.parameters"
                         />
                     </a>
-                    <a href="https://docs.turbowarp.org/">
+                    <a href="https://docs.02engine.org/">
                         <FormattedMessage
                             defaultMessage="Documentation"
                             description="Link in footer to additional documentation"
@@ -327,11 +327,11 @@ class Interface extends React.Component {
                                             values={{
                                                 link: (
                                                     <a
-                                                        href="https://docs.turbowarp.org/unshared-projects"
+                                                        href="https://docs.02engine.org/unshared-projects"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                     >
-                                                        {'https://docs.turbowarp.org/unshared-projects'}
+                                                        {'https://docs.02engine.org/unshared-projects'}
                                                     </a>
                                                 )
                                             }}
