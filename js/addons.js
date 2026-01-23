@@ -2363,6 +2363,32 @@ window.addonAPI = {
         console.error('Error while rerunning addon userscripts', e);
       }
     }
+  },
+  /**
+   * 查询某个插件是否加载
+   * @param {string} addonId - 插件的 ID
+   * @returns {Object} - 包含插件加载状态的对象
+   * @returns {boolean} return.loaded - 插件是否已加载
+   * @returns {boolean} return.loading - 插件是否正在加载
+   * @returns {boolean} return.disabled - 插件是否被禁用
+   * @returns {boolean} return.exists - 插件是否存在
+   */
+  isAddonLoaded(addonId) {
+    const runner = AddonRunner.instances.find(i => i.id === addonId);
+    if (!runner) {
+      return {
+        loaded: false,
+        loading: false,
+        disabled: false,
+        exists: false
+      };
+    }
+    return {
+      loaded: !runner.loading,
+      loading: runner.loading,
+      disabled: runner.publicAPI.addon.self.disabled,
+      exists: true
+    };
   }
 };
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../node_modules/webpack/buildin/global.js */ "./node_modules/webpack/buildin/global.js")))

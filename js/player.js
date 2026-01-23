@@ -2576,7 +2576,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */\n\n/* layout contants from `layout-constants.js` */\n\n/* overridden by src/lib/themes/guiHelpers.js */\n\n/*\n    Contains constants for the z-index values of elements that are part of the global stack context.\n    In other words, z-index values that are \"inside\" a component are not added here.\n    This prevents conflicts between identical z-index values in different components.\n*/\n\n/* Toolbox z-index: 40; set in scratch-blocks */\n\n/* tooltips should go over add buttons if they overlap */\n\n/* monitors go over add buttons */\n\n/* \"ask\" block text input goes above monitors */\n\n/* menu-bar should go over monitors, alerts and tutorials */\n\n/* behind menu-bar */\n\n/* Block drag z-index: 1000; default 50 is overriden in blocks.css */\n\n/* so it is draggable into other panes */\n\n/* behind modals */\n\n/* behind modals */\n\n/* above menu-bar when dragging */\n\n/* in most interfaces, the context menu is always on top */\n\n.stage-header_stage-header-wrapper_1F4gT {\n    position: absolute;\n    top: 0;\n}\n\n[dir=\"ltr\"] .stage-header_stage-header-wrapper_1F4gT {\n    left: 0;\n}\n\n[dir=\"rtl\"] .stage-header_stage-header-wrapper_1F4gT {\n    right: 0;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa {\n    position: fixed;\n    background-color: var(--fullscreen-accent);\n    top: 0;\n    left: 0;\n    right: 0;\n    z-index: 500;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa.stage-header_embedded_nhDjw {\n    background-color: transparent;\n}\n\n.stage-header_stage-menu-wrapper_15JJt {\n    display: flex;\n    margin: auto;\n    justify-content: space-between;\n    flex-shrink: 0;\n    align-items: center;\n    height: 2.75rem;\n    padding-top: 0.5rem;\n    padding-bottom: 0.5rem;\n}\n\n.stage-header_stage-size-row_14N65 {\n    display: flex;\n}\n\n.stage-header_stage-size-toggle-group_17LtK {\n    display: flex;\n}\n\n.stage-header_stage-size-row_14N65 > *, .stage-header_unselect-wrapper_1leRy {\n    /* Use a white background so semi-transparent selection states look correct */\n    background-color: var(--ui-secondary);\n    border-radius: calc(0.5rem / 2);\n}\n\n[dir=\"ltr\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"ltr\"] .stage-header_settings-button_3t4e7 {\n    margin-right: .2rem;\n}\n\n[dir=\"rtl\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"rtl\"] .stage-header_settings-button_3t4e7 {\n    margin-left: .2rem;\n}\n\n.stage-header_stage-button_hkl9B {\n    display: block;\n    border: 1px solid var(--ui-black-transparent);\n    border-radius: calc(0.5rem / 2);\n    width: calc(2rem + 2px);\n    height: calc(2rem + 2px);\n    background: var(--ui-white);\n    padding: 0.375rem;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    cursor: pointer;\n}\n\n.stage-header_stage-button_hkl9B:active {\n    background-color: var(--looks-transparent);\n}\n\n.stage-header_stage-button-icon_3zzFK {\n    width: 100%;\n    height: 100%;\n    filter: var(--filter-icon-gray);\n}\n\n[dir=\"rtl\"] .stage-header_stage-button-icon_3zzFK {\n    transform: scaleX(-1);\n}\n\n.stage-header_fullscreen-buttons-row_j3xTR {\n    /* relied on by addons */\n    display: flex;\n}\n\n.stage-header_fullscreen-buttons-row_j3xTR:last-child {\n    margin-right: .2rem;\n}\n\n.stage-header_btn_32l-4{\n    padding:4px;\n    color:white;\n    font-size:10px;\n    background: rgb(23, 23, 23);\n    border: 1px solid rgb(61, 61, 61);\n    border-radius: 5px;\n}\n\n.stage-header_btn_32l-4:not(.stage-header_droppable_1hk3N):dragover {\n  display: none; /* 隐藏元素 */\n}\n\n.stage-header_openInEditorContainer_JdqHH {\n    display: flex;\n    align-items: center;\n    /* Provide horizontal spacing between Open in Editor and adjacent buttons */\n    margin-right: .5rem;\n}\n\n.stage-header_openInEditorLink_2cTmR {\n    font-weight: bold;\n    text-decoration: none;\n    color: var(--ui-black-transparent);\n}\n\n[dir=\"rtl\"] .stage-header_openInEditorContainer_JdqHH {\n    /* Mirror spacing for RTL */\n    margin-right: 0;\n    margin-left: .5rem;\n}", ""]);
+exports.push([module.i, "/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */\n\n/* layout contants from `layout-constants.js` */\n\n/* overridden by src/lib/themes/guiHelpers.js */\n\n/*\n    Contains constants for the z-index values of elements that are part of the global stack context.\n    In other words, z-index values that are \"inside\" a component are not added here.\n    This prevents conflicts between identical z-index values in different components.\n*/\n\n/* Toolbox z-index: 40; set in scratch-blocks */\n\n/* tooltips should go over add buttons if they overlap */\n\n/* monitors go over add buttons */\n\n/* \"ask\" block text input goes above monitors */\n\n/* menu-bar should go over monitors, alerts and tutorials */\n\n/* behind menu-bar */\n\n/* Block drag z-index: 1000; default 50 is overriden in blocks.css */\n\n/* so it is draggable into other panes */\n\n/* behind modals */\n\n/* behind modals */\n\n/* above menu-bar when dragging */\n\n/* in most interfaces, the context menu is always on top */\n\n.stage-header_stage-header-wrapper_1F4gT {\n    position: absolute;\n    top: 0;\n}\n\n[dir=\"ltr\"] .stage-header_stage-header-wrapper_1F4gT {\n    left: 0;\n}\n\n[dir=\"rtl\"] .stage-header_stage-header-wrapper_1F4gT {\n    right: 0;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa {\n    position: fixed;\n    background-color: var(--fullscreen-accent);\n    top: 0;\n    left: 0;\n    right: 0;\n    z-index: 500;\n}\n\n.stage-header_stage-header-wrapper-overlay_5vfJa.stage-header_embedded_nhDjw {\n    background-color: transparent;\n}\n\n.stage-header_stage-menu-wrapper_15JJt {\n    display: flex;\n    margin: auto;\n    justify-content: space-between;\n    flex-shrink: 0;\n    align-items: center;\n    height: 2.75rem;\n    padding-top: 0.5rem;\n    padding-bottom: 0.5rem;\n}\n\n.stage-header_stage-size-row_14N65 {\n    display: flex;\n}\n\n.stage-header_stage-size-toggle-group_17LtK {\n    display: flex;\n}\n\n.stage-header_stage-size-row_14N65 > *, .stage-header_unselect-wrapper_1leRy {\n    /* Use a white background so semi-transparent selection states look correct */\n    background-color: var(--ui-secondary);\n    border-radius: calc(0.5rem / 2);\n}\n\n[dir=\"ltr\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"ltr\"] .stage-header_settings-button_3t4e7 {\n    margin-right: .2rem;\n}\n\n[dir=\"rtl\"] .stage-header_stage-size-toggle-group_17LtK,\n[dir=\"rtl\"] .stage-header_settings-button_3t4e7 {\n    margin-left: .2rem;\n}\n\n.stage-header_stage-button_hkl9B {\n    display: block;\n    border: 1px solid var(--ui-black-transparent);\n    border-radius: calc(0.5rem / 2);\n    width: calc(2rem + 2px);\n    height: calc(2rem + 2px);\n    background: var(--ui-white);\n    padding: 0.375rem;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n    cursor: pointer;\n    margin-right: .2rem;\n}\n\n.stage-header_stage-button_hkl9B:active {\n    background-color: var(--looks-transparent);\n}\n\n.stage-header_stage-button-icon_3zzFK {\n    width: 100%;\n    height: 100%;\n    filter: var(--filter-icon-gray);\n}\n\n[dir=\"rtl\"] .stage-header_stage-button-icon_3zzFK {\n    transform: scaleX(-1);\n}\n\n.stage-header_fullscreen-buttons-row_j3xTR {\n    /* relied on by addons */\n    display: flex;\n}\n\n.stage-header_fullscreen-buttons-row_j3xTR:last-child {\n    margin-right: .2rem;\n}\n\n.stage-header_btn_32l-4{\n    padding:4px;\n    color:white;\n    font-size:10px;\n    background: var(--ui-secondary);\n    border: 1px solid var(--ui-black-transparent);\n    border-radius: 5px;\n    filter: var(--filter-icon-gray);\n}\n\n.stage-header_btn_32l-4:not(.stage-header_droppable_1hk3N):dragover {\n  display: none; /* 隐藏元素 */\n}\n\n.stage-header_coordinate-controls_206J2 {\n  display: flex;\n  flex-direction: row;\n  align-items: center;\n  background-color: var(--ui-secondary);\n  border-radius: calc(0.5rem / 2);\n  overflow: hidden;\n  margin-right: .2rem;\n}\n\n.stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B {\n  margin: 0;\n  padding: 0.25rem;\n  border: 1px solid var(--ui-black-transparent);\n  border-radius: 0;\n  background: none;\n  outline: none;\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n  position: relative;\n  width: 34px;\n  height: 34px;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n}\n\n.stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:not(:last-child) {\n  border-right: none;\n}\n\n[dir=\"rtl\"] .stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:not(:last-child) {\n  border-left: none;\n  border-right: 1px solid var(--ui-black-transparent);\n}\n\n.stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:first-child,\n[dir=\"rtl\"] .stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:last-child {\n  border-radius: calc(0.5rem / 2) 0 0 calc(0.5rem / 2);\n}\n\n.stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:last-child,\n[dir=\"rtl\"] .stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:first-child {\n  border-radius: 0 calc(0.5rem / 2) calc(0.5rem / 2) 0;\n}\n\n.stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:active {\n  background-color: var(--looks-transparent);\n}\n\n.stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:focus::before {\n  content: \"\";\n  position: absolute;\n  top: -1px;\n  right: -1px;\n  bottom: -1px;\n  left: -1px;\n  border: 1px solid var(--looks-secondary);\n}\n\n.stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:focus:first-child::before,\n[dir=\"rtl\"] .stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:focus:last-child::before {\n  border-radius: calc(0.5rem / 2) 0 0 calc(0.5rem / 2);\n}\n\n.stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:focus:last-child::before,\n[dir=\"rtl\"] .stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:focus:first-child::before {\n  border-radius: 0 calc(0.5rem / 2) calc(0.5rem / 2) 0;\n}\n\n.stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B img {\n  display: block;\n  transition: transform 0.1s;\n  filter: var(--filter-icon-gray);\n}\n\n.stage-header_coordinate-controls_206J2 .stage-header_stage-button_hkl9B:active img {\n  filter: none;\n}\n\n.stage-header_openInEditorContainer_JdqHH {\n    display: flex;\n    align-items: center;\n    /* Provide horizontal spacing between Open in Editor and adjacent buttons */\n    margin-right: .5rem;\n}\n\n.stage-header_openInEditorLink_2cTmR {\n    font-weight: bold;\n    text-decoration: none;\n    color: var(--ui-black-transparent);\n}\n\n[dir=\"rtl\"] .stage-header_openInEditorContainer_JdqHH {\n    /* Mirror spacing for RTL */\n    margin-right: 0;\n    margin-left: .5rem;\n}", ""]);
 
 // exports
 exports.locals = {
@@ -2603,6 +2603,8 @@ exports.locals = {
 	"fullscreenButtonsRow": "stage-header_fullscreen-buttons-row_j3xTR",
 	"btn": "stage-header_btn_32l-4",
 	"droppable": "stage-header_droppable_1hk3N",
+	"coordinate-controls": "stage-header_coordinate-controls_206J2",
+	"coordinateControls": "stage-header_coordinate-controls_206J2",
 	"openInEditorContainer": "stage-header_openInEditorContainer_JdqHH",
 	"openInEditorLink": "stage-header_openInEditorLink_2cTmR"
 };
@@ -10240,10 +10242,10 @@ const DraggableWindow = props => {
       const rect = windowRef.current.getBoundingClientRect();
       const currentWidth = rect.width;
       const currentHeight = rect.height;
-      const extBarWidth = 62;
+      const extBarWidth = 61;
       const targetX = Math.max(extBarWidth, Math.min(window.innerWidth - currentWidth, newX));
       // 限制窗口不能被拖动到顶栏之上 (顶栏高度为 3rem = 48px)
-      const menuBarHeight = 93; // 3rem = 48px (based on $menu-bar-height in units.css)
+      const menuBarHeight = window.addonAPI.isAddonLoaded('editor-compact').disabled ? 92 : 64; // 3rem = 48px (based on $menu-bar-height in units.css)
       const targetY = Math.max(menuBarHeight, Math.min(window.innerHeight - currentHeight, newY));
       const newPosition = {
         x: targetX,
@@ -21428,6 +21430,28 @@ SpriteSelectorComponent.propTypes = {
 
 /***/ }),
 
+/***/ "./src/components/stage-header/icon--coordinate-off.svg":
+/*!**************************************************************!*\
+  !*** ./src/components/stage-header/icon--coordinate-off.svg ***!
+  \**************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZjhmOGYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0iaWNvbiBpY29uLXRhYmxlciBpY29ucy10YWJsZXItb3V0bGluZSBpY29uLXRhYmxlci1ib3JkZXItbm9uZSI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTQgNGwwIC4wMSIgLz48cGF0aCBkPSJNOCA0bDAgLjAxIiAvPjxwYXRoIGQ9Ik0xMiA0bDAgLjAxIiAvPjxwYXRoIGQ9Ik0xNiA0bDAgLjAxIiAvPjxwYXRoIGQ9Ik0yMCA0bDAgLjAxIiAvPjxwYXRoIGQ9Ik00IDhsMCAuMDEiIC8+PHBhdGggZD0iTTEyIDhsMCAuMDEiIC8+PHBhdGggZD0iTTIwIDhsMCAuMDEiIC8+PHBhdGggZD0iTTQgMTJsMCAuMDEiIC8+PHBhdGggZD0iTTggMTJsMCAuMDEiIC8+PHBhdGggZD0iTTEyIDEybDAgLjAxIiAvPjxwYXRoIGQ9Ik0xNiAxMmwwIC4wMSIgLz48cGF0aCBkPSJNMjAgMTJsMCAuMDEiIC8+PHBhdGggZD0iTTQgMTZsMCAuMDEiIC8+PHBhdGggZD0iTTEyIDE2bDAgLjAxIiAvPjxwYXRoIGQ9Ik0yMCAxNmwwIC4wMSIgLz48cGF0aCBkPSJNNCAyMGwwIC4wMSIgLz48cGF0aCBkPSJNOCAyMGwwIC4wMSIgLz48cGF0aCBkPSJNMTIgMjBsMCAuMDEiIC8+PHBhdGggZD0iTTE2IDIwbDAgLjAxIiAvPjxwYXRoIGQ9Ik0yMCAyMGwwIC4wMSIgLz48L3N2Zz4="
+
+/***/ }),
+
+/***/ "./src/components/stage-header/icon--coordinate-on.svg":
+/*!*************************************************************!*\
+  !*** ./src/components/stage-header/icon--coordinate-on.svg ***!
+  \*************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZjhmOGYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0iaWNvbiBpY29uLXRhYmxlciBpY29ucy10YWJsZXItb3V0bGluZSBpY29uLXRhYmxlci1ib3JkZXItYWxsIj48cGF0aCBzdHJva2U9Im5vbmUiIGQ9Ik0wIDBoMjR2MjRIMHoiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNNCA2YTIgMiAwIDAgMSAyIC0yaDEyYTIgMiAwIDAgMSAyIDJ2MTJhMiAyIDAgMCAxIC0yIDJoLTEyYTIgMiAwIDAgMSAtMiAtMmwwIC0xMiIgLz48cGF0aCBkPSJNNCAxMmwxNiAwIiAvPjxwYXRoIGQ9Ik0xMiA0bDAgMTYiIC8+PC9zdmc+"
+
+/***/ }),
+
 /***/ "./src/components/stage-header/icon--fullscreen.svg":
 /*!**********************************************************!*\
   !*** ./src/components/stage-header/icon--fullscreen.svg ***!
@@ -21458,6 +21482,28 @@ module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5v
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__.p + "static/assets/61e99f0da6828d62aa9e3761c15ace9f.svg";
+
+/***/ }),
+
+/***/ "./src/components/stage-header/icon--zoom-in-font.svg":
+/*!************************************************************!*\
+  !*** ./src/components/stage-header/icon--zoom-in-font.svg ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZjhmOGYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0iaWNvbiBpY29uLXRhYmxlciBpY29ucy10YWJsZXItb3V0bGluZSBpY29uLXRhYmxlci16b29tLWluIj48cGF0aCBzdHJva2U9Im5vbmUiIGQ9Ik0wIDBoMjR2MjRIMHoiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMyAxMGE3IDcgMCAxIDAgMTQgMGE3IDcgMCAxIDAgLTE0IDAiIC8+PHBhdGggZD0iTTcgMTBsNiAwIiAvPjxwYXRoIGQ9Ik0xMCA3bDAgNiIgLz48cGF0aCBkPSJNMjEgMjFsLTYgLTYiIC8+PC9zdmc+"
+
+/***/ }),
+
+/***/ "./src/components/stage-header/icon--zoom-out-font.svg":
+/*!*************************************************************!*\
+  !*** ./src/components/stage-header/icon--zoom-out-font.svg ***!
+  \*************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZjhmOGYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0iaWNvbiBpY29uLXRhYmxlciBpY29ucy10YWJsZXItb3V0bGluZSBpY29uLXRhYmxlci16b29tLW91dCI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTMgMTBhNyA3IDAgMSAwIDE0IDBhNyA3IDAgMSAwIC0xNCAwIiAvPjxwYXRoIGQ9Ik03IDEwbDYgMCIgLz48cGF0aCBkPSJNMjEgMjFsLTYgLTYiIC8+PC9zdmc+"
 
 /***/ }),
 
@@ -21525,9 +21571,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_tw_recolor_build_icon_full_stage_svg__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../../lib/tw-recolor/build!./icon--full-stage.svg */ "./src/lib/tw-recolor/build.js!./src/components/stage-header/icon--full-stage.svg");
 /* harmony import */ var _icon_settings_svg__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./icon--settings.svg */ "./src/components/stage-header/icon--settings.svg");
 /* harmony import */ var _icon_settings_svg__WEBPACK_IMPORTED_MODULE_17___default = /*#__PURE__*/__webpack_require__.n(_icon_settings_svg__WEBPACK_IMPORTED_MODULE_17__);
-/* harmony import */ var _stage_header_css__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./stage-header.css */ "./src/components/stage-header/stage-header.css");
-/* harmony import */ var _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default = /*#__PURE__*/__webpack_require__.n(_stage_header_css__WEBPACK_IMPORTED_MODULE_18__);
-/* harmony import */ var _lib_tw_fullscreen_api__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../../lib/tw-fullscreen-api */ "./src/lib/tw-fullscreen-api.js");
+/* harmony import */ var _icon_coordinate_on_svg__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./icon--coordinate-on.svg */ "./src/components/stage-header/icon--coordinate-on.svg");
+/* harmony import */ var _icon_coordinate_on_svg__WEBPACK_IMPORTED_MODULE_18___default = /*#__PURE__*/__webpack_require__.n(_icon_coordinate_on_svg__WEBPACK_IMPORTED_MODULE_18__);
+/* harmony import */ var _icon_coordinate_off_svg__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./icon--coordinate-off.svg */ "./src/components/stage-header/icon--coordinate-off.svg");
+/* harmony import */ var _icon_coordinate_off_svg__WEBPACK_IMPORTED_MODULE_19___default = /*#__PURE__*/__webpack_require__.n(_icon_coordinate_off_svg__WEBPACK_IMPORTED_MODULE_19__);
+/* harmony import */ var _icon_zoom_in_font_svg__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./icon--zoom-in-font.svg */ "./src/components/stage-header/icon--zoom-in-font.svg");
+/* harmony import */ var _icon_zoom_in_font_svg__WEBPACK_IMPORTED_MODULE_20___default = /*#__PURE__*/__webpack_require__.n(_icon_zoom_in_font_svg__WEBPACK_IMPORTED_MODULE_20__);
+/* harmony import */ var _icon_zoom_out_font_svg__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./icon--zoom-out-font.svg */ "./src/components/stage-header/icon--zoom-out-font.svg");
+/* harmony import */ var _icon_zoom_out_font_svg__WEBPACK_IMPORTED_MODULE_21___default = /*#__PURE__*/__webpack_require__.n(_icon_zoom_out_font_svg__WEBPACK_IMPORTED_MODULE_21__);
+/* harmony import */ var _stage_header_css__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./stage-header.css */ "./src/components/stage-header/stage-header.css");
+/* harmony import */ var _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default = /*#__PURE__*/__webpack_require__.n(_stage_header_css__WEBPACK_IMPORTED_MODULE_22__);
+/* harmony import */ var _lib_tw_fullscreen_api__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../../lib/tw-fullscreen-api */ "./src/lib/tw-fullscreen-api.js");
+
+
+
+
 
 
 
@@ -21616,118 +21674,138 @@ const StageHeaderComponent = function StageHeaderComponent(props) {
     }
   };
   const openInEditorElement = isEmbedded && projectUrl ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-    className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.openInEditorContainer
+    className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.openInEditorContainer
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
-    className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.openInEditorLink,
+    className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.openInEditorLink,
     href: "".concat("", "editor?project_url=").concat(encodeURIComponent(projectUrl)),
     onClick: handleOpenInEditor
   }, props.intl.formatMessage(messages.openInEditorMessage))) : null;
   if (isFullScreen || isEmbedded) {
     const settingsButton = isEmbedded && enableSettingsButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.settingsButton, _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.unselectWrapper)
+      className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.settingsButton, _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.unselectWrapper)
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButton,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButton,
       onClick: onOpenSettings
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
       alt: props.intl.formatMessage(messages.openSettingsMessage),
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButtonIcon,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButtonIcon,
       draggable: false,
       src: _icon_settings_svg__WEBPACK_IMPORTED_MODULE_17___default.a,
       title: props.intl.formatMessage(messages.openSettingsMessage)
     }))) : null;
     const fullscreenButton = isFullScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.unselectWrapper
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.unselectWrapper
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButton,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButton,
       onClick: onSetStageUnFullScreen,
       onKeyPress: onKeyPress
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
       alt: props.intl.formatMessage(messages.unFullScreenMessage),
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButtonIcon,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButtonIcon,
       draggable: false,
       src: _icon_unfullscreen_svg__WEBPACK_IMPORTED_MODULE_13___default.a,
       title: props.intl.formatMessage(messages.fullscreenControl)
-    }))) : _lib_tw_fullscreen_api__WEBPACK_IMPORTED_MODULE_19__["default"].available() ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.unselectWrapper
+    }))) : _lib_tw_fullscreen_api__WEBPACK_IMPORTED_MODULE_23__["default"].available() ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.unselectWrapper
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButton,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButton,
       onClick: onSetStageFullScreen
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
       alt: props.intl.formatMessage(messages.fullScreenMessage),
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButtonIcon,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButtonIcon,
       draggable: false,
       src: _icon_fullscreen_svg__WEBPACK_IMPORTED_MODULE_12___default.a,
       title: props.intl.formatMessage(messages.fullscreenControl)
     }))) : null;
     header = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
-      className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageHeaderWrapperOverlay, {
-        [_stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.embedded]: isEmbedded
+      className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageHeaderWrapperOverlay, {
+        [_stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.embedded]: isEmbedded
       })
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageMenuWrapper,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageMenuWrapper,
       style: {
         width: stageDimensions.width
       }
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_controls_jsx__WEBPACK_IMPORTED_MODULE_9__["default"], {
       vm: vm
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.fullscreenButtonsRow,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.fullscreenButtonsRow,
       key: "fullscreen" // addons require the HTML element to be not be re-used by in-editor buttons
     }, openInEditorElement, settingsButton, fullscreenButton)));
   } else {
     const stageControls = isPlayerOnly ? [] : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageSizeToggleGroup
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.btn,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageSizeToggleGroup
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.coordinateControls
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButton,
       onClick: onTriggerCoordinate
-    }, isShowCoordinate ? '关闭坐标' : '开启坐标'), isShowCoordinate && stageSizeMode !== _lib_layout_constants__WEBPACK_IMPORTED_MODULE_11__["STAGE_SIZE_MODES"].small ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_3___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.btn,
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
+      alt: isShowCoordinate ? '关闭坐标' : '开启坐标',
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButtonIcon,
+      draggable: false,
+      src: isShowCoordinate ? _icon_coordinate_on_svg__WEBPACK_IMPORTED_MODULE_18___default.a : _icon_coordinate_off_svg__WEBPACK_IMPORTED_MODULE_19___default.a,
+      title: isShowCoordinate ? '关闭坐标' : '开启坐标'
+    })), isShowCoordinate && stageSizeMode !== _lib_layout_constants__WEBPACK_IMPORTED_MODULE_11__["STAGE_SIZE_MODES"].small ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_3___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButton,
       onClick: onZoomOutCoordinateFontSize
-    }, "\u7F29\u5C0F\u5B57\u4F53"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.btn,
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
+      alt: "\u7F29\u5C0F\u5B57\u4F53",
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButtonIcon,
+      draggable: false,
+      src: _icon_zoom_out_font_svg__WEBPACK_IMPORTED_MODULE_21___default.a,
+      title: "\u7F29\u5C0F\u5B57\u4F53"
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButton,
       onClick: onZoomInCoordinateFontSize
-    }, "\u653E\u5927\u5B57\u4F53")) : null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_toggle_buttons_toggle_buttons_jsx__WEBPACK_IMPORTED_MODULE_8__["default"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
+      alt: "\u653E\u5927\u5B57\u4F53",
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButtonIcon,
+      draggable: false,
+      src: _icon_zoom_in_font_svg__WEBPACK_IMPORTED_MODULE_20___default.a,
+      title: "\u653E\u5927\u5B57\u4F53"
+    }))) : null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_toggle_buttons_toggle_buttons_jsx__WEBPACK_IMPORTED_MODULE_8__["default"], {
       buttons: [{
         handleClick: onSetStageSmall,
         icon: _lib_tw_recolor_build_icon_small_stage_svg__WEBPACK_IMPORTED_MODULE_15__["default"],
-        iconClassName: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButtonIcon,
+        iconClassName: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButtonIcon,
         isSelected: stageSizeMode === _lib_layout_constants__WEBPACK_IMPORTED_MODULE_11__["STAGE_SIZE_MODES"].small,
         title: props.intl.formatMessage(messages.smallStageSizeMessage)
       }, ...(showFixedLargeSize ? [{
         handleClick: onSetStageLarge,
         icon: _lib_tw_recolor_build_icon_large_stage_svg__WEBPACK_IMPORTED_MODULE_14__["default"],
-        iconClassName: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButtonIcon,
+        iconClassName: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButtonIcon,
         isSelected: stageSizeMode === _lib_layout_constants__WEBPACK_IMPORTED_MODULE_11__["STAGE_SIZE_MODES"].large,
         title: props.intl.formatMessage(messages.largeStageSizeMessage)
       }] : []), {
         handleClick: onSetStageFull,
         icon: showFixedLargeSize ? _lib_tw_recolor_build_icon_full_stage_svg__WEBPACK_IMPORTED_MODULE_16__["default"] : _lib_tw_recolor_build_icon_large_stage_svg__WEBPACK_IMPORTED_MODULE_14__["default"],
-        iconClassName: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButtonIcon,
+        iconClassName: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButtonIcon,
         isSelected: stageSizeMode === _lib_layout_constants__WEBPACK_IMPORTED_MODULE_11__["STAGE_SIZE_MODES"].full,
         title: props.intl.formatMessage(messages.fullStageSizeMessage)
       }]
     }));
     header = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageHeaderWrapper
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageHeaderWrapper
       // + 2 px because the stage will have 2 pixels of border around it
       ,
       style: {
         minWidth: "".concat(stageDimensions.width + 2, "px")
       }
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageMenuWrapper
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageMenuWrapper
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_controls_jsx__WEBPACK_IMPORTED_MODULE_9__["default"], {
       vm: vm,
       isSmall: stageSizeMode === _lib_layout_constants__WEBPACK_IMPORTED_MODULE_11__["STAGE_SIZE_MODES"].small
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageSizeRow,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageSizeRow,
       key: "editor" // addons require the HTML element to be not be re-used by in-editor buttons
     }, stageControls, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_button_button_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButton,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButton,
       onClick: onSetStageFullScreen
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("img", {
       alt: props.intl.formatMessage(messages.fullStageSizeMessage),
-      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_18___default.a.stageButtonIcon,
+      className: _stage_header_css__WEBPACK_IMPORTED_MODULE_22___default.a.stageButtonIcon,
       draggable: false,
       src: _icon_fullscreen_svg__WEBPACK_IMPORTED_MODULE_12___default.a,
       title: props.intl.formatMessage(messages.fullscreenControl)
