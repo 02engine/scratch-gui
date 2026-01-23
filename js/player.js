@@ -23395,7 +23395,7 @@ const CloudVariableBadge = props => {
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
     target: "_blank",
     rel: "noreferrer",
-    href: "https://docs.turbowarp.org/cloud-variables"
+    href: "https://docs.02engine.org/cloud-variables"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], {
     defaultMessage: "Learn more about cloud variables.",
     id: "tw.moreCloud"
@@ -23884,7 +23884,7 @@ const DocumentationLink = _ref => {
     children
   } = _ref;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
-    href: "https://docs.turbowarp.org/".concat(slug),
+    href: "https://docs.02engine.org/".concat(slug),
     target: "_blank",
     rel: "noopener noreferrer"
   }, children);
@@ -25372,10 +25372,10 @@ __webpack_require__.r(__webpack_exports__);
 const InvalidEmbed = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
   className: _invalid_embed_css__WEBPACK_IMPORTED_MODULE_1___default.a.container
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", null, "Invalid ".concat(_lib_brand__WEBPACK_IMPORTED_MODULE_2__["APP_NAME"], " Embed :(")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, 'See ', /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
-  href: "https://docs.turbowarp.org/embedding",
+  href: "https://docs.02engine.org/embedding",
   target: "_blank",
   rel: "noreferrer"
-}, 'docs.turbowarp.org/embedding'), ' for more information. You need to replace the iframe src with the embed page:'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
+}, 'docs.02engine.org/embedding'), ' for more information. You need to replace the iframe src with the embed page:'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
   className: _invalid_embed_css__WEBPACK_IMPORTED_MODULE_1___default.a.code
 }, 'https://turbowarp.org/<project ID>/embed'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, 'Here\'s an example of a full iframe to embed a project:'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
   className: _invalid_embed_css__WEBPACK_IMPORTED_MODULE_1___default.a.code
@@ -27370,7 +27370,7 @@ const CustomOPF = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___defau
       }))
     }
   }),
-  slug: "custom-opf"
+  slug: "opf"
 });
 CustomOPF.propTypes = {
   opsPerFrame: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.number,
@@ -27388,7 +27388,7 @@ const CustomUI = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___defaul
     defaultMessage: "Switches between the custom separated-window stage/targets UI and the original single-window UI.",
     id: "tw.settingsModal.customUIHelp"
   }),
-  slug: "custom-ui"
+  slug: "new-ui"
 });
 CustomUI.propTypes = {
   customUI: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool,
@@ -29830,7 +29830,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
       }
     });
     toolboxWorkspace.registerButtonCallback('OPEN_RETURN_DOCS', () => {
-      window.open('https://docs.turbowarp.org/return', '_blank');
+      window.open('https://docs.02engine.org/return', '_blank');
     });
 
     // Store the xml of the toolbox that is actually rendered.
@@ -48688,7 +48688,7 @@ const fetchProjectToken = async projectId => {
     return metadata.project_token;
   } catch (e) {
     _log__WEBPACK_IMPORTED_MODULE_8__["default"].error(e);
-    throw new Error('Cannot access project token. Project is probably unshared. See https://docs.turbowarp.org/unshared-projects');
+    throw new Error('Cannot access project token. Project is probably unshared. See https://docs.02engine.org/unshared-projects');
   }
 };
 
@@ -56732,17 +56732,17 @@ const Footer = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.c
 }, '02Engine Desktop'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
   href: "https://packager.02engine.02studio.xyz/"
 }, '02Engine Packager'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-  href: "https://docs.turbowarp.org/embedding"
+  href: "https://docs.02engine.org/embedding"
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"], {
   defaultMessage: "Embedding",
   id: "tw.footer.embed"
 })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-  href: "https://docs.turbowarp.org/url-parameters"
+  href: "https://docs.02engine.org/url-parameters"
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"], {
   defaultMessage: "URL Parameters",
   id: "tw.footer.parameters"
 })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-  href: "https://docs.turbowarp.org/"
+  href: "https://docs.02engine.org/"
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"], {
   defaultMessage: "Documentation",
   id: "tw.footer.documentation"
@@ -56864,10 +56864,10 @@ class Interface extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Component {
       id: "tw.unshared.2",
       values: {
         link: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-          href: "https://docs.turbowarp.org/unshared-projects",
+          href: "https://docs.02engine.org/unshared-projects",
           target: "_blank",
           rel: "noopener noreferrer"
-        }, 'https://docs.turbowarp.org/unshared-projects')
+        }, 'https://docs.02engine.org/unshared-projects')
       }
     })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"]
     // eslint-disable-next-line max-len

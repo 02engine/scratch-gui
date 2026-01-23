@@ -22293,7 +22293,7 @@ const DocumentationLink = _ref => {
     children
   } = _ref;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
-    href: "https://docs.turbowarp.org/".concat(slug),
+    href: "https://docs.02engine.org/".concat(slug),
     target: "_blank",
     rel: "noopener noreferrer"
   }, children);
@@ -25331,7 +25331,7 @@ const CustomOPF = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___defau
       }))
     }
   }),
-  slug: "custom-opf"
+  slug: "opf"
 });
 CustomOPF.propTypes = {
   opsPerFrame: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.number,
@@ -25349,7 +25349,7 @@ const CustomUI = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___defaul
     defaultMessage: "Switches between the custom separated-window stage/targets UI and the original single-window UI.",
     id: "tw.settingsModal.customUIHelp"
   }),
-  slug: "custom-ui"
+  slug: "new-ui"
 });
 CustomUI.propTypes = {
   customUI: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool,
@@ -27358,7 +27358,7 @@ class Blocks extends react__WEBPACK_IMPORTED_MODULE_5___default.a.Component {
       }
     });
     toolboxWorkspace.registerButtonCallback('OPEN_RETURN_DOCS', () => {
-      window.open('https://docs.turbowarp.org/return', '_blank');
+      window.open('https://docs.02engine.org/return', '_blank');
     });
 
     // Store the xml of the toolbox that is actually rendered.
@@ -45960,7 +45960,7 @@ const fetchProjectToken = async projectId => {
     return metadata.project_token;
   } catch (e) {
     _log__WEBPACK_IMPORTED_MODULE_8__["default"].error(e);
-    throw new Error('Cannot access project token. Project is probably unshared. See https://docs.turbowarp.org/unshared-projects');
+    throw new Error('Cannot access project token. Project is probably unshared. See https://docs.02engine.org/unshared-projects');
   }
 };
 
