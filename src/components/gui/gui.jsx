@@ -946,9 +946,9 @@ const GUIComponent = props => {
                                     title="Stage"
                                     defaultPosition={stageWindowPosition}
                                     defaultSize={{width: stageWindowSize[0]+2, height: stageWindowSize[1]+122}}
-                                    minSize={{width: stageWindowSize[0]+2, height: stageWindowSize[1]+122}}
-                                    maxSize={{width: stageWindowSize[0]+2, height: stageWindowSize[1]+122}}
-                                    allowResize={false}
+                                    minSize={{width: 200, height: 200}}
+                                    maxSize={{width: 600, height: 800}}
+                                    allowResize={true}
                                     allowMaximize={false}
                                     onDragStop={(id, position) => setStageWindowPosition(position)}
                                     onResizeStop={(id, size) => setStageWindowSize(size)}
