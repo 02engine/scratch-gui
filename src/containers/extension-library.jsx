@@ -704,8 +704,8 @@ const fetchLibrary = async () => {
     const result = [];
     // 扩展来源列表，方便以后添加新的来源
     const sources = [
-        { data: ztdata, name: 'ztengine' },
         { data: twdata, name: 'turbowarp' },
+        { data: ztdata, name: 'ztengine' },
         { data: pmdata, name: 'penguinmod' },
         { data: mistdata, name: 'mist' },
         { data: spdata, name: 'sharkpool' }
