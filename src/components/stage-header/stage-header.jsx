@@ -17,6 +17,10 @@ import largeStageIcon from '!../../lib/tw-recolor/build!./icon--large-stage.svg'
 import smallStageIcon from '!../../lib/tw-recolor/build!./icon--small-stage.svg';
 import fullStageIcon from '!../../lib/tw-recolor/build!./icon--full-stage.svg';
 import settingsIcon from './icon--settings.svg';
+import coordinateOnIcon from './icon--coordinate-on.svg';
+import coordinateOffIcon from './icon--coordinate-off.svg';
+import ZoomInFontIcon from './icon--zoom-in-font.svg';
+import ZoomOutFontIcon from './icon--zoom-out-font.svg';
 
 import styles from './stage-header.css';
 
@@ -192,13 +196,46 @@ const StageHeaderComponent = function (props) {
                 []
             ) : (
                 <div className={styles.stageSizeToggleGroup}>
-                    <div>
-                        <button className={styles.btn} onClick={onTriggerCoordinate}>{isShowCoordinate ? '关闭坐标' : '开启坐标'}</button>
+                    <div className={styles.coordinateControls}>
+                        <Button
+                            className={styles.stageButton}
+                            onClick={onTriggerCoordinate}
+                        >
+                            <img
+                                alt={isShowCoordinate ? '关闭坐标' : '开启坐标'}
+                                className={styles.stageButtonIcon}
+                                draggable={false}
+                                src={isShowCoordinate ? coordinateOnIcon : coordinateOffIcon}
+                                title={isShowCoordinate ? '关闭坐标' : '开启坐标'}
+                            />
+                        </Button>
                         {
                             isShowCoordinate&&stageSizeMode!==STAGE_SIZE_MODES.small ? (
                                 <>
-                                    <button className={styles.btn} onClick={onZoomOutCoordinateFontSize}>缩小字体</button>
-                                    <button className={styles.btn} onClick={onZoomInCoordinateFontSize}>放大字体</button>
+                                    <Button
+                                        className={styles.stageButton}
+                                        onClick={onZoomOutCoordinateFontSize}
+                                    >
+                                        <img
+                                            alt="缩小字体"
+                                            className={styles.stageButtonIcon}
+                                            draggable={false}
+                                            src={ZoomOutFontIcon}
+                                            title="缩小字体"
+                                        />
+                                    </Button>
+                                    <Button
+                                        className={styles.stageButton}
+                                        onClick={onZoomInCoordinateFontSize}
+                                    >
+                                        <img
+                                            alt="放大字体"
+                                            className={styles.stageButtonIcon}
+                                            draggable={false}
+                                            src={ZoomInFontIcon}
+                                            title="放大字体"
+                                        />
+                                    </Button>
                                 </>
                             ) : null
                         }

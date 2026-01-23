@@ -145,10 +145,11 @@ const DraggableWindow = props => {
             const currentWidth = rect.width;
             const currentHeight = rect.height;
             
-            const extBarWidth = 62;
+            const extBarWidth = 61;
+
             const targetX = Math.max(extBarWidth, Math.min(window.innerWidth - currentWidth, newX));
             // 限制窗口不能被拖动到顶栏之上 (顶栏高度为 3rem = 48px)
-            const menuBarHeight = 93; // 3rem = 48px (based on $menu-bar-height in units.css)
+            const menuBarHeight = window.addonAPI.isAddonLoaded('editor-compact').disabled ? 92 : 64; // 3rem = 48px (based on $menu-bar-height in units.css)
             const targetY = Math.max(menuBarHeight, Math.min(window.innerHeight - currentHeight, newY));
             
             const newPosition = {

@@ -71,6 +71,7 @@
     padding: 0.375rem;
     user-select: none;
     cursor: pointer;
+    margin-right: .2rem;
 }
 
 .stage-button:active {
@@ -98,12 +99,93 @@
     padding:4px;
     color:white;
     font-size:10px;
-    background: rgb(23, 23, 23);
-    border: 1px solid rgb(61, 61, 61);
+    background: $ui-secondary;
+    border: 1px solid $ui-black-transparent;
     border-radius: 5px;
+    filter: var(--filter-icon-gray);
 }
 .btn:not(.droppable):dragover {
   display: none; /* 隐藏元素 */
+}
+
+.coordinate-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: $ui-secondary;
+  border-radius: $form-radius;
+  overflow: hidden;
+  margin-right: .2rem;
+}
+
+.coordinate-controls .stage-button {
+  margin: 0;
+  padding: 0.25rem;
+  border: 1px solid $ui-black-transparent;
+  border-radius: 0;
+  background: none;
+  outline: none;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.coordinate-controls .stage-button:not(:last-child) {
+  border-right: none;
+}
+
+[dir="rtl"] .coordinate-controls .stage-button:not(:last-child) {
+  border-left: none;
+  border-right: 1px solid $ui-black-transparent;
+}
+
+.coordinate-controls .stage-button:first-child,
+[dir="rtl"] .coordinate-controls .stage-button:last-child {
+  border-radius: $form-radius 0 0 $form-radius;
+}
+
+.coordinate-controls .stage-button:last-child,
+[dir="rtl"] .coordinate-controls .stage-button:first-child {
+  border-radius: 0 $form-radius $form-radius 0;
+}
+
+.coordinate-controls .stage-button:active {
+  background-color: $looks-transparent;
+}
+
+.coordinate-controls .stage-button:focus::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  bottom: -1px;
+  left: -1px;
+  border: 1px solid $looks-secondary;
+}
+
+.coordinate-controls .stage-button:focus:first-child::before,
+[dir="rtl"] .coordinate-controls .stage-button:focus:last-child::before {
+  border-radius: $form-radius 0 0 $form-radius;
+}
+
+.coordinate-controls .stage-button:focus:last-child::before,
+[dir="rtl"] .coordinate-controls .stage-button:focus:first-child::before {
+  border-radius: 0 $form-radius $form-radius 0;
+}
+
+.coordinate-controls .stage-button img {
+  display: block;
+  transition: transform 0.1s;
+  filter: $filter-icon-gray;
+}
+
+.coordinate-controls .stage-button:active img {
+  filter: none;
 }
 
 .openInEditorContainer {
