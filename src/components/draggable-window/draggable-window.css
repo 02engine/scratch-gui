@@ -33,7 +33,7 @@
 
 .windowContent {
     flex: 1;
-    overflow: hidden;
+    overflow: auto;
     position: relative;
 }
 
