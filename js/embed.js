@@ -12031,14 +12031,14 @@ const GUIComponent = props => {
         height: stageWindowSize[1] + 122
       },
       minSize: {
-        width: stageWindowSize[0] + 2,
-        height: stageWindowSize[1] + 122
+        width: 200,
+        height: 200
       },
       maxSize: {
-        width: stageWindowSize[0] + 2,
-        height: stageWindowSize[1] + 122
+        width: 600,
+        height: 800
       },
-      allowResize: false,
+      allowResize: true,
       allowMaximize: false,
       onDragStop: (id, position) => setStageWindowPosition(position),
       onResizeStop: (id, size) => setStageWindowSize(size),
