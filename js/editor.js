@@ -12588,18 +12588,18 @@ const GUIComponent = props => {
     } = _omit,
     componentProps = _objectWithoutProperties(_omit, _excluded);
   const [stageWindowPosition, setStageWindowPosition] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState({
-    x: 1426,
-    y: 48
-  });
+    x: 350,
+    y: 200
+  }); //其实没什么实际含义
   const [stageWindowSize, setStageWindowSize] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState({
     width: 485,
     height: 483
   });
   const [stageWindowMinimized, setStageWindowMinimized] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState(false);
   const [targetPaneWindowPosition, setTargetPaneWindowPosition] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState({
-    x: 1426,
-    y: 483
-  });
+    x: 400,
+    y: 275
+  }); //也没什么含义
   const [targetPaneWindowSize, setTargetPaneWindowSize] = react__WEBPACK_IMPORTED_MODULE_3___default.a.useState({
     width: 485,
     height: 447
