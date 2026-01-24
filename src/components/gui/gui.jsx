@@ -170,10 +170,10 @@ const GUIComponent = props => {
         ...componentProps
     } = omit(props, 'dispatch');
 
-    const [stageWindowPosition, setStageWindowPosition] = React.useState({x: 1426, y: 48});
+    const [stageWindowPosition, setStageWindowPosition] = React.useState({x: 350, y: 200}); //其实没什么实际含义
     const [stageWindowSize, setStageWindowSize] = React.useState({width: 485, height: 483});
     const [stageWindowMinimized, setStageWindowMinimized] = React.useState(false);
-    const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({x: 1426, y: 483});
+    const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({x: 400, y: 275}); //也没什么含义
     const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({width: 485, height: 447});
     const [targetPaneWindowMinimized, setTargetPaneWindowMinimized] = React.useState(false);
 

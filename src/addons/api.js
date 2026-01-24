@@ -1034,7 +1034,8 @@ window.addonAPI = {
         'find-bar',
         'block-count',
         'data-category-tweaks-v2',
-        'debugger'
+        'debugger',
+        'folders'
     ]),
 
     addToRerunExclude (id) {
