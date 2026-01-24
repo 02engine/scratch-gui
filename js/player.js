@@ -11930,9 +11930,17 @@ const DOMAIN_CONFIGS = {
   },
   '0pen.top': {
     clientId: 'Ov23liAie81Wqd2u9gmK',
-    // 替换为实际的 Client ID
-    backendUrl: 'https://02engine-0pen-oauth-backend.netlify.app/.netlify/functions/token' // 替换为实际的后端地址
+    backendUrl: 'https://02engine-0pen-oauth-backend.netlify.app/.netlify/functions/token'
+  },
+  'org': {
+    clientId: 'Ov23likcDcsmzKCashVK',
+    backendUrl: 'https://02engine-org-oauth-backend.netlify.app/.netlify/functions/token'
   }
+  // 示例：添加新的域名配置
+  // 'your-domain.com': {
+  //     clientId: 'your-github-oauth-app-client-id',
+  //     backendUrl: 'https://your-backend-service.netlify.app/.netlify/functions/token'
+  // }
 };
 
 // 获取当前域名配置
