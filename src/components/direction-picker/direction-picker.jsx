@@ -90,6 +90,7 @@ const DirectionPicker = props => (
             isOpen={props.popoverOpen}
             preferPlace="above"
             onOuterAction={props.onClosePopover}
+            zIndex={99999}
         >
             <BufferedInput
                 small
