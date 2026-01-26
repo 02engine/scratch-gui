@@ -1055,12 +1055,18 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, ".direction-picker_button-row_1DF8U {\n    justify-content: center;\n    margin-bottom: 1rem;\n}\n", ""]);
+exports.push([module.i, ".direction-picker_button-row_1DF8U {\n    justify-content: center;\n    margin-bottom: 1rem;\n}\n\n/* Ensure popover appears above draggable windows by using position: fixed */\n\n.direction-picker_Popover_2C8pf {\n    position: fixed !important;\n    z-index: 99999 !important;\n}\n\n.direction-picker_Popover-body_2hqz2 {\n    position: fixed !important;\n    z-index: 99999 !important;\n}\n\n.direction-picker_Popover-tip_2ONxW {\n    position: fixed !important;\n    z-index: 99999 !important;\n}\n", ""]);
 
 // exports
 exports.locals = {
 	"button-row": "direction-picker_button-row_1DF8U",
-	"buttonRow": "direction-picker_button-row_1DF8U"
+	"buttonRow": "direction-picker_button-row_1DF8U",
+	"Popover": "direction-picker_Popover_2C8pf",
+	"popover": "direction-picker_Popover_2C8pf",
+	"Popover-body": "direction-picker_Popover-body_2hqz2",
+	"popoverBody": "direction-picker_Popover-body_2hqz2",
+	"Popover-tip": "direction-picker_Popover-tip_2ONxW",
+	"popoverTip": "direction-picker_Popover-tip_2ONxW"
 };
 
 /***/ }),
@@ -8598,7 +8604,8 @@ const DirectionPicker = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__
   })),
   isOpen: props.popoverOpen,
   preferPlace: "above",
-  onOuterAction: props.onClosePopover
+  onOuterAction: props.onClosePopover,
+  zIndex: 99999
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(BufferedInput, {
   small: true,
   disabled: props.disabled,
@@ -12035,16 +12042,16 @@ const GUIComponent = props => {
       title: "Stage",
       defaultPosition: stageWindowPosition,
       defaultSize: {
-        width: stageWindowSize[0] + 2,
-        height: stageWindowSize[1] + 122
+        width: stageWindowSize[0] + 4,
+        height: stageWindowSize[1] + 75
       },
       minSize: {
-        width: 200,
-        height: 200
+        width: 480 + 4,
+        height: 360 + 75
       },
       maxSize: {
-        width: 600,
-        height: 800
+        width: 960 + 4,
+        height: 720 + 75
       },
       allowResize: true,
       allowMaximize: false,
@@ -12075,7 +12082,7 @@ const GUIComponent = props => {
       onDragStop: (id, position) => setTargetPaneWindowPosition(position),
       onResizeStop: (id, size) => setTargetPaneWindowSize(size),
       onMinimizeToggle: (id, minimized) => setTargetPaneWindowMinimized(minimized),
-      zIndex: 0,
+      zIndex: 100,
       enableStatePersistence: true
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_target_pane_jsx__WEBPACK_IMPORTED_MODULE_19__["default"], {
       stageSize: stageSize,
@@ -29793,7 +29800,7 @@ const fetchLibrary = async () => {
       }
       return credit.name;
     }),
-    docsURI: extension.docs ? "https://extensions.02engine.02studio.xyz/doc/".concat(extension.slug) : null,
+    docsURI: null,
     samples: extension.samples ? extension.samples.map(sample => ({
       href: "".concat("", "editor?project_url=https://extensions.02engine.02studio.xyz/samples/").concat(encodeURIComponent(sample), ".sb3"),
       text: sample
@@ -29851,7 +29858,7 @@ const fetchLibrary = async () => {
       }
       return credit.name;
     }),
-    docsURI: extension.docs ? "https://extensions.turbowarp.org/".concat(extension.slug) : null,
+    docsURI: null,
     samples: extension.samples ? extension.samples.map(sample => ({
       href: "".concat("", "editor?project_url=https://extensions.turbowarp.org/samples/").concat(encodeURIComponent(sample), ".sb3"),
       text: sample
@@ -29868,8 +29875,8 @@ const fetchLibrary = async () => {
       description: extension.desc,
       descriptionTranslations: {},
       extensionId: slug,
-      extensionURL: "https://sharkpoolextensions.02studio.xyz/".concat(extension.url),
-      iconURL: "https://sharkpoolextensions.02studio.xyz/".concat(extension.banner || 'images/unknown.svg'),
+      extensionURL: "https://sharkpoolextensions.02studio.xyz/extension-code/".concat(extension.url),
+      iconURL: "https://sharkpoolextensions.02studio.xyz/extension-thumbs/".concat(extension.banner || 'images/unknown.svg'),
       tags: [...extension.tags, 'sp'],
       credits: extension.creator.split(', ').map(creator => {
         const match = creator.match(/(.+?)(?:\s*\((.+)\))?$/);
