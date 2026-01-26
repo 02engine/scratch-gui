@@ -2,3 +2,19 @@
     justify-content: center;
     margin-bottom: 1rem;
 }
+
+/* Ensure popover appears above draggable windows by using position: fixed */
+.Popover {
+    position: fixed !important;
+    z-index: 99999 !important;
+}
+
+.Popover-body {
+    position: fixed !important;
+    z-index: 99999 !important;
+}
+
+.Popover-tip {
+    position: fixed !important;
+    z-index: 99999 !important;
+}

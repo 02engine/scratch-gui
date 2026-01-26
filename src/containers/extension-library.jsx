@@ -97,7 +97,7 @@ const fetchLibrary = async () => {
                     }
                     return credit.name;
                 }),
-                docsURI: extension.docs ? `https://extensions.02engine.02studio.xyz/doc/${extension.slug}` : null,
+                docsURI: null,
                 samples: extension.samples ? extension.samples.map(sample => ({
                     href: `${process.env.ROOT}editor?project_url=https://extensions.02engine.02studio.xyz/samples/${encodeURIComponent(sample)}.sb3`,
                     text: sample
@@ -179,7 +179,7 @@ const fetchLibrary = async () => {
                     }
                     return credit.name;
                 }),
-                docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
+                docsURI: null,
                 samples: extension.samples ? extension.samples.map(sample => ({
                     href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
                     text: sample
@@ -199,8 +199,8 @@ const fetchLibrary = async () => {
                 description: extension.desc,
                 descriptionTranslations: {},
                 extensionId: slug,
-                extensionURL: `https://sharkpoolextensions.02studio.xyz/${extension.url}`,
-                iconURL: `https://sharkpoolextensions.02studio.xyz/${extension.banner || 'images/unknown.svg'}`,
+                extensionURL: `https://sharkpoolextensions.02studio.xyz/extension-code/${extension.url}`,
+                iconURL: `https://sharkpoolextensions.02studio.xyz/extension-thumbs/${extension.banner || 'images/unknown.svg'}`,
                 tags: [...extension.tags, 'sp'],
                 credits: extension.creator.split(', ').map(creator => {
                     const match = creator.match(/(.+?)(?:\s*\((.+)\))?$/);
