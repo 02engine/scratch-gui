@@ -19283,7 +19283,7 @@ const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["defineMessages"
   }
 });
 const Packager = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
-  href: "https://packager.02engine.02studio.xyz/",
+  href: "https://packager.02engine.org/",
   target: "_blank",
   rel: "noopener noreferrer"
 }, '02Engine Packager');
@@ -52308,7 +52308,7 @@ function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t =
 
 
 
-const PACKAGER_URL = 'https://packager.02engine.02studio.xyz/';
+const PACKAGER_URL = 'https://packager.02engine.org/';
 const PACKAGER_ORIGIN = PACKAGER_URL;
 const PackagerIntegrationHOC = function PackagerIntegrationHOC(WrappedComponent) {
   class PackagerIntegrationComponent extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
@@ -56349,7 +56349,7 @@ const Footer = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.c
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
   href: "https://02engine.02studio.xyz/"
 }, '02Engine Desktop'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-  href: "https://packager.02engine.02studio.xyz/"
+  href: "https://packager.02engine.org/"
 }, '02Engine Packager'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
   href: "https://docs.02engine.org/embedding"
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_5__["FormattedMessage"], {

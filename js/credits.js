@@ -1660,9 +1660,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_brand__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_lib_brand__WEBPACK_IMPORTED_MODULE_4__);
 /* harmony import */ var _lib_themes_guiHelpers__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../lib/themes/guiHelpers */ "./src/lib/themes/guiHelpers.js");
 /* harmony import */ var _lib_themes_themePersistance__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../lib/themes/themePersistance */ "./src/lib/themes/themePersistance.js");
-/* harmony import */ var _users__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./users */ "./src/playground/credits/users.js");
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-
 
 
 
@@ -1675,6 +1673,23 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 
 Object(_lib_themes_guiHelpers__WEBPACK_IMPORTED_MODULE_5__["applyGuiColors"])(Object(_lib_themes_themePersistance__WEBPACK_IMPORTED_MODULE_6__["detectTheme"])());
 document.documentElement.lang = 'en';
+const Contributors = () => {
+  const [users, setUsers] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])([]);
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    fetch('./credits/contributors.json').then(r => r.json()).then(data => {
+      setUsers(data.map(u => ({
+        image: u.avatar,
+        text: u.login,
+        href: u.url
+      })));
+    }).catch(err => {
+      console.warn('[Credits] failed to load contributors', err);
+    });
+  }, []);
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(UserList, {
+    users: users
+  });
+};
 const User = _ref => {
   let {
     image,
@@ -1691,7 +1706,8 @@ const User = _ref => {
     className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.userImage,
     src: image,
     width: "60",
-    height: "60"
+    height: "60",
+    alt: ""
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.userInfo
   }, text));
@@ -1708,321 +1724,50 @@ const UserList = _ref2 => {
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.users
   }, users.map((data, index) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(User, _extends({
-    key: index
+    key: "".concat(data.text, "-").concat(index)
   }, data))));
 };
 UserList.propTypes = {
   users: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.arrayOf(prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.object)
 };
-const Credits = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
-  className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.main
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("header", {
-  className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.headerContainer
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
-  className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.headerText
-}, _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " Credits")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, "The ", _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " project is made possible by the work of many volunteers.")), _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"] !== '02Engine' &&
-/*#__PURE__*/
-// Be kind and considerate. Don't remove this :)
-react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "02Engine"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " is based on ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
-  href: "https://editor.02engine.02studio.xyz/"
-}, "02Engine"), ".")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Scratch"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " is based on the work of the ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
-  href: "https://scratch.mit.edu/credits"
-}, "Scratch contributors"), " but is not endorsed by Scratch in any way."), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
-  href: "https://scratch.mit.edu/donate"
-}, "Donate to support Scratch."))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Contributors"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(UserList, {
-  users: _users__WEBPACK_IMPORTED_MODULE_7__["default"].contributors
-})), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Addons"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(UserList, {
-  users: _users__WEBPACK_IMPORTED_MODULE_7__["default"].addonDevelopers
-})), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "TurboWarp Extension Gallery"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(UserList, {
-  users: _users__WEBPACK_IMPORTED_MODULE_7__["default"].extensionDevelopers
-})), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Documentation"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(UserList, {
-  users: _users__WEBPACK_IMPORTED_MODULE_7__["default"].docs
-})), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Translators"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, "More than 100 people have helped translate ", _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " and its addons into many languages \u2014 far more than we could hope to list here.")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("i", null, "Individual contributors are listed in no particular order. The order is randomized each visit."))));
+const Credits = () => {
+  const [contributors, setContributors] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])([]);
+  const [loading, setLoading] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(true);
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    fetch('/credits/contributors.json').then(res => {
+      if (!res.ok) throw new Error('Failed to load contributors');
+      return res.json();
+    }).then(data => {
+      const mapped = data.map(user => ({
+        image: user.avatar,
+        text: user.login,
+        href: user.url
+      }));
+
+      // 可选：每次刷新随机顺序（与你页面底部说明一致）
+      mapped.sort(() => Math.random() - 0.5);
+      setContributors(mapped);
+    }).catch(err => {
+      console.error('[Credits] Failed to load contributors:', err);
+    }).finally(() => {
+      setLoading(false);
+    });
+  }, []);
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
+    className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.main
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("header", {
+    className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.headerContainer
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
+    className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.headerText
+  }, _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " Credits")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, "The ", _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " project is made possible by the work of many volunteers.")), _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"] !== '02Engine' && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "02Engine"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " is based on ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
+    href: "https://editor.02engine.org/"
+  }, "02Engine"), ".")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Scratch"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, _lib_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " is based on the work of the ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
+    href: "https://scratch.mit.edu/credits"
+  }, "Scratch contributors"), " but is not endorsed by Scratch in any way."), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
+    href: "https://scratch.mit.edu/donate"
+  }, "Donate to support Scratch."))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Contributors"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Contributors, null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("i", null, "Individual contributors are listed in no particular order. The order is randomized each visit."))));
+};
 Object(_app_target__WEBPACK_IMPORTED_MODULE_2__["default"])(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Credits, null));
-
-/***/ }),
-
-/***/ "./src/playground/credits/users.js":
-/*!*****************************************!*\
-  !*** ./src/playground/credits/users.js ***!
-  \*****************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-const shuffle = list => {
-  for (let i = list.length - 1; i > 0; i--) {
-    const random = Math.floor(Math.random() * (i + 1));
-    const tmp = list[i];
-    list[i] = list[random];
-    list[random] = tmp;
-  }
-  return list;
-};
-const fromHardcoded = _ref => {
-  let {
-    userID = '0',
-    username
-  } = _ref;
-  const result = {
-    image: "https://trampoline.turbowarp.org/avatars/".concat(userID),
-    text: username
-  };
-  if (username && userID !== '0') {
-    result.href = "https://scratch.mit.edu/users/".concat(username, "/");
-  }
-  return result;
-};
-
-// The lists below are in no particular order.
-
-const contributors = [{
-  userID: '41219524',
-  username: 'CubesterYT'
-}, {
-  userID: '64691048',
-  username: 'CST1229'
-}, {
-  userID: '128887584',
-  username: 'FurryR'
-}, {
-  userID: '17340565',
-  username: 'GarboMuffin'
-}, {
-  userID: '12498592',
-  username: 'LilyMakesThings'
-}, {
-  userID: '105362329',
-  username: 'TrueFantom'
-}, {
-  userID: '9636514',
-  username: 'Tacodiva7729'
-}, {
-  userID: '141930175',
-  username: 'SimonShiki'
-}, {
-  userID: '34824813',
-  username: 'Geotale'
-}, {
-  username: 'Wowfunhappy'
-}].map(fromHardcoded);
-const addonDevelopers = [{
-  userID: '34018398',
-  username: 'Jeffalo'
-}, {
-  userID: '64184234',
-  username: 'ErrorGamer2000'
-}, {
-  userID: '41616512',
-  username: 'pufferfish101007'
-}, {
-  userID: '61409215',
-  username: 'TheColaber'
-}, {
-  userID: '1882674',
-  username: 'griffpatch'
-}, {
-  userID: '10817178',
-  username: 'apple502j'
-}, {
-  userID: '16947341',
-  username: '--Explosion--'
-}, {
-  userID: '14880401',
-  username: 'Sheep_maker'
-}, {
-  userID: '9981676',
-  username: 'NitroCipher'
-}, {
-  userID: '2561680',
-  username: 'lisa_wolfgang'
-}, {
-  userID: '60000111',
-  username: 'GDUcrash'
-}, {
-  userID: '4648559',
-  username: 'World_Languages'
-}, {
-  userID: '17340565',
-  username: 'GarboMuffin'
-}, {
-  userID: '5354974',
-  username: 'Chrome_Cat'
-}, {
-  userID: '34455896',
-  username: 'summerscar'
-}, {
-  userID: '55742784',
-  username: 'RedGuy7'
-}, {
-  userID: '9636514',
-  username: 'Tacodiva7729'
-}, {
-  userID: '14792872',
-  username: '_nix'
-}, {
-  userID: '30323614',
-  username: 'BarelySmooth'
-}, {
-  userID: '64691048',
-  username: 'CST1229'
-}, {
-  username: 'DNin01'
-}, {
-  userID: '16426047',
-  username: 'Maximouse'
-}, {
-  username: 'retronbv'
-}, {
-  username: 'GrahamSH'
-}, {
-  userID: '22529928',
-  username: 'simiagain'
-}, {
-  username: 'Secret-chest'
-}, {
-  userID: '11677378',
-  username: 'Mr_MPH'
-}, {
-  username: 'TheKodeToad'
-}].map(fromHardcoded);
-
-// generated by TurboWarp/extensions/scripts/get-credits-for-gui.js
-const extensionDevelopers = [{
-  username: '-SIPC-'
-}, {
-  username: '0832'
-}, {
-  userID: '74246431',
-  username: '0znzw'
-}, {
-  userID: '17235330',
-  username: 'aleb2005'
-}, {
-  username: 'BlueDome77'
-}, {
-  username: 'ClaytonTDM'
-}, {
-  userID: '37070511',
-  username: 'cs2627883'
-}, {
-  userID: '64691048',
-  username: 'CST1229'
-}, {
-  userID: '41219524',
-  username: 'CubesterYT'
-}, {
-  userID: '33988895',
-  username: 'D-ScratchNinja'
-}, {
-  username: 'DT'
-}, {
-  userID: '1882674',
-  username: 'griffpatch'
-}, {
-  userID: '41876695',
-  username: 'JeremyGamer13'
-}, {
-  userID: '12498592',
-  username: 'LilyMakesThings'
-}, {
-  username: 'MikeDEV'
-}, {
-  userID: '62325737',
-  username: 'mybearworld'
-}, {
-  userID: '62950341',
-  username: 'NamelessCat'
-}, {
-  username: 'NOname-awa'
-}, {
-  userID: '26959223',
-  username: 'pinksheep2917'
-}, {
-  username: 'pumpkinhasapatch'
-}, {
-  userID: '126715567',
-  username: 'PwLDev'
-}, {
-  userID: '139929771',
-  username: 'qxsck'
-}, {
-  userID: '29118689',
-  username: 'RedMan13'
-}, {
-  userID: '80038021',
-  username: 'RixTheTyrunt'
-}, {
-  userID: '45777723',
-  username: 'DemonX5'
-}, {
-  userID: '14880401',
-  username: 'Sheep_maker'
-}, {
-  userID: '103496265',
-  username: 'shreder95ua'
-}, {
-  userID: '72467731',
-  username: 'Skyhigh173'
-}, {
-  userID: '52066199',
-  username: 'softed'
-}, {
-  username: 'TheShovel'
-}, {
-  userID: '105362329',
-  username: 'TrueFantom'
-}, {
-  userID: '19133274',
-  username: 'Vadik1'
-}, {
-  username: 'veggiecan0419'
-}, {
-  userID: '82486672',
-  username: 'lolecksdeehaha'
-}, {
-  userID: '3318598',
-  username: 'plant2014'
-}, {
-  userID: '128778351',
-  username: 'XmerOriginals'
-}, {
-  username: 'ZXMushroom63'
-}].map(fromHardcoded);
-const docs = [{
-  userID: '12498592',
-  username: 'LilyMakesThings'
-}, {
-  username: 'DNin01'
-}, {
-  username: 'Samq64'
-}, {
-  username: '61080GBA'
-}, {
-  username: 'adazem009'
-}, {
-  username: 'sajtosteszta32'
-}, {
-  username: 'yoyomonem'
-}, {
-  userID: '55742784',
-  username: 'RedGuy7'
-}, {
-  username: '28klotlucas2'
-}, {
-  username: 'PPPDUD'
-}, {
-  username: 'BackThePortal'
-}, {
-  username: 'Naleksuh'
-}].map(fromHardcoded);
-/* harmony default export */ __webpack_exports__["default"] = ({
-  contributors: shuffle(contributors),
-  addonDevelopers: shuffle(addonDevelopers),
-  extensionDevelopers: shuffle(extensionDevelopers),
-  docs: shuffle(docs)
-});
 
 /***/ })
 

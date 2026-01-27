@@ -18028,7 +18028,7 @@ const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["defineMessages"
   }
 });
 const Packager = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
-  href: "https://packager.02engine.02studio.xyz/",
+  href: "https://packager.02engine.org/",
   target: "_blank",
   rel: "noopener noreferrer"
 }, '02Engine Packager');
