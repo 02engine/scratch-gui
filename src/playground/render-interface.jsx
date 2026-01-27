@@ -140,7 +140,7 @@ const Footer = () => (
                         {/* Do not translate */}
                         {'02Engine Desktop'}
                     </a>
-                    <a href="https://packager.02engine.02studio.xyz/">
+                    <a href="https://packager.02engine.org/">
                         {/* Do not translate */}
                         {'02Engine Packager'}
                     </a>
