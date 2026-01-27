@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import log from './log';
 import {getIsShowingProject} from '../reducers/project-state';
 
-const PACKAGER_URL = 'https://packager.02engine.02studio.xyz/';
+const PACKAGER_URL = 'https://packager.02engine.org/';
 const PACKAGER_ORIGIN = PACKAGER_URL;
 
 const PackagerIntegrationHOC = function (WrappedComponent) {

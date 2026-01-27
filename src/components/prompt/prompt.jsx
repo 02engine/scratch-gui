@@ -43,7 +43,7 @@ const messages = defineMessages({
 
 const Packager = () => (
     <a
-        href="https://packager.02engine.02studio.xyz/"
+        href="https://packager.02engine.org/"
         target="_blank"
         rel="noopener noreferrer"
     >
