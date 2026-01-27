@@ -150,8 +150,7 @@ const Credits = () => {
             <section>
                 <p>
                     <i>
-                        Individual contributors are listed in no particular order.
-                        The order is randomized each visit.
+                        Individual contributors are listed in particular order of contribution.
                     </i>
                 </p>
             </section>
