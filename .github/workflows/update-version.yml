@@ -1,4 +1,4 @@
-name: update versions.json
+name: Update versions.json
 
 on:
   schedule:
@@ -58,7 +58,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: version-info                    # 你可以改回 cf-page
+          branch: cf-page                   # 你可以改回 cf-page
           folder: ./ver                               # versions.json 在根目录
           target-folder: .                        # 放根目录（可改成 data/ 等）
           clean: false                             # 清空旧文件，只保留最新 JSON
