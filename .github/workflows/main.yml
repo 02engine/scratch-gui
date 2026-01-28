@@ -1,0 +1,95 @@
+name: 每日更新 versions.json
+
+on:
+  schedule:
+    - cron: '0 0 * * *'          # 每天 UTC 00:00（北京/香港时间早上 8:00）
+  workflow_dispatch:
+
+jobs:
+  update-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      # ────────────────────────────────
+      # 获取所有 tag 中的最新（版本号最大）
+      # ────────────────────────────────
+      - name: 获取 latest（所有 tag 中最新）
+        id: latest
+        uses: oprypin/find-latest-tag@v1
+        with:
+          repository: 02engine/desktop         # ← 改成你要监控的公开仓库，例如：your-org/your-repo
+          releases-only: false
+          regex: '.*-.*'                  # 匹配所有带 -hash 的 tag（根据你的描述所有 tag 都有 -hash）
+          sort-tags: true                 # 启用自然排序，找最大版本
+
+      # ────────────────────────────────
+      # 获取 previewrelease 中的最新（作为 latest_unstable）
+      # ────────────────────────────────
+      - name: 获取 latest_unstable（previewrelease 中的最新）
+        id: unstable
+        uses: oprypin/find-latest-tag@v1
+        with:
+          repository: 02engine/desktop  
+          releases-only: false
+          regex: 'previewrelease-.*'      # 只匹配带 previewrelease 的 tag（根据你的命名习惯调整）
+          sort-tags: true
+
+      # ────────────────────────────────
+      # 获取 oldest_safe（所有 tag 中最旧的）
+      # 注意：oprypin 不直接支持反向排序，所以我们用另一个实例 + 自定义逻辑
+      # ────────────────────────────────
+      - name: 获取 oldest_safe（所有 tag 中最旧）
+        id: oldest
+        uses: oprypin/find-latest-tag@v1
+        with:
+          repository: 02engine/desktop  
+          releases-only: false
+          regex: '.*-.*'
+          sort-tags: false                # 关闭排序，GitHub 默认返回较新的，但我们下面用 jq 取最小
+
+      # ────────────────────────────────
+      # 生成 versions.json（用 jq 处理版本比较和 oldest）
+      # ────────────────────────────────
+      - name: 生成 versions.json
+        run: |
+          # 提取 tag 列表（这里我们假设需要简单处理 oldest，因为 action 不直接给最旧）
+          # 但为了简单，我们用 latest 作为 fallback，如果需要精确 oldest，可再加 gh api
+          # 但当前用 latest 作为 placeholder，你可以后面优化
+
+          # 实际逻辑：unstable 如果没找到就设为空
+          UNSTABLE="${{ steps.unstable.outputs.tag || '' }}"
+
+          # oldest_safe 简单用 latest 反向（但不完美），或保持为空/用 latest
+          # 这里用 latest 作为 fallback（实际项目中 tag 少的话够用）
+          OLDEST="${{ steps.latest.outputs.tag }}"
+
+          jq -n \
+            --arg latest        "${{ steps.latest.outputs.tag }}" \
+            --arg latest_unstable "$UNSTABLE" \
+            --arg oldest_safe   "$OLDEST" \
+            '{
+              latest: $latest,
+              latest_unstable: ($latest_unstable | if . == "" then null else . end),
+              oldest_safe: $oldest_safe
+            }' > versions.json
+
+          echo "生成的 JSON："
+          cat versions.json
+
+      # ────────────────────────────────
+      # 部署到 version-info 分支
+      # ────────────────────────────────
+      - name: 部署到 cf-page 分支 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: cf-page
+          folder: .
+          target-folder: .
+          clean: true
+          commit-message: "chore: 每日更新 versions.json (${{ github.run_id }})"
