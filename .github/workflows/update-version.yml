@@ -1,4 +1,4 @@
-name: 每日更新 versions.json
+name: update versions.json
 
 on:
   schedule:
@@ -28,6 +28,9 @@ jobs:
       # 生成 versions.json（latest_unstable 永久为空，oldest_safe 固定值）
       - name: 生成 versions.json
         run: |
+
+          mkdir -p ver
+
           # latest 来自 action 输出
           LATEST="${{ steps.latest.outputs.tag }}"
 
@@ -45,18 +48,18 @@ jobs:
               latest: $latest,
               latest_unstable: ($unstable | if . == "" then null else . end),
               oldest_safe: $oldest
-            }' > versions.json
+            }' > ./ver/versions.json
 
           echo "生成的 JSON 内容："
-          cat versions.json
+          cat ./ver/versions.json
 
-      # 部署单个文件到 version-info 分支（类似 cf-page 部署）
-      - name: 部署到 version-info 分支 🚀
+      # 部署单个文件到 cf-page 分支
+      - name: 部署到 cf-page 分支 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: version-info                    # 你可以改回 cf-page
-          folder: .                               # versions.json 在根目录
+          folder: ./ver                               # versions.json 在根目录
           target-folder: .                        # 放根目录（可改成 data/ 等）
-          clean: true                             # 清空旧文件，只保留最新 JSON
+          clean: false                             # 清空旧文件，只保留最新 JSON
           commit-message: "chore: 每日更新 versions.json (${{ github.run_id }})"
