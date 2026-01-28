@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-01-27T14:33:03.567Z
+// Synced at: 2026-01-28T12:20:18.184Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -24,6 +24,13 @@ export default [
         banner: "TheShovel/thumbnail-shoveldebugger.avif",
         isGitHub: true,
         creator: "TheShovel",
+    },
+    {
+        name: "Storage Plus",
+        description: "A storage extension with many more features. Featuring server storage (with a fast server), local storage and more!",
+        code: "Gen1x/storage_plus.js",
+        banner: "Gen1x/storage_plus.avif",
+        creator: "G1nX",
     },
     {
         name: "MotionSprite",
