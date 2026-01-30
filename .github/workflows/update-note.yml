@@ -1,0 +1,70 @@
+name: 每日生成 TurboWarp Desktop 更新日志 JSON
+
+on:
+  schedule:
+    - cron: '0 3 * * *'          # 每天 UTC 03:00（北京/香港时间上午 11:00）
+  workflow_dispatch:             # 支持手动触发
+
+jobs:
+  generate-changelog:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read             # 只读 Releases 即可
+
+    steps:
+      - name: 检出仓库（可选，用于后续 commit）
+        uses: actions/checkout@v4
+
+      # 使用 gh api 获取所有 Releases（公开仓库无需 token）
+      - name: 获取所有 Releases 并处理成 JSON
+        run: |
+          # 获取 Releases 列表（按发布时间降序）
+          gh api \
+            --paginate \
+            repos/02engine/desktop/releases \
+            --jq '
+              map({
+                tag: .tag_name,
+                # 提取纯版本号：去掉 v 前缀 + 去掉 -hash 部分
+                version: (
+                  .tag_name 
+                  | sub("^v"; "") 
+                  | sub("-[0-9a-f]+$"; "")
+                ),
+                # 日期：取 published_at 前 10 位（YYYY-MM-DD）
+                date: (.published_at | .[0:10]),
+                # notes：body 按行分割，过滤掉空行 + 常见纯 tag/版本标题行
+                notes: (
+                  .body 
+                  | split("\n") 
+                  | map(select(
+                      . != "" and 
+                      (. | test("^v?\\d+\\.\\d+\\.\\d+(-[0-9a-f]+)?$"; "i") | not) and
+                      (. | test("^Release v?\\d+\\.\\d+\\.\\d+"; "i") | not) and
+                      (. | test("^\\s*$") | not)
+                    ))
+                )
+              })
+              # 只保留有有效 version 的条目（避免意外）
+              | map(select(.version | test("^\\d+\\.\\d+\\.\\d+$")))
+              # 按日期降序（最新在前）
+              | sort_by(.date) | reverse
+            ' > changelog.json
+
+          # 打印出来方便调试
+          echo "生成的 changelog.json 前几行："
+          head -n 20 changelog.json || cat changelog.json
+
+      # （可选）提交到另一个分支，例如 version-info 或 gh-pages
+      - name: 部署 JSON 到 version-info 分支
+        if: always()  # 即使上面有警告也尝试提交
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: version-info                 # 可改为 cf-page / gh-pages 等
+          folder: .                            # 当前目录
+          target-folder: .                     # 放根目录（或改成 updates/）
+          clean: true                          # 清空旧文件，只保留最新 JSON
+          clean-exclude: |
+            README.md
+          commit-message: "chore: 更新 TurboWarp Desktop 更新日志 JSON (${{ github.run_id }})"
