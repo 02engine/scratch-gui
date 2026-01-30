@@ -2,6 +2,7 @@
 
 const addons = [
     'cat-blocks',
+    'coder-style',
     'editor-devtools',
     'find-bar',
     'middle-click-popup',
