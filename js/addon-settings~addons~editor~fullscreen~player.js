@@ -509,6 +509,73 @@ const manifest = {
 
 /***/ }),
 
+/***/ "./src/addons/addons/coder-style/_manifest_entry.js":
+/*!**********************************************************!*\
+  !*** ./src/addons/addons/coder-style/_manifest_entry.js ***!
+  \**********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+const manifest = {
+  editorOnly: true,
+  name: "Coder Style",
+  description: "Ultra-minimalist block style: colored text only, no visible borders, parentheses style for inputs",
+  credits: [{
+    name: "02engine"
+  }],
+  dynamicDisable: true,
+  userscripts: [{
+    url: "userscript.js"
+  }],
+  userstyles: [{
+    url: "coder-style.css"
+  }],
+  settings: [{
+    dynamic: true,
+    name: "Block opacity",
+    id: "block-opacity",
+    type: "number",
+    default: 0.02,
+    min: 0.01,
+    max: 0.1,
+    step: 0.01
+  }, {
+    dynamic: true,
+    name: "C-shape block opacity",
+    id: "c-shape-opacity",
+    type: "number",
+    default: 0.08,
+    min: 0.01,
+    max: 0.2,
+    step: 0.01
+  }, {
+    dynamic: true,
+    name: "Boolean block opacity",
+    id: "boolean-opacity",
+    type: "number",
+    default: 0.15,
+    min: 0.05,
+    max: 0.3,
+    step: 0.01
+  }, {
+    dynamic: true,
+    name: "Input block opacity",
+    id: "input-opacity",
+    type: "number",
+    default: 0.12,
+    min: 0.05,
+    max: 0.3,
+    step: 0.01
+  }],
+  tags: ["theme", "blocks"],
+  enabledByDefault: false
+};
+/* harmony default export */ __webpack_exports__["default"] = (manifest);
+
+/***/ }),
+
 /***/ "./src/addons/addons/color-picker/_manifest_entry.js":
 /*!***********************************************************!*\
   !*** ./src/addons/addons/color-picker/_manifest_entry.js ***!
@@ -4695,87 +4762,89 @@ class EventTargetShim {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _addons_cat_blocks_manifest_entry_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../addons/cat-blocks/_manifest_entry.js */ "./src/addons/addons/cat-blocks/_manifest_entry.js");
-/* harmony import */ var _addons_editor_devtools_manifest_entry_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../addons/editor-devtools/_manifest_entry.js */ "./src/addons/addons/editor-devtools/_manifest_entry.js");
-/* harmony import */ var _addons_find_bar_manifest_entry_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../addons/find-bar/_manifest_entry.js */ "./src/addons/addons/find-bar/_manifest_entry.js");
-/* harmony import */ var _addons_middle_click_popup_manifest_entry_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../addons/middle-click-popup/_manifest_entry.js */ "./src/addons/addons/middle-click-popup/_manifest_entry.js");
-/* harmony import */ var _addons_jump_to_def_manifest_entry_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../addons/jump-to-def/_manifest_entry.js */ "./src/addons/addons/jump-to-def/_manifest_entry.js");
-/* harmony import */ var _addons_reorder_custom_inputs_manifest_entry_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../addons/reorder-custom-inputs/_manifest_entry.js */ "./src/addons/addons/reorder-custom-inputs/_manifest_entry.js");
-/* harmony import */ var _addons_editor_searchable_dropdowns_manifest_entry_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../addons/editor-searchable-dropdowns/_manifest_entry.js */ "./src/addons/addons/editor-searchable-dropdowns/_manifest_entry.js");
-/* harmony import */ var _addons_data_category_tweaks_v2_manifest_entry_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../addons/data-category-tweaks-v2/_manifest_entry.js */ "./src/addons/addons/data-category-tweaks-v2/_manifest_entry.js");
-/* harmony import */ var _addons_block_palette_icons_manifest_entry_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../addons/block-palette-icons/_manifest_entry.js */ "./src/addons/addons/block-palette-icons/_manifest_entry.js");
-/* harmony import */ var _addons_hide_flyout_manifest_entry_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../addons/hide-flyout/_manifest_entry.js */ "./src/addons/addons/hide-flyout/_manifest_entry.js");
-/* harmony import */ var _addons_mediarecorder_manifest_entry_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../addons/mediarecorder/_manifest_entry.js */ "./src/addons/addons/mediarecorder/_manifest_entry.js");
-/* harmony import */ var _addons_drag_drop_manifest_entry_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../addons/drag-drop/_manifest_entry.js */ "./src/addons/addons/drag-drop/_manifest_entry.js");
-/* harmony import */ var _addons_debugger_manifest_entry_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../addons/debugger/_manifest_entry.js */ "./src/addons/addons/debugger/_manifest_entry.js");
-/* harmony import */ var _addons_pause_manifest_entry_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../addons/pause/_manifest_entry.js */ "./src/addons/addons/pause/_manifest_entry.js");
-/* harmony import */ var _addons_mute_project_manifest_entry_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../addons/mute-project/_manifest_entry.js */ "./src/addons/addons/mute-project/_manifest_entry.js");
-/* harmony import */ var _addons_vol_slider_manifest_entry_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../addons/vol-slider/_manifest_entry.js */ "./src/addons/addons/vol-slider/_manifest_entry.js");
-/* harmony import */ var _addons_clones_manifest_entry_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../addons/clones/_manifest_entry.js */ "./src/addons/addons/clones/_manifest_entry.js");
-/* harmony import */ var _addons_mouse_pos_manifest_entry_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../addons/mouse-pos/_manifest_entry.js */ "./src/addons/addons/mouse-pos/_manifest_entry.js");
-/* harmony import */ var _addons_color_picker_manifest_entry_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../addons/color-picker/_manifest_entry.js */ "./src/addons/addons/color-picker/_manifest_entry.js");
-/* harmony import */ var _addons_remove_sprite_confirm_manifest_entry_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../addons/remove-sprite-confirm/_manifest_entry.js */ "./src/addons/addons/remove-sprite-confirm/_manifest_entry.js");
-/* harmony import */ var _addons_block_count_manifest_entry_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../addons/block-count/_manifest_entry.js */ "./src/addons/addons/block-count/_manifest_entry.js");
-/* harmony import */ var _addons_onion_skinning_manifest_entry_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../addons/onion-skinning/_manifest_entry.js */ "./src/addons/addons/onion-skinning/_manifest_entry.js");
-/* harmony import */ var _addons_paint_snap_manifest_entry_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../addons/paint-snap/_manifest_entry.js */ "./src/addons/addons/paint-snap/_manifest_entry.js");
-/* harmony import */ var _addons_default_costume_editor_color_manifest_entry_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../addons/default-costume-editor-color/_manifest_entry.js */ "./src/addons/addons/default-costume-editor-color/_manifest_entry.js");
-/* harmony import */ var _addons_bitmap_copy_manifest_entry_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../addons/bitmap-copy/_manifest_entry.js */ "./src/addons/addons/bitmap-copy/_manifest_entry.js");
-/* harmony import */ var _addons_2d_color_picker_manifest_entry_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../addons/2d-color-picker/_manifest_entry.js */ "./src/addons/addons/2d-color-picker/_manifest_entry.js");
-/* harmony import */ var _addons_paint_skew_manifest_entry_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ../addons/paint-skew/_manifest_entry.js */ "./src/addons/addons/paint-skew/_manifest_entry.js");
-/* harmony import */ var _addons_better_img_uploads_manifest_entry_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ../addons/better-img-uploads/_manifest_entry.js */ "./src/addons/addons/better-img-uploads/_manifest_entry.js");
-/* harmony import */ var _addons_pick_colors_from_stage_manifest_entry_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ../addons/pick-colors-from-stage/_manifest_entry.js */ "./src/addons/addons/pick-colors-from-stage/_manifest_entry.js");
-/* harmony import */ var _addons_custom_block_shape_manifest_entry_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ../addons/custom-block-shape/_manifest_entry.js */ "./src/addons/addons/custom-block-shape/_manifest_entry.js");
-/* harmony import */ var _addons_editor_square_inputs_manifest_entry_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../addons/editor-square-inputs/_manifest_entry.js */ "./src/addons/addons/editor-square-inputs/_manifest_entry.js");
-/* harmony import */ var _addons_zebra_striping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../addons/zebra-striping/_manifest_entry.js */ "./src/addons/addons/zebra-striping/_manifest_entry.js");
-/* harmony import */ var _addons_editor_compact_manifest_entry_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ../addons/editor-compact/_manifest_entry.js */ "./src/addons/addons/editor-compact/_manifest_entry.js");
-/* harmony import */ var _addons_custom_menu_bar_manifest_entry_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ../addons/custom-menu-bar/_manifest_entry.js */ "./src/addons/addons/custom-menu-bar/_manifest_entry.js");
-/* harmony import */ var _addons_editor_theme3_manifest_entry_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../addons/editor-theme3/_manifest_entry.js */ "./src/addons/addons/editor-theme3/_manifest_entry.js");
-/* harmony import */ var _addons_custom_block_text_manifest_entry_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../addons/custom-block-text/_manifest_entry.js */ "./src/addons/addons/custom-block-text/_manifest_entry.js");
-/* harmony import */ var _addons_editor_colored_context_menus_manifest_entry_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../addons/editor-colored-context-menus/_manifest_entry.js */ "./src/addons/addons/editor-colored-context-menus/_manifest_entry.js");
-/* harmony import */ var _addons_editor_stage_left_manifest_entry_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../addons/editor-stage-left/_manifest_entry.js */ "./src/addons/addons/editor-stage-left/_manifest_entry.js");
-/* harmony import */ var _addons_editor_buttons_reverse_order_manifest_entry_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../addons/editor-buttons-reverse-order/_manifest_entry.js */ "./src/addons/addons/editor-buttons-reverse-order/_manifest_entry.js");
-/* harmony import */ var _addons_variable_manager_manifest_entry_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../addons/variable-manager/_manifest_entry.js */ "./src/addons/addons/variable-manager/_manifest_entry.js");
-/* harmony import */ var _addons_search_sprites_manifest_entry_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ../addons/search-sprites/_manifest_entry.js */ "./src/addons/addons/search-sprites/_manifest_entry.js");
-/* harmony import */ var _addons_sprite_properties_manifest_entry_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ../addons/sprite-properties/_manifest_entry.js */ "./src/addons/addons/sprite-properties/_manifest_entry.js");
-/* harmony import */ var _addons_gamepad_manifest_entry_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ../addons/gamepad/_manifest_entry.js */ "./src/addons/addons/gamepad/_manifest_entry.js");
-/* harmony import */ var _addons_editor_sounds_manifest_entry_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../addons/editor-sounds/_manifest_entry.js */ "./src/addons/addons/editor-sounds/_manifest_entry.js");
-/* harmony import */ var _addons_folders_manifest_entry_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ../addons/folders/_manifest_entry.js */ "./src/addons/addons/folders/_manifest_entry.js");
-/* harmony import */ var _addons_block_switching_manifest_entry_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ../addons/block-switching/_manifest_entry.js */ "./src/addons/addons/block-switching/_manifest_entry.js");
-/* harmony import */ var _addons_load_extensions_manifest_entry_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ../addons/load-extensions/_manifest_entry.js */ "./src/addons/addons/load-extensions/_manifest_entry.js");
-/* harmony import */ var _addons_custom_zoom_manifest_entry_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ../addons/custom-zoom/_manifest_entry.js */ "./src/addons/addons/custom-zoom/_manifest_entry.js");
-/* harmony import */ var _addons_copy_reporter_manifest_entry_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ../addons/copy-reporter/_manifest_entry.js */ "./src/addons/addons/copy-reporter/_manifest_entry.js");
-/* harmony import */ var _addons_initialise_sprite_position_manifest_entry_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ../addons/initialise-sprite-position/_manifest_entry.js */ "./src/addons/addons/initialise-sprite-position/_manifest_entry.js");
-/* harmony import */ var _addons_blocks2image_manifest_entry_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! ../addons/blocks2image/_manifest_entry.js */ "./src/addons/addons/blocks2image/_manifest_entry.js");
-/* harmony import */ var _addons_remove_curved_stage_border_manifest_entry_js__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! ../addons/remove-curved-stage-border/_manifest_entry.js */ "./src/addons/addons/remove-curved-stage-border/_manifest_entry.js");
-/* harmony import */ var _addons_transparent_orphans_manifest_entry_js__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! ../addons/transparent-orphans/_manifest_entry.js */ "./src/addons/addons/transparent-orphans/_manifest_entry.js");
-/* harmony import */ var _addons_paint_by_default_manifest_entry_js__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! ../addons/paint-by-default/_manifest_entry.js */ "./src/addons/addons/paint-by-default/_manifest_entry.js");
-/* harmony import */ var _addons_block_cherry_picking_manifest_entry_js__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! ../addons/block-cherry-picking/_manifest_entry.js */ "./src/addons/addons/block-cherry-picking/_manifest_entry.js");
-/* harmony import */ var _addons_hide_new_variables_manifest_entry_js__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! ../addons/hide-new-variables/_manifest_entry.js */ "./src/addons/addons/hide-new-variables/_manifest_entry.js");
-/* harmony import */ var _addons_editor_extra_keys_manifest_entry_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! ../addons/editor-extra-keys/_manifest_entry.js */ "./src/addons/addons/editor-extra-keys/_manifest_entry.js");
-/* harmony import */ var _addons_hide_delete_button_manifest_entry_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! ../addons/hide-delete-button/_manifest_entry.js */ "./src/addons/addons/hide-delete-button/_manifest_entry.js");
-/* harmony import */ var _addons_no_script_bumping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! ../addons/no-script-bumping/_manifest_entry.js */ "./src/addons/addons/no-script-bumping/_manifest_entry.js");
-/* harmony import */ var _addons_disable_stage_drag_select_manifest_entry_js__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! ../addons/disable-stage-drag-select/_manifest_entry.js */ "./src/addons/addons/disable-stage-drag-select/_manifest_entry.js");
-/* harmony import */ var _addons_move_to_top_bottom_manifest_entry_js__WEBPACK_IMPORTED_MODULE_60__ = __webpack_require__(/*! ../addons/move-to-top-bottom/_manifest_entry.js */ "./src/addons/addons/move-to-top-bottom/_manifest_entry.js");
-/* harmony import */ var _addons_move_to_top_layer_manifest_entry_js__WEBPACK_IMPORTED_MODULE_61__ = __webpack_require__(/*! ../addons/move-to-top-layer/_manifest_entry.js */ "./src/addons/addons/move-to-top-layer/_manifest_entry.js");
-/* harmony import */ var _addons_disable_paste_offset_manifest_entry_js__WEBPACK_IMPORTED_MODULE_62__ = __webpack_require__(/*! ../addons/disable-paste-offset/_manifest_entry.js */ "./src/addons/addons/disable-paste-offset/_manifest_entry.js");
-/* harmony import */ var _addons_block_duplicate_manifest_entry_js__WEBPACK_IMPORTED_MODULE_63__ = __webpack_require__(/*! ../addons/block-duplicate/_manifest_entry.js */ "./src/addons/addons/block-duplicate/_manifest_entry.js");
-/* harmony import */ var _addons_rename_broadcasts_manifest_entry_js__WEBPACK_IMPORTED_MODULE_64__ = __webpack_require__(/*! ../addons/rename-broadcasts/_manifest_entry.js */ "./src/addons/addons/rename-broadcasts/_manifest_entry.js");
-/* harmony import */ var _addons_swap_local_global_manifest_entry_js__WEBPACK_IMPORTED_MODULE_65__ = __webpack_require__(/*! ../addons/swap-local-global/_manifest_entry.js */ "./src/addons/addons/swap-local-global/_manifest_entry.js");
-/* harmony import */ var _addons_editor_comment_previews_manifest_entry_js__WEBPACK_IMPORTED_MODULE_66__ = __webpack_require__(/*! ../addons/editor-comment-previews/_manifest_entry.js */ "./src/addons/addons/editor-comment-previews/_manifest_entry.js");
-/* harmony import */ var _addons_columns_manifest_entry_js__WEBPACK_IMPORTED_MODULE_67__ = __webpack_require__(/*! ../addons/columns/_manifest_entry.js */ "./src/addons/addons/columns/_manifest_entry.js");
-/* harmony import */ var _addons_number_pad_manifest_entry_js__WEBPACK_IMPORTED_MODULE_68__ = __webpack_require__(/*! ../addons/number-pad/_manifest_entry.js */ "./src/addons/addons/number-pad/_manifest_entry.js");
-/* harmony import */ var _addons_editor_number_arrow_keys_manifest_entry_js__WEBPACK_IMPORTED_MODULE_69__ = __webpack_require__(/*! ../addons/editor-number-arrow-keys/_manifest_entry.js */ "./src/addons/addons/editor-number-arrow-keys/_manifest_entry.js");
-/* harmony import */ var _addons_expanded_backpack_manifest_entry_js__WEBPACK_IMPORTED_MODULE_70__ = __webpack_require__(/*! ../addons/expanded-backpack/_manifest_entry.js */ "./src/addons/addons/expanded-backpack/_manifest_entry.js");
-/* harmony import */ var _addons_script_snap_manifest_entry_js__WEBPACK_IMPORTED_MODULE_71__ = __webpack_require__(/*! ../addons/script-snap/_manifest_entry.js */ "./src/addons/addons/script-snap/_manifest_entry.js");
-/* harmony import */ var _addons_fullscreen_manifest_entry_js__WEBPACK_IMPORTED_MODULE_72__ = __webpack_require__(/*! ../addons/fullscreen/_manifest_entry.js */ "./src/addons/addons/fullscreen/_manifest_entry.js");
-/* harmony import */ var _addons_hide_stage_manifest_entry_js__WEBPACK_IMPORTED_MODULE_73__ = __webpack_require__(/*! ../addons/hide-stage/_manifest_entry.js */ "./src/addons/addons/hide-stage/_manifest_entry.js");
-/* harmony import */ var _addons_tw_straighten_comments_manifest_entry_js__WEBPACK_IMPORTED_MODULE_74__ = __webpack_require__(/*! ../addons/tw-straighten-comments/_manifest_entry.js */ "./src/addons/addons/tw-straighten-comments/_manifest_entry.js");
-/* harmony import */ var _addons_tw_remove_backpack_manifest_entry_js__WEBPACK_IMPORTED_MODULE_75__ = __webpack_require__(/*! ../addons/tw-remove-backpack/_manifest_entry.js */ "./src/addons/addons/tw-remove-backpack/_manifest_entry.js");
-/* harmony import */ var _addons_tw_remove_feedback_manifest_entry_js__WEBPACK_IMPORTED_MODULE_76__ = __webpack_require__(/*! ../addons/tw-remove-feedback/_manifest_entry.js */ "./src/addons/addons/tw-remove-feedback/_manifest_entry.js");
-/* harmony import */ var _addons_tw_disable_cloud_variables_manifest_entry_js__WEBPACK_IMPORTED_MODULE_77__ = __webpack_require__(/*! ../addons/tw-disable-cloud-variables/_manifest_entry.js */ "./src/addons/addons/tw-disable-cloud-variables/_manifest_entry.js");
-/* harmony import */ var _addons_tw_disable_compiler_manifest_entry_js__WEBPACK_IMPORTED_MODULE_78__ = __webpack_require__(/*! ../addons/tw-disable-compiler/_manifest_entry.js */ "./src/addons/addons/tw-disable-compiler/_manifest_entry.js");
-/* harmony import */ var _addons_editor_stepping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_79__ = __webpack_require__(/*! ../addons/editor-stepping/_manifest_entry.js */ "./src/addons/addons/editor-stepping/_manifest_entry.js");
-/* harmony import */ var _addons_tw_comment_markdown_editor_manifest_entry_js__WEBPACK_IMPORTED_MODULE_80__ = __webpack_require__(/*! ../addons/tw-comment-markdown-editor/_manifest_entry.js */ "./src/addons/addons/tw-comment-markdown-editor/_manifest_entry.js");
+/* harmony import */ var _addons_coder_style_manifest_entry_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../addons/coder-style/_manifest_entry.js */ "./src/addons/addons/coder-style/_manifest_entry.js");
+/* harmony import */ var _addons_editor_devtools_manifest_entry_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../addons/editor-devtools/_manifest_entry.js */ "./src/addons/addons/editor-devtools/_manifest_entry.js");
+/* harmony import */ var _addons_find_bar_manifest_entry_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../addons/find-bar/_manifest_entry.js */ "./src/addons/addons/find-bar/_manifest_entry.js");
+/* harmony import */ var _addons_middle_click_popup_manifest_entry_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../addons/middle-click-popup/_manifest_entry.js */ "./src/addons/addons/middle-click-popup/_manifest_entry.js");
+/* harmony import */ var _addons_jump_to_def_manifest_entry_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../addons/jump-to-def/_manifest_entry.js */ "./src/addons/addons/jump-to-def/_manifest_entry.js");
+/* harmony import */ var _addons_reorder_custom_inputs_manifest_entry_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../addons/reorder-custom-inputs/_manifest_entry.js */ "./src/addons/addons/reorder-custom-inputs/_manifest_entry.js");
+/* harmony import */ var _addons_editor_searchable_dropdowns_manifest_entry_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../addons/editor-searchable-dropdowns/_manifest_entry.js */ "./src/addons/addons/editor-searchable-dropdowns/_manifest_entry.js");
+/* harmony import */ var _addons_data_category_tweaks_v2_manifest_entry_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../addons/data-category-tweaks-v2/_manifest_entry.js */ "./src/addons/addons/data-category-tweaks-v2/_manifest_entry.js");
+/* harmony import */ var _addons_block_palette_icons_manifest_entry_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../addons/block-palette-icons/_manifest_entry.js */ "./src/addons/addons/block-palette-icons/_manifest_entry.js");
+/* harmony import */ var _addons_hide_flyout_manifest_entry_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../addons/hide-flyout/_manifest_entry.js */ "./src/addons/addons/hide-flyout/_manifest_entry.js");
+/* harmony import */ var _addons_mediarecorder_manifest_entry_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../addons/mediarecorder/_manifest_entry.js */ "./src/addons/addons/mediarecorder/_manifest_entry.js");
+/* harmony import */ var _addons_drag_drop_manifest_entry_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../addons/drag-drop/_manifest_entry.js */ "./src/addons/addons/drag-drop/_manifest_entry.js");
+/* harmony import */ var _addons_debugger_manifest_entry_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../addons/debugger/_manifest_entry.js */ "./src/addons/addons/debugger/_manifest_entry.js");
+/* harmony import */ var _addons_pause_manifest_entry_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../addons/pause/_manifest_entry.js */ "./src/addons/addons/pause/_manifest_entry.js");
+/* harmony import */ var _addons_mute_project_manifest_entry_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../addons/mute-project/_manifest_entry.js */ "./src/addons/addons/mute-project/_manifest_entry.js");
+/* harmony import */ var _addons_vol_slider_manifest_entry_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../addons/vol-slider/_manifest_entry.js */ "./src/addons/addons/vol-slider/_manifest_entry.js");
+/* harmony import */ var _addons_clones_manifest_entry_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../addons/clones/_manifest_entry.js */ "./src/addons/addons/clones/_manifest_entry.js");
+/* harmony import */ var _addons_mouse_pos_manifest_entry_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../addons/mouse-pos/_manifest_entry.js */ "./src/addons/addons/mouse-pos/_manifest_entry.js");
+/* harmony import */ var _addons_color_picker_manifest_entry_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../addons/color-picker/_manifest_entry.js */ "./src/addons/addons/color-picker/_manifest_entry.js");
+/* harmony import */ var _addons_remove_sprite_confirm_manifest_entry_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../addons/remove-sprite-confirm/_manifest_entry.js */ "./src/addons/addons/remove-sprite-confirm/_manifest_entry.js");
+/* harmony import */ var _addons_block_count_manifest_entry_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../addons/block-count/_manifest_entry.js */ "./src/addons/addons/block-count/_manifest_entry.js");
+/* harmony import */ var _addons_onion_skinning_manifest_entry_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../addons/onion-skinning/_manifest_entry.js */ "./src/addons/addons/onion-skinning/_manifest_entry.js");
+/* harmony import */ var _addons_paint_snap_manifest_entry_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../addons/paint-snap/_manifest_entry.js */ "./src/addons/addons/paint-snap/_manifest_entry.js");
+/* harmony import */ var _addons_default_costume_editor_color_manifest_entry_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../addons/default-costume-editor-color/_manifest_entry.js */ "./src/addons/addons/default-costume-editor-color/_manifest_entry.js");
+/* harmony import */ var _addons_bitmap_copy_manifest_entry_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../addons/bitmap-copy/_manifest_entry.js */ "./src/addons/addons/bitmap-copy/_manifest_entry.js");
+/* harmony import */ var _addons_2d_color_picker_manifest_entry_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ../addons/2d-color-picker/_manifest_entry.js */ "./src/addons/addons/2d-color-picker/_manifest_entry.js");
+/* harmony import */ var _addons_paint_skew_manifest_entry_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ../addons/paint-skew/_manifest_entry.js */ "./src/addons/addons/paint-skew/_manifest_entry.js");
+/* harmony import */ var _addons_better_img_uploads_manifest_entry_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ../addons/better-img-uploads/_manifest_entry.js */ "./src/addons/addons/better-img-uploads/_manifest_entry.js");
+/* harmony import */ var _addons_pick_colors_from_stage_manifest_entry_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ../addons/pick-colors-from-stage/_manifest_entry.js */ "./src/addons/addons/pick-colors-from-stage/_manifest_entry.js");
+/* harmony import */ var _addons_custom_block_shape_manifest_entry_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../addons/custom-block-shape/_manifest_entry.js */ "./src/addons/addons/custom-block-shape/_manifest_entry.js");
+/* harmony import */ var _addons_editor_square_inputs_manifest_entry_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../addons/editor-square-inputs/_manifest_entry.js */ "./src/addons/addons/editor-square-inputs/_manifest_entry.js");
+/* harmony import */ var _addons_zebra_striping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ../addons/zebra-striping/_manifest_entry.js */ "./src/addons/addons/zebra-striping/_manifest_entry.js");
+/* harmony import */ var _addons_editor_compact_manifest_entry_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ../addons/editor-compact/_manifest_entry.js */ "./src/addons/addons/editor-compact/_manifest_entry.js");
+/* harmony import */ var _addons_custom_menu_bar_manifest_entry_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../addons/custom-menu-bar/_manifest_entry.js */ "./src/addons/addons/custom-menu-bar/_manifest_entry.js");
+/* harmony import */ var _addons_editor_theme3_manifest_entry_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../addons/editor-theme3/_manifest_entry.js */ "./src/addons/addons/editor-theme3/_manifest_entry.js");
+/* harmony import */ var _addons_custom_block_text_manifest_entry_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../addons/custom-block-text/_manifest_entry.js */ "./src/addons/addons/custom-block-text/_manifest_entry.js");
+/* harmony import */ var _addons_editor_colored_context_menus_manifest_entry_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../addons/editor-colored-context-menus/_manifest_entry.js */ "./src/addons/addons/editor-colored-context-menus/_manifest_entry.js");
+/* harmony import */ var _addons_editor_stage_left_manifest_entry_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../addons/editor-stage-left/_manifest_entry.js */ "./src/addons/addons/editor-stage-left/_manifest_entry.js");
+/* harmony import */ var _addons_editor_buttons_reverse_order_manifest_entry_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../addons/editor-buttons-reverse-order/_manifest_entry.js */ "./src/addons/addons/editor-buttons-reverse-order/_manifest_entry.js");
+/* harmony import */ var _addons_variable_manager_manifest_entry_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ../addons/variable-manager/_manifest_entry.js */ "./src/addons/addons/variable-manager/_manifest_entry.js");
+/* harmony import */ var _addons_search_sprites_manifest_entry_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ../addons/search-sprites/_manifest_entry.js */ "./src/addons/addons/search-sprites/_manifest_entry.js");
+/* harmony import */ var _addons_sprite_properties_manifest_entry_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ../addons/sprite-properties/_manifest_entry.js */ "./src/addons/addons/sprite-properties/_manifest_entry.js");
+/* harmony import */ var _addons_gamepad_manifest_entry_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../addons/gamepad/_manifest_entry.js */ "./src/addons/addons/gamepad/_manifest_entry.js");
+/* harmony import */ var _addons_editor_sounds_manifest_entry_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ../addons/editor-sounds/_manifest_entry.js */ "./src/addons/addons/editor-sounds/_manifest_entry.js");
+/* harmony import */ var _addons_folders_manifest_entry_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ../addons/folders/_manifest_entry.js */ "./src/addons/addons/folders/_manifest_entry.js");
+/* harmony import */ var _addons_block_switching_manifest_entry_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ../addons/block-switching/_manifest_entry.js */ "./src/addons/addons/block-switching/_manifest_entry.js");
+/* harmony import */ var _addons_load_extensions_manifest_entry_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ../addons/load-extensions/_manifest_entry.js */ "./src/addons/addons/load-extensions/_manifest_entry.js");
+/* harmony import */ var _addons_custom_zoom_manifest_entry_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ../addons/custom-zoom/_manifest_entry.js */ "./src/addons/addons/custom-zoom/_manifest_entry.js");
+/* harmony import */ var _addons_copy_reporter_manifest_entry_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ../addons/copy-reporter/_manifest_entry.js */ "./src/addons/addons/copy-reporter/_manifest_entry.js");
+/* harmony import */ var _addons_initialise_sprite_position_manifest_entry_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! ../addons/initialise-sprite-position/_manifest_entry.js */ "./src/addons/addons/initialise-sprite-position/_manifest_entry.js");
+/* harmony import */ var _addons_blocks2image_manifest_entry_js__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! ../addons/blocks2image/_manifest_entry.js */ "./src/addons/addons/blocks2image/_manifest_entry.js");
+/* harmony import */ var _addons_remove_curved_stage_border_manifest_entry_js__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! ../addons/remove-curved-stage-border/_manifest_entry.js */ "./src/addons/addons/remove-curved-stage-border/_manifest_entry.js");
+/* harmony import */ var _addons_transparent_orphans_manifest_entry_js__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! ../addons/transparent-orphans/_manifest_entry.js */ "./src/addons/addons/transparent-orphans/_manifest_entry.js");
+/* harmony import */ var _addons_paint_by_default_manifest_entry_js__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! ../addons/paint-by-default/_manifest_entry.js */ "./src/addons/addons/paint-by-default/_manifest_entry.js");
+/* harmony import */ var _addons_block_cherry_picking_manifest_entry_js__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! ../addons/block-cherry-picking/_manifest_entry.js */ "./src/addons/addons/block-cherry-picking/_manifest_entry.js");
+/* harmony import */ var _addons_hide_new_variables_manifest_entry_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! ../addons/hide-new-variables/_manifest_entry.js */ "./src/addons/addons/hide-new-variables/_manifest_entry.js");
+/* harmony import */ var _addons_editor_extra_keys_manifest_entry_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! ../addons/editor-extra-keys/_manifest_entry.js */ "./src/addons/addons/editor-extra-keys/_manifest_entry.js");
+/* harmony import */ var _addons_hide_delete_button_manifest_entry_js__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! ../addons/hide-delete-button/_manifest_entry.js */ "./src/addons/addons/hide-delete-button/_manifest_entry.js");
+/* harmony import */ var _addons_no_script_bumping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! ../addons/no-script-bumping/_manifest_entry.js */ "./src/addons/addons/no-script-bumping/_manifest_entry.js");
+/* harmony import */ var _addons_disable_stage_drag_select_manifest_entry_js__WEBPACK_IMPORTED_MODULE_60__ = __webpack_require__(/*! ../addons/disable-stage-drag-select/_manifest_entry.js */ "./src/addons/addons/disable-stage-drag-select/_manifest_entry.js");
+/* harmony import */ var _addons_move_to_top_bottom_manifest_entry_js__WEBPACK_IMPORTED_MODULE_61__ = __webpack_require__(/*! ../addons/move-to-top-bottom/_manifest_entry.js */ "./src/addons/addons/move-to-top-bottom/_manifest_entry.js");
+/* harmony import */ var _addons_move_to_top_layer_manifest_entry_js__WEBPACK_IMPORTED_MODULE_62__ = __webpack_require__(/*! ../addons/move-to-top-layer/_manifest_entry.js */ "./src/addons/addons/move-to-top-layer/_manifest_entry.js");
+/* harmony import */ var _addons_disable_paste_offset_manifest_entry_js__WEBPACK_IMPORTED_MODULE_63__ = __webpack_require__(/*! ../addons/disable-paste-offset/_manifest_entry.js */ "./src/addons/addons/disable-paste-offset/_manifest_entry.js");
+/* harmony import */ var _addons_block_duplicate_manifest_entry_js__WEBPACK_IMPORTED_MODULE_64__ = __webpack_require__(/*! ../addons/block-duplicate/_manifest_entry.js */ "./src/addons/addons/block-duplicate/_manifest_entry.js");
+/* harmony import */ var _addons_rename_broadcasts_manifest_entry_js__WEBPACK_IMPORTED_MODULE_65__ = __webpack_require__(/*! ../addons/rename-broadcasts/_manifest_entry.js */ "./src/addons/addons/rename-broadcasts/_manifest_entry.js");
+/* harmony import */ var _addons_swap_local_global_manifest_entry_js__WEBPACK_IMPORTED_MODULE_66__ = __webpack_require__(/*! ../addons/swap-local-global/_manifest_entry.js */ "./src/addons/addons/swap-local-global/_manifest_entry.js");
+/* harmony import */ var _addons_editor_comment_previews_manifest_entry_js__WEBPACK_IMPORTED_MODULE_67__ = __webpack_require__(/*! ../addons/editor-comment-previews/_manifest_entry.js */ "./src/addons/addons/editor-comment-previews/_manifest_entry.js");
+/* harmony import */ var _addons_columns_manifest_entry_js__WEBPACK_IMPORTED_MODULE_68__ = __webpack_require__(/*! ../addons/columns/_manifest_entry.js */ "./src/addons/addons/columns/_manifest_entry.js");
+/* harmony import */ var _addons_number_pad_manifest_entry_js__WEBPACK_IMPORTED_MODULE_69__ = __webpack_require__(/*! ../addons/number-pad/_manifest_entry.js */ "./src/addons/addons/number-pad/_manifest_entry.js");
+/* harmony import */ var _addons_editor_number_arrow_keys_manifest_entry_js__WEBPACK_IMPORTED_MODULE_70__ = __webpack_require__(/*! ../addons/editor-number-arrow-keys/_manifest_entry.js */ "./src/addons/addons/editor-number-arrow-keys/_manifest_entry.js");
+/* harmony import */ var _addons_expanded_backpack_manifest_entry_js__WEBPACK_IMPORTED_MODULE_71__ = __webpack_require__(/*! ../addons/expanded-backpack/_manifest_entry.js */ "./src/addons/addons/expanded-backpack/_manifest_entry.js");
+/* harmony import */ var _addons_script_snap_manifest_entry_js__WEBPACK_IMPORTED_MODULE_72__ = __webpack_require__(/*! ../addons/script-snap/_manifest_entry.js */ "./src/addons/addons/script-snap/_manifest_entry.js");
+/* harmony import */ var _addons_fullscreen_manifest_entry_js__WEBPACK_IMPORTED_MODULE_73__ = __webpack_require__(/*! ../addons/fullscreen/_manifest_entry.js */ "./src/addons/addons/fullscreen/_manifest_entry.js");
+/* harmony import */ var _addons_hide_stage_manifest_entry_js__WEBPACK_IMPORTED_MODULE_74__ = __webpack_require__(/*! ../addons/hide-stage/_manifest_entry.js */ "./src/addons/addons/hide-stage/_manifest_entry.js");
+/* harmony import */ var _addons_tw_straighten_comments_manifest_entry_js__WEBPACK_IMPORTED_MODULE_75__ = __webpack_require__(/*! ../addons/tw-straighten-comments/_manifest_entry.js */ "./src/addons/addons/tw-straighten-comments/_manifest_entry.js");
+/* harmony import */ var _addons_tw_remove_backpack_manifest_entry_js__WEBPACK_IMPORTED_MODULE_76__ = __webpack_require__(/*! ../addons/tw-remove-backpack/_manifest_entry.js */ "./src/addons/addons/tw-remove-backpack/_manifest_entry.js");
+/* harmony import */ var _addons_tw_remove_feedback_manifest_entry_js__WEBPACK_IMPORTED_MODULE_77__ = __webpack_require__(/*! ../addons/tw-remove-feedback/_manifest_entry.js */ "./src/addons/addons/tw-remove-feedback/_manifest_entry.js");
+/* harmony import */ var _addons_tw_disable_cloud_variables_manifest_entry_js__WEBPACK_IMPORTED_MODULE_78__ = __webpack_require__(/*! ../addons/tw-disable-cloud-variables/_manifest_entry.js */ "./src/addons/addons/tw-disable-cloud-variables/_manifest_entry.js");
+/* harmony import */ var _addons_tw_disable_compiler_manifest_entry_js__WEBPACK_IMPORTED_MODULE_79__ = __webpack_require__(/*! ../addons/tw-disable-compiler/_manifest_entry.js */ "./src/addons/addons/tw-disable-compiler/_manifest_entry.js");
+/* harmony import */ var _addons_editor_stepping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_80__ = __webpack_require__(/*! ../addons/editor-stepping/_manifest_entry.js */ "./src/addons/addons/editor-stepping/_manifest_entry.js");
+/* harmony import */ var _addons_tw_comment_markdown_editor_manifest_entry_js__WEBPACK_IMPORTED_MODULE_81__ = __webpack_require__(/*! ../addons/tw-comment-markdown-editor/_manifest_entry.js */ "./src/addons/addons/tw-comment-markdown-editor/_manifest_entry.js");
 /* generated by pull.js */
+
 
 
 
@@ -4859,86 +4928,87 @@ __webpack_require__.r(__webpack_exports__);
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   "cat-blocks": _addons_cat_blocks_manifest_entry_js__WEBPACK_IMPORTED_MODULE_0__["default"],
-  "editor-devtools": _addons_editor_devtools_manifest_entry_js__WEBPACK_IMPORTED_MODULE_1__["default"],
-  "find-bar": _addons_find_bar_manifest_entry_js__WEBPACK_IMPORTED_MODULE_2__["default"],
-  "middle-click-popup": _addons_middle_click_popup_manifest_entry_js__WEBPACK_IMPORTED_MODULE_3__["default"],
-  "jump-to-def": _addons_jump_to_def_manifest_entry_js__WEBPACK_IMPORTED_MODULE_4__["default"],
-  "reorder-custom-inputs": _addons_reorder_custom_inputs_manifest_entry_js__WEBPACK_IMPORTED_MODULE_5__["default"],
-  "editor-searchable-dropdowns": _addons_editor_searchable_dropdowns_manifest_entry_js__WEBPACK_IMPORTED_MODULE_6__["default"],
-  "data-category-tweaks-v2": _addons_data_category_tweaks_v2_manifest_entry_js__WEBPACK_IMPORTED_MODULE_7__["default"],
-  "block-palette-icons": _addons_block_palette_icons_manifest_entry_js__WEBPACK_IMPORTED_MODULE_8__["default"],
-  "hide-flyout": _addons_hide_flyout_manifest_entry_js__WEBPACK_IMPORTED_MODULE_9__["default"],
-  "mediarecorder": _addons_mediarecorder_manifest_entry_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-  "drag-drop": _addons_drag_drop_manifest_entry_js__WEBPACK_IMPORTED_MODULE_11__["default"],
-  "debugger": _addons_debugger_manifest_entry_js__WEBPACK_IMPORTED_MODULE_12__["default"],
-  "pause": _addons_pause_manifest_entry_js__WEBPACK_IMPORTED_MODULE_13__["default"],
-  "mute-project": _addons_mute_project_manifest_entry_js__WEBPACK_IMPORTED_MODULE_14__["default"],
-  "vol-slider": _addons_vol_slider_manifest_entry_js__WEBPACK_IMPORTED_MODULE_15__["default"],
-  "clones": _addons_clones_manifest_entry_js__WEBPACK_IMPORTED_MODULE_16__["default"],
-  "mouse-pos": _addons_mouse_pos_manifest_entry_js__WEBPACK_IMPORTED_MODULE_17__["default"],
-  "color-picker": _addons_color_picker_manifest_entry_js__WEBPACK_IMPORTED_MODULE_18__["default"],
-  "remove-sprite-confirm": _addons_remove_sprite_confirm_manifest_entry_js__WEBPACK_IMPORTED_MODULE_19__["default"],
-  "block-count": _addons_block_count_manifest_entry_js__WEBPACK_IMPORTED_MODULE_20__["default"],
-  "onion-skinning": _addons_onion_skinning_manifest_entry_js__WEBPACK_IMPORTED_MODULE_21__["default"],
-  "paint-snap": _addons_paint_snap_manifest_entry_js__WEBPACK_IMPORTED_MODULE_22__["default"],
-  "default-costume-editor-color": _addons_default_costume_editor_color_manifest_entry_js__WEBPACK_IMPORTED_MODULE_23__["default"],
-  "bitmap-copy": _addons_bitmap_copy_manifest_entry_js__WEBPACK_IMPORTED_MODULE_24__["default"],
-  "2d-color-picker": _addons_2d_color_picker_manifest_entry_js__WEBPACK_IMPORTED_MODULE_25__["default"],
-  "paint-skew": _addons_paint_skew_manifest_entry_js__WEBPACK_IMPORTED_MODULE_26__["default"],
-  "better-img-uploads": _addons_better_img_uploads_manifest_entry_js__WEBPACK_IMPORTED_MODULE_27__["default"],
-  "pick-colors-from-stage": _addons_pick_colors_from_stage_manifest_entry_js__WEBPACK_IMPORTED_MODULE_28__["default"],
-  "custom-block-shape": _addons_custom_block_shape_manifest_entry_js__WEBPACK_IMPORTED_MODULE_29__["default"],
-  "editor-square-inputs": _addons_editor_square_inputs_manifest_entry_js__WEBPACK_IMPORTED_MODULE_30__["default"],
-  "zebra-striping": _addons_zebra_striping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_31__["default"],
-  "editor-compact": _addons_editor_compact_manifest_entry_js__WEBPACK_IMPORTED_MODULE_32__["default"],
-  "custom-menu-bar": _addons_custom_menu_bar_manifest_entry_js__WEBPACK_IMPORTED_MODULE_33__["default"],
-  "editor-theme3": _addons_editor_theme3_manifest_entry_js__WEBPACK_IMPORTED_MODULE_34__["default"],
-  "custom-block-text": _addons_custom_block_text_manifest_entry_js__WEBPACK_IMPORTED_MODULE_35__["default"],
-  "editor-colored-context-menus": _addons_editor_colored_context_menus_manifest_entry_js__WEBPACK_IMPORTED_MODULE_36__["default"],
-  "editor-stage-left": _addons_editor_stage_left_manifest_entry_js__WEBPACK_IMPORTED_MODULE_37__["default"],
-  "editor-buttons-reverse-order": _addons_editor_buttons_reverse_order_manifest_entry_js__WEBPACK_IMPORTED_MODULE_38__["default"],
-  "variable-manager": _addons_variable_manager_manifest_entry_js__WEBPACK_IMPORTED_MODULE_39__["default"],
-  "search-sprites": _addons_search_sprites_manifest_entry_js__WEBPACK_IMPORTED_MODULE_40__["default"],
-  "sprite-properties": _addons_sprite_properties_manifest_entry_js__WEBPACK_IMPORTED_MODULE_41__["default"],
-  "gamepad": _addons_gamepad_manifest_entry_js__WEBPACK_IMPORTED_MODULE_42__["default"],
-  "editor-sounds": _addons_editor_sounds_manifest_entry_js__WEBPACK_IMPORTED_MODULE_43__["default"],
-  "folders": _addons_folders_manifest_entry_js__WEBPACK_IMPORTED_MODULE_44__["default"],
-  "block-switching": _addons_block_switching_manifest_entry_js__WEBPACK_IMPORTED_MODULE_45__["default"],
-  "load-extensions": _addons_load_extensions_manifest_entry_js__WEBPACK_IMPORTED_MODULE_46__["default"],
-  "custom-zoom": _addons_custom_zoom_manifest_entry_js__WEBPACK_IMPORTED_MODULE_47__["default"],
-  "copy-reporter": _addons_copy_reporter_manifest_entry_js__WEBPACK_IMPORTED_MODULE_48__["default"],
-  "initialise-sprite-position": _addons_initialise_sprite_position_manifest_entry_js__WEBPACK_IMPORTED_MODULE_49__["default"],
-  "blocks2image": _addons_blocks2image_manifest_entry_js__WEBPACK_IMPORTED_MODULE_50__["default"],
-  "remove-curved-stage-border": _addons_remove_curved_stage_border_manifest_entry_js__WEBPACK_IMPORTED_MODULE_51__["default"],
-  "transparent-orphans": _addons_transparent_orphans_manifest_entry_js__WEBPACK_IMPORTED_MODULE_52__["default"],
-  "paint-by-default": _addons_paint_by_default_manifest_entry_js__WEBPACK_IMPORTED_MODULE_53__["default"],
-  "block-cherry-picking": _addons_block_cherry_picking_manifest_entry_js__WEBPACK_IMPORTED_MODULE_54__["default"],
-  "hide-new-variables": _addons_hide_new_variables_manifest_entry_js__WEBPACK_IMPORTED_MODULE_55__["default"],
-  "editor-extra-keys": _addons_editor_extra_keys_manifest_entry_js__WEBPACK_IMPORTED_MODULE_56__["default"],
-  "hide-delete-button": _addons_hide_delete_button_manifest_entry_js__WEBPACK_IMPORTED_MODULE_57__["default"],
-  "no-script-bumping": _addons_no_script_bumping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_58__["default"],
-  "disable-stage-drag-select": _addons_disable_stage_drag_select_manifest_entry_js__WEBPACK_IMPORTED_MODULE_59__["default"],
-  "move-to-top-bottom": _addons_move_to_top_bottom_manifest_entry_js__WEBPACK_IMPORTED_MODULE_60__["default"],
-  "move-to-top-layer": _addons_move_to_top_layer_manifest_entry_js__WEBPACK_IMPORTED_MODULE_61__["default"],
-  "disable-paste-offset": _addons_disable_paste_offset_manifest_entry_js__WEBPACK_IMPORTED_MODULE_62__["default"],
-  "block-duplicate": _addons_block_duplicate_manifest_entry_js__WEBPACK_IMPORTED_MODULE_63__["default"],
-  "rename-broadcasts": _addons_rename_broadcasts_manifest_entry_js__WEBPACK_IMPORTED_MODULE_64__["default"],
-  "swap-local-global": _addons_swap_local_global_manifest_entry_js__WEBPACK_IMPORTED_MODULE_65__["default"],
-  "editor-comment-previews": _addons_editor_comment_previews_manifest_entry_js__WEBPACK_IMPORTED_MODULE_66__["default"],
-  "columns": _addons_columns_manifest_entry_js__WEBPACK_IMPORTED_MODULE_67__["default"],
-  "number-pad": _addons_number_pad_manifest_entry_js__WEBPACK_IMPORTED_MODULE_68__["default"],
-  "editor-number-arrow-keys": _addons_editor_number_arrow_keys_manifest_entry_js__WEBPACK_IMPORTED_MODULE_69__["default"],
-  "expanded-backpack": _addons_expanded_backpack_manifest_entry_js__WEBPACK_IMPORTED_MODULE_70__["default"],
-  "script-snap": _addons_script_snap_manifest_entry_js__WEBPACK_IMPORTED_MODULE_71__["default"],
-  "fullscreen": _addons_fullscreen_manifest_entry_js__WEBPACK_IMPORTED_MODULE_72__["default"],
-  "hide-stage": _addons_hide_stage_manifest_entry_js__WEBPACK_IMPORTED_MODULE_73__["default"],
-  "tw-straighten-comments": _addons_tw_straighten_comments_manifest_entry_js__WEBPACK_IMPORTED_MODULE_74__["default"],
-  "tw-remove-backpack": _addons_tw_remove_backpack_manifest_entry_js__WEBPACK_IMPORTED_MODULE_75__["default"],
-  "tw-remove-feedback": _addons_tw_remove_feedback_manifest_entry_js__WEBPACK_IMPORTED_MODULE_76__["default"],
-  "tw-disable-cloud-variables": _addons_tw_disable_cloud_variables_manifest_entry_js__WEBPACK_IMPORTED_MODULE_77__["default"],
-  "tw-disable-compiler": _addons_tw_disable_compiler_manifest_entry_js__WEBPACK_IMPORTED_MODULE_78__["default"],
-  "editor-stepping": _addons_editor_stepping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_79__["default"],
-  "tw-comment-markdown-editor": _addons_tw_comment_markdown_editor_manifest_entry_js__WEBPACK_IMPORTED_MODULE_80__["default"]
+  "coder-style": _addons_coder_style_manifest_entry_js__WEBPACK_IMPORTED_MODULE_1__["default"],
+  "editor-devtools": _addons_editor_devtools_manifest_entry_js__WEBPACK_IMPORTED_MODULE_2__["default"],
+  "find-bar": _addons_find_bar_manifest_entry_js__WEBPACK_IMPORTED_MODULE_3__["default"],
+  "middle-click-popup": _addons_middle_click_popup_manifest_entry_js__WEBPACK_IMPORTED_MODULE_4__["default"],
+  "jump-to-def": _addons_jump_to_def_manifest_entry_js__WEBPACK_IMPORTED_MODULE_5__["default"],
+  "reorder-custom-inputs": _addons_reorder_custom_inputs_manifest_entry_js__WEBPACK_IMPORTED_MODULE_6__["default"],
+  "editor-searchable-dropdowns": _addons_editor_searchable_dropdowns_manifest_entry_js__WEBPACK_IMPORTED_MODULE_7__["default"],
+  "data-category-tweaks-v2": _addons_data_category_tweaks_v2_manifest_entry_js__WEBPACK_IMPORTED_MODULE_8__["default"],
+  "block-palette-icons": _addons_block_palette_icons_manifest_entry_js__WEBPACK_IMPORTED_MODULE_9__["default"],
+  "hide-flyout": _addons_hide_flyout_manifest_entry_js__WEBPACK_IMPORTED_MODULE_10__["default"],
+  "mediarecorder": _addons_mediarecorder_manifest_entry_js__WEBPACK_IMPORTED_MODULE_11__["default"],
+  "drag-drop": _addons_drag_drop_manifest_entry_js__WEBPACK_IMPORTED_MODULE_12__["default"],
+  "debugger": _addons_debugger_manifest_entry_js__WEBPACK_IMPORTED_MODULE_13__["default"],
+  "pause": _addons_pause_manifest_entry_js__WEBPACK_IMPORTED_MODULE_14__["default"],
+  "mute-project": _addons_mute_project_manifest_entry_js__WEBPACK_IMPORTED_MODULE_15__["default"],
+  "vol-slider": _addons_vol_slider_manifest_entry_js__WEBPACK_IMPORTED_MODULE_16__["default"],
+  "clones": _addons_clones_manifest_entry_js__WEBPACK_IMPORTED_MODULE_17__["default"],
+  "mouse-pos": _addons_mouse_pos_manifest_entry_js__WEBPACK_IMPORTED_MODULE_18__["default"],
+  "color-picker": _addons_color_picker_manifest_entry_js__WEBPACK_IMPORTED_MODULE_19__["default"],
+  "remove-sprite-confirm": _addons_remove_sprite_confirm_manifest_entry_js__WEBPACK_IMPORTED_MODULE_20__["default"],
+  "block-count": _addons_block_count_manifest_entry_js__WEBPACK_IMPORTED_MODULE_21__["default"],
+  "onion-skinning": _addons_onion_skinning_manifest_entry_js__WEBPACK_IMPORTED_MODULE_22__["default"],
+  "paint-snap": _addons_paint_snap_manifest_entry_js__WEBPACK_IMPORTED_MODULE_23__["default"],
+  "default-costume-editor-color": _addons_default_costume_editor_color_manifest_entry_js__WEBPACK_IMPORTED_MODULE_24__["default"],
+  "bitmap-copy": _addons_bitmap_copy_manifest_entry_js__WEBPACK_IMPORTED_MODULE_25__["default"],
+  "2d-color-picker": _addons_2d_color_picker_manifest_entry_js__WEBPACK_IMPORTED_MODULE_26__["default"],
+  "paint-skew": _addons_paint_skew_manifest_entry_js__WEBPACK_IMPORTED_MODULE_27__["default"],
+  "better-img-uploads": _addons_better_img_uploads_manifest_entry_js__WEBPACK_IMPORTED_MODULE_28__["default"],
+  "pick-colors-from-stage": _addons_pick_colors_from_stage_manifest_entry_js__WEBPACK_IMPORTED_MODULE_29__["default"],
+  "custom-block-shape": _addons_custom_block_shape_manifest_entry_js__WEBPACK_IMPORTED_MODULE_30__["default"],
+  "editor-square-inputs": _addons_editor_square_inputs_manifest_entry_js__WEBPACK_IMPORTED_MODULE_31__["default"],
+  "zebra-striping": _addons_zebra_striping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_32__["default"],
+  "editor-compact": _addons_editor_compact_manifest_entry_js__WEBPACK_IMPORTED_MODULE_33__["default"],
+  "custom-menu-bar": _addons_custom_menu_bar_manifest_entry_js__WEBPACK_IMPORTED_MODULE_34__["default"],
+  "editor-theme3": _addons_editor_theme3_manifest_entry_js__WEBPACK_IMPORTED_MODULE_35__["default"],
+  "custom-block-text": _addons_custom_block_text_manifest_entry_js__WEBPACK_IMPORTED_MODULE_36__["default"],
+  "editor-colored-context-menus": _addons_editor_colored_context_menus_manifest_entry_js__WEBPACK_IMPORTED_MODULE_37__["default"],
+  "editor-stage-left": _addons_editor_stage_left_manifest_entry_js__WEBPACK_IMPORTED_MODULE_38__["default"],
+  "editor-buttons-reverse-order": _addons_editor_buttons_reverse_order_manifest_entry_js__WEBPACK_IMPORTED_MODULE_39__["default"],
+  "variable-manager": _addons_variable_manager_manifest_entry_js__WEBPACK_IMPORTED_MODULE_40__["default"],
+  "search-sprites": _addons_search_sprites_manifest_entry_js__WEBPACK_IMPORTED_MODULE_41__["default"],
+  "sprite-properties": _addons_sprite_properties_manifest_entry_js__WEBPACK_IMPORTED_MODULE_42__["default"],
+  "gamepad": _addons_gamepad_manifest_entry_js__WEBPACK_IMPORTED_MODULE_43__["default"],
+  "editor-sounds": _addons_editor_sounds_manifest_entry_js__WEBPACK_IMPORTED_MODULE_44__["default"],
+  "folders": _addons_folders_manifest_entry_js__WEBPACK_IMPORTED_MODULE_45__["default"],
+  "block-switching": _addons_block_switching_manifest_entry_js__WEBPACK_IMPORTED_MODULE_46__["default"],
+  "load-extensions": _addons_load_extensions_manifest_entry_js__WEBPACK_IMPORTED_MODULE_47__["default"],
+  "custom-zoom": _addons_custom_zoom_manifest_entry_js__WEBPACK_IMPORTED_MODULE_48__["default"],
+  "copy-reporter": _addons_copy_reporter_manifest_entry_js__WEBPACK_IMPORTED_MODULE_49__["default"],
+  "initialise-sprite-position": _addons_initialise_sprite_position_manifest_entry_js__WEBPACK_IMPORTED_MODULE_50__["default"],
+  "blocks2image": _addons_blocks2image_manifest_entry_js__WEBPACK_IMPORTED_MODULE_51__["default"],
+  "remove-curved-stage-border": _addons_remove_curved_stage_border_manifest_entry_js__WEBPACK_IMPORTED_MODULE_52__["default"],
+  "transparent-orphans": _addons_transparent_orphans_manifest_entry_js__WEBPACK_IMPORTED_MODULE_53__["default"],
+  "paint-by-default": _addons_paint_by_default_manifest_entry_js__WEBPACK_IMPORTED_MODULE_54__["default"],
+  "block-cherry-picking": _addons_block_cherry_picking_manifest_entry_js__WEBPACK_IMPORTED_MODULE_55__["default"],
+  "hide-new-variables": _addons_hide_new_variables_manifest_entry_js__WEBPACK_IMPORTED_MODULE_56__["default"],
+  "editor-extra-keys": _addons_editor_extra_keys_manifest_entry_js__WEBPACK_IMPORTED_MODULE_57__["default"],
+  "hide-delete-button": _addons_hide_delete_button_manifest_entry_js__WEBPACK_IMPORTED_MODULE_58__["default"],
+  "no-script-bumping": _addons_no_script_bumping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_59__["default"],
+  "disable-stage-drag-select": _addons_disable_stage_drag_select_manifest_entry_js__WEBPACK_IMPORTED_MODULE_60__["default"],
+  "move-to-top-bottom": _addons_move_to_top_bottom_manifest_entry_js__WEBPACK_IMPORTED_MODULE_61__["default"],
+  "move-to-top-layer": _addons_move_to_top_layer_manifest_entry_js__WEBPACK_IMPORTED_MODULE_62__["default"],
+  "disable-paste-offset": _addons_disable_paste_offset_manifest_entry_js__WEBPACK_IMPORTED_MODULE_63__["default"],
+  "block-duplicate": _addons_block_duplicate_manifest_entry_js__WEBPACK_IMPORTED_MODULE_64__["default"],
+  "rename-broadcasts": _addons_rename_broadcasts_manifest_entry_js__WEBPACK_IMPORTED_MODULE_65__["default"],
+  "swap-local-global": _addons_swap_local_global_manifest_entry_js__WEBPACK_IMPORTED_MODULE_66__["default"],
+  "editor-comment-previews": _addons_editor_comment_previews_manifest_entry_js__WEBPACK_IMPORTED_MODULE_67__["default"],
+  "columns": _addons_columns_manifest_entry_js__WEBPACK_IMPORTED_MODULE_68__["default"],
+  "number-pad": _addons_number_pad_manifest_entry_js__WEBPACK_IMPORTED_MODULE_69__["default"],
+  "editor-number-arrow-keys": _addons_editor_number_arrow_keys_manifest_entry_js__WEBPACK_IMPORTED_MODULE_70__["default"],
+  "expanded-backpack": _addons_expanded_backpack_manifest_entry_js__WEBPACK_IMPORTED_MODULE_71__["default"],
+  "script-snap": _addons_script_snap_manifest_entry_js__WEBPACK_IMPORTED_MODULE_72__["default"],
+  "fullscreen": _addons_fullscreen_manifest_entry_js__WEBPACK_IMPORTED_MODULE_73__["default"],
+  "hide-stage": _addons_hide_stage_manifest_entry_js__WEBPACK_IMPORTED_MODULE_74__["default"],
+  "tw-straighten-comments": _addons_tw_straighten_comments_manifest_entry_js__WEBPACK_IMPORTED_MODULE_75__["default"],
+  "tw-remove-backpack": _addons_tw_remove_backpack_manifest_entry_js__WEBPACK_IMPORTED_MODULE_76__["default"],
+  "tw-remove-feedback": _addons_tw_remove_feedback_manifest_entry_js__WEBPACK_IMPORTED_MODULE_77__["default"],
+  "tw-disable-cloud-variables": _addons_tw_disable_cloud_variables_manifest_entry_js__WEBPACK_IMPORTED_MODULE_78__["default"],
+  "tw-disable-compiler": _addons_tw_disable_compiler_manifest_entry_js__WEBPACK_IMPORTED_MODULE_79__["default"],
+  "editor-stepping": _addons_editor_stepping_manifest_entry_js__WEBPACK_IMPORTED_MODULE_80__["default"],
+  "tw-comment-markdown-editor": _addons_tw_comment_markdown_editor_manifest_entry_js__WEBPACK_IMPORTED_MODULE_81__["default"]
 });
 
 /***/ }),

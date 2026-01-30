@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-01-28T12:29:36.708Z
+// Synced at: 2026-01-30T06:43:43.755Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -599,6 +599,14 @@ export default [
         banner: "electricfuzzball_pm/firealarm.svg",
         creator: "ElectricFuzzball_PM" //hey look thats me!!
         //Pluey has been implemented.
+    },
+        {
+        name: "Stage Brah",
+        description: "Spawn Brah cats in your codespace!",
+        code: "electricfuzzball_pm/StageBrah.js",
+        banner: "electricfuzzball_pm/StageBrah.svg",
+        creator: "ElectricFuzzball_PM"
+        //:brah:
     },
 ];
 
