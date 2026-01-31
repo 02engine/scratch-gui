@@ -1,4 +1,4 @@
-// generate-versions.js
+// generate-changelog.js
 const { Octokit } = require("@octokit/rest");
 const fs = require("fs").promises;
 const path = require("path");
@@ -77,8 +77,8 @@ async function main() {
       return b.version.localeCompare(a.version, undefined, { numeric: true });
     });
 
-  const outputDir = path.join(process.cwd(), "updates");
-  const outputPath = path.join(outputDir, "versions.json");
+  const outputDir = path.join(process.cwd(), "changelog");
+  const outputPath = path.join(outputDir, "changelog.json");
 
   await fs.mkdir(outputDir, { recursive: true });
   await fs.writeFile(outputPath, JSON.stringify(result, null, 2) + "\n", "utf8");
