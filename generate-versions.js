@@ -9,8 +9,8 @@ const octokit = new Octokit({
 });
 
 async function main() {
-  const owner = process.env.GITHUB_REPOSITORY_OWNER || "你的用户名";
-  const repo = process.env.GITHUB_REPOSITORY_NAME || "你的仓库名";
+  const owner = process.env.GITHUB_REPOSITORY_OWNER || "02engine";
+  const repo = process.env.GITHUB_REPOSITORY_NAME || "desktop";
 
   // 如果环境变量里没有，手动硬编码也行（不推荐）
   // const owner = "你的用户名";
@@ -45,7 +45,7 @@ async function main() {
       version = version.replace(/^v/, "").trim();
 
       // 如果你严格只想要 X.Y.Z 格式，可以再加一层过滤
-      // if (!/^\d+\.\d+\.\d+(?:[-+].*)?$/.test(version)) return null;
+      if (!/^\d+\.\d+\.\d+(?:[-+].*)?$/.test(version)) return null;
 
       const date = dayjs(release.published_at || release.created_at).format("YYYY-MM-DD");
 
