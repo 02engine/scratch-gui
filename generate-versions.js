@@ -12,10 +12,6 @@ async function main() {
   const owner = process.env.GITHUB_REPOSITORY_OWNER || "02engine";
   const repo = process.env.GITHUB_REPOSITORY_NAME || "desktop";
 
-  // 如果环境变量里没有，手动硬编码也行（不推荐）
-  // const owner = "你的用户名";
-  // const repo = "你的仓库名";
-
   console.log(`Fetching releases from ${owner}/${repo}`);
 
   let allReleases = [];
@@ -37,25 +33,37 @@ async function main() {
   console.log(`Found ${allReleases.length} releases`);
 
   const result = allReleases
-    .filter(r => !r.draft && !r.prerelease) // 建议只保留正式版，可按需修改
+    .filter(r => !r.draft && !r.prerelease)
     .map(release => {
-      let version = release.tag_name;
+      let rawTag = release.tag_name;
 
-      // 常见格式处理： v1.15.2 → 1.15.2    1.15.2 → 1.15.2    v1.15.2-beta → 1.15.2-beta
-      version = version.replace(/^v/, "").trim();
+      // 去掉开头的 v（常见写法 v1.2.3 或 1.2.3）
+      let version = rawTag.replace(/^v/i, "").trim();
 
-      // 如果你严格只想要 X.Y.Z 格式，可以再加一层过滤
-      if (!/^\d+\.\d+\.\d+(?:[-+].*)?$/.test(version)) return null;
+      // 只提取 major.minor.patch 部分（X.Y.Z）
+      const semverMatch = version.match(/^(\d+\.\d+\.\d+)/);
+      if (!semverMatch || !semverMatch[1]) {
+        console.log(`Skipping invalid version format: ${rawTag}`);
+        return null;
+      }
+
+      version = semverMatch[1]; // 现在 version 只可能是 1.2.3 这种
 
       const date = dayjs(release.published_at || release.created_at).format("YYYY-MM-DD");
 
-      // 将 body 按行分割，有内容的行才保留
+      // 处理 release notes
       let notes = (release.body || "")
         .split(/\r?\n/)
         .map(line => line.trim())
-        .filter(line => line.length > 0 && !line.startsWith("<!--") && !line.endsWith("-->"))
-        // 可选：过滤掉一些常见的无意义行
-        .filter(line => !/^(v?\d+\.\d+\.\d+|\d{4}-\d{2}-\d{2}|---|\*\*Full Changelog\*\*|See commits)/i.test(line));
+        .filter(line => 
+          line.length > 0 &&
+          !line.startsWith("<!--") &&
+          !line.endsWith("-->")
+        )
+        // 过滤掉一些常见的无意义行（可根据你的仓库实际情况增减）
+        .filter(line => 
+          !/^(v?\d+\.\d+\.\d+|\d{4}-\d{2}-\d{2}|---|\*\*Full Changelog\*\*|See commits|chore:|feat:|fix:)/i.test(line)
+        );
 
       return {
         version,
@@ -63,9 +71,9 @@ async function main() {
         notes: notes.length > 0 ? notes : ["No release notes provided"],
       };
     })
-    // .filter(Boolean)           // 如果上面加了 null 过滤则启用
+    .filter(Boolean) // 移除 null 条目
     .sort((a, b) => {
-      // 版本号倒序（最新在上）
+      // 版本号倒序（最新版本在数组最前面）
       return b.version.localeCompare(a.version, undefined, { numeric: true });
     });
 
@@ -73,12 +81,12 @@ async function main() {
   const outputPath = path.join(outputDir, "versions.json");
 
   await fs.mkdir(outputDir, { recursive: true });
-  await fs.writeFile(outputPath, JSON.stringify(result, null, 2) + "\n");
+  await fs.writeFile(outputPath, JSON.stringify(result, null, 2) + "\n", "utf8");
 
   console.log(`Generated ${result.length} entries → ${outputPath}`);
 }
 
 main().catch(err => {
-  console.error(err);
+  console.error("Script failed:", err);
   process.exit(1);
 });
