@@ -36,17 +36,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node generate-versions.js
 
-      - name: Commit and push if changed
-        run: |
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-          
-          git add updates/versions.json || true
-          git diff --staged --quiet && echo "No changes to commit" && exit 0
-          
-          git commit -m "chore: update versions.json from releases [ci skip]"
-          git push
-        continue-on-error: true
-
       - name: Show generated JSON (for debug)
         run: cat updates/versions.json || true
