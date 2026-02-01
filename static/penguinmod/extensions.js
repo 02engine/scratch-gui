@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-01-27T13:56:09.507Z
+// Synced at: 2026-02-01T03:56:14.746Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -24,6 +24,13 @@ export default [
         banner: "TheShovel/thumbnail-shoveldebugger.avif",
         isGitHub: true,
         creator: "TheShovel",
+    },
+    {
+        name: "Storage Plus",
+        description: "A storage extension with many more features. Featuring server storage (with a fast server), local storage and more!",
+        code: "Gen1x/storage_plus.js",
+        banner: "Gen1x/storage_plus.avif",
+        creator: "G1nX",
     },
     {
         name: "MotionSprite",
@@ -592,6 +599,14 @@ export default [
         banner: "electricfuzzball_pm/firealarm.svg",
         creator: "ElectricFuzzball_PM" //hey look thats me!!
         //Pluey has been implemented.
+    },
+        {
+        name: "Stage Brah",
+        description: "Spawn Brah cats in your codespace!",
+        code: "electricfuzzball_pm/StageBrah.js",
+        banner: "electricfuzzball_pm/StageBrah.svg",
+        creator: "ElectricFuzzball_PM"
+        //:brah:
     },
 ];
 
