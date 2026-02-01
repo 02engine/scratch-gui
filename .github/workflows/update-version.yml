@@ -1,0 +1,65 @@
+name: Update versions.json
+
+on:
+  schedule:
+    - cron: '0 0 * * *'          # 每天 UTC 00:00（北京/香港时间早上 8:00）
+  workflow_dispatch:             # 支持手动触发测试
+
+jobs:
+  update-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write            # 必须，用于推送内容
+
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      # 获取仓库中版本号最大的 tag（作为 latest）
+      - name: 获取 latest tag
+        id: latest
+        uses: oprypin/find-latest-tag@v1
+        with:
+          repository: 02engine/desktop
+          releases-only: false
+          regex: '^v\d+\.\d+\.\d+-[0-9a-f]+$'   # 精确匹配 vX.Y.Z-hash 格式
+          sort-tags: true                       # 按版本降序排序，取最大
+
+      # 生成 versions.json（latest_unstable 永久为空，oldest_safe 固定值）
+      - name: 生成 versions.json
+        run: |
+
+          mkdir -p ver
+
+          # latest 来自 action 输出
+          LATEST="${{ steps.latest.outputs.tag }}"
+
+          # latest_unstable 永远为空
+          UNSTABLE=""
+
+          # oldest_safe 固定写死为你指定的值
+          OLDEST_SAFE="v1.1.0-239378be"
+
+          jq -n \
+            --arg latest "$LATEST" \
+            --arg unstable "$UNSTABLE" \
+            --arg oldest "$OLDEST_SAFE" \
+            '{
+              latest: $latest,
+              latest_unstable: ($unstable | if . == "" then null else . end),
+              oldest_safe: $oldest
+            }' > ./ver/versions.json
+
+          echo "生成的 JSON 内容："
+          cat ./ver/versions.json
+
+      # 部署单个文件到 cf-page 分支
+      - name: 部署到 cf-page 分支 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: cf-page                   # 你可以改回 cf-page
+          folder: ./ver                               # versions.json 在根目录
+          target-folder: .                        # 放根目录（可改成 data/ 等）
+          clean: false                             # 清空旧文件，只保留最新 JSON
+          commit-message: "chore: 每日更新 versions.json (${{ github.run_id }})"

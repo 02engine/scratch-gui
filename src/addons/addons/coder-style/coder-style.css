@@ -1,0 +1,39 @@
+/* 积木主体路径极低透明度 */
+.blocklySvg > .blocklyWorkspace > .blocklyBlockCanvas > .blocklyDraggable .blocklyPath {
+  opacity: var(--coder-style-block-opacity, 0.02) !important;
+}
+
+/* 积木文字显示分类颜色 */
+.blocklyText {
+  fill: currentColor !important;
+}
+
+/* 拖拽时的积木保持可见 */
+.blocklyBlockDragSurface .blocklyPath {
+  opacity: 0.3 !important;
+}
+
+/* 悬停时的积木稍微可见 */
+.blocklyDraggable:hover .blocklyPath {
+  opacity: calc(var(--coder-style-block-opacity, 0.02) * 2) !important;
+}
+
+/* 选中状态的积木稍微可见 */
+.blocklySelected .blocklyPath {
+  opacity: 0.05 !important;
+}
+
+/* 飞出面板中的积木稍微可见 */
+.blocklyFlyout > .blocklyWorkspace > .blocklyBlockCanvas > .blocklyDraggable .blocklyPath {
+  opacity: 0.04 !important;
+}
+
+/* 确保积木连接点保持可见 */
+.blocklyPath.blocklyNotch {
+  opacity: 0.1 !important;
+}
+
+/* 确保 SVG 元素可交互 */
+.blocklySvg > .blocklyWorkspace > .blocklyBlockCanvas > .blocklyDraggable {
+  pointer-events: auto !important;
+}

@@ -47,4 +47,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
+          clean: false    
+
           publish_branch: cf-page
