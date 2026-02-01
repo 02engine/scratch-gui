@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import fs from 'fs/promises';
-import path from 'path';
-import process from 'process';
+const fs = require('fs').promises;
+const path = require('path');
+const process = require('process');
+const crossFetch = require('cross-fetch');
 
 const REPOS = [
     { owner: '02Engine', repo: 'scratch-gui' },
@@ -22,7 +23,7 @@ const headers = {
 async function fetchContributors(owner, repo) {
     const url = `https://api.github.com/repos/${owner}/${repo}/contributors?per_page=100`;
 
-    const res = await fetch(url, { headers });
+    const res = await crossFetch(url, { headers });
     if (!res.ok) {
         throw new Error(`${owner}/${repo} → ${res.status}`);
     }

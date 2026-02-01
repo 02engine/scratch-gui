@@ -946,7 +946,7 @@ const GUIComponent = props => {
                                     title="Stage"
                                     defaultPosition={stageWindowPosition}
                                     defaultSize={{width: stageWindowSize[0]+4, height: stageWindowSize[1]+75}}
-                                    minSize={{width: 480+4, height: 360+75}}
+                                    minSize={{width: 74, height: 25}}
                                     maxSize={{width: 960+4, height: 720+75}}
                                     allowResize={true}
                                     allowMaximize={false}

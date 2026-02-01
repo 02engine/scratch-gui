@@ -25,8 +25,9 @@
     "test:unit": "jest test[\\\\/]unit[\\\\/]addons",
     "test:smoke": "jest --runInBand test[\\\\/]smoke",
     "watch": "webpack --colors --watch",
-    "sync:credits": "node scripts/sync-credits.mjs",
-    "prepublishOnly": "node scripts/penguinmod-ext.mjs && npm run sync:credits"
+    "sync:credits": "node scripts/sync-credits.js",
+    "sync:penguinmod": "node scripts/penguinmod-ext.js",
+    "prepublishOnly": "npm run sync:credits && npm run sync:penguinmod"
   },
   "config": {
     "commitizen": {
