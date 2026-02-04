@@ -1036,8 +1036,7 @@ window.addonAPI = {
         'data-category-tweaks-v2',
         'debugger',
         'folders',
-        'blocks2image',
-        'editor-searchable-dropdowns'
+        'blocks2image'
     ]),
 
     addToRerunExclude (id) {
