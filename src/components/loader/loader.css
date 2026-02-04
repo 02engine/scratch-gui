@@ -1,6 +1,7 @@
 @import "../../css/colors.css";
 @import "../../css/z-index.css";
-@import "../../css/default-colors.css";
+
+/* 02engine Loading Screen Styles */
 
 .background {
     position: absolute;
@@ -10,12 +11,10 @@
     height: 100%;
     z-index: $z-index-loader;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: $menu-bar-background;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    text-align: center;
-    color: white;
+    flex-direction: column;
+    background-color: #000000;
+    overflow: hidden;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .fullscreen {
@@ -25,168 +24,217 @@
     z-index: $z-index-stage-wrapper-overlay;
 }
 
-.block-animation {
-    width: 125px;
-    height: 150px;
-    margin: 50px auto 0px;
+/* Background Section - 75% height */
+.backgroundSection {
+    position: relative;
+    width: 100%;
+    height: 75%;
+    min-height: 0;
+    flex: 1;
 }
 
-.block-animation img {
+.backgroundImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
-    position: relative;
-    height: 30%;
-    margin-top: -4px;
 }
 
-.top-block {
-    animation: top-slide-in 1.5s ease infinite;
+/* Vertical Text */
+.verticalText {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%) rotate(180deg);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
-.middle-block {
-    animation: middle-slide-in 1.5s ease infinite;
-}
-
-.bottom-block {
-    animation: bottom-slide-in 1.5s ease infinite;
-}
-
-[dir="rtl"] .top-block {
-    animation: top-slide-in-rtl 1.5s ease infinite;
-}
-
-[dir="rtl"] .middle-block {
-    animation: middle-slide-in-rtl 1.5s ease infinite;
-}
-
-[dir="rtl"] .bottom-block {
-    animation: bottom-slide-in-rtl 1.5s ease infinite;
-}
-
-@keyframes top-slide-in {
-  0% {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-
-  33% {
-    transform: translateY(0px);
-    opacity: 1;
-  }
-}
-
-@keyframes middle-slide-in {
-  0% {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-
-  33% {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-
-  66% {
-    transform: translateY(0px);
-    opacity: 1;
-  }
-}
-
-@keyframes bottom-slide-in {
-  0% {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-
-  66% {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-
-  100% {
-    transform: translateY(0px);
-    opacity: 1;
-  }
-}
-
-@keyframes top-slide-in-rtl {
-  0% {
-    transform: translateY(50px) scaleX(-1);
-    opacity: 0;
-  }
-
-  33% {
-    transform: translateY(0px) scaleX(-1);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0px) scaleX(-1);
-    opacity: 1;
-  }
-}
-
-@keyframes middle-slide-in-rtl {
-  0% {
-    transform: translateY(50px) scaleX(-1);
-    opacity: 0;
-  }
-
-  33% {
-    transform: translateY(50px) scaleX(-1);
-    opacity: 0;
-  }
-
-  66% {
-    transform: translateY(0px) scaleX(-1);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0px) scaleX(-1);
-    opacity: 1;
-  }
-}
-
-@keyframes bottom-slide-in-rtl {
-  0% {
-    transform: translateY(50px) scaleX(-1);
-    opacity: 0;
-  }
-
-  66% {
-    transform: translateY(50px) scaleX(-1);
-    opacity: 0;
-  }
-
-  100% {
-    transform: translateY(0px) scaleX(-1);
-    opacity: 1;
-  }
-}
-
-.title {
-    font-size: 2rem;
-    font-weight: bold;
-    margin: 0.75rem 0;
-}
-
-.message {
-    height: 20px;
-    margin: 5px 0;
-}
-
-.bar-outer {
-    width: 250px;
-    height: 8px;
-    border-radius: 8px;
-    background-color: $ui-white-transparent-default;
+/* Progress Bar */
+.progressBarContainer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: rgba(0, 0, 0, 0.5);
     overflow: hidden;
-    position: relative;
-    margin: auto;
 }
-.bar-inner {
+
+.progressBarFill {
     position: absolute;
     top: 0;
     left: 0;
     width: 0;
     height: 100%;
-    background-color: $ui-white-default;
+    background-color: #00BAAD;
+}
+
+/* Bottom Section - 25% height */
+.bottomSection {
+    width: 100%;
+    height: 25%;
+    min-height: 120px;
+    background-color: #000000;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px 32px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Bottom Left - Logo and Copyright */
+.bottomLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 350px;
+    min-width: 0;
+}
+
+.logoContainer {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logoContainer svg {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+}
+
+.engineText {
+    color: #FFFFFF;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+}
+
+.copyright {
+    color: #666666;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+/* Bottom Right - Loading Status and Random Tips */
+.bottomRight {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    text-align: right;
+    max-width: calc(100% - 400px);
+    min-width: 0;
+}
+
+.loadingStatus {
+    color: #999999;
+    font-size: 14px;
+    font-weight: 400;
+    max-width: 100%;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.randomTip {
+    color: #666666;
+    font-size: 13px;
+    font-weight: 400;
+    max-width: 100%;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    font-style: italic;
+}
+
+/* RTL Support */
+[dir="rtl"] .verticalText {
+    right: auto;
+    left: 20px;
+    transform: translateY(-50%) rotate(0deg);
+}
+
+[dir="rtl"] .bottomLeft {
+    align-items: flex-end;
+}
+
+[dir="rtl"] .bottomRight {
+    align-items: flex-start;
+    text-align: left;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .verticalText {
+        display: none;
+    }
+
+    .bottomSection {
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 16px;
+        height: auto;
+        min-height: 150px;
+    }
+
+    .bottomLeft {
+        max-width: 100%;
+    }
+
+    .bottomRight {
+        align-items: flex-start;
+        text-align: left;
+        max-width: 100%;
+    }
+
+    .randomTip {
+        font-size: 12px;
+        max-width: 100%;
+    }
+
+    .engineText {
+        font-size: 22px;
+    }
+
+    .logoContainer svg {
+        width: 50px;
+        height: 50px;
+    }
+
+    .loadingStatus {
+        font-size: 12px;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .backgroundSection {
+        height: 70%;
+    }
+
+    .bottomSection {
+        height: 30%;
+    }
+
+    .engineText {
+        font-size: 18px;
+    }
+
+    .logoContainer svg {
+        width: 40px;
+        height: 40px;
+    }
+
+    .loadingStatus {
+        font-size: 11px;
+    }
 }

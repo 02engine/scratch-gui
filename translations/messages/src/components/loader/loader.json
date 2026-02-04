@@ -23,5 +23,15 @@
     "id": "tw.loader.loadingAssets",
     "description": "Appears when loading project assets from a project file on the user's computer",
     "defaultMessage": "Loading assets ({complete}/{total}) …"
+  },
+  {
+    "id": "tw.loader.madeByStudio",
+    "description": "Vertical copyright text",
+    "defaultMessage": "Made by 0.2Studio"
+  },
+  {
+    "id": "tw.loader.redefineExperience",
+    "description": "Copyright slogan",
+    "defaultMessage": "Redefine the Designing Experience"
   }
 ]
