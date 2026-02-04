@@ -2313,7 +2313,7 @@ window.addonAPI = {
   // Addons that should NOT be re-run / cleaned by the global DOM cleanup
   _rerunExclude: new Set([
   // 默认排除：variable-manager, find-bar, block-count
-  'variable-manager', 'find-bar', 'block-count', 'data-category-tweaks-v2', 'debugger', 'folders']),
+  'variable-manager', 'find-bar', 'block-count', 'data-category-tweaks-v2', 'debugger', 'folders', 'blocks2image', 'editor-searchable-dropdowns']),
   addToRerunExclude(id) {
     this._rerunExclude.add(id);
   },
