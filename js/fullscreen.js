@@ -1606,38 +1606,25 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "/* overridden by src/lib/themes/guiHelpers.js */\n\n/*\n    Contains constants for the z-index values of elements that are part of the global stack context.\n    In other words, z-index values that are \"inside\" a component are not added here.\n    This prevents conflicts between identical z-index values in different components.\n*/\n\n/* Toolbox z-index: 40; set in scratch-blocks */\n\n/* tooltips should go over add buttons if they overlap */\n\n/* monitors go over add buttons */\n\n/* \"ask\" block text input goes above monitors */\n\n/* menu-bar should go over monitors, alerts and tutorials */\n\n/* behind menu-bar */\n\n/* Block drag z-index: 1000; default 50 is overriden in blocks.css */\n\n/* so it is draggable into other panes */\n\n/* behind modals */\n\n/* behind modals */\n\n/* above menu-bar when dragging */\n\n/* in most interfaces, the context menu is always on top */\n\n.loader_background_2DPrW {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    z-index: 490;\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    background-color: var(--menu-bar-background);\n    font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n    text-align: center;\n    color: white;\n}\n\n.loader_fullscreen_29EhP {\n    /* Break out of the layout using position: fixed to cover the whole screen */\n    position: fixed;\n    /* Use the fullscreen stage z-index to allow covering full-screen mode */\n    z-index: 500;\n}\n\n.loader_block-animation_12MqO {\n    width: 125px;\n    height: 150px;\n    margin: 50px auto 0px;\n}\n\n.loader_block-animation_12MqO img {\n    display: block;\n    position: relative;\n    height: 30%;\n    margin-top: -4px;\n}\n\n.loader_top-block_3P7pK {\n    animation: loader_top-slide-in_8ngR8 1.5s ease infinite;\n}\n\n.loader_middle-block_CKcTg {\n    animation: loader_middle-slide-in_In2DU 1.5s ease infinite;\n}\n\n.loader_bottom-block_1-3rO {\n    animation: loader_bottom-slide-in_2DZ1B 1.5s ease infinite;\n}\n\n[dir=\"rtl\"] .loader_top-block_3P7pK {\n    animation: loader_top-slide-in-rtl_1vHi4 1.5s ease infinite;\n}\n\n[dir=\"rtl\"] .loader_middle-block_CKcTg {\n    animation: loader_middle-slide-in-rtl_21ALw 1.5s ease infinite;\n}\n\n[dir=\"rtl\"] .loader_bottom-block_1-3rO {\n    animation: loader_bottom-slide-in-rtl_3kdB0 1.5s ease infinite;\n}\n\n@keyframes loader_top-slide-in_8ngR8 {\n  0% {\n    transform: translateY(50px);\n    opacity: 0;\n  }\n\n  33% {\n    transform: translateY(0px);\n    opacity: 1;\n  }\n}\n\n@keyframes loader_middle-slide-in_In2DU {\n  0% {\n    transform: translateY(50px);\n    opacity: 0;\n  }\n\n  33% {\n    transform: translateY(50px);\n    opacity: 0;\n  }\n\n  66% {\n    transform: translateY(0px);\n    opacity: 1;\n  }\n}\n\n@keyframes loader_bottom-slide-in_2DZ1B {\n  0% {\n    transform: translateY(50px);\n    opacity: 0;\n  }\n\n  66% {\n    transform: translateY(50px);\n    opacity: 0;\n  }\n\n  100% {\n    transform: translateY(0px);\n    opacity: 1;\n  }\n}\n\n@keyframes loader_top-slide-in-rtl_1vHi4 {\n  0% {\n    transform: translateY(50px) scaleX(-1);\n    opacity: 0;\n  }\n\n  33% {\n    transform: translateY(0px) scaleX(-1);\n    opacity: 1;\n  }\n  100% {\n    transform: translateY(0px) scaleX(-1);\n    opacity: 1;\n  }\n}\n\n@keyframes loader_middle-slide-in-rtl_21ALw {\n  0% {\n    transform: translateY(50px) scaleX(-1);\n    opacity: 0;\n  }\n\n  33% {\n    transform: translateY(50px) scaleX(-1);\n    opacity: 0;\n  }\n\n  66% {\n    transform: translateY(0px) scaleX(-1);\n    opacity: 1;\n  }\n  100% {\n    transform: translateY(0px) scaleX(-1);\n    opacity: 1;\n  }\n}\n\n@keyframes loader_bottom-slide-in-rtl_3kdB0 {\n  0% {\n    transform: translateY(50px) scaleX(-1);\n    opacity: 0;\n  }\n\n  66% {\n    transform: translateY(50px) scaleX(-1);\n    opacity: 0;\n  }\n\n  100% {\n    transform: translateY(0px) scaleX(-1);\n    opacity: 1;\n  }\n}\n\n.loader_title_1tlje {\n    font-size: 2rem;\n    font-weight: bold;\n    margin: 0.75rem 0;\n}\n\n.loader_message_3yQvj {\n    height: 20px;\n    margin: 5px 0;\n}\n\n.loader_bar-outer_11Y-7 {\n    width: 250px;\n    height: 8px;\n    border-radius: 8px;\n    background-color: var(--ui-white-transparent-default);\n    overflow: hidden;\n    position: relative;\n    margin: auto;\n}\n\n.loader_bar-inner_3GLRE {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 0;\n    height: 100%;\n    background-color: var(--ui-white-default);\n}\n", ""]);
+exports.push([module.i, "/* overridden by src/lib/themes/guiHelpers.js */\n\n/*\n    Contains constants for the z-index values of elements that are part of the global stack context.\n    In other words, z-index values that are \"inside\" a component are not added here.\n    This prevents conflicts between identical z-index values in different components.\n*/\n\n/* Toolbox z-index: 40; set in scratch-blocks */\n\n/* tooltips should go over add buttons if they overlap */\n\n/* monitors go over add buttons */\n\n/* \"ask\" block text input goes above monitors */\n\n/* menu-bar should go over monitors, alerts and tutorials */\n\n/* behind menu-bar */\n\n/* Block drag z-index: 1000; default 50 is overriden in blocks.css */\n\n/* so it is draggable into other panes */\n\n/* behind modals */\n\n/* behind modals */\n\n/* above menu-bar when dragging */\n\n/* in most interfaces, the context menu is always on top */\n\n/* 02engine Loading Screen Styles */\n\n.loader_background_2DPrW {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    z-index: 490;\n    display: flex;\n    flex-direction: column;\n    background-color: #000000;\n    overflow: hidden;\n    font-family: Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n}\n\n.loader_fullscreen_29EhP {\n    /* Break out of the layout using position: fixed to cover the whole screen */\n    position: fixed;\n    /* Use the fullscreen stage z-index to allow covering full-screen mode */\n    z-index: 500;\n}\n\n/* Background Section - 75% height */\n\n.loader_backgroundSection_25A-K {\n    position: relative;\n    width: 100%;\n    height: 75%;\n    min-height: 0;\n    flex: 1;\n}\n\n.loader_backgroundImage_3-od2 {\n    width: 100%;\n    height: 100%;\n    object-fit: cover;\n    display: block;\n}\n\n/* Vertical Text */\n\n.loader_verticalText_2uJ5f {\n    position: absolute;\n    right: 20px;\n    top: 50%;\n    transform: translateY(-50%) rotate(180deg);\n    writing-mode: vertical-rl;\n    -webkit-text-orientation: mixed;\n            text-orientation: mixed;\n    color: rgba(255, 255, 255, 0.6);\n    font-size: 11px;\n    font-weight: 400;\n    letter-spacing: 0.5px;\n    white-space: nowrap;\n}\n\n/* Progress Bar */\n\n.loader_progressBarContainer_3rMb_ {\n    position: absolute;\n    bottom: 0;\n    left: 0;\n    width: 100%;\n    height: 4px;\n    background-color: rgba(0, 0, 0, 0.5);\n    overflow: hidden;\n}\n\n.loader_progressBarFill_1Inh5 {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 0;\n    height: 100%;\n    background-color: #00BAAD;\n}\n\n/* Bottom Section - 25% height */\n\n.loader_bottomSection_xzTCP {\n    width: 100%;\n    height: 25%;\n    min-height: 120px;\n    background-color: #000000;\n    display: flex;\n    justify-content: space-between;\n    align-items: flex-start;\n    padding: 24px 32px;\n    position: relative;\n    box-sizing: border-box;\n}\n\n/* Bottom Left - Logo and Copyright */\n\n.loader_bottomLeft_2Cdou {\n    display: flex;\n    flex-direction: column;\n    gap: 16px;\n    max-width: 350px;\n    min-width: 0;\n}\n\n.loader_logoContainer_3MKbd {\n    display: flex;\n    align-items: center;\n    gap: 20px;\n}\n\n.loader_logoContainer_3MKbd svg {\n    width: 50px;\n    height: 50px;\n    flex-shrink: 0;\n}\n\n.loader_engineText_3BH60 {\n    color: #FFFFFF;\n    font-size: 28px;\n    font-weight: 600;\n    letter-spacing: -0.5px;\n    flex-shrink: 0;\n}\n\n.loader_copyright_1taw9 {\n    color: #666666;\n    font-size: 12px;\n    font-weight: 400;\n}\n\n/* Bottom Right - Loading Status and Random Tips */\n\n.loader_bottomRight_38EIN {\n    display: flex;\n    flex-direction: column;\n    align-items: flex-end;\n    gap: 8px;\n    text-align: right;\n    max-width: calc(100% - 400px);\n    min-width: 0;\n}\n\n.loader_loadingStatus_2tWec {\n    color: #999999;\n    font-size: 14px;\n    font-weight: 400;\n    max-width: 100%;\n    word-wrap: break-word;\n    word-break: break-word;\n    overflow-wrap: break-word;\n}\n\n.loader_randomTip_1sMsW {\n    color: #666666;\n    font-size: 13px;\n    font-weight: 400;\n    max-width: 100%;\n    word-wrap: break-word;\n    word-break: break-word;\n    overflow-wrap: break-word;\n    font-style: italic;\n}\n\n/* RTL Support */\n\n[dir=\"rtl\"] .loader_verticalText_2uJ5f {\n    right: auto;\n    left: 20px;\n    transform: translateY(-50%) rotate(0deg);\n}\n\n[dir=\"rtl\"] .loader_bottomLeft_2Cdou {\n    align-items: flex-end;\n}\n\n[dir=\"rtl\"] .loader_bottomRight_38EIN {\n    align-items: flex-start;\n    text-align: left;\n}\n\n/* Responsive Design */\n\n@media (max-width: 768px) {\n    .loader_verticalText_2uJ5f {\n        display: none;\n    }\n\n    .loader_bottomSection_xzTCP {\n        padding: 16px 20px;\n        flex-direction: column;\n        gap: 16px;\n        height: auto;\n        min-height: 150px;\n    }\n\n    .loader_bottomLeft_2Cdou {\n        max-width: 100%;\n    }\n\n    .loader_bottomRight_38EIN {\n        align-items: flex-start;\n        text-align: left;\n        max-width: 100%;\n    }\n\n    .loader_randomTip_1sMsW {\n        font-size: 12px;\n        max-width: 100%;\n    }\n\n    .loader_engineText_3BH60 {\n        font-size: 22px;\n    }\n\n    .loader_logoContainer_3MKbd svg {\n        width: 50px;\n        height: 50px;\n    }\n\n    .loader_loadingStatus_2tWec {\n        font-size: 12px;\n        max-width: 100%;\n    }\n}\n\n@media (max-width: 480px) {\n    .loader_backgroundSection_25A-K {\n        height: 70%;\n    }\n\n    .loader_bottomSection_xzTCP {\n        height: 30%;\n    }\n\n    .loader_engineText_3BH60 {\n        font-size: 18px;\n    }\n\n    .loader_logoContainer_3MKbd svg {\n        width: 40px;\n        height: 40px;\n    }\n\n    .loader_loadingStatus_2tWec {\n        font-size: 11px;\n    }\n}", ""]);
 
 // exports
 exports.locals = {
 	"background": "loader_background_2DPrW",
 	"fullscreen": "loader_fullscreen_29EhP",
-	"block-animation": "loader_block-animation_12MqO",
-	"blockAnimation": "loader_block-animation_12MqO",
-	"top-block": "loader_top-block_3P7pK",
-	"topBlock": "loader_top-block_3P7pK",
-	"top-slide-in": "loader_top-slide-in_8ngR8",
-	"topSlideIn": "loader_top-slide-in_8ngR8",
-	"middle-block": "loader_middle-block_CKcTg",
-	"middleBlock": "loader_middle-block_CKcTg",
-	"middle-slide-in": "loader_middle-slide-in_In2DU",
-	"middleSlideIn": "loader_middle-slide-in_In2DU",
-	"bottom-block": "loader_bottom-block_1-3rO",
-	"bottomBlock": "loader_bottom-block_1-3rO",
-	"bottom-slide-in": "loader_bottom-slide-in_2DZ1B",
-	"bottomSlideIn": "loader_bottom-slide-in_2DZ1B",
-	"top-slide-in-rtl": "loader_top-slide-in-rtl_1vHi4",
-	"topSlideInRtl": "loader_top-slide-in-rtl_1vHi4",
-	"middle-slide-in-rtl": "loader_middle-slide-in-rtl_21ALw",
-	"middleSlideInRtl": "loader_middle-slide-in-rtl_21ALw",
-	"bottom-slide-in-rtl": "loader_bottom-slide-in-rtl_3kdB0",
-	"bottomSlideInRtl": "loader_bottom-slide-in-rtl_3kdB0",
-	"title": "loader_title_1tlje",
-	"message": "loader_message_3yQvj",
-	"bar-outer": "loader_bar-outer_11Y-7",
-	"barOuter": "loader_bar-outer_11Y-7",
-	"bar-inner": "loader_bar-inner_3GLRE",
-	"barInner": "loader_bar-inner_3GLRE"
+	"backgroundSection": "loader_backgroundSection_25A-K",
+	"backgroundImage": "loader_backgroundImage_3-od2",
+	"verticalText": "loader_verticalText_2uJ5f",
+	"progressBarContainer": "loader_progressBarContainer_3rMb_",
+	"progressBarFill": "loader_progressBarFill_1Inh5",
+	"bottomSection": "loader_bottomSection_xzTCP",
+	"bottomLeft": "loader_bottomLeft_2Cdou",
+	"logoContainer": "loader_logoContainer_3MKbd",
+	"engineText": "loader_engineText_3BH60",
+	"copyright": "loader_copyright_1taw9",
+	"bottomRight": "loader_bottomRight_38EIN",
+	"loadingStatus": "loader_loadingStatus_2tWec",
+	"randomTip": "loader_randomTip_1sMsW"
 };
 
 /***/ }),
@@ -14309,17 +14296,6 @@ LibraryComponent.defaultProps = {
 
 /***/ }),
 
-/***/ "./src/components/loader/bottom-block.svg":
-/*!************************************************!*\
-  !*** ./src/components/loader/bottom-block.svg ***!
-  \************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__.p + "static/assets/7efe82fffae735cd083388badd51b3fa.svg";
-
-/***/ }),
-
 /***/ "./src/components/loader/loader.css":
 /*!******************************************!*\
   !*** ./src/components/loader/loader.css ***!
@@ -14372,12 +14348,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _loader_css__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./loader.css */ "./src/components/loader/loader.css");
 /* harmony import */ var _loader_css__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_loader_css__WEBPACK_IMPORTED_MODULE_6__);
 /* harmony import */ var _reducers_project_state__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../reducers/project-state */ "./src/reducers/project-state.js");
-/* harmony import */ var _top_block_svg__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./top-block.svg */ "./src/components/loader/top-block.svg");
-/* harmony import */ var _top_block_svg__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(_top_block_svg__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var _middle_block_svg__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./middle-block.svg */ "./src/components/loader/middle-block.svg");
-/* harmony import */ var _middle_block_svg__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(_middle_block_svg__WEBPACK_IMPORTED_MODULE_9__);
-/* harmony import */ var _bottom_block_svg__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./bottom-block.svg */ "./src/components/loader/bottom-block.svg");
-/* harmony import */ var _bottom_block_svg__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(_bottom_block_svg__WEBPACK_IMPORTED_MODULE_10__);
 
 
 
@@ -14387,19 +14357,65 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-const mainMessages = {
-  'gui.loader.headline': /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
-    defaultMessage: "Loading Project",
-    id: "gui.loader.headline"
-  }),
-  'gui.loader.creating': /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
-    defaultMessage: "Creating Project",
-    id: "gui.loader.creating"
-  })
-};
+// 02engine Logo Component
+const Logo = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "60",
+  height: "60",
+  viewBox: "0 0 170 170",
+  fill: "none"
+}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("rect", {
+  x: "0",
+  y: "0",
+  width: "170",
+  height: "170",
+  rx: "57.800000000000004",
+  fill: "#004540"
+}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("rect", {
+  x: "10.20001220703125",
+  y: "18.699951171875",
+  width: "68",
+  height: "137.6999969482422",
+  rx: "34",
+  fill: "#00BAAD"
+}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("rect", {
+  x: "91.79998779296875",
+  y: "18.699951171875",
+  width: "68",
+  height: "102",
+  rx: "34",
+  fill: "#00BAAD"
+}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("rect", {
+  x: "91.79998779296875",
+  y: "91.800048828125",
+  width: "68",
+  height: "64.5999984741211",
+  rx: "32.29999923706055",
+  fill: "url(#linear_fill_22_5_0)"
+}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("defs", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("linearGradient", {
+  id: "linear_fill_22_5_0",
+  x1: "124.39646779296875",
+  y1: "156.4000473022461",
+  x2: "124.39646779296875",
+  y2: "103.72714654640198",
+  gradientUnits: "userSpaceOnUse"
+}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
+  offset: "0",
+  "stop-color": "#00BAAD"
+}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
+  offset: "1",
+  "stop-color": "#00BAAD",
+  "stop-opacity": "0"
+}))));
 const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["defineMessages"])({
+  loadingProject: {
+    "id": "gui.loader.headline",
+    "defaultMessage": "Loading Project"
+  },
+  creatingProject: {
+    "id": "gui.loader.creating",
+    "defaultMessage": "Creating Project"
+  },
   projectData: {
     "id": "tw.loader.projectData",
     "defaultMessage": "Loading project \u2026"
@@ -14411,6 +14427,14 @@ const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["defineMessages"
   loadingAssets: {
     "id": "tw.loader.loadingAssets",
     "defaultMessage": "Loading assets ({complete}/{total}) \u2026"
+  },
+  madeByStudio: {
+    "id": "tw.loader.madeByStudio",
+    "defaultMessage": "Made by 0.2Studio"
+  },
+  redefineExperience: {
+    "id": "tw.loader.redefineExperience",
+    "defaultMessage": "Redefine the Designing Experience"
   }
 });
 
@@ -14420,19 +14444,40 @@ const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["defineMessages"
 class LoaderComponent extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
   constructor(props) {
     super(props);
-    lodash_bindall__WEBPACK_IMPORTED_MODULE_5___default()(this, ['handleAssetProgress', 'handleProjectLoaded', 'barInnerRef', 'messageRef']);
+    lodash_bindall__WEBPACK_IMPORTED_MODULE_5___default()(this, ['handleAssetProgress', 'handleProjectLoaded', 'barInnerRef', 'messageRef', 'loadTips', 'cycleTips']);
     this.barInnerEl = null;
     this.messageEl = null;
     this.ignoreProgress = false;
+    this.tips = [];
+    this.currentTipIndex = 0;
+    this.tipInterval = null;
   }
   componentDidMount() {
     this.handleAssetProgress(this.props.vm.runtime.finishedAssetRequests, this.props.vm.runtime.totalAssetRequests);
     this.props.vm.on('ASSET_PROGRESS', this.handleAssetProgress);
     this.props.vm.runtime.on('PROJECT_LOADED', this.handleProjectLoaded);
+    this.loadTips();
   }
   componentWillUnmount() {
     this.props.vm.off('ASSET_PROGRESS', this.handleAssetProgress);
     this.props.vm.runtime.off('PROJECT_LOADED', this.handleProjectLoaded);
+    if (this.tipInterval) {
+      clearInterval(this.tipInterval);
+    }
+  }
+  loadTips() {
+    fetch('/loading-tips.json').then(response => response.json()).then(data => {
+      this.tips = data;
+      this.cycleTips();
+      this.tipInterval = setInterval(this.cycleTips, 5000);
+    }).catch(error => {
+      console.error('Failed to load tips:', error);
+    });
+  }
+  cycleTips() {
+    if (this.tips.length === 0) return;
+    this.currentTipIndex = (this.currentTipIndex + 1) % this.tips.length;
+    this.forceUpdate();
   }
   handleAssetProgress(finished, total) {
     if (this.ignoreProgress || !this.barInnerEl || !this.messageEl) {
@@ -14465,37 +14510,48 @@ class LoaderComponent extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Compo
     this.messageEl = message;
   }
   render() {
+    const getMessageId = () => {
+      if (this.props.messageId === 'gui.loader.creating') {
+        return messages.creatingProject;
+      }
+      return messages.loadingProject;
+    };
+    const currentTip = this.tips.length > 0 ? this.tips[this.currentTipIndex] : null;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: classnames__WEBPACK_IMPORTED_MODULE_3___default()(_loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.background, {
         [_loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.fullscreen]: this.props.isFullScreen
       })
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.container
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.blockAnimation
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.backgroundSection
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
-      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.topBlock,
-      src: _top_block_svg__WEBPACK_IMPORTED_MODULE_8___default.a,
-      draggable: false
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
-      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.middleBlock,
-      src: _middle_block_svg__WEBPACK_IMPORTED_MODULE_9___default.a,
-      draggable: false
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
-      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.bottomBlock,
-      src: _bottom_block_svg__WEBPACK_IMPORTED_MODULE_10___default.a,
-      draggable: false
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.title
-    }, mainMessages[this.props.messageId]), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.message,
-      ref: this.messageRef
+      src: "/images/loading-background.svg",
+      alt: "02engine Background",
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.backgroundImage
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.barOuter
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.verticalText
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], messages.madeByStudio)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.progressBarContainer
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.barInner,
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.progressBarFill,
       ref: this.barInnerRef
-    }))));
+    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.bottomSection
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.bottomLeft
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.logoContainer
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Logo, null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.engineText
+    }, "02Engine")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.copyright
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], messages.redefineExperience))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.bottomRight
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.loadingStatus,
+      ref: this.messageRef
+    }), currentTip && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: _loader_css__WEBPACK_IMPORTED_MODULE_6___default.a.randomTip
+    }, currentTip.zh))));
   }
 }
 LoaderComponent.propTypes = {
@@ -14503,6 +14559,7 @@ LoaderComponent.propTypes = {
   isFullScreen: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.bool,
   isRemote: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.bool,
   messageId: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.string,
+  projectTitle: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.string,
   vm: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.shape({
     on: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
     off: prop_types__WEBPACK_IMPORTED_MODULE_4___default.a.func,
@@ -14521,32 +14578,11 @@ LoaderComponent.defaultProps = {
 };
 const mapStateToProps = state => ({
   isRemote: Object(_reducers_project_state__WEBPACK_IMPORTED_MODULE_7__["getIsLoadingWithId"])(state.scratchGui.projectState.loadingState),
+  projectTitle: state.scratchGui.projectTitle,
   vm: state.scratchGui.vm
 });
 const mapDispatchToProps = () => ({});
 /* harmony default export */ __webpack_exports__["default"] = (Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["connect"])(mapStateToProps, mapDispatchToProps)(Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["injectIntl"])(LoaderComponent)));
-
-/***/ }),
-
-/***/ "./src/components/loader/middle-block.svg":
-/*!************************************************!*\
-  !*** ./src/components/loader/middle-block.svg ***!
-  \************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__.p + "static/assets/674db5c2e49df884273ac0f7d221865c.svg";
-
-/***/ }),
-
-/***/ "./src/components/loader/top-block.svg":
-/*!*********************************************!*\
-  !*** ./src/components/loader/top-block.svg ***!
-  \*********************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__.p + "static/assets/566d73a090e3d42d5bdfee3d92c79d25.svg";
 
 /***/ }),
 
