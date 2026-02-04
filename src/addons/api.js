@@ -1037,7 +1037,8 @@ window.addonAPI = {
         'debugger',
         'folders',
         'blocks2image',
-        'editor-searchable-dropdowns'
+        'editor-searchable-dropdowns',
+        'swap-local-global'
     ]),
 
     addToRerunExclude (id) {
