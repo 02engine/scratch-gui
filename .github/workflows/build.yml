@@ -21,20 +21,23 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Setup bun ⚙️
+        uses: oven-sh/setup-bun@v2
+
       - name: Skip Scripts Install 📦
-        run: npm i --skip-scripts  --loglevel=info
+        run: bun install --skip-scripts  --loglevel=info
 
       - name: Install cross-fetch 📦
-        run: npm i cross-fetch  --loglevel=info
+        run: bun install cross-fetch  --loglevel=info
 
       - name: Install dependencies 📦
-        run: npm i  --loglevel=info
+        run: bun install  --loglevel=info
 
       - name: Prepublish 🔧
-        run: npm run prepublishOnly
+        run: bun run prepublishOnly
 
       - name: Build 🏗️
-        run: npm run build
+        run: bun run build
 
       - name: Upload build artifact 📤
         uses: actions/upload-artifact@v4
