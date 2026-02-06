@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-02-04T12:51:37.187Z
+// Synced at: 2026-02-06T08:34:09.533Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -242,6 +242,7 @@ export default [
         code: "ddededodediamante/dateFormatV2.js",
         banner: "ddededodediamante/dateFormat.svg",
         creator: "ddededodediamante",
+        tags: ["customtype", "utility", "small", "data", "time"],
         isGitHub: true,
     },
     {
@@ -249,8 +250,9 @@ export default [
         description: "Use translation keys in your projects for multi-language support",
         code: "Embin/embintranslation.js",
         banner: "Embin/embintranslation.avif",
-        creator: "NotEmbin",
+        creator: "embinmc",
         isGitHub: true, 
+        tags: ["data", "utility", "text", "strings"],
         creatorAlias: "Embin",
     },
     {
@@ -535,6 +537,7 @@ export default [
         code: "Monochromasity/howmanylines.js",
         banner: "Monochromasity/placeholder-howmanylines.avif",
         creator: "Monochromasity",
+        tags: ["small"],
         isGitHub: true,
     },
     {
