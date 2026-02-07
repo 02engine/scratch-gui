@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-02-06T08:34:09.533Z
+// Synced at: 2026-02-07T12:06:18.039Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -281,6 +281,16 @@ export default [
         creator: "DogeisCut",
         isGitHub: true, 
         tags: ["customtype", "sets", "data", "utility"]
+    },
+    {
+        name: "Iterators",
+        description: "Transform and iterate over different types of collections and more.",
+        code: "Div/divIterators.js",
+        banner: "Div/divIterators.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
     },
     {
         name: "Blobs",
