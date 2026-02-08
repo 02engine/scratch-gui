@@ -1,0 +1,16 @@
+{
+  "forums": [
+    {
+      "name": "ScratchRain",
+      "baseUrl": "https://scbbs.nethugo.top",
+      "oauth": {
+        "clientId": "Yw5rZcZjn35YR7m5JaG6AljqFoxjfBz",
+        "clientSecret": "463vt1oS7hLKKOkYGyMntTUsOiV2HA6B",
+        "redirectUri": "",
+        "scope": "user.read discussions.create discussions.read uploads.create",
+        "exchangeEndpoint": ""
+      },
+      "defaultTagId": 1
+    }
+  ]
+}
