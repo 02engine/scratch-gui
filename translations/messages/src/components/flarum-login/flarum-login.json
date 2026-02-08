@@ -1,0 +1,27 @@
+[
+  {
+    "id": "gui.flarumLogin.selectForum",
+    "description": "Select forum to authenticate",
+    "defaultMessage": "Select Forum"
+  },
+  {
+    "id": "gui.flarumLogin.post",
+    "description": "Post to forum",
+    "defaultMessage": "Post"
+  },
+  {
+    "id": "gui.flarumLogin.logout",
+    "description": "Logout from forum",
+    "defaultMessage": "Logout"
+  },
+  {
+    "id": "gui.flarumLogin.authenticating",
+    "description": "Authenticating",
+    "defaultMessage": "Authenticating..."
+  },
+  {
+    "id": "gui.flarumLogin.button",
+    "description": "Forum login button",
+    "defaultMessage": "Forum Login"
+  }
+]

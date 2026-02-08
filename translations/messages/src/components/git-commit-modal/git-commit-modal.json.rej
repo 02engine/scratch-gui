@@ -1,0 +1,83 @@
+diff a/translations/messages/src/components/git-commit-modal/git-commit-modal.json b/translations/messages/src/components/git-commit-modal/git-commit-modal.json	(rejected hunks)
+@@ -69,6 +69,81 @@
+     "description": "Loading message during fetch",
+     "defaultMessage": "Fetching..."
+   },
++  {
++    "id": "gui.gitCommit.logoutSuccess",
++    "description": "Message when logout is successful",
++    "defaultMessage": "Logged out successfully"
++  },
++  {
++    "id": "gui.gitCommit.selectValidMdFile",
++    "description": "Error when file selection is invalid",
++    "defaultMessage": "Please select a valid .md file"
++  },
++  {
++    "id": "gui.gitCommit.dropValidMdFile",
++    "description": "Error when dropped file is invalid",
++    "defaultMessage": "Please drop a valid .md or .markdown file"
++  },
++  {
++    "id": "gui.gitCommit.enterRepository",
++    "description": "Error when repository is empty",
++    "defaultMessage": "Please enter a repository"
++  },
++  {
++    "id": "gui.gitCommit.repositoryFormat",
++    "description": "Error when repository format is invalid",
++    "defaultMessage": "Repository must be in format: owner/repository"
++  },
++  {
++    "id": "gui.gitCommit.noToken",
++    "description": "Error when token is not available",
++    "defaultMessage": "No authentication token available. Please authenticate first."
++  },
++  {
++    "id": "gui.gitCommit.commitSuccess",
++    "description": "Success message after commit",
++    "defaultMessage": "Successfully committed to {repository} ({branch})"
++  },
++  {
++    "id": "gui.gitCommit.commitFailed",
++    "description": "Error message when commit fails",
++    "defaultMessage": "Failed to commit to GitHub"
++  },
++  {
++    "id": "gui.gitCommit.unexpectedError",
++    "description": "Generic error message",
++    "defaultMessage": "An unexpected error occurred"
++  },
++  {
++    "id": "gui.gitCommit.fetchSuccess",
++    "description": "Success message after fetch",
++    "defaultMessage": "Successfully fetched project from {repository} ({branch})"
++  },
++  {
++    "id": "gui.gitCommit.fetchFailed",
++    "description": "Error message when fetch fails",
++    "defaultMessage": "Failed to fetch from GitHub"
++  },
++  {
++    "id": "gui.gitCommit.fetchError",
++    "description": "Error message during fetch",
++    "defaultMessage": "An unexpected error occurred while fetching"
++  },
++  {
++    "id": "gui.gitCommit.dragReleaseHint",
++    "description": "File drop release hint",
++    "defaultMessage": "Release to upload"
++  },
++  {
++    "id": "gui.gitCommit.dragDropHint",
++    "description": "File drop zone hint",
++    "defaultMessage": "Drag file here or click to select"
++  },
++  {
++    "id": "gui.gitCommit.readmeFileHint",
++    "description": "Supported file types hint",
++    "defaultMessage": "Support .md or .markdown files"
++  },
+   {
+     "id": "gui.gitCommit.loginButton",
+     "description": "Button to login to GitHub",

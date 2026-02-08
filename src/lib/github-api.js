@@ -107,7 +107,6 @@ class GitHubApiService {
     clearAllAuth() {
         // 清除 OAuth 认证
         githubOAuth.clearAuth();
-
         // 清除 PAT
         this.clearToken();
     }

@@ -1,0 +1,113 @@
+diff a/src/components/menu-bar/menu-bar.jsx b/src/components/menu-bar/menu-bar.jsx	(rejected hunks)
+@@ -113,6 +113,9 @@ import SeeInsideButton from './tw-see-inside.jsx';
+ import {notScratchDesktop} from '../../lib/isScratchDesktop.js';
+ import {APP_NAME} from '../../lib/brand.js';
+ 
++import FlarumLogin from '../flarum-login/flarum-login.jsx';
++import FlarumComposer from '../flarum-composer/flarum-composer.jsx';
++
+ const ariaMessages = defineMessages({
+     tutorials: {
+         id: 'gui.menuBar.tutorialsLibrary',
+@@ -235,8 +238,14 @@ class MenuBar extends React.Component {
+             'getSaveToComputerHandler',
+             'restoreOptionMessage',
+             'handleSetDefaultProject',
+-            'handleRestoreDefaultProject'
++            'handleRestoreDefaultProject',
++            'handleOpenFlarumComposer',
++            'handleCloseFlarumComposer'
+         ]);
++        this.state = {
++            showComposer: false,
++            flarumToken: null
++        };
+     }
+     componentDidMount () {
+         document.addEventListener('keydown', this.handleKeyPress);
+@@ -494,6 +503,12 @@ class MenuBar extends React.Component {
+             this.props.onRestoreDefaultProject();
+         }
+     }
++    handleOpenFlarumComposer () {
++        this.setState({showComposer: true});
++    }
++    handleCloseFlarumComposer () {
++        this.setState({showComposer: false});
++    }
+     buildAboutMenu (onClickAbout) {
+         if (!onClickAbout) {
+             // hide the button
+@@ -1158,26 +1173,24 @@ class MenuBar extends React.Component {
+                             </Button>
+                         </a>
+                     </div>}
+-                    {<div className={styles.menuBarItem}>
+-                        <div
+-                            className={classNames(styles.menuBarItem, styles.hoverable)}
+-                            onClick={this.props.onClickGitCommit}
+-                        >
+-                            <img
+-                                src={gitIcon}
+-                                draggable={false}
+-                                width={20}
+-                                height={20}
++                    <div
++                        className={classNames(styles.menuBarItem, styles.hoverable, styles.withShadow)}
++                        onClick={this.props.onClickGitCommit}
++                    >
++                        <img
++                            src={gitIcon}
++                            draggable={false}
++                            width={20}
++                            height={20}
++                        />
++                        <span className={styles.collapsibleLabel}>
++                            <FormattedMessage
++                                defaultMessage="Git"
++                                description="Button to open Git menu"
++                                id="gui.menuBar.git"
+                             />
+-                            <span className={styles.collapsibleLabel}>
+-                                <FormattedMessage
+-                                    defaultMessage="Git"
+-                                    description="Button to open Git menu"
+-                                    id="gui.menuBar.git"
+-                                />
+-                            </span>
+-                        </div>
+-                    </div>}
++                        </span>
++                    </div>
+                     {/* Git 快捷按钮 */}
+                     {this.props.vm && this.props.vm.runtime && this.props.vm.runtime.platform &&
+                      this.props.vm.runtime.platform.git && this.props.vm.runtime.platform.git.repository &&
+@@ -1214,7 +1227,28 @@ class MenuBar extends React.Component {
+                     />
+                 </div>
+ 
++                {/* Flarum 登录按钮放在右上角，关于按钮左边 */}
++                <div 
++                    className={classNames(styles.menuBarItem, !this.state.flarumToken && styles.hoverable, styles.withShadow)}
++                    style={!this.props.onClickAbout ? {marginRight: '8px'} : {}}
++                >
++                    <FlarumLogin
++                        isRtl={this.props.isRtl}
++                        onTokenUpdate={(token) => this.setState({flarumToken: token})}
++                        onOpenComposer={this.handleOpenFlarumComposer}
++                    />
++                </div>
++
+                 {aboutButton}
++                {this.state.showComposer && (
++                    <FlarumComposer
++                        vm={this.props.vm}
++                        projectName={this.props.projectTitle}
++                        token={this.state.flarumToken}
++                        onRequestClose={this.handleCloseFlarumComposer}
++                        onDone={this.handleCloseFlarumComposer}
++                    />
++                )}
+             </Box>
+         );
+     }

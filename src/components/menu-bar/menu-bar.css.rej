@@ -1,0 +1,31 @@
+diff a/src/components/menu-bar/menu-bar.css b/src/components/menu-bar/menu-bar.css	(rejected hunks)
+@@ -74,6 +74,21 @@
+     background-color: $ui-black-transparent;
+ }
+ 
++/* Git和Flarum按钮悬浮时显示左右阴影间隔 */
++.menu-bar-item.with-shadow:hover {
++    box-shadow: -8px 0 0 $ui-black-transparent, 8px 0 0 $ui-black-transparent;
++}
++
++/* 菜单展开时也显示阴影 - 使用更高优先级 */
++.menu-bar-item.with-shadow.active {
++    box-shadow: -8px 0 0 $ui-black-transparent, 8px 0 0 $ui-black-transparent !important;
++}
++
++/* 覆盖hover状态的背景色，确保阴影可见 */
++.menu-bar-item.with-shadow.active {
++    background-color: transparent !important;
++}
++
+ .menu-bar-item.growable {
+     max-width: $menu-bar-item-max-width;
+     flex: 1;
+@@ -109,6 +124,7 @@
+     background-color: white;
+     color: inherit;
+     height: 34px;
++    margin-right: 8px;
+ }
+ 
+ .divider {

@@ -1,0 +1,58 @@
+diff a/translations/messages/src/components/git-quick-modal/git-quick-modal.json b/translations/messages/src/components/git-quick-modal/git-quick-modal.json	(rejected hunks)
+@@ -78,5 +78,55 @@
+     "id": "gui.gitQuick.loading",
+     "description": "Loading message",
+     "defaultMessage": "Processing..."
++  },
++  {
++    "id": "gui.gitQuick.enterSummary",
++    "description": "Error when commit summary is empty",
++    "defaultMessage": "Please enter a commit summary"
++  },
++  {
++    "id": "gui.gitQuick.commitSuccess",
++    "description": "Success message after commit",
++    "defaultMessage": "Successfully committed to {repository}"
++  },
++  {
++    "id": "gui.gitQuick.commitFailed",
++    "description": "Error message when commit fails",
++    "defaultMessage": "Failed to commit"
++  },
++  {
++    "id": "gui.gitQuick.fetchSuccess",
++    "description": "Success message after fetch",
++    "defaultMessage": "Successfully fetched from {repository}"
++  },
++  {
++    "id": "gui.gitQuick.fetchFailed",
++    "description": "Error message when fetch fails",
++    "defaultMessage": "Failed to fetch project"
++  },
++  {
++    "id": "gui.gitQuick.fetchError",
++    "description": "General error message during fetch",
++    "defaultMessage": "An unexpected error occurred"
++  },
++  {
++    "id": "gui.gitQuick.enterPrTitle",
++    "description": "Error when pull request title is empty",
++    "defaultMessage": "Please enter a pull request title"
++  },
++  {
++    "id": "gui.gitQuick.forkRepository",
++    "description": "Message for fork repository",
++    "defaultMessage": "This is a fork repository. Create a pull request at: {upstreamUrl}"
++  },
++  {
++    "id": "gui.gitQuick.createPrPrompt",
++    "description": "Message to prompt creating pull request",
++    "defaultMessage": "Repository ready for pull requests. Create a new branch and submit a PR at: {repoUrl}/pulls"
++  },
++  {
++    "id": "gui.gitQuick.preparePrFailed",
++    "description": "Error message when preparing pull request fails",
++    "defaultMessage": "Failed to prepare pull request. Make sure you have created a feature branch first."
+   }
+ ]
+\ No newline at end of file

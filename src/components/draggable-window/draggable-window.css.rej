@@ -1,0 +1,8 @@
+diff a/src/components/draggable-window/draggable-window.css b/src/components/draggable-window/draggable-window.css	(rejected hunks)
+@@ -165,4 +165,4 @@
+ 
+ .minimizedWindowTitle {
+     display: none;
+-}
+\ No newline at end of file
++}

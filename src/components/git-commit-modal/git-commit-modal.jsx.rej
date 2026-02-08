@@ -1,0 +1,328 @@
+diff a/src/components/git-commit-modal/git-commit-modal.jsx b/src/components/git-commit-modal/git-commit-modal.jsx	(rejected hunks)
+@@ -80,6 +80,66 @@ const messages = defineMessages({
+         id: 'gui.gitCommit.fetching',
+         defaultMessage: 'Fetching...',
+         description: 'Loading message during fetch'
++    },
++    logoutSuccess: {
++        id: 'gui.gitCommit.logoutSuccess',
++        defaultMessage: 'Logged out successfully',
++        description: 'Message when logout is successful'
++    },
++    selectValidMdFile: {
++        id: 'gui.gitCommit.selectValidMdFile',
++        defaultMessage: 'Please select a valid .md file',
++        description: 'Error when file selection is invalid'
++    },
++    dropValidMdFile: {
++        id: 'gui.gitCommit.dropValidMdFile',
++        defaultMessage: 'Please drop a valid .md or .markdown file',
++        description: 'Error when dropped file is invalid'
++    },
++    enterRepository: {
++        id: 'gui.gitCommit.enterRepository',
++        defaultMessage: 'Please enter a repository',
++        description: 'Error when repository is empty'
++    },
++    repositoryFormat: {
++        id: 'gui.gitCommit.repositoryFormat',
++        defaultMessage: 'Repository must be in format: owner/repository',
++        description: 'Error when repository format is invalid'
++    },
++    noToken: {
++        id: 'gui.gitCommit.noToken',
++        defaultMessage: 'No authentication token available. Please authenticate first.',
++        description: 'Error when token is not available'
++    },
++    commitSuccess: {
++        id: 'gui.gitCommit.commitSuccess',
++        defaultMessage: 'Successfully committed to {repository} ({branch})',
++        description: 'Success message after commit'
++    },
++    commitFailed: {
++        id: 'gui.gitCommit.commitFailed',
++        defaultMessage: 'Failed to commit to GitHub',
++        description: 'Error message when commit fails'
++    },
++    unexpectedError: {
++        id: 'gui.gitCommit.unexpectedError',
++        defaultMessage: 'An unexpected error occurred',
++        description: 'Generic error message'
++    },
++    fetchSuccess: {
++        id: 'gui.gitCommit.fetchSuccess',
++        defaultMessage: 'Successfully fetched project from {repository} ({branch})',
++        description: 'Success message after fetch'
++    },
++    fetchFailed: {
++        id: 'gui.gitCommit.fetchFailed',
++        defaultMessage: 'Failed to fetch from GitHub',
++        description: 'Error message when fetch fails'
++    },
++    fetchError: {
++        id: 'gui.gitCommit.fetchError',
++        defaultMessage: 'An unexpected error occurred while fetching',
++        description: 'Error message during fetch'
+     }
+ });
+ 
+@@ -91,11 +151,12 @@ const GitCommitModal = props => {
+         onCommit,
+         onFetch,
+         onLogin,
+-        projectData
++        projectData,
++        repository: initialRepository = ''
+     } = props;
+ 
+     const [formData, setFormData] = React.useState({
+-        repository: '',
++        repository: initialRepository || '',
+         summary: '',
+         description: '',
+         readmeFile: null
+@@ -104,15 +165,15 @@ const GitCommitModal = props => {
+         isLoading: false,
+         isFetching: false
+     });
+-    const [uiMessages, setUiMessages] = React.useState({
+-        error: '',
+-        success: ''
+-    });
+     const [isDragOver, setIsDragOver] = React.useState(false);
++    const [notification, setNotification] = React.useState({
++        show: false,
++        message: '',
++        type: 'info' // 'success', 'error', 'warning', 'info'
++    });
+ 
+     const updateFormData = (field, value) => {
+         setFormData(prev => ({ ...prev, [field]: value }));
+-        setUiMessages(prev => ({ ...prev, error: '' }));
+     };
+ 
+     const handleRepositoryChange = e => updateFormData('repository', e.target.value);
+@@ -124,7 +185,7 @@ const GitCommitModal = props => {
+         if (file && file.name.toLowerCase().endsWith('.md')) {
+             updateFormData('readmeFile', file);
+         } else if (file) {
+-            setUiMessages(prev => ({ ...prev, error: 'Please select a valid .md file' }));
++            showNotification(intl.formatMessage(messages.selectValidMdFile), 'error');
+             e.target.value = '';
+         }
+     };
+@@ -158,7 +219,7 @@ const GitCommitModal = props => {
+             if (file.name.toLowerCase().endsWith('.md') || file.name.toLowerCase().endsWith('.markdown')) {
+                 updateFormData('readmeFile', file);
+             } else {
+-                setUiMessages(prev => ({ ...prev, error: 'Please drop a valid .md or .markdown file' }));
++                showNotification(intl.formatMessage(messages.dropValidMdFile), 'error');
+             }
+         }
+     };
+@@ -173,14 +234,14 @@ const GitCommitModal = props => {
+ 
+     const validateInputs = () => {
+         if (!formData.repository.trim()) {
+-            setUiMessages(prev => ({ ...prev, error: 'Please enter a repository' }));
++            showNotification(intl.formatMessage(messages.enterRepository), 'error');
+             return false;
+         }
+ 
+         // 验证仓库格式
+         const repoPattern = /^[^/]+\/[^/]+$/;
+         if (!repoPattern.test(formData.repository.trim())) {
+-            setUiMessages(prev => ({ ...prev, error: 'Repository must be in format: owner/repository' }));
++            showNotification(intl.formatMessage(messages.repositoryFormat), 'error');
+             return false;
+         }
+ 
+@@ -191,13 +252,13 @@ const GitCommitModal = props => {
+         if (!validateInputs()) return;
+ 
+         setLoadingStates(prev => ({ ...prev, isLoading: true }));
+-        setUiMessages({ error: '', success: '' });
+ 
+         try {
+             // 获取有效的token（OAuth优先）
+             const token = githubApi.getEffectiveToken();
+             if (!token) {
+-                setUiMessages(prev => ({ ...prev, error: 'No authentication token available. Please authenticate first.' }));
++                showNotification(intl.formatMessage(messages.noToken), 'error');
++                setLoadingStates(prev => ({ ...prev, isLoading: false }));
+                 return;
+             }
+ 
+@@ -225,15 +286,28 @@ const GitCommitModal = props => {
+             });
+ 
+             if (result.success) {
+-                setUiMessages(prev => ({ ...prev, success: `Successfully committed to ${result.repository} (${result.branch})` }));
++                setLoadingStates(prev => ({ ...prev, isLoading: false }));
++                setFormData(prev => ({
++                    ...prev,
++                    repository: '',
++                    summary: '',
++                    description: '',
++                    readmeFile: null
++                }));
++                showNotification(intl.formatMessage(messages.commitSuccess, {
++                    repository: result.repository,
++                    branch: result.branch
++                }), 'success');
+                 onCommit && onCommit(result);
+             } else {
+-                setUiMessages(prev => ({ ...prev, error: result.error || 'Failed to commit to GitHub' }));
++                setLoadingStates(prev => ({ ...prev, isLoading: false }));
++                showNotification(intl.formatMessage(messages.commitFailed), 'error');
+             }
+ 
+         } catch (err) {
+             console.error('Commit error:', err);
+-            setUiMessages(prev => ({ ...prev, error: err.message || 'An unexpected error occurred' }));
++            setLoadingStates(prev => ({ ...prev, isLoading: false }));
++            showNotification(intl.formatMessage(messages.unexpectedError), 'error');
+         } finally {
+             setLoadingStates(prev => ({ ...prev, isLoading: false }));
+         }
+@@ -243,13 +317,13 @@ const GitCommitModal = props => {
+         if (!validateInputs()) return;
+ 
+         setLoadingStates(prev => ({ ...prev, isFetching: true }));
+-        setUiMessages({ error: '', success: '' });
+ 
+         try {
+             // 获取有效的token（OAuth优先）
+             const token = githubApi.getEffectiveToken();
+             if (!token) {
+-                setUiMessages(prev => ({ ...prev, error: 'No authentication token available. Please authenticate first.' }));
++                showNotification(intl.formatMessage(messages.noToken), 'error');
++                setLoadingStates(prev => ({ ...prev, isFetching: false }));
+                 return;
+             }
+ 
+@@ -257,15 +331,21 @@ const GitCommitModal = props => {
+             const result = await githubApi.fetchProject(token, formData.repository.trim());
+ 
+             if (result.success) {
+-                setUiMessages(prev => ({ ...prev, success: `Successfully fetched project from ${result.repository} (${result.branch})` }));
++                setLoadingStates(prev => ({ ...prev, isFetching: false }));
++                showNotification(intl.formatMessage(messages.fetchSuccess, {
++                    repository: result.repository,
++                    branch: result.branch
++                }), 'success');
+                 onFetch && onFetch(result);
+             } else {
+-                setUiMessages(prev => ({ ...prev, error: result.error || 'Failed to fetch from GitHub' }));
++                setLoadingStates(prev => ({ ...prev, isFetching: false }));
++                showNotification(intl.formatMessage(messages.fetchFailed), 'error');
+             }
+ 
+         } catch (err) {
+             console.error('Fetch error:', err);
+-            setUiMessages(prev => ({ ...prev, error: err.message || 'An unexpected error occurred while fetching' }));
++            setLoadingStates(prev => ({ ...prev, isFetching: false }));
++            showNotification(intl.formatMessage(messages.fetchError), 'error');
+         } finally {
+             setLoadingStates(prev => ({ ...prev, isFetching: false }));
+         }
+@@ -277,6 +357,16 @@ const GitCommitModal = props => {
+         }
+     };
+ 
++    const showNotification = (message, type = 'info') => {
++        setNotification({ show: true, message, type });
++        // 3秒后自动隐藏通知
++        setTimeout(() => {
++            setNotification(prev => ({ ...prev, show: false }));
++        }, 3000);
++    };
++
++
++
+     return (
+         <Modal
+             className={styles.modalContent}
+@@ -362,10 +452,26 @@ const GitCommitModal = props => {
+                                     <div className={styles.dropZoneContent}>
+                                         <span className={styles.dropIcon}>📎</span>
+                                         <span className={styles.dropText}>
+-                                            {isDragOver ? '释放文件以上传' : '拖拽文件到此处或点击选择'}
++                                            {isDragOver ? (
++                                                <FormattedMessage
++                                                    defaultMessage="Release to upload"
++                                                    description="File drop release hint"
++                                                    id="gui.gitCommit.dragReleaseHint"
++                                                />
++                                            ) : (
++                                                <FormattedMessage
++                                                    defaultMessage="Drag file here or click to select"
++                                                    description="File drop zone hint"
++                                                    id="gui.gitCommit.dragDropHint"
++                                                />
++                                            )}
+                                         </span>
+                                         <span className={styles.dropHint}>
+-                                            支持 .md 或 .markdown 文件
++                                            <FormattedMessage
++                                                defaultMessage="Support .md or .markdown files"
++                                                description="Supported file types hint"
++                                                id="gui.gitCommit.readmeFileHint"
++                                            />
+                                         </span>
+                                     </div>
+                                 )}
+@@ -382,19 +488,23 @@ const GitCommitModal = props => {
+                         </Label>
+                     </Box>
+ 
+-                    {/* 错误消息 */}
+-                    {uiMessages.error && (
+-                        <Box className={styles.error}>
+-                            {uiMessages.error}
++                    {/* 通知显示区域 */}
++                    {notification.show && (
++                        <Box className={styles.notificationContainer}>
++                            <div className={`${styles.notification} ${styles[`notification${notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}`]}`}>
++                                <span className={styles.notificationIcon}>
++                                    {notification.type === 'success' && '✓'}
++                                    {notification.type === 'error' && '✕'}
++                                    {notification.type === 'warning' && '⚠'}
++                                    {notification.type === 'info' && 'ℹ'}
++                                </span>
++                                <span className={styles.notificationText}>
++                                    {notification.message}
++                                </span>
++                            </div>
+                         </Box>
+                     )}
+ 
+-                    {/* 成功消息 */}
+-                    {uiMessages.success && (
+-                        <Box className={styles.success}>
+-                            {uiMessages.success}
+-                        </Box>
+-                    )}
+                 </Box>
+ 
+                 <Box className={styles.footer}>
+@@ -427,7 +537,8 @@ const GitCommitModal = props => {
+                             className={styles.logoutButton}
+                             onClick={() => {
+                                 githubApi.clearAllAuth();
+-                                setUiMessages(prev => ({ ...prev, success: 'Successfully logged out from GitHub' }));
++                                showNotification(intl.formatMessage(messages.logoutSuccess), 'success');
++                                onCancel && onCancel();
+                             }}
+                             disabled={loadingStates.isLoading || loadingStates.isFetching}
+                         >
+@@ -476,7 +587,8 @@ GitCommitModal.propTypes = {
+     projectData: PropTypes.oneOfType([
+         PropTypes.instanceOf(ArrayBuffer),
+         PropTypes.instanceOf(Blob)
+-    ]).isRequired
++    ]).isRequired,
++    repository: PropTypes.string
+ };
+ 
+ export default injectIntl(GitCommitModal);

@@ -7,8 +7,8 @@
 
 .dropdownMenu {
     position: absolute;
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-    border: 1px solid #e1e5e9;
+    background: var(--ui-modal-background, linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%));
+    border: 1px solid var(--ui-black-transparent, #e1e5e9);
     border-radius: 8px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
     min-width: 180px;
@@ -22,31 +22,32 @@
     padding: 10px 16px;
     background: none;
     border: none;
-    text-align: left;
+    text-align: center;
     font-size: 14px;
     font-weight: 500;
-    color: #24292f;
+    color: var(--text-primary, #24292f);
     cursor: pointer;
     transition: all 0.15s ease;
     white-space: nowrap;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     position: relative;
 }
 
 .dropdownItem:hover {
-    background-color: #f6f8fa;
-    color: #0969da;
+    background-color: var(--ui-modal-background, #f6f8fa);
+    color: #00baad;
 }
 
 .dropdownItem:active {
-    background-color: #f3f4f6;
+    background-color: var(--ui-modal-background, #f3f4f6);
     transform: scale(0.98);
 }
 
 .dropdownItem:not(:last-child) {
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--ui-black-transparent, #f0f0f0);
 }
 
 .dropdownItem::before {

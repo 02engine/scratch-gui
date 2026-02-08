@@ -407,7 +407,7 @@ const GUIComponent = props => {
 
 
 
-    // 确保 VM 初始化时 git 对象存在
+    // 确保 VM 初始化时 git 对象存在，并立即检测Git状态
     React.useEffect(() => {
         if (vm && vm.runtime && vm.runtime.platform) {
             if (!vm.runtime.platform.git) {
@@ -417,6 +417,14 @@ const GUIComponent = props => {
                     lastFetch: null
                 };
             }
+
+            // 立即检测Git状态
+            const hasRepo = !!vm.runtime.platform.git.repository;
+            console.log('🔍 [Git] Initial Git state check:', {
+                hasRepository: hasRepo,
+                repository: vm.runtime.platform.git.repository
+            });
+            setGitRepositoryExists(hasRepo);
         }
     }, [vm]);
 
@@ -562,17 +570,13 @@ const GUIComponent = props => {
 
         // 项目加载完成事件处理
         const handleProjectLoaded = () => {
-            console.log('🚀 [Git] Project loaded, waiting for SB3 deserialization to complete...');
+            console.log('🚀 [Git] Project loaded, checking Git state immediately...');
 
-            // 步骤1: 清除React状态
-            setGitRepositoryExists(false);
-
-            // 步骤2: 延迟检测，确保SB3反序列化完成
-            // VM的SB3反序列化会自动从meta.platform.git恢复Git数据
+            // 立即检测Git状态
             setTimeout(() => {
-                console.log('🔍 [Git] Checking Git state after SB3 deserialization...');
+                console.log('🔍 [Git] Checking Git state after project load...');
                 detectAndRestoreGitState();
-            }, 500); // 增加延迟确保SB3反序列化完成
+            }, 100); // 短暂延迟确保VM准备就绪
         };
 
         // VM准备完成事件处理
@@ -787,7 +791,6 @@ const GUIComponent = props => {
                         onRequestClose={onRequestCloseBackdropLibrary}
                     />
                 ) : null}
-                {!isFullScreen && (
                 <MenuBar
                     accountNavOpen={accountNavOpen}
                     authorId={authorId}
@@ -802,7 +805,9 @@ const GUIComponent = props => {
                     canRemix={canRemix}
                     canSave={canSave}
                     canShare={canShare}
-                    className={styles.menuBarPosition}
+                    className={classNames(styles.menuBarPosition, {
+                        [styles.fullscreenMenuBar]: isFullScreen
+                    })}
                     enableCommunity={enableCommunity}
                     isShared={isShared}
                     isTotallyNormal={isTotallyNormal}
@@ -828,9 +833,10 @@ const GUIComponent = props => {
                     onToggleLoginOpen={onToggleLoginOpen}
                     onClickGitCommit={handleClickGitCommit}
                     onGitQuickAction={handleGitQuickAction}
-                    showGitQuickButtons={hasGitRepository() && hasGitToken()}
+                    showGitQuickButtons={hasGitRepository()}
                 />
-                )}
+
+
                 <Box className={styles.bodyWrapper}>
                     <Box className={styles.flexWrapper}>
                         <Box className={styles.editorWrapper}>
@@ -1024,6 +1030,7 @@ const GUIComponent = props => {
                         onFetch={handleGitFetchSuccess}
                         onLogin={() => setIsOAuthModalOpen(true)}
                         projectData={projectData}
+                        repository={vm.runtime.platform.git.repository}
                     />
                 )}
 

@@ -1,0 +1,10 @@
+diff a/src/components/stage-header/stage-header.jsx b/src/components/stage-header/stage-header.jsx	(rejected hunks)
+@@ -92,6 +94,8 @@ const StageHeaderComponent = function (props) {
+         onZoomInCoordinateFontSize
+     } = props;
+ 
++
++
+     let header = null;
+ 
+     const stageDimensions = getStageDimensions(stageSize, customStageSize, isFullScreen || isEmbedded);

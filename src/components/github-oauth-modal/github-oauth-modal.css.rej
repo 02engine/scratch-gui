@@ -1,0 +1,411 @@
+diff a/src/components/github-oauth-modal/github-oauth-modal.css b/src/components/github-oauth-modal/github-oauth-modal.css	(rejected hunks)
+@@ -20,18 +20,18 @@
+     font-size: 24px;
+     font-weight: bold;
+     margin-bottom: 10px;
+-    color: #333;
++    color: var(--text-primary, #333);
+ }
+ 
+ .description {
+-    color: #666;
++    color: var(--text-primary, #666);
+     margin-bottom: 20px;
+     line-height: 1.5;
+ }
+ 
+ .setupInstructions {
+-    background: #f8f9fa;
+-    border: 1px solid #e9ecef;
++    background: var(--ui-modal-background, #f8f9fa);
++    border: 1px solid var(--ui-black-transparent, #e9ecef);
+     border-radius: 8px;
+     padding: 15px;
+     margin-bottom: 20px;
+@@ -39,7 +39,7 @@
+ 
+ .setupInstructions h3 {
+     margin: 0 0 10px 0;
+-    color: #495057;
++    color: var(--text-primary, #495057);
+     font-size: 16px;
+     font-weight: 600;
+ }
+@@ -51,7 +51,7 @@
+ 
+ .steps li {
+     margin-bottom: 5px;
+-    color: #6c757d;
++    color: var(--text-primary, #6c757d);
+     line-height: 1.4;
+ }
+ 
+@@ -62,24 +62,26 @@
+ .input {
+     width: 100%;
+     padding: 10px;
+-    border: 1px solid #ced4da;
++    border: 1px solid var(--ui-black-transparent, #ced4da);
+     border-radius: 4px;
+     font-size: 14px;
++    background: var(--ui-modal-background, white);
++    color: var(--text-primary, #333);
+ }
+ 
+ .input:focus {
+     outline: none;
+-    border-color: #80bdff;
++    border-color: var(--control-primary, #80bdff);
+     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+ }
+ 
+ .error {
+-    background: #f8d7da;
+-    color: #721c24;
++    background: var(--error-primary, #f8d7da);
++    color: var(--error-primary, #721c24);
+     padding: 10px;
+     border-radius: 4px;
+     margin-bottom: 15px;
+-    border: 1px solid #f5c6cb;
++    border: 1px solid var(--error-primary, #f5c6cb);
+ }
+ 
+ .userInfo {
+@@ -87,7 +89,7 @@
+ }
+ 
+ .userInfoTitle {
+-    color: #333;
++    color: var(--text-primary, #333);
+     margin-bottom: 15px;
+     font-size: 18px;
+ }
+@@ -99,7 +101,7 @@
+     gap: 15px;
+     margin-bottom: 15px;
+     padding: 15px;
+-    background: #f8f9fa;
++    background: var(--ui-modal-background, #f8f9fa);
+     border-radius: 8px;
+ }
+ 
+@@ -111,7 +113,7 @@
+     width: 60px;
+     height: 60px;
+     border-radius: 50%;
+-    border: 2px solid #dee2e6;
++    border: 2px solid var(--ui-black-transparent, #dee2e6);
+ }
+ 
+ .userMeta {
+@@ -121,18 +123,18 @@
+ .userName {
+     font-size: 18px;
+     font-weight: 600;
+-    color: #333;
++    color: var(--text-primary, #333);
+     margin-bottom: 2px;
+ }
+ 
+ .userLogin {
+-    color: #6c757d;
++    color: var(--text-primary, #6c757d);
+     font-size: 14px;
+     margin-bottom: 4px;
+ }
+ 
+ .userEmail {
+-    color: #6c757d;
++    color: var(--text-primary, #6c757d);
+     font-size: 14px;
+     margin-bottom: 4px;
+ }
+@@ -141,12 +143,12 @@
+     display: flex;
+     gap: 15px;
+     font-size: 12px;
+-    color: #6c757d;
++    color: var(--text-primary, #6c757d);
+ }
+ 
+ .tokenStatus {
+-    background: #d4edda;
+-    color: #155724;
++    background: var(--looks-secondary-dark, #d4edda);
++    color: var(--looks-secondary-dark, #155724);
+     padding: 8px 12px;
+     border-radius: 4px;
+     display: inline-block;
+@@ -156,7 +158,7 @@
+ }
+ 
+ .logoutButton {
+-    background: #dc3545;
++    background: var(--error-primary, #dc3545);
+     color: white;
+     border: none;
+     padding: 10px 20px;
+@@ -168,7 +170,7 @@
+ }
+ 
+ .logoutButton:hover {
+-    background: #c82333;
++    background: var(--error-primary, #c82333);
+ }
+ 
+ .footer {
+@@ -176,12 +178,12 @@
+     justify-content: flex-end;
+     gap: 10px;
+     padding: 15px 20px;
+-    border-top: 1px solid #dee2e6;
+-    background: #f8f9fa;
++    border-top: 1px solid var(--ui-black-transparent, #dee2e6);
++    background: var(--ui-modal-background, #f8f9fa);
+ }
+ 
+ .cancelButton {
+-    background: #6c757d;
++    background: var(--ui-black-transparent, #6c757d);
+     color: white;
+     border: none;
+     padding: 10px 20px;
+@@ -191,11 +193,11 @@
+ }
+ 
+ .cancelButton:hover {
+-    background: #5a6268;
++    background: var(--ui-black-transparent, #5a6268);
+ }
+ 
+ .authenticateButton {
+-    background: #007bff;
++    background: #00baad;
+     color: white;
+     border: none;
+     padding: 10px 20px;
+@@ -207,11 +209,11 @@
+ }
+ 
+ .authenticateButton:hover:not(:disabled) {
+-    background: #0056b3;
++    background: #00998d;
+ }
+ 
+ .authenticateButton:disabled {
+-    background: #6c757d;
++    background: var(--ui-black-transparent, #6c757d);
+     cursor: not-allowed;
+ }
+ 
+@@ -219,14 +221,14 @@
+ .oauthSection {
+     margin: 1rem 0;
+     padding: 1rem;
+-    border: 1px solid #ddd;
++    border: 1px solid var(--ui-black-transparent, #ddd);
+     border-radius: 8px;
+-    background: #f9f9f9;
++    background: var(--ui-modal-background, #f9f9f9);
+ }
+ 
+ .oauthTitle {
+     margin: 0 0 0.5rem 0;
+-    color: #333;
++    color: var(--text-primary, #333);
+     font-size: 18px;
+     font-weight: 600;
+ }
+@@ -234,21 +236,21 @@
+ .oauthDescription {
+     margin: 0 0 1rem 0;
+     font-size: 0.9rem;
+-    color: #666;
++    color: var(--text-primary, #666);
+     line-height: 1.4;
+ }
+ 
+ .errorMessage {
+-    color: #d32f2f;
++    color: var(--error-primary, #d32f2f);
+     margin-bottom: 1rem;
+     padding: 0.5rem;
+-    background: #ffebee;
++    background: var(--error-primary, #ffebee);
+     border-radius: 4px;
+     font-size: 0.9rem;
+ }
+ 
+ .githubLoginButton {
+-    background: #24292e;
++    background: var(--ui-black, #24292e);
+     color: white;
+     border: none;
+     padding: 0.75rem 1.5rem;
+@@ -265,11 +267,11 @@
+ }
+ 
+ .githubLoginButton:hover:not(:disabled) {
+-    background: #1a1e22;
++    background: var(--ui-black, #1a1e22);
+ }
+ 
+ .githubLoginButton:disabled {
+-    background: #6c757d;
++    background: var(--ui-black-transparent, #6c757d);
+     cursor: not-allowed;
+ }
+ 
+@@ -288,38 +290,38 @@
+ }
+ 
+ .setupDetails {
+-    border: 1px solid #e0e0e0;
++    border: 1px solid var(--ui-black-transparent, #e0e0e0);
+     border-radius: 6px;
+-    background: white;
++    background: var(--ui-modal-background, white);
+ }
+ 
+ .setupSummary {
+     padding: 0.75rem;
+     cursor: pointer;
+     font-weight: 500;
+-    color: #666;
++    color: var(--text-primary, #666);
+     user-select: none;
+     transition: background-color 0.2s;
+ }
+ 
+ .setupSummary:hover {
+-    background: #f8f8f8;
++    background: var(--ui-modal-background, #f8f8f8);
+ }
+ 
+ .setupSummary::marker {
+-    color: #666;
++    color: var(--text-primary, #666);
+ }
+ 
+ .setupContent {
+     padding: 1rem;
+-    border-top: 1px solid #e0e0e0;
+-    background: #fafafa;
++    border-top: 1px solid var(--ui-black-transparent, #e0e0e0);
++    background: var(--ui-modal-background, #fafafa);
+ }
+ 
+ .setupSteps {
+     margin: 0;
+     padding-left: 1.5rem;
+-    color: #555;
++    color: var(--text-primary, #555);
+     line-height: 1.5;
+ }
+ 
+@@ -328,7 +330,7 @@
+ }
+ 
+ .setupSteps a {
+-    color: #0366d6;
++    color: #00baad;
+     text-decoration: none;
+ }
+ 
+@@ -337,18 +339,18 @@
+ }
+ 
+ .setupSteps code {
+-    background: #f6f8fa;
++    background: var(--ui-modal-background, #f6f8fa);
+     padding: 0.2rem 0.4rem;
+     border-radius: 3px;
+     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+     font-size: 0.85em;
+-    color: #d73a49;
++    color: var(--error-primary, #d73a49);
+ }
+ 
+ .manualSetup {
+     margin-top: 1rem;
+     padding-top: 1rem;
+-    border-top: 1px solid #e0e0e0;
++    border-top: 1px solid var(--ui-black-transparent, #e0e0e0);
+ }
+ 
+ .clientIdInput {
+@@ -359,23 +361,23 @@
+ .authenticatedSection {
+     margin: 1rem 0;
+     padding: 1rem;
+-    border: 1px solid #4caf50;
++    border: 1px solid var(--control-primary, #4caf50);
+     border-radius: 8px;
+-    background: #e8f5e8;
++    background: var(--looks-secondary-dark, #e8f5e8);
+ }
+ 
+ .authenticatedTitle {
+     margin: 0 0 0.5rem 0;
+-    color: #2e7d32;
++    color: var(--looks-secondary-dark, #2e7d32);
+     font-size: 18px;
+     font-weight: 600;
+ }
+ 
+ .userInfoCard {
+-    background: white;
++    background: var(--ui-modal-background, white);
+     border-radius: 8px;
+     padding: 1rem;
+-    border: 1px solid #c8e6c9;
++    border: 1px solid var(--control-primary, #c8e6c9);
+ }
+ 
+ .userInfoContent {
+@@ -388,7 +390,7 @@
+     width: 48px;
+     height: 48px;
+     border-radius: 50%;
+-    border: 2px solid #4caf50;
++    border: 2px solid var(--control-primary, #4caf50);
+     flex-shrink: 0;
+ }
+ 
+@@ -398,24 +400,24 @@
+ 
+ .userName {
+     font-weight: 600;
+-    color: #2e7d32;
++    color: var(--looks-secondary-dark, #2e7d32);
+     margin-bottom: 0.25rem;
+     font-size: 16px;
+ }
+ 
+ .userLogin {
+-    color: #666;
++    color: var(--text-primary, #666);
+     font-size: 14px;
+     margin-bottom: 0.25rem;
+ }
+ 
+ .userEmail {
+-    color: #666;
++    color: var(--text-primary, #666);
+     font-size: 14px;
+ }
+ 
+ .logoutButtonSmall {
+-    background: #f44336;
++    background: var(--error-primary, #f44336);
+     color: white;
+     border: none;
+     padding: 0.5rem 1rem;
+@@ -427,5 +429,5 @@
+ }
+ 
+ .logoutButtonSmall:hover {
+-    background: #d32f2f;
++    background: var(--error-primary, #d32f2f);
+ }

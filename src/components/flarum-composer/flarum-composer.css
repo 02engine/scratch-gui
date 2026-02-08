@@ -1,0 +1,130 @@
+.modal-content {
+    max-width: 750px;
+}
+
+.body {
+    background: var(--ui-modal-background, white);
+    padding: 1.5rem 2.25rem;
+    min-height: 150px;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+    color: var(--text-primary, #333);
+}
+
+/* For small screens, such as in the embed */
+@media (max-height: 600px) {
+    .modal-content {
+        margin: 50px auto;
+    }
+    .body {
+        max-height: calc(100vh - 150px);
+    }
+}
+
+.setting {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem 0;
+    border-radius: 4px;
+}
+.setting:hover,
+.setting:focus-within {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.label {
+    height: 32px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.composerField {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.4;
+    resize: vertical;
+}
+
+.composerField:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.1);
+}
+
+.composerPreview {
+    border: 1px solid var(--ui-black-transparent, #e1e5e9);
+    padding: 16px;
+    max-height: 300px;
+    overflow: auto;
+    background: var(--ui-modal-background, #f8f9fa);
+    color: var(--text-primary, #333);
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.composerPreview h1,
+.composerPreview h2,
+.composerPreview h3,
+.composerPreview h4,
+.composerPreview h5,
+.composerPreview h6 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: var(--text-primary, #2c3e50);
+}
+
+.composerPreview p {
+    margin: 8px 0;
+    color: var(--text-primary, #333);
+}
+
+.composerPreview code {
+    background: var(--input-background, #e8f4fd);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    color: var(--text-primary, #333);
+}
+
+.composerPreview pre {
+    background: var(--ui-modal-header-background, #2c3e50);
+    color: var(--ui-modal-header-foreground, #ecf0f1);
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.composerPreview pre code {
+    background: transparent;
+    padding: 0;
+}
+
+.composerPreview blockquote {
+    border-left: 4px solid var(--control-primary, #3498db);
+    padding-left: 12px;
+    margin: 8px 0;
+    color: var(--text-primary, #555);
+}
+
+.composerPreview a {
+    color: var(--link-color, #007cba);
+    text-decoration: none;
+}
+
+.composerPreview a:hover {
+    text-decoration: underline;
+}
+
+.composerPreview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 8px 0;
+}

@@ -24,6 +24,8 @@ import ZoomOutFontIcon from './icon--zoom-out-font.svg';
 
 import styles from './stage-header.css';
 
+
+
 import FullscreenAPI from '../../lib/tw-fullscreen-api';
 
 const messages = defineMessages({

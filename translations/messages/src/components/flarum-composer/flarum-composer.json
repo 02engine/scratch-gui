@@ -1,0 +1,62 @@
+[
+  {
+    "id": "gui.flarumComposer.emptyContent",
+    "description": "Empty preview",
+    "defaultMessage": "No content"
+  },
+  {
+    "id": "gui.flarumComposer.renderError",
+    "description": "Preview render error",
+    "defaultMessage": "Render error"
+  },
+  {
+    "id": "gui.flarumComposer.titleLabel",
+    "description": "Title label",
+    "defaultMessage": "Title"
+  },
+  {
+    "id": "gui.flarumComposer.contentLabel",
+    "description": "Content editor label",
+    "defaultMessage": "Content Editor"
+  },
+  {
+    "id": "gui.flarumComposer.previewLabel",
+    "description": "Live preview label",
+    "defaultMessage": "Live Preview"
+  },
+  {
+    "id": "gui.flarumComposer.tagsLabel",
+    "description": "Select tags label",
+    "defaultMessage": "Select Tags"
+  },
+  {
+    "id": "gui.flarumComposer.loadingTags",
+    "description": "Loading tags",
+    "defaultMessage": "Loading tags..."
+  },
+  {
+    "id": "gui.flarumComposer.noTagsAvailable",
+    "description": "No available tags",
+    "defaultMessage": "No available tags, will use default"
+  },
+  {
+    "id": "gui.flarumComposer.tagsSelected",
+    "description": "Tags selected count",
+    "defaultMessage": "{count} tags selected"
+  },
+  {
+    "id": "gui.flarumComposer.attachProject",
+    "description": "Attach current project",
+    "defaultMessage": "Attach Project"
+  },
+  {
+    "id": "gui.flarumComposer.cancel",
+    "description": "Cancel button",
+    "defaultMessage": "Cancel"
+  },
+  {
+    "id": "gui.flarumComposer.send",
+    "description": "Send to forum button",
+    "defaultMessage": "Send to Forum"
+  }
+]
