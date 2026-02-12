@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-02-08T12:08:11.806Z
+// Synced at: 2026-02-12T08:57:21.095Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -64,6 +64,13 @@ export default [
         isGitHub: false,
         unstable: true,
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
+    },
+    {
+        name: "Beat Sync",
+        description: "An extension designed to let you sync anything in your project to a musical beat, with incredible precision.",
+        code: "Gen1x/beat_sync.js",
+        banner: "Gen1x/beat_sync.avif",
+        creator: "G1nX",
     },
     {
         name: "Object",
