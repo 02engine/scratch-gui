@@ -55,19 +55,27 @@ class FlarumLogin extends React.Component {
         const state = params.get('state');
         const error = params.get('error');
 
+        // 先检查 sessionStorage 中是否有 Flarum OAuth 的 state 记录
+        // 如果没有，说明这个回调不是 Flarum OAuth 发起的（可能是 GitHub OAuth 等），直接跳过
+        const savedState = sessionStorage.getItem('flarum_oauth_state');
+        if (!savedState) {
+            return;
+        }
+
         if (error) {
             alert(this.props.intl.formatMessage({id: 'gui.flarumLogin.authorizationFailed', defaultMessage: 'Authorization failed: {error}', description: 'Authorization failed'}, {error: error}));
             // 清理URL
+            sessionStorage.removeItem('flarum_oauth_state');
             window.history.replaceState({}, document.title, window.location.pathname);
             return;
         }
 
         if (code && state) {
             // 验证state参数防止CSRF攻击
-            const savedState = sessionStorage.getItem('flarum_oauth_state');
             if (state !== savedState) {
                 alert(this.props.intl.formatMessage({id: 'gui.flarumLogin.stateValidationFailed', defaultMessage: 'State validation failed, please re-authorize', description: 'State validation failed'}));
                 // 清理URL
+                sessionStorage.removeItem('flarum_oauth_state');
                 window.history.replaceState({}, document.title, window.location.pathname);
                 return;
             }
