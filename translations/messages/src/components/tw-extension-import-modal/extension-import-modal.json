@@ -1,0 +1,27 @@
+[
+  {
+    "id": "tw.extensionImportModal.title",
+    "description": "Title of extension import method selection modal",
+    "defaultMessage": "Choose Import Method"
+  },
+  {
+    "id": "tw.extensionImportModal.description",
+    "description": "Description for extension import method selection",
+    "defaultMessage": "How would you like to import this extension?"
+  },
+  {
+    "id": "tw.extensionImportModal.normalImport",
+    "description": "Button to import extension normally",
+    "defaultMessage": "Normal Import"
+  },
+  {
+    "id": "tw.extensionImportModal.textImport",
+    "description": "Button to import extension as text",
+    "defaultMessage": "Import as Text"
+  },
+  {
+    "id": "tw.extensionImportModal.cancel",
+    "description": "Button to cancel import",
+    "defaultMessage": "Cancel"
+  }
+]

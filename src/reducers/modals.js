@@ -1,5 +1,6 @@
 const OPEN_MODAL = 'scratch-gui/modals/OPEN_MODAL';
 const CLOSE_MODAL = 'scratch-gui/modals/CLOSE_MODAL';
+const SET_SELECTED_EXTENSION = 'scratch-gui/modals/SET_SELECTED_EXTENSION';
 
 const MODAL_BACKDROP_LIBRARY = 'backdropLibrary';
 const MODAL_COSTUME_LIBRARY = 'costumeLibrary';
@@ -14,6 +15,7 @@ const MODAL_TIPS_LIBRARY = 'tipsLibrary';
 const MODAL_USERNAME = 'usernameModal';
 const MODAL_SETTINGS = 'settingsModal';
 const MODAL_CUSTOM_EXTENSION = 'customExtensionModal';
+const MODAL_EXTENSION_IMPORT_METHOD = 'extensionImportMethodModal';
 const MODAL_RESTORE_POINTS = 'restorePointModal';
 const MODAL_FONTS = 'fontsModal';
 const MODAL_UNKNOWN_PLATFORM = 'unknownPlatformModal';
@@ -33,10 +35,12 @@ const initialState = {
     [MODAL_USERNAME]: false,
     [MODAL_SETTINGS]: false,
     [MODAL_CUSTOM_EXTENSION]: false,
+    [MODAL_EXTENSION_IMPORT_METHOD]: false,
     [MODAL_RESTORE_POINTS]: false,
     [MODAL_FONTS]: false,
     [MODAL_UNKNOWN_PLATFORM]: false,
-    [MODAL_INVALID_PROJECT]: false
+    [MODAL_INVALID_PROJECT]: false,
+    selectedExtension: null
 };
 
 const reducer = function (state, action) {
@@ -49,6 +53,10 @@ const reducer = function (state, action) {
     case CLOSE_MODAL:
         return Object.assign({}, state, {
             [action.modal]: false
+        });
+    case SET_SELECTED_EXTENSION:
+        return Object.assign({}, state, {
+            selectedExtension: action.extension
         });
     default:
         return state;
@@ -105,6 +113,15 @@ const openSettingsModal = function () {
 const openCustomExtensionModal = function () {
     return openModal(MODAL_CUSTOM_EXTENSION);
 };
+const openExtensionImportMethodModal = function () {
+    return openModal(MODAL_EXTENSION_IMPORT_METHOD);
+};
+const setSelectedExtension = function (extension) {
+    return {
+        type: SET_SELECTED_EXTENSION,
+        extension: extension
+    };
+};
 const openRestorePointModal = function () {
     return openModal(MODAL_RESTORE_POINTS);
 };
@@ -156,6 +173,9 @@ const closeSettingsModal = function () {
 const closeCustomExtensionModal = function () {
     return closeModal(MODAL_CUSTOM_EXTENSION);
 };
+const closeExtensionImportMethodModal = function () {
+    return closeModal(MODAL_EXTENSION_IMPORT_METHOD);
+};
 const closeRestorePointModal = function () {
     return closeModal(MODAL_RESTORE_POINTS);
 };
@@ -184,7 +204,9 @@ export {
     openUsernameModal,
     openSettingsModal,
     openCustomExtensionModal,
+    openExtensionImportMethodModal,
     openRestorePointModal,
+    setSelectedExtension,
     openFontsModal,
     openUnknownPlatformModal,
     openInvalidProjectModal,
@@ -201,6 +223,7 @@ export {
     closeUsernameModal,
     closeSettingsModal,
     closeCustomExtensionModal,
+    closeExtensionImportMethodModal,
     closeRestorePointModal,
     closeFontsModal,
     closeUnknownPlatformModal,

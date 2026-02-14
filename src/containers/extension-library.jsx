@@ -324,6 +324,7 @@ class ExtensionLibrary extends React.PureComponent {
         }
 
         const extensionId = item.extensionId;
+        const extensionURL = item.extensionURL || extensionId;
 
         if (extensionId === 'custom_extension') {
             this.props.onOpenCustomExtensionModal();
@@ -336,12 +337,23 @@ class ExtensionLibrary extends React.PureComponent {
             return;
         }
 
-        const url = item.extensionURL ? item.extensionURL : extensionId;
-        if (!item.disabled) {
+        if (item.disabled) {
+            return;
+        }
+
+        // 显示导入方式选择模态框
+        if (this.props.onSetSelectedExtension && this.props.onOpenExtensionImportMethodModal) {
+            this.props.onSetSelectedExtension({
+                extensionId,
+                extensionURL
+            });
+            this.props.onOpenExtensionImportMethodModal();
+        } else {
+            // 回退到原来的行为
             if (this.props.vm.extensionManager.isExtensionLoaded(extensionId)) {
                 this.props.onCategorySelected(extensionId);
             } else {
-                this.props.vm.extensionManager.loadExtensionURL(url)
+                this.props.vm.extensionManager.loadExtensionURL(extensionURL)
                     .then(() => {
                         this.props.onCategorySelected(extensionId);
                     })
@@ -394,7 +406,9 @@ ExtensionLibrary.propTypes = {
     onCategorySelected: PropTypes.func,
     onEnableProcedureReturns: PropTypes.func,
     onOpenCustomExtensionModal: PropTypes.func,
+    onOpenExtensionImportMethodModal: PropTypes.func,
     onRequestClose: PropTypes.func,
+    onSetSelectedExtension: PropTypes.func,
     visible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired // eslint-disable-line react/no-unused-prop-types
 };

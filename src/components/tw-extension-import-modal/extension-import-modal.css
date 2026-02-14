@@ -1,0 +1,100 @@
+@import "../../css/colors.css";
+@import "../../css/units.css";
+
+.modalContent {
+    width: 360px;
+}
+
+.body {
+    background: $ui-modal-background;
+    padding: 1.5rem 2.25rem;
+}
+
+.title {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: $text-primary-transparent;
+}
+
+.description {
+    margin: 0 0 1.5rem 0;
+    line-height: 1.4;
+    font-size: 0.875rem;
+    color: $text-primary-transparent;
+}
+
+.errorMessage {
+    color: $error-primary;
+    margin: 0 0 1.5rem 0;
+    padding: 0.75rem;
+    background-color: $error-transparent;
+    border-radius: $form-radius;
+    font-size: 0.8125rem;
+    border: 1px solid $error-light;
+}
+
+.buttonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.normalButton,
+.textButton,
+.cancelButton {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: $form-radius;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: bold;
+    transition: background-color 0.2s;
+    text-align: center;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.normalButton {
+    background-color: $motion-primary;
+    color: white;
+}
+
+.normalButton:hover:not(:disabled) {
+    background-color: $motion-primary;
+}
+
+.normalButton:disabled {
+    background-color: $motion-tertiary;
+    cursor: not-allowed;
+}
+
+.textButton {
+    background-color: $looks-secondary;
+    color: white;
+}
+
+.textButton:hover:not(:disabled) {
+    background-color: $looks-secondary-dark;
+}
+
+.textButton:disabled {
+    background-color: $looks-light-transparent;
+    cursor: not-allowed;
+}
+
+.cancelButton {
+    background-color: $ui-tertiary;
+    color: $text-primary-transparent;
+}
+
+.cancelButton:hover:not(:disabled) {
+    background-color: $ui-tertiary;
+}
+
+.cancelButton:disabled {
+    background-color: $ui-tertiary;
+    cursor: not-allowed;
+}

@@ -30,7 +30,9 @@ import {
     closeExtensionLibrary,
     openSoundRecorder,
     openConnectionModal,
-    openCustomExtensionModal
+    openCustomExtensionModal,
+    openExtensionImportMethodModal,
+    setSelectedExtension
 } from '../reducers/modals';
 import { activateCustomProcedures, deactivateCustomProcedures } from '../reducers/custom-procedures';
 import { setConnectionModalExtensionId } from '../reducers/connection-modal';
@@ -1025,6 +1027,8 @@ class Blocks extends React.Component {
             onOpenConnectionModal,
             onOpenSoundRecorder,
             onOpenCustomExtensionModal,
+            onOpenExtensionImportMethodModal,
+            onSetSelectedExtension,
             reduxOnOpenCustomExtensionModal,
             updateToolboxState,
             onActivateCustomProcedures,
@@ -1065,6 +1069,8 @@ class Blocks extends React.Component {
                         onEnableProcedureReturns={this.handleEnableProcedureReturns}
                         onRequestClose={onRequestCloseExtensionLibrary}
                         onOpenCustomExtensionModal={onOpenCustomExtensionModal || reduxOnOpenCustomExtensionModal}
+                        onOpenExtensionImportMethodModal={onOpenExtensionImportMethodModal}
+                        onSetSelectedExtension={onSetSelectedExtension}
                     />
                 ) : null}
                 {customProceduresVisible ? (
@@ -1099,6 +1105,8 @@ Blocks.propTypes = {
     onOpenConnectionModal: PropTypes.func,
     onOpenSoundRecorder: PropTypes.func,
     onOpenCustomExtensionModal: PropTypes.func,
+    onOpenExtensionImportMethodModal: PropTypes.func,
+    onSetSelectedExtension: PropTypes.func,
     reduxOnOpenCustomExtensionModal: PropTypes.func,
     onRequestCloseCustomProcedures: PropTypes.func,
     onRequestCloseExtensionLibrary: PropTypes.func,
@@ -1174,6 +1182,8 @@ const mapDispatchToProps = dispatch => ({
         dispatch(openSoundRecorder());
     },
     reduxOnOpenCustomExtensionModal: () => dispatch(openCustomExtensionModal()),
+    onOpenExtensionImportMethodModal: () => dispatch(openExtensionImportMethodModal()),
+    onSetSelectedExtension: extension => dispatch(setSelectedExtension(extension)),
     onRequestCloseExtensionLibrary: () => {
         dispatch(closeExtensionLibrary());
     },
