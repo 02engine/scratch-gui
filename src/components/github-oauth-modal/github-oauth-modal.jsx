@@ -99,7 +99,7 @@ const DOMAIN_CONFIGS = {
         clientId: 'Ov23liAie81Wqd2u9gmK',
         backendUrl: 'https://02engine-0pen-oauth-backend.netlify.app/.netlify/functions/token' 
     },
-    'org': {
+    '02engine.org': {
         clientId: 'Ov23likcDcsmzKCashVK',
         backendUrl: 'https://02engine-org-oauth-backend.netlify.app/.netlify/functions/token' 
     }
