@@ -6,6 +6,8 @@ import PropTypes from 'prop-types';
 import bindAll from 'lodash.bindall';
 import styles from './loader.css';
 import {getIsLoadingWithId} from '../../reducers/project-state';
+import tipsData from './loading-tips.json';
+import backgroundImage from './loading-background.svg';
 
 // 02engine Logo Component
 const Logo = () => (
@@ -72,13 +74,12 @@ class LoaderComponent extends React.Component {
             'handleProjectLoaded',
             'barInnerRef',
             'messageRef',
-            'loadTips',
             'cycleTips'
         ]);
         this.barInnerEl = null;
         this.messageEl = null;
         this.ignoreProgress = false;
-        this.tips = [];
+        this.tips = tipsData;
         this.currentTipIndex = 0;
         this.tipInterval = null;
     }
@@ -89,7 +90,7 @@ class LoaderComponent extends React.Component {
         );
         this.props.vm.on('ASSET_PROGRESS', this.handleAssetProgress);
         this.props.vm.runtime.on('PROJECT_LOADED', this.handleProjectLoaded);
-        this.loadTips();
+        this.tipInterval = setInterval(this.cycleTips, 5000);
     }
     componentWillUnmount () {
         this.props.vm.off('ASSET_PROGRESS', this.handleAssetProgress);
@@ -97,18 +98,6 @@ class LoaderComponent extends React.Component {
         if (this.tipInterval) {
             clearInterval(this.tipInterval);
         }
-    }
-    loadTips () {
-        fetch('/loading-tips.json')
-            .then(response => response.json())
-            .then(data => {
-                this.tips = data;
-                this.cycleTips();
-                this.tipInterval = setInterval(this.cycleTips, 5000);
-            })
-            .catch(error => {
-                console.error('Failed to load tips:', error);
-            });
     }
     cycleTips () {
         if (this.tips.length === 0) return;
@@ -166,7 +155,7 @@ class LoaderComponent extends React.Component {
                 {/* Background Section - 75% height */}
                 <div className={styles.backgroundSection}>
                     <img
-                        src="/images/loading-background.svg"
+                        src={backgroundImage}
                         alt="02engine Background"
                         className={styles.backgroundImage}
                     />
