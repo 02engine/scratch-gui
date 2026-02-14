@@ -25,6 +25,10 @@ const messages = defineMessages({
 class UsernameModal extends React.Component {
     constructor (props) {
         super(props);
+        this.state = {
+            extensionDebugConnected: false,
+            extensionDebugFailed: false
+        };
         bindAll(this, [
             'handleFramerateChange',
             'handleCustomizeFramerate',
@@ -41,11 +45,17 @@ class UsernameModal extends React.Component {
             'handleDisableCompilerChange',
             'handleCustomUIChange',
             'handleStoreProjectOptions',
-            'handleResetWindowCoefficients'
+            'handleResetWindowCoefficients',
+            'handleExtensionDebugConnect'
         ]);
     }
     handleFramerateChange (e) {
         this.props.vm.setFramerate(e.target.checked ? 60 : 30);
+    }
+    handleExtensionDebugConnect () {
+        if (typeof window.ScratchExtensionDebug !== 'undefined' && window.ScratchExtensionDebug.connect) {
+            window.ScratchExtensionDebug.connect();
+        }
     }
     handleOpsPerFrameChange (e) {
         this.props.vm.setOpsPerFrame(e.target.checked ? 2 : 1);
@@ -121,6 +131,32 @@ class UsernameModal extends React.Component {
         // 刷新页面以应用重置
         window.location.reload();
     }
+    componentDidMount () {
+        // 监听扩展调试状态变化
+        const handleStatusChange = (event) => {
+            this.setState({
+                extensionDebugConnected: event.detail.connected,
+                extensionDebugFailed: event.detail.error !== undefined
+            });
+        };
+        
+        window.addEventListener('extensionDebugStatus', handleStatusChange);
+        
+        // 检查当前状态
+        if (typeof window.ScratchExtensionDebug !== 'undefined') {
+            this.setState({
+                extensionDebugConnected: window.ScratchExtensionDebug.isConnected(),
+                extensionDebugFailed: window.ScratchExtensionDebug.isConnectionFailed()
+            });
+        }
+        
+        this._handleStatusChange = handleStatusChange;
+    }
+    componentWillUnmount () {
+        if (this._handleStatusChange) {
+            window.removeEventListener('extensionDebugStatus', this._handleStatusChange);
+        }
+    }
     render () {
         const {
             /* eslint-disable no-unused-vars */
@@ -155,6 +191,9 @@ class UsernameModal extends React.Component {
                 }
                 onStoreProjectOptions={this.handleStoreProjectOptions}
                 onResetWindowCoefficients={this.handleResetWindowCoefficients}
+                extensionDebugConnected={this.state.extensionDebugConnected}
+                extensionDebugFailed={this.state.extensionDebugFailed}
+                onExtensionDebugConnect={this.handleExtensionDebugConnect}
                 {...props}
             />
         );

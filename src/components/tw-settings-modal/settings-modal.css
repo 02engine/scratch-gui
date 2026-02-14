@@ -129,3 +129,29 @@
     background: rgb(233, 233, 53);
     color: $text-primary-default;
 }
+
+.extensionDebugStatus {
+    margin: 0.5rem 0;
+    font-size: 0.875rem;
+    color: $text-primary-transparent;
+}
+
+.extensionDebugButton {
+    font-family: inherit;
+    font-size: 14px;
+    background-color: $motion-primary;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+}
+.extensionDebugButton:hover {
+    background-color: $motion-primary;
+}
+.extensionDebugButton:active {
+    box-shadow: 0 0 0 3px $pen-transparent;
+}

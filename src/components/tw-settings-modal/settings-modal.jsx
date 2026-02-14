@@ -520,6 +520,55 @@ ResetWindowCoefficients.propTypes = {
     onResetWindowCoefficients: PropTypes.func
 };
 
+const ExtensionDebugging = ({isConnected, isConnectionFailed, onConnect}) => (
+    <div className={styles.setting}>
+        <div className={styles.label}>
+            <FormattedMessage
+                defaultMessage="Extension Debugging Server"
+                description="Extension debugging server status"
+                id="tw.settingsModal.extensionDebuggingServer"
+            />
+        </div>
+        <div className={styles.extensionDebugStatus}>
+            {isConnected ? (
+                <FormattedMessage
+                    defaultMessage="Connected to extension debugging server"
+                    description="Extension debugging server connected"
+                    id="tw.settingsModal.extensionDebugConnected"
+                />
+            ) : isConnectionFailed ? (
+                <FormattedMessage
+                    defaultMessage="Connection failed (server not available)"
+                    description="Extension debugging server connection failed"
+                    id="tw.settingsModal.extensionDebugFailed"
+                />
+            ) : (
+                <FormattedMessage
+                    defaultMessage="Not connected to extension debugging server"
+                    description="Extension debugging server not connected"
+                    id="tw.settingsModal.extensionDebugNotConnected"
+                />
+            )}
+        </div>
+        <button
+            className={styles.extensionDebugButton}
+            onClick={onConnect}
+        >
+            <FormattedMessage
+                defaultMessage="Connect to Extension Debugging Server"
+                description="Connect to extension debugging server button"
+                id="tw.settingsModal.extensionDebugConnect"
+            />
+        </button>
+    </div>
+);
+
+ExtensionDebugging.propTypes = {
+    isConnected: PropTypes.bool,
+    isConnectionFailed: PropTypes.bool,
+    onConnect: PropTypes.func
+};
+
 const Header = props => (
     <div className={styles.header}>
         {props.children}
@@ -616,6 +665,18 @@ const SettingsModalComponent = props => (
                     onResetWindowCoefficients={props.onResetWindowCoefficients}
                 />
             )}
+            <Header>
+                <FormattedMessage
+                    defaultMessage="Extension Debugging"
+                    description="Settings modal section"
+                    id="tw.settingsModal.extensionDebugging"
+                />
+            </Header>
+            <ExtensionDebugging
+                isConnected={props.extensionDebugConnected}
+                isConnectionFailed={props.extensionDebugFailed}
+                onConnect={props.onExtensionDebugConnect}
+            />
         </Box>
     </Modal>
 );
@@ -646,7 +707,10 @@ SettingsModalComponent.propTypes = {
     onDisableCompilerChange: PropTypes.func,
     customUI: PropTypes.bool,
     onCustomUIChange: PropTypes.func,
-    onResetWindowCoefficients: PropTypes.func
+    onResetWindowCoefficients: PropTypes.func,
+    extensionDebugConnected: PropTypes.bool,
+    extensionDebugFailed: PropTypes.bool,
+    onExtensionDebugConnect: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);

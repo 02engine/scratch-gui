@@ -159,6 +159,31 @@
     "defaultMessage": "Resets all draggable window positions and sizes to their default values. This will restore the stage and sprites windows to their initial layout."
   },
   {
+    "id": "tw.settingsModal.extensionDebuggingServer",
+    "description": "Extension debugging server status",
+    "defaultMessage": "Extension Debugging Server"
+  },
+  {
+    "id": "tw.settingsModal.extensionDebugConnected",
+    "description": "Extension debugging server connected",
+    "defaultMessage": "Connected to extension debugging server"
+  },
+  {
+    "id": "tw.settingsModal.extensionDebugFailed",
+    "description": "Extension debugging server connection failed",
+    "defaultMessage": "Connection failed (server not available)"
+  },
+  {
+    "id": "tw.settingsModal.extensionDebugNotConnected",
+    "description": "Extension debugging server not connected",
+    "defaultMessage": "Not connected to extension debugging server"
+  },
+  {
+    "id": "tw.settingsModal.extensionDebugConnect",
+    "description": "Connect to extension debugging server button",
+    "defaultMessage": "Connect to Extension Debugging Server"
+  },
+  {
     "id": "tw.settingsModal.featured",
     "description": "Settings modal section",
     "defaultMessage": "Featured"
@@ -172,5 +197,10 @@
     "id": "tw.settingsModal.dangerZone",
     "description": "Settings modal section",
     "defaultMessage": "Danger Zone"
+  },
+  {
+    "id": "tw.settingsModal.extensionDebugging",
+    "description": "Settings modal section",
+    "defaultMessage": "Extension Debugging"
   }
 ]
