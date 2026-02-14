@@ -11,31 +11,7 @@
     let connectionFailed = false; // 连接失败标记
 
     /**
-     * 从扩展代码中提取extensionId
-     */
-    function extractExtensionId(extensionCode) {
-        try {
-            // 使用正则表达式提取getInfo()方法中的id
-            const getInfoMatch = extensionCode.match(/getInfo\s*\(\)\s*\{[\s\S]*?id:\s*['"`]([^'"`]+)['"`]/);
-            if (getInfoMatch) {
-                return getInfoMatch[1];
-            }
-
-            // 尝试另一种模式
-            const idMatch = extensionCode.match(/id:\s*['"`]([^'"`]+)['"`]/);
-            if (idMatch) {
-                return idMatch[1];
-            }
-
-            return null;
-        } catch (error) {
-            console.error('Failed to extract extension ID:', error);
-            return null;
-        }
-    }
-
-    /**
-     * 卸载扩展 - 完整删除扩展（包括从runtime中移除）
+     * 卸载扩展
      */
     function unloadExtension(extensionId) {
         if (!vm || !vm.extensionManager) {
@@ -44,13 +20,24 @@
         }
 
         const runtime = vm.runtime;
+        const extensionManager = vm.extensionManager;
 
-        // 从_loadedExtensions中移除
-        if (vm.extensionManager._loadedExtensions) {
-            vm.extensionManager._loadedExtensions.delete(extensionId);
+        // 获取 serviceName 并从中提取 workerId
+        const serviceName = extensionManager._loadedExtensions.get(extensionId);
+        if (serviceName) {
+            // Service names for extension workers are in the format "extension.WORKER_ID.EXTENSION_ID" or "unsandboxed.WORKER_ID.EXTENSION_ID"
+            const serviceNameParts = serviceName.split('.');
+            if (serviceNameParts.length >= 2) {
+                const workerId = +serviceNameParts[1]; // 第二个部分是 workerId
+                // 从 workerURLs 中删除 URL，这样相同的 URL 可以被重新加载
+                delete extensionManager.workerURLs[workerId];
+            }
         }
 
-        // 从runtime._blockInfo中移除
+        // 从_loadedExtensions中移除
+        extensionManager._loadedExtensions.delete(extensionId);
+
+        // 从runtime._blockInfo中移除扩展分类
         if (runtime && runtime._blockInfo) {
             runtime._blockInfo = runtime._blockInfo.filter(
                 categoryInfo => categoryInfo.id !== extensionId
@@ -67,44 +54,135 @@
             }
         }
 
-        // 触发workspace更新
+        // 触发积木分类更新事件
+        if (runtime && runtime.emit) {
+            runtime.emit('toolboxUpdate');
+        }
+
+        // 触发workspace更新，刷新积木列表
         if (vm.emitWorkspaceUpdate) {
             vm.emitWorkspaceUpdate();
         }
 
-        console.log('Extension fully unloaded:', extensionId);
+        // 尝试从 toolbox 中移除分类（如果可访问）
+        if (typeof window !== 'undefined' && window.ScratchBlocks && window.ScratchBlocks.Workspace) {
+            try {
+                const workspaces = window.ScratchBlocks.Workspace.getAll();
+                workspaces.forEach(workspace => {
+                    const toolbox = workspace.getToolbox();
+                    if (toolbox && toolbox.removeCategory) {
+                        toolbox.removeCategory(extensionId);
+                    }
+                });
+            } catch (e) {
+                // 忽略错误，可能无法访问
+                console.debug('Could not remove category from toolbox:', e);
+            }
+        }
+
+        console.log('Extension unloaded:', extensionId);
     }
 
     /**
      * 加载扩展
      */
-    async function loadExtension(extensionCode) {
+async function loadExtension(extensionCode) {
         if (!vm || !vm.extensionManager) {
             throw new Error('VM or extensionManager not available');
         }
 
-        // 提取extensionId
-        const extensionId = extractExtensionId(extensionCode);
-        if (!extensionId) {
-            throw new Error('Could not extract extension ID from code');
-        }
-
-        console.log('Loading extension:', extensionId);
-
-        // 检查扩展是否已存在
-        if (vm.extensionManager.isExtensionLoaded(extensionId)) {
-            console.log('Extension already loaded, unloading first:', extensionId);
-            unloadExtension(extensionId);
-        }
-
-        // 转换为Data URL
         const dataURL = `data:application/javascript,${encodeURIComponent(extensionCode)}`;
 
-        // 加载扩展
+        // 清除 workerURLs 中的记录，确保可以重新加载
+        for (const [workerId, url] of Object.entries(vm.extensionManager.workerURLs)) {
+            if (url === dataURL) {
+                delete vm.extensionManager.workerURLs[workerId];
+                console.log('Removed dataURL from workerURLs:', workerId);
+            }
+        }
+
+        console.log('=== Starting load process ===');
+
+        // 记录加载前的所有扩展ID和serviceName
+        const originalExtensionIds = new Set(
+            Array.from(vm.extensionManager._loadedExtensions.keys())
+        );
+        const originalServiceNames = new Set(
+            Array.from(vm.extensionManager._loadedExtensions.values())
+        );
+
+        console.log('Original extensions:', Array.from(originalExtensionIds));
+        console.log('Original service names:', Array.from(originalServiceNames));
+
+        // 第一步：加载扩展
         await vm.extensionManager.loadExtensionURL(dataURL);
 
-        console.log('Extension loaded successfully:', extensionId);
-        return extensionId;
+        console.log('After load, extensions:', Array.from(vm.extensionManager._loadedExtensions.keys()));
+
+        // 第二步：找出要删除的扩展ID
+        let extensionId = null;
+
+        // 方法1：查找新加载的扩展（通过比较extensionId）
+        for (const [id, serviceName] of vm.extensionManager._loadedExtensions) {
+            if (!originalExtensionIds.has(id)) {
+                // 这是新加载的扩展
+                extensionId = id;
+                console.log('Found new extension by ID:', extensionId);
+                break;
+            }
+        }
+
+        // 方法2：如果没找到新扩展，说明是重新加载已存在的扩展，通过比较serviceName找出
+        if (!extensionId) {
+            for (const [id, serviceName] of vm.extensionManager._loadedExtensions) {
+                if (!originalServiceNames.has(serviceName)) {
+                    // 这是被重新加载的扩展
+                    extensionId = id;
+                    console.log('Found reloaded extension by serviceName:', extensionId);
+                    break;
+                }
+            }
+        }
+
+        if (!extensionId) {
+            throw new Error('Could not determine extension ID');
+        }
+
+        console.log('Extension to delete:', extensionId);
+
+        // 第三步：删除该扩展（不检测积木使用情况）
+        console.log('Unloading extension:', extensionId);
+        unloadExtension(extensionId);
+
+        // 第四步：重新加载扩展
+        console.log('Reloading extension...');
+        await vm.extensionManager.loadExtensionURL(dataURL);
+
+        console.log('After reload, extensions:', Array.from(vm.extensionManager._loadedExtensions.keys()));
+
+        // 第五步：刷新积木栏
+        if (vm.emitWorkspaceUpdate) {
+            vm.emitWorkspaceUpdate();
+        }
+
+        // 第六步：刷新工具箱选择
+        if (typeof window !== 'undefined' && window.ScratchBlocks && window.ScratchBlocks.Workspace) {
+            try {
+                const workspaces = window.ScratchBlocks.Workspace.getAll();
+                workspaces.forEach(workspace => {
+                    if (workspace && workspace.toolbox_) {
+                        const toolbox = workspace.toolbox_;
+                        if (toolbox.refreshSelection) {
+                            toolbox.refreshSelection();
+                        }
+                    }
+                });
+            } catch (e) {
+                // 忽略错误
+            }
+        }
+
+        console.log('=== Load completed successfully ===');
     }
 
     /**
