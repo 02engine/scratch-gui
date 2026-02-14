@@ -35,7 +35,7 @@
     }
 
     /**
-     * 卸载扩展
+     * 卸载扩展 - 完整删除扩展（包括从runtime中移除）
      */
     function unloadExtension(extensionId) {
         if (!vm || !vm.extensionManager) {
@@ -43,10 +43,36 @@
             return;
         }
 
-        // 从_loadedExtensions中移除
-        vm.extensionManager._loadedExtensions.delete(extensionId);
+        const runtime = vm.runtime;
 
-        console.log('Extension unloaded:', extensionId);
+        // 从_loadedExtensions中移除
+        if (vm.extensionManager._loadedExtensions) {
+            vm.extensionManager._loadedExtensions.delete(extensionId);
+        }
+
+        // 从runtime._blockInfo中移除
+        if (runtime && runtime._blockInfo) {
+            runtime._blockInfo = runtime._blockInfo.filter(
+                categoryInfo => categoryInfo.id !== extensionId
+            );
+        }
+
+        // 从ScratchBlocks中移除扩展积木定义
+        if (typeof window !== 'undefined' && window.ScratchBlocks && window.ScratchBlocks.Blocks) {
+            const extensionPrefix = `${extensionId}_`;
+            for (const blockName in window.ScratchBlocks.Blocks) {
+                if (blockName.startsWith(extensionPrefix)) {
+                    delete window.ScratchBlocks.Blocks[blockName];
+                }
+            }
+        }
+
+        // 触发workspace更新
+        if (vm.emitWorkspaceUpdate) {
+            vm.emitWorkspaceUpdate();
+        }
+
+        console.log('Extension fully unloaded:', extensionId);
     }
 
     /**
