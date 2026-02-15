@@ -965,7 +965,7 @@ const GUIComponent = props => {
                                     onDragStop={(id, position) => setStageWindowPosition(position)}
                                     onResizeStop={(id, size) => setStageWindowSize(size)}
                                     onMinimizeToggle={(id, minimized) => setStageWindowMinimized(minimized)}
-                                    zIndex={100}
+                                    zIndex={isFullScreen ? 600 : 100}
                                     enableStatePersistence={true}
                                 >
                                     <StageWrapper

@@ -1227,8 +1227,8 @@ class MenuBar extends React.Component {
                     />
                 </div>
 
-                {/* Flarum 登录按钮放在右上角，关于按钮左边 */}
-                <div 
+                {/* Flarum 登录按钮放在右上角，关于按钮左边 - 已隐藏 */}
+                {/* <div
                     className={classNames(styles.menuBarItem, !this.state.flarumToken && styles.hoverable, styles.withShadow)}
                     style={!this.props.onClickAbout ? {marginRight: '8px'} : {}}
                 >
@@ -1237,10 +1237,10 @@ class MenuBar extends React.Component {
                         onTokenUpdate={(token) => this.setState({flarumToken: token})}
                         onOpenComposer={this.handleOpenFlarumComposer}
                     />
-                </div>
+                </div> */}
 
                 {aboutButton}
-                {this.state.showComposer && (
+                {/* {this.state.showComposer && (
                     <FlarumComposer
                         vm={this.props.vm}
                         projectName={this.props.projectTitle}
@@ -1248,7 +1248,7 @@ class MenuBar extends React.Component {
                         onRequestClose={this.handleCloseFlarumComposer}
                         onDone={this.handleCloseFlarumComposer}
                     />
-                )}
+                )} */}
             </Box>
         );
     }
