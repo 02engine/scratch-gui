@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-02-15T14:55:56.546Z
+// Synced at: 2026-02-17T09:21:04.548Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -24,6 +24,14 @@ export default [
         banner: "TheShovel/thumbnail-shoveldebugger.avif",
         isGitHub: true,
         creator: "TheShovel",
+    },
+    {
+        name: "Server Storage",
+        description: "Similar to the server storage blocks in the 'Storage' extension, but with a better server uptime and non-global keys.\nDid you know the server is open source?",
+        code: "Ikelene/serverStorageExtension.js",
+        banner: "Ikelene/serverStorageIMG.avif",
+        creator: "Ikelene",
+        isGitHub: true,
     },
     {
         name: "Storage Plus",
@@ -619,28 +627,32 @@ export default [
         creator: "G1nX",
     },
     */
-    {
+        {
         name: "Smoke Detector",
         description: "Plays a beep every 30 seconds.",
         code: "electricfuzzball_pm/firealarm.js",
         banner: "electricfuzzball_pm/firealarm.svg",
-        creator: "ElectricFuzzball_PM" //hey look thats me!!
-        //Pluey has been implemented.
+        creator: "FloppyDisk-OSC",
+        isGitHub: true,
+        creatorAlias: "ElectricFuzzball_PM"
     },
         {
         name: "Stage Brah",
         description: "Spawn Brah cats in your codespace!",
         code: "electricfuzzball_pm/StageBrah.js",
         banner: "electricfuzzball_pm/StageBrah.svg",
-        creator: "ElectricFuzzball_PM"
-        //:brah:
+        creator: "FloppyDisk-OSC",
+        isGitHub: true,
+        creatorAlias: "ElectricFuzzball_PM"
     },
         {
         name: "MIDI Controller",
         description: "Use a MIDI keyboard to interact with projects!",
         code: "electricfuzzball_pm/MIDI.js",
         banner: "electricfuzzball_pm/MIDI.svg",
-        creator: "ElectricFuzzball_PM"
+        creator: "FloppyDisk-OSC",
+        isGitHub: true,
+        creatorAlias: "ElectricFuzzball_PM"
     },
 ];
 

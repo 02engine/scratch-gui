@@ -1593,6 +1593,28 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_modal__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_modal__WEBPACK_IMPORTED_MODULE_1__);
 
 
+
+// Suppress React warnings about deprecated lifecycle methods
+// These warnings come from react-redux and other dependencies
+const originalConsoleError = console.error;
+console.error = function () {
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+  // Suppress componentWillMount, componentWillReceiveProps, componentWillUpdate warnings
+  if (args[0] && typeof args[0] === 'string' && (args[0].includes('componentWillMount') || args[0].includes('componentWillReceiveProps') || args[0].includes('componentWillUpdate'))) {
+    return;
+  }
+  // Suppress PropType warnings for messages.tw.blocks.addons
+  if (args[0] && typeof args[0] === 'string' && args[0].includes('Invalid prop') && args[0].includes('messages.tw.blocks.addons')) {
+    return;
+  }
+  // Suppress PropType warnings for items[0].order
+  if (args[0] && typeof args[0] === 'string' && args[0].includes('items[0].order')) {
+    return;
+  }
+  originalConsoleError.apply(console, args);
+};
 const appTarget = document.getElementById('app');
 
 // Remove everything from the target to fix macOS Safari "Save Page As",
