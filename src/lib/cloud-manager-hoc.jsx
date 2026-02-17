@@ -44,12 +44,12 @@ const cloudManagerHOC = function (WrappedComponent) {
                 this.connectToCloud();
             }
         }
-        componentWillReceiveProps (nextProps) {
-            if (this.props.reduxCloudHost !== nextProps.cloudHost) {
-                this.props.onSetReduxCloudHost(nextProps.cloudHost);
-            }
-        }
         componentDidUpdate (prevProps) {
+            // Handle cloud host changes
+            if (this.props.reduxCloudHost !== this.props.cloudHost) {
+                this.props.onSetReduxCloudHost(this.props.cloudHost);
+            }
+
             // TODO need to add cloud provider disconnection logic and cloud data clearing logic
             // when loading a new project e.g. via file upload
             // (and eventually move it out of the vm.clear function)

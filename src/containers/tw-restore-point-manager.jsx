@@ -83,10 +83,10 @@ class TWRestorePointManager extends React.Component {
         this.props.vm.on('PROJECT_CHANGED', this.handleProjectChanged);
     }
 
-    componentWillReceiveProps (nextProps) {
-        if (nextProps.isModalVisible && !this.props.isModalVisible) {
+    componentDidUpdate (prevProps) {
+        if (this.props.isModalVisible && !prevProps.isModalVisible) {
             this.refreshState();
-        } else if (!nextProps.isModalVisible && this.props.isModalVisible) {
+        } else if (!this.props.isModalVisible && prevProps.isModalVisible) {
             this.setState({
                 restorePoints: []
             });

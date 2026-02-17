@@ -9074,7 +9074,11 @@
         "gui.gitCommit.dragReleaseHint": "释放文件开始上传",
         "gui.gitCommit.dragDropHint": "拖拽文件至此处或点击选择",
         "gui.gitCommit.readmeFileHint": "支持 .md 或 .markdown 文件",
-        "gui.gitCommit.logoutSuccess": "已成功退出登录"
+        "gui.gitCommit.logoutSuccess": "已成功退出登录",
+        "tw.loader.madeByStudio": "由 0.2Studio 开发",
+        "tw.loader.redefineExperience": "重新定义设计体验",
+        "gui.menuBar.git": "Git",
+        "zt.tools": "工具"
     },
 "zh-tw": {
         "gui.gitCommit.title": "推送變更至 GitHub",

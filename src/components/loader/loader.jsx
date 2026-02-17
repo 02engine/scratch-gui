@@ -18,8 +18,8 @@ const Logo = () => (
         <rect x="91.79998779296875" y="91.800048828125" width="68" height="64.5999984741211" rx="32.29999923706055" fill="url(#linear_fill_22_5_0)"></rect>
         <defs>
             <linearGradient id="linear_fill_22_5_0" x1="124.39646779296875" y1="156.4000473022461" x2="124.39646779296875" y2="103.72714654640198" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stop-color="#00BAAD"></stop>
-                <stop offset="1" stop-color="#00BAAD" stop-opacity="0"></stop>
+                <stop offset="0" stopColor="#00BAAD"></stop>
+                <stop offset="1" stopColor="#00BAAD" stopOpacity="0"></stop>
             </linearGradient>
         </defs>
     </svg>

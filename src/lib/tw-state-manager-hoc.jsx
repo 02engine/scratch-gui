@@ -552,6 +552,8 @@ const TWStateManager = function (WrappedComponent) {
                 routingStyle,
                 username,
                 vm,
+                customUI,
+                setCustomUI,
                 /* eslint-enable no-unused-vars */
                 ...props
             } = this.props;

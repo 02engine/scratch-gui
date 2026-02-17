@@ -100,23 +100,23 @@ class CostumeTab extends React.Component {
             this.state = {selectedCostumeIndex: 0};
         }
     }
-    componentWillReceiveProps (nextProps) {
+    componentDidUpdate (prevProps) {
         const {
             editingTarget,
             sprites,
             stage
-        } = nextProps;
+        } = this.props;
 
         const target = editingTarget && sprites[editingTarget] ? sprites[editingTarget] : stage;
         if (!target || !target.costumes) {
             return;
         }
 
-        if (this.props.editingTarget === editingTarget) {
+        if (prevProps.editingTarget === editingTarget) {
             // If costumes have been added or removed, change costumes to the editing target's
             // current costume.
-            const oldTarget = this.props.sprites[editingTarget] ?
-                this.props.sprites[editingTarget] : this.props.stage;
+            const oldTarget = prevProps.sprites[editingTarget] ?
+                prevProps.sprites[editingTarget] : prevProps.stage;
             // @todo: Find and switch to the index of the costume that is new. This is blocked by
             // https://github.com/LLK/scratch-vm/issues/967
             // Right now, you can land on the wrong costume if a costume changing script is running.

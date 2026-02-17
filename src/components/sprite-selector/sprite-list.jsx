@@ -116,10 +116,10 @@ SpriteList.propTypes = {
     items: PropTypes.arrayOf(PropTypes.shape({
         costume: PropTypes.shape({
             url: PropTypes.string,
-            name: PropTypes.string.isRequired,
-            bitmapResolution: PropTypes.number.isRequired,
-            rotationCenterX: PropTypes.number.isRequired,
-            rotationCenterY: PropTypes.number.isRequired
+            name: PropTypes.string,
+            bitmapResolution: PropTypes.number,
+            rotationCenterX: PropTypes.number,
+            rotationCenterY: PropTypes.number
         }),
         name: PropTypes.any, // modified by folders addon
         order: PropTypes.number.isRequired

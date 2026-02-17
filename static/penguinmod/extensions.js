@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-02-01T03:56:14.746Z
+// Synced at: 2026-02-15T11:08:34.956Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -64,6 +64,13 @@ export default [
         isGitHub: false,
         unstable: true,
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
+    },
+    {
+        name: "Beat Sync",
+        description: "An extension designed to let you sync anything in your project to a musical beat, with incredible precision.",
+        code: "Gen1x/beat_sync.js",
+        banner: "Gen1x/beat_sync.avif",
+        creator: "G1nX",
     },
     {
         name: "Object",
@@ -225,6 +232,7 @@ export default [
         creator: "qxsck",
         isGitHub: true,
     },
+    /* Use the TurboWarp version. This one is outdated and broken.
     {
         name: "Format Numbers",
         description: "Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.",
@@ -234,12 +242,14 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
+    */
     {
         name: "Date Format",
         description: "Manage, format and compare dates.",
         code: "ddededodediamante/dateFormatV2.js",
         banner: "ddededodediamante/dateFormat.svg",
         creator: "ddededodediamante",
+        tags: ["customtype", "utility", "small", "data", "time"],
         isGitHub: true,
     },
     {
@@ -247,8 +257,9 @@ export default [
         description: "Use translation keys in your projects for multi-language support",
         code: "Embin/embintranslation.js",
         banner: "Embin/embintranslation.avif",
-        creator: "NotEmbin",
+        creator: "embinmc",
         isGitHub: true, 
+        tags: ["data", "utility", "text", "strings"],
         creatorAlias: "Embin",
     },
     {
@@ -258,6 +269,7 @@ export default [
         banner: "DogeisCut/YetAnotherStringExtension.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["strings", "builder", "small", "text", "utility"]
     },
     {
         name: "Regular Expressions",
@@ -266,6 +278,7 @@ export default [
         banner: "DogeisCut/dogeiscutRegularExpressions.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["customtype", "strings", "regex", "text", "utility"]
     },
     {
         name: "Sets",
@@ -274,6 +287,17 @@ export default [
         banner: "DogeisCut/dogeiscutSet.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["customtype", "sets", "data", "utility"]
+    },
+    {
+        name: "Iterators",
+        description: "Transform and iterate over different types of collections and more.",
+        code: "Div/divIterators.js",
+        banner: "Div/divIterators.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
     },
     {
         name: "Blobs",
@@ -389,6 +413,7 @@ export default [
         banner: "DogeisCut/BeepBoxPlayer.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["api", "music", "sounds", "ultrabox", "jummbox", "beepbox"]
     },
     {
         name: "Update File (Direct Access)",
@@ -529,6 +554,7 @@ export default [
         code: "Monochromasity/howmanylines.js",
         banner: "Monochromasity/placeholder-howmanylines.avif",
         creator: "Monochromasity",
+        tags: ["small"],
         isGitHub: true,
     },
     {
@@ -548,6 +574,7 @@ export default [
         isGitHub: true, 
         documentation: "Resolution",
         notes: "Gallery banner by Dillon",
+        tags: ["graphics", "utility"]
     },
     {
         name: "Device Motion",
@@ -607,6 +634,13 @@ export default [
         banner: "electricfuzzball_pm/StageBrah.svg",
         creator: "ElectricFuzzball_PM"
         //:brah:
+    },
+        {
+        name: "MIDI Controller",
+        description: "Use a MIDI keyboard to interact with projects!",
+        code: "electricfuzzball_pm/MIDI.js",
+        banner: "electricfuzzball_pm/MIDI.svg",
+        creator: "ElectricFuzzball_PM"
     },
 ];
 

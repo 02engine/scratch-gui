@@ -22,11 +22,11 @@ class MonitorList extends React.Component {
             key: 0
         };
     }
-    componentWillReceiveProps (nextProps) {
+    componentDidUpdate (prevProps) {
         // TW: When stage size changes, we'll force all monitors to re-render completely
         // This is important because the VM moves monitors after resize to preserve locations but
         // Scratch's monitor layout logic is very complex and it won't notice that
-        if (this.props.customStageSize !== nextProps.customStageSize) {
+        if (prevProps.customStageSize !== this.props.customStageSize) {
             this.props.resetMonitorLayout();
             this.setState({
                 key: this.state.key + 1

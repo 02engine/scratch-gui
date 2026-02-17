@@ -171,6 +171,7 @@ const GUIComponent = props => {
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
         vm,
+        customUI,
         ...componentProps
     } = omit(props, 'dispatch');
 
