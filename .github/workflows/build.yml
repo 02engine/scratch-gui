@@ -24,6 +24,11 @@ jobs:
       - name: Setup bun ⚙️
         uses: oven-sh/setup-bun@v2
 
+      - name: Clean cache and node_modules 🧹
+        run: |
+          rm -rf node_modules ~/.bun/install/cache
+          rm -f bun.lockb
+
       - name: Skip Scripts Install 📦
         run: bun install --skip-scripts  --loglevel=info --no-cache
 
@@ -51,5 +56,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
           clean: false    
-
           publish_branch: cf-page
