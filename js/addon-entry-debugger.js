@@ -13,7 +13,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../node_modules/css-
 exports.i(__webpack_require__(/*! -!../../../../node_modules/css-loader!../editor-theme3/compatibility.css */ "./node_modules/css-loader/index.js!./src/addons/addons/editor-theme3/compatibility.css"), "");
 
 // module
-exports.push([module.i, "[dir=\"ltr\"] .sa-debugger-container {\n  margin-right: 0.2rem;\n}\n\n[dir=\"rtl\"] .sa-debugger-container {\n  margin-left: 0.2rem;\n}\n\n.sa-small-stage [class*=\"gui_body-wrapper_\"]:not(.sa-stage-hidden) .sa-debugger-container {\n  display: none !important;\n}\n\n.sa-debugger-container [class*=\"button_content_\"] {\n  position: relative;\n}\n\n.sa-debugger-unread::after {\n  content: \"\";\n  position: absolute;\n  top: 1px;\n  right: 0;\n  display: block;\n  width: 6px;\n  height: 6px;\n  background-color: var(--editorDarkMode-highlightText, #855cd6);\n  border-radius: 50%;\n}\n\n.sa-debugger-interface {\n  display: none;\n  position: absolute;\n  z-index: 492;\n  background-color: var(--ui-modal-background);\n  color: var(--ui-modal-foreground);\n  width: 565px;\n  height: 25rem;\n}\n\n.sa-debugger-interface [class*=\"card_header-buttons_\"] {\n  background-color: #29beb8;\n  border-color: #3aa8a4;\n}\n\n.sa-debugger-interface h1 {\n  padding: 10px;\n  z-index: 10;\n  width: calc(100% - 20px);\n  font-size: 20px;\n}\n\n.sa-debugger-tabs {\n  margin: 0;\n  display: flex;\n  align-items: center;\n  padding: 0 15px;\n  font-size: 0.75rem;\n}\n.sa-debugger-tabs li {\n  margin: 0;\n  display: flex;\n  align-items: center;\n  padding: 0.5em 1em;\n  background-color: rgba(0, 0, 0, 0.1);\n  border: 1px solid rgba(0, 0, 0, 0.15);\n  border-radius: 1rem;\n  color: white;\n  cursor: pointer;\n}\n.sa-debugger-tabs li + li {\n  margin-inline-start: 10px;\n}\n.sa-debugger-tabs li:hover {\n  background-color: rgba(0, 0, 0, 0.15);\n}\n.sa-debugger-tabs li.sa-debugger-tab-selected {\n  background-color: white;\n  background-clip: padding-box;\n  border-color: rgba(0, 0, 0, 0.25);\n  color: var(--looks-secondary);\n}\n.sa-debugger-tabs li img {\n  margin: 0;\n  margin-right: 0.25rem;\n  width: 1rem;\n  filter: brightness(0) invert(1);\n}\n.sa-debugger-tabs li.sa-debugger-tab-selected img {\n  filter: none;\n}\n\n.sa-debugger-header-buttons img {\n  width: 20px;\n  height: 20px;\n}\n\n.sa-debugger-unpause {\n  animation: saDebuggerUnpause 2s infinite alternate;\n}\n\n@keyframes saDebuggerUnpause {\n  0% {\n    background-color: rgba(0, 0, 0, 0.15);\n  }\n  100% {\n    background-color: rgba(0, 0, 0, 0);\n  }\n}\n\n.sa-debugger-tab-content {\n  width: 100%;\n  height: 100%;\n  overflow: auto;\n  cursor: auto;\n}\n\n.sa-debugger-chart {\n  width: 100%;\n  height: 100%;\n}\n\n.sa-performance-tab-content {\n  padding: 15px;\n}\n\n.sa-debugger-log-outer {\n  height: 100%;\n}\n\n.sa-debugger-log-inner {\n  position: relative;\n  overflow-y: auto;\n  font-size: 12px;\n  line-height: 1.2;\n  height: 100%;\n  contain: strict;\n}\n\n.sa-debugger-log-empty {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  width: 100%;\n  height: 100%;\n  font-size: 20px;\n  font-style: italic;\n}\n\n.sa-debugger-log-end {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 1px;\n  height: 1px;\n}\n\n.sa-debugger-log {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 20px;\n  box-sizing: border-box;\n  display: flex;\n  align-items: center;\n  border-bottom: 1px solid var(--ui-black-transparent);\n  padding-left: 4px;\n  font-family: monospace;\n}\n.sa-debugger-log[data-type=\"warn\"] {\n  border-color: hsla(56deg, 100%, 69%, 0.5);\n  background-color: hsla(56deg, 100%, 69%, 0.3);\n}\n.sa-debugger-log[data-type=\"error\"] {\n  border-color: hsla(0deg, 100%, 69%, 0.5);\n  color: red;\n  background-color: hsla(0deg, 100%, 69%, 0.3);\n}\n\n.sa-debugger-log-repeats {\n  background-color: hsla(163, 85%, 40%, 1);\n  color: white;\n  border-radius: 100px;\n  padding: 1px 6px;\n  margin-right: 4px;\n}\n\n.sa-debugger-log-icon {\n  width: 16px;\n  height: 16px;\n  margin-right: 4px;\n}\n[data-type=\"warn\"] .sa-debugger-log-icon {\n  background-image: url(" + escape(__webpack_require__(/*! ./icons/warning.svg */ "./src/addons/addons/debugger/icons/warning.svg")) + ");\n}\n[data-type=\"error\"] .sa-debugger-log-icon {\n  background-image: url(" + escape(__webpack_require__(/*! ./icons/error.svg */ "./src/addons/addons/debugger/icons/error.svg")) + ");\n}\n.sa-debugger-threads .sa-debugger-log-icon {\n  background-image: url(" + escape(__webpack_require__(/*! ./icons/subthread.svg */ "./src/addons/addons/debugger/icons/subthread.svg")) + ");\n}\n\n.sa-debugger-log-link {\n  color: inherit;\n  cursor: pointer;\n  opacity: 0.5;\n  text-decoration: underline;\n  float: right;\n  text-align: right;\n  max-width: 100%;\n  padding-left: 4px;\n  margin-right: 4px;\n  margin-left: auto;\n}\n.sa-debugger-log-link:hover {\n  text-decoration: underline;\n  color: var(--looks-secondary);\n  opacity: 1;\n}\n.sa-debugger-log-link-unknown {\n  pointer-events: none;\n}\n\n.sa-debugger-log-text {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: pre;\n}\n.sa-debugger-log-text-empty {\n  font-style: italic;\n}\n.sa-debugger-log-internal .sa-debugger-log-text {\n  font-style: italic;\n}\n\n.sa-debugger-thread-indent {\n  width: calc(16px * var(--level));\n  margin-right: 4px;\n}\n.sa-debugger-thread-title .sa-debugger-thread-indent {\n  margin: 0;\n}\n.sa-debugger-thread-target-name {\n  font-weight: bold;\n  margin-right: 8px;\n}\n.sa-debugger-thread-running {\n  background-color: rgba(255, 187, 0, 0.233);\n  font-weight: bold;\n}\n\n.sa-debugger-block-preview {\n  padding: 1px 6px;\n  margin-right: 4px;\n  background-color: var(--sa-block-colored-background);\n  color: var(--sa-block-text);\n}\n.sa-debugger-block-preview[data-shape=\"round\"] {\n  border-radius: 100px;\n}\n.sa-debugger-block-preview[data-shape=\"stacked\"] {\n  border-radius: 3px;\n}\n\n.sa-debugger-thread-compiled {\n  font-style: italic;\n}\n\n.sa-debugger-compiler-warning {\n  position: relative;\n  display: block;\n  text-align: center;\n  height: 24px;\n  color: var(--link-color);\n}\n.sa-debugger-compiler-warning[hidden] {\n  display: none;\n}\n", ""]);
+exports.push([module.i, "[dir=\"ltr\"] .sa-debugger-container {\n  margin-right: 0.2rem;\n}\n\n[dir=\"rtl\"] .sa-debugger-container {\n  margin-left: 0.2rem;\n}\n\n.sa-small-stage [class*=\"gui_body-wrapper_\"]:not(.sa-stage-hidden) .sa-debugger-container {\n  display: none !important;\n}\n\n.sa-debugger-container [class*=\"button_content_\"] {\n  position: relative;\n}\n\n.sa-debugger-unread::after {\n  content: \"\";\n  position: absolute;\n  top: 1px;\n  right: 0;\n  display: block;\n  width: 6px;\n  height: 6px;\n  background-color: var(--editorDarkMode-highlightText, #855cd6);\n  border-radius: 50%;\n}\n\n.sa-debugger-interface {\n  display: none;\n  position: absolute;\n  z-index: 492;\n  background-color: var(--ui-modal-background);\n  color: var(--ui-modal-foreground);\n  width: 565px;\n  height: 25rem;\n}\n\n.sa-debugger-interface [class*=\"card_header-buttons_\"] {\n  background-color: #29beb8;\n  border-color: #3aa8a4;\n}\n\n.sa-debugger-interface h1 {\n  padding: 10px;\n  z-index: 10;\n  width: calc(100% - 20px);\n  font-size: 20px;\n}\n\n.sa-debugger-tabs {\n  margin: 0;\n  display: flex;\n  align-items: center;\n  padding: 0 15px;\n  font-size: 0.75rem;\n}\n.sa-debugger-tabs li {\n  margin: 0;\n  display: flex;\n  align-items: center;\n  padding: 0.5em 1em;\n  background-color: rgba(0, 0, 0, 0.1);\n  border: 1px solid rgba(0, 0, 0, 0.15);\n  border-radius: 1rem;\n  color: white;\n  cursor: pointer;\n}\n.sa-debugger-tabs li + li {\n  margin-inline-start: 10px;\n}\n.sa-debugger-tabs li:hover {\n  background-color: rgba(0, 0, 0, 0.15);\n}\n.sa-debugger-tabs li.sa-debugger-tab-selected {\n  background-color: white;\n  background-clip: padding-box;\n  border-color: rgba(0, 0, 0, 0.25);\n  color: var(--looks-secondary);\n}\n.sa-debugger-tabs li img {\n  margin: 0;\n  margin-right: 0.25rem;\n  width: 1rem;\n  filter: brightness(0) invert(1);\n}\n.sa-debugger-tabs li.sa-debugger-tab-selected img {\n  filter: none;\n}\n\n.sa-debugger-header-buttons img {\n  width: 20px;\n  height: 20px;\n}\n\n.sa-debugger-unpause {\n  animation: saDebuggerUnpause 2s infinite alternate;\n}\n\n@keyframes saDebuggerUnpause {\n  0% {\n    background-color: rgba(0, 0, 0, 0.15);\n  }\n  100% {\n    background-color: rgba(0, 0, 0, 0);\n  }\n}\n\n.sa-debugger-tab-content {\n  width: 100%;\n  height: 100%;\n  overflow: auto;\n  cursor: auto;\n}\n\n.sa-debugger-chart {\n  width: 100%;\n  height: 100%;\n}\n\n.sa-performance-tab-content {\n  padding: 15px;\n}\n\n.sa-debugger-log-outer {\n  height: 100%;\n}\n\n.sa-debugger-log-inner {\n  position: relative;\n  overflow-y: auto;\n  font-size: 12px;\n  line-height: 1.2;\n  height: 100%;\n  contain: strict;\n}\n\n.sa-debugger-log-empty {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  width: 100%;\n  height: 100%;\n  font-size: 20px;\n  font-style: italic;\n}\n\n.sa-debugger-log-end {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 1px;\n  height: 1px;\n}\n\n.sa-debugger-log {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 20px;\n  box-sizing: border-box;\n  display: flex;\n  align-items: center;\n  border-bottom: 1px solid var(--ui-black-transparent);\n  padding-left: 4px;\n  font-family: monospace;\n}\n.sa-debugger-log[data-type=\"warn\"] {\n  border-color: hsla(56deg, 100%, 69%, 0.5);\n  background-color: hsla(56deg, 100%, 69%, 0.3);\n}\n.sa-debugger-log[data-type=\"error\"] {\n  border-color: hsla(0deg, 100%, 69%, 0.5);\n  color: red;\n  background-color: hsla(0deg, 100%, 69%, 0.3);\n}\n\n.sa-debugger-log-repeats {\n  background-color: hsla(163, 85%, 40%, 1);\n  color: white;\n  border-radius: 100px;\n  padding: 1px 6px;\n  margin-right: 4px;\n}\n\n.sa-debugger-log-icon {\n  width: 16px;\n  height: 16px;\n  margin-right: 4px;\n}\n[data-type=\"warn\"] .sa-debugger-log-icon {\n  background-image: url(" + escape(__webpack_require__(/*! ./icons/warning.svg */ "./src/addons/addons/debugger/icons/warning.svg")) + ");\n}\n[data-type=\"error\"] .sa-debugger-log-icon {\n  background-image: url(" + escape(__webpack_require__(/*! ./icons/error.svg */ "./src/addons/addons/debugger/icons/error.svg")) + ");\n}\n.sa-debugger-threads .sa-debugger-log-icon {\n  background-image: url(" + escape(__webpack_require__(/*! ./icons/subthread.svg */ "./src/addons/addons/debugger/icons/subthread.svg")) + ");\n}\n\n.sa-debugger-log-link {\n  color: inherit;\n  cursor: pointer;\n  opacity: 0.5;\n  text-decoration: underline;\n  float: right;\n  text-align: right;\n  max-width: 100%;\n  padding-left: 4px;\n  margin-right: 4px;\n  margin-left: auto;\n}\n.sa-debugger-log-link:hover {\n  text-decoration: underline;\n  color: var(--looks-secondary);\n  opacity: 1;\n}\n.sa-debugger-log-link-unknown {\n  pointer-events: none;\n}\n\n.sa-debugger-log-text {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: pre;\n}\n.sa-debugger-log-text-empty {\n  font-style: italic;\n}\n.sa-debugger-log-internal .sa-debugger-log-text {\n  font-style: italic;\n}\n\n.sa-debugger-thread-indent {\n  width: calc(16px * var(--level));\n  margin-right: 4px;\n}\n.sa-debugger-thread-title .sa-debugger-thread-indent {\n  margin: 0;\n}\n.sa-debugger-thread-target-name {\n  font-weight: bold;\n  margin-right: 8px;\n}\n.sa-debugger-thread-running {\n  background-color: rgba(255, 187, 0, 0.233);\n  font-weight: bold;\n}\n\n.sa-debugger-block-preview {\n  padding: 1px 6px;\n  margin-right: 4px;\n  background-color: var(--sa-block-colored-background);\n  color: var(--sa-block-text);\n}\n.sa-debugger-block-preview[data-shape=\"round\"] {\n  border-radius: 100px;\n}\n.sa-debugger-block-preview[data-shape=\"stacked\"] {\n  border-radius: 3px;\n}\n\n.sa-debugger-thread-compiled {\n  font-style: italic;\n}\n\n.sa-debugger-compiler-warning {\n  position: relative;\n  display: block;\n  text-align: center;\n  height: 24px;\n  color: var(--link-color);\n}\n.sa-debugger-compiler-warning[hidden] {\n  display: none;\n}\n\n/* Variables Tab Styles */\n.sa-debugger-variables {\n  height: 100%;\n  overflow-y: auto;\n  padding: 10px;\n  background-color: var(--ui-modal-background);\n  color: var(--ui-modal-foreground);\n}\n\n.sa-debugger-variables-header {\n  display: flex;\n  gap: 10px;\n  margin-bottom: 15px;\n  align-items: center;\n}\n\n.sa-debugger-variables-search {\n  flex: 1;\n  padding: 8px 12px;\n  border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.15));\n  border-radius: 4px;\n  font-size: 13px;\n  background-color: var(--ui-white, #fff);\n  color: var(--text-primary, #575e75);\n}\n\n.sa-debugger-variables-uncheck-all {\n  padding: 8px 16px;\n  background-color: var(--looks-secondary, #4c97ff);\n  color: white;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  font-size: 13px;\n  white-space: nowrap;\n}\n\n.sa-debugger-variables-uncheck-all:hover {\n  background-color: var(--looks, #3373cc);\n}\n\n.sa-debugger-variables-section {\n  margin-bottom: 20px;\n}\n\n.sa-debugger-variables-heading {\n  font-size: 12px;\n  color: var(--text-secondary, #8f8f8f);\n  text-transform: uppercase;\n  margin-bottom: 10px;\n  padding-bottom: 5px;\n  border-bottom: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.15));\n}\n\n.sa-debugger-variables-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n\n.sa-debugger-variable-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 8px;\n  background: var(--ui-tertiary, #f2f2f2);\n  border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.15));\n  border-radius: 4px;\n  transition: opacity 0.2s;\n}\n\n.sa-debugger-variable-row.sa-debugger-variable-unchecked {\n  opacity: 0.6;\n  background: var(--ui-secondary, #e5e5e5);\n}\n\n.sa-debugger-variable-checkbox {\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n}\n\n.sa-debugger-variable-name {\n  font-weight: 600;\n  font-size: 13px;\n  color: var(--text-primary, #575e75);\n  min-width: 100px;\n  max-width: 150px;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.sa-debugger-variable-unchecked .sa-debugger-variable-name {\n  color: var(--text-secondary, #8f8f8f);\n}\n\n.sa-debugger-variable-value-container {\n  flex: 1;\n}\n\n.sa-debugger-variable-value {\n  width: 100%;\n  padding: 6px 8px;\n  border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.15));\n  border-radius: 3px;\n  font-size: 13px;\n  font-family: monospace;\n  background: var(--ui-white, #fff);\n  color: var(--text-primary, #575e75);\n}\n\n.sa-debugger-variable-value:focus {\n  border-color: var(--looks-secondary, #4c97ff);\n  outline: none;\n}\n\n.sa-debugger-variable-list {\n  min-height: 60px;\n  resize: vertical;\n  white-space: pre-wrap;\n}\n", ""]);
 
 // exports
 
@@ -182,6 +182,19 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./node_modules/url-loader/dist/cjs.js!./src/addons/addons/debugger/icons/variable.svg":
+/*!*********************************************************************************************!*\
+  !*** ./node_modules/url-loader/dist/cjs.js!./src/addons/addons/debugger/icons/variable.svg ***!
+  \*********************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICA8cmVjdCB4PSIzIiB5PSIzIiB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHJ4PSIyIiByeT0iMiIvPgogIDxsaW5lIHgxPSI4IiB5MT0iMTIiIHgyPSIxNiIgeTI9IjEyIi8+CiAgPGxpbmUgeDE9IjEyIiB5MT0iOCIgeDI9IjEyIiB5Mj0iMTYiLz4KPC9zdmc+");
+
+/***/ }),
+
 /***/ "./node_modules/url-loader/dist/cjs.js!./src/addons/addons/debugger/icons/warning.svg":
 /*!********************************************************************************************!*\
   !*** ./node_modules/url-loader/dist/cjs.js!./src/addons/addons/debugger/icons/warning.svg ***!
@@ -220,7 +233,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _url_loader_icons_subthread_svg__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! url-loader!./icons/subthread.svg */ "./node_modules/url-loader/dist/cjs.js!./src/addons/addons/debugger/icons/subthread.svg");
 /* harmony import */ var _url_loader_icons_threads_svg__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! url-loader!./icons/threads.svg */ "./node_modules/url-loader/dist/cjs.js!./src/addons/addons/debugger/icons/threads.svg");
 /* harmony import */ var _url_loader_icons_warning_svg__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! url-loader!./icons/warning.svg */ "./node_modules/url-loader/dist/cjs.js!./src/addons/addons/debugger/icons/warning.svg");
+/* harmony import */ var _url_loader_icons_variable_svg__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! url-loader!./icons/variable.svg */ "./node_modules/url-loader/dist/cjs.js!./src/addons/addons/debugger/icons/variable.svg");
 /* generated by pull.js */
+
 
 
 
@@ -249,7 +264,8 @@ const resources = {
   "icons/step.svg": _url_loader_icons_step_svg__WEBPACK_IMPORTED_MODULE_10__["default"],
   "icons/subthread.svg": _url_loader_icons_subthread_svg__WEBPACK_IMPORTED_MODULE_11__["default"],
   "icons/threads.svg": _url_loader_icons_threads_svg__WEBPACK_IMPORTED_MODULE_12__["default"],
-  "icons/warning.svg": _url_loader_icons_warning_svg__WEBPACK_IMPORTED_MODULE_13__["default"]
+  "icons/warning.svg": _url_loader_icons_warning_svg__WEBPACK_IMPORTED_MODULE_13__["default"],
+  "icons/variable.svg": _url_loader_icons_variable_svg__WEBPACK_IMPORTED_MODULE_14__["default"]
 };
 
 /***/ }),
@@ -1169,8 +1185,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _logs_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./logs.js */ "./src/addons/addons/debugger/logs.js");
 /* harmony import */ var _threads_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./threads.js */ "./src/addons/addons/debugger/threads.js");
 /* harmony import */ var _performance_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./performance.js */ "./src/addons/addons/debugger/performance.js");
-/* harmony import */ var _find_bar_blockly_Utils_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../find-bar/blockly/Utils.js */ "./src/addons/addons/find-bar/blockly/Utils.js");
-/* harmony import */ var _libraries_common_cs_small_stage_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../libraries/common/cs/small-stage.js */ "./src/addons/libraries/common/cs/small-stage.js");
+/* harmony import */ var _variables_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./variables.js */ "./src/addons/addons/debugger/variables.js");
+/* harmony import */ var _find_bar_blockly_Utils_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../find-bar/blockly/Utils.js */ "./src/addons/addons/find-bar/blockly/Utils.js");
+/* harmony import */ var _libraries_common_cs_small_stage_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../libraries/common/cs/small-stage.js */ "./src/addons/libraries/common/cs/small-stage.js");
+
 
 
 
@@ -1500,7 +1518,7 @@ const removeAllChildren = element => {
 
     // Don't scroll to blocks in the flyout
     if (block.workspace.isFlyout) return;
-    new _find_bar_blockly_Utils_js__WEBPACK_IMPORTED_MODULE_4__["default"](addon).scrollBlockIntoView(blockId);
+    new _find_bar_blockly_Utils_js__WEBPACK_IMPORTED_MODULE_5__["default"](addon).scrollBlockIntoView(blockId);
   };
 
   /**
@@ -1668,7 +1686,8 @@ const removeAllChildren = element => {
   logsTab = await Object(_logs_js__WEBPACK_IMPORTED_MODULE_1__["default"])(api);
   const threadsTab = await Object(_threads_js__WEBPACK_IMPORTED_MODULE_2__["default"])(api);
   const performanceTab = await Object(_performance_js__WEBPACK_IMPORTED_MODULE_3__["default"])(api);
-  const allTabs = [logsTab, threadsTab, performanceTab];
+  const variablesTab = await Object(_variables_js__WEBPACK_IMPORTED_MODULE_4__["default"])(api);
+  const allTabs = [logsTab, threadsTab, performanceTab, variablesTab];
   for (const message of messagesLoggedBeforeLogsTabLoaded) {
     logsTab.addLog(...message);
   }
@@ -1702,7 +1721,7 @@ const removeAllChildren = element => {
     tabListElement.appendChild(tab.tab.element);
   }
   setActiveTab(allTabs[0]);
-  Object(_libraries_common_cs_small_stage_js__WEBPACK_IMPORTED_MODULE_5__["default"])();
+  Object(_libraries_common_cs_small_stage_js__WEBPACK_IMPORTED_MODULE_6__["default"])();
   const ogGreenFlag = vm.runtime.greenFlag;
   vm.runtime.greenFlag = function () {
     if (addon.settings.get("log_clear_greenflag")) {
@@ -1763,6 +1782,364 @@ const removeAllChildren = element => {
     }
   }
 });
+
+/***/ }),
+
+/***/ "./src/addons/addons/debugger/variables.js":
+/*!*************************************************!*\
+  !*** ./src/addons/addons/debugger/variables.js ***!
+  \*************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return createVariablesTab; });
+async function createVariablesTab(_ref) {
+  let {
+    debug,
+    addon,
+    msg
+  } = _ref;
+  const vm = addon.tab.traps.vm;
+
+  // 存储所有变量包装器
+  let localVariables = [];
+  let globalVariables = [];
+
+  // 创建 Tab
+  const tab = debug.createHeaderTab({
+    text: msg("tab-variables"),
+    icon: addon.self.getResource("/icons/variable.svg")
+  });
+
+  // 创建内容容器
+  const content = document.createElement("div");
+  content.className = "sa-debugger-variables";
+
+  // 创建搜索和按钮区域
+  const headerRow = document.createElement("div");
+  headerRow.className = "sa-debugger-variables-header";
+
+  // 创建搜索框
+  const searchBox = document.createElement("input");
+  searchBox.type = "text";
+  searchBox.className = "sa-debugger-variables-search";
+  searchBox.placeholder = msg("search-variables");
+  headerRow.appendChild(searchBox);
+
+  // 创建"全部取消"按钮
+  const uncheckAllBtn = document.createElement("button");
+  uncheckAllBtn.className = "sa-debugger-variables-uncheck-all";
+  uncheckAllBtn.textContent = msg("uncheck-all");
+  uncheckAllBtn.addEventListener("click", () => {
+    [...localVariables, ...globalVariables].forEach(v => {
+      v.checked = false;
+      // 更新复选框状态
+      const checkbox = v.row.querySelector(".sa-debugger-variable-checkbox");
+      if (checkbox) checkbox.checked = false;
+      v.updateDisplayMode();
+    });
+    reorderVariables();
+  });
+  headerRow.appendChild(uncheckAllBtn);
+  content.appendChild(headerRow);
+
+  // 创建"此角色"变量区域
+  const localSection = document.createElement("div");
+  localSection.className = "sa-debugger-variables-section";
+  const localHeading = document.createElement("h3");
+  localHeading.textContent = msg("for-this-sprite");
+  localHeading.className = "sa-debugger-variables-heading";
+  const localList = document.createElement("div");
+  localList.className = "sa-debugger-variables-list";
+  localSection.appendChild(localHeading);
+  localSection.appendChild(localList);
+  content.appendChild(localSection);
+
+  // 创建"所有角色"变量区域
+  const globalSection = document.createElement("div");
+  globalSection.className = "sa-debugger-variables-section";
+  const globalHeading = document.createElement("h3");
+  globalHeading.textContent = msg("for-all-sprites");
+  globalHeading.className = "sa-debugger-variables-heading";
+  const globalList = document.createElement("div");
+  globalList.className = "sa-debugger-variables-list";
+  globalSection.appendChild(globalHeading);
+  globalSection.appendChild(globalList);
+  content.appendChild(globalSection);
+
+  // 变量包装类
+  class WrappedVariable {
+    constructor(scratchVariable, target, isGlobal) {
+      this.scratchVariable = scratchVariable;
+      this.target = target;
+      this.isGlobal = isGlobal;
+
+      // 使用私有属性存储 checked 状态，防止被外部意外修改
+      let _checked = true;
+      Object.defineProperty(this, 'checked', {
+        get: function get() {
+          return _checked;
+        },
+        set: function set(value) {
+          _checked = !!value;
+        },
+        enumerable: true,
+        configurable: true
+      });
+      this.buildDOM();
+    }
+    buildDOM() {
+      const row = document.createElement("div");
+      row.className = "sa-debugger-variable-row";
+      this.row = row;
+
+      // 复选框（用于选择是否显示值）
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = this.checked;
+      checkbox.className = "sa-debugger-variable-checkbox";
+      checkbox.addEventListener("change", e => {
+        this.checked = e.target.checked;
+        this.updateDisplayMode();
+        reorderVariables();
+      });
+      row.appendChild(checkbox);
+
+      // 变量名
+      const nameLabel = document.createElement("span");
+      nameLabel.className = "sa-debugger-variable-name";
+      nameLabel.textContent = this.scratchVariable.name + (this.scratchVariable.isCloud ? " ☁" : "");
+      row.appendChild(nameLabel);
+
+      // 值显示/编辑区域
+      this.valueContainer = document.createElement("div");
+      this.valueContainer.className = "sa-debugger-variable-value-container";
+      if (this.scratchVariable.type === "list") {
+        // 列表显示为多行文本
+        this.valueElement = document.createElement("textarea");
+        this.valueElement.className = "sa-debugger-variable-value sa-debugger-variable-list";
+        this.valueElement.rows = 3;
+      } else {
+        // 普通变量显示为单行输入
+        this.valueElement = document.createElement("input");
+        this.valueElement.type = "text";
+        this.valueElement.className = "sa-debugger-variable-value";
+      }
+
+      // 实时更新变量值
+      this.valueElement.addEventListener("input", e => {
+        this.updateVariableValue(e.target.value);
+      });
+      this.valueContainer.appendChild(this.valueElement);
+      row.appendChild(this.valueContainer);
+      this.updateDisplayMode();
+    }
+
+    // 根据勾选状态更新显示模式
+    updateDisplayMode() {
+      const checkbox = this.row.querySelector(".sa-debugger-variable-checkbox");
+      if (this.checked) {
+        // 勾选状态：显示完整行（名称+值输入框）
+        this.row.classList.remove("sa-debugger-variable-unchecked");
+        this.valueContainer.style.display = "";
+      } else {
+        // 未勾选状态：只显示名称，隐藏值输入框
+        this.row.classList.add("sa-debugger-variable-unchecked");
+        this.valueContainer.style.display = "none";
+
+        // 强制同步：确保复选框 DOM 状态与 this.checked 一致
+        if (checkbox && checkbox.checked) {
+          checkbox.checked = false;
+        }
+      }
+    }
+    updateValue() {
+      // 严格检查：未勾选时不更新值，强制隐藏值输入框
+      if (!this.checked) {
+        this.valueContainer.style.display = "none";
+        return;
+      }
+
+      // 确保值容器可见（如果之前被隐藏了）
+      if (this.valueContainer.style.display === "none") {
+        this.valueContainer.style.display = "";
+      }
+      let newValue;
+      if (this.scratchVariable.type === "list") {
+        newValue = this.scratchVariable.value.join("\n");
+      } else {
+        newValue = String(this.scratchVariable.value);
+      }
+
+      // 只在值不同时更新，且输入框没有焦点时
+      if (this.valueElement.value !== newValue && document.activeElement !== this.valueElement) {
+        this.valueElement.value = newValue;
+      }
+    }
+    updateVariableValue(value) {
+      if (this.scratchVariable.type === "list") {
+        this.scratchVariable.value = value.split("\n");
+      } else {
+        this.scratchVariable.value = value;
+      }
+    }
+    handleSearch(search) {
+      const name = this.scratchVariable.name.toLowerCase();
+      const match = name.includes(search.toLowerCase());
+      // 搜索不影响行的显示，只影响是否匹配搜索条件
+      // 未勾选的变量保持显示（只显示名称）
+      if (!match) {
+        this.row.style.display = "none";
+      } else {
+        this.row.style.display = "";
+      }
+      return match;
+    }
+  }
+
+  // 获取目标的所有变量
+  const getVariablesForTarget = (target, isGlobal) => {
+    const variables = [];
+    if (!target) return variables;
+    for (const [id, variable] of Object.entries(target.variables)) {
+      variables.push(new WrappedVariable(variable, target, isGlobal));
+    }
+    return variables;
+  };
+
+  // 重新排序：勾选的在前，未勾选的在后
+  const reorderVariables = () => {
+    const sortFn = (a, b) => {
+      if (a.checked === b.checked) return 0;
+      return a.checked ? -1 : 1;
+    };
+    localVariables.sort(sortFn);
+    localVariables.forEach(v => {
+      localList.appendChild(v.row);
+      // 重新排序后确保显示状态正确
+      v.updateDisplayMode();
+    });
+    globalVariables.sort(sortFn);
+    globalVariables.forEach(v => {
+      globalList.appendChild(v.row);
+      // 重新排序后确保显示状态正确
+      v.updateDisplayMode();
+    });
+  };
+
+  // 完全重新加载变量
+  const fullReload = () => {
+    // 保存现有变量的 checked 状态
+    const checkedState = new Map();
+    [...localVariables, ...globalVariables].forEach(v => {
+      const key = v.scratchVariable.id || v.scratchVariable.name;
+      checkedState.set(key, v.checked);
+    });
+
+    // 清空现有列表
+    localList.innerHTML = "";
+    globalList.innerHTML = "";
+    localVariables = [];
+    globalVariables = [];
+    const editingTarget = vm.editingTarget;
+    const stage = vm.runtime.getTargetForStage();
+
+    // 获取当前角色的变量
+    localVariables = getVariablesForTarget(editingTarget, false);
+    localVariables.forEach(v => {
+      // 恢复 checked 状态
+      const key = v.scratchVariable.id || v.scratchVariable.name;
+      if (checkedState.has(key)) {
+        v.checked = checkedState.get(key);
+        // 同步复选框 DOM 状态
+        const checkbox = v.row.querySelector(".sa-debugger-variable-checkbox");
+        if (checkbox) checkbox.checked = v.checked;
+        v.updateDisplayMode();
+      }
+      localList.appendChild(v.row);
+    });
+
+    // 获取全局变量（从舞台获取）
+    globalVariables = getVariablesForTarget(stage, true);
+    globalVariables.forEach(v => {
+      // 恢复 checked 状态
+      const key = v.scratchVariable.id || v.scratchVariable.name;
+      if (checkedState.has(key)) {
+        v.checked = checkedState.get(key);
+        // 同步复选框 DOM 状态
+        const checkbox = v.row.querySelector(".sa-debugger-variable-checkbox");
+        if (checkbox) checkbox.checked = v.checked;
+        v.updateDisplayMode();
+      }
+      globalList.appendChild(v.row);
+    });
+
+    // 更新标题可见性
+    updateHeadingVisibility();
+  };
+  const updateHeadingVisibility = () => {
+    localHeading.style.display = localVariables.length === 0 ? "none" : "";
+    globalHeading.style.display = globalVariables.length === 0 ? "none" : "";
+  };
+
+  // 快速更新（只更新勾选的变量）
+  const quickUpdate = () => {
+    [...localVariables, ...globalVariables].forEach(v => {
+      if (v.checked) {
+        v.updateValue();
+      } else {
+        // 未勾选的变量：强制保持值输入框隐藏
+        if (v.valueContainer && v.valueContainer.style.display !== "none") {
+          v.valueContainer.style.display = "none";
+        }
+      }
+    });
+  };
+
+  // 搜索功能
+  searchBox.addEventListener("input", e => {
+    const search = e.target.value;
+    [...localVariables, ...globalVariables].forEach(v => v.handleSearch(search));
+    updateHeadingVisibility();
+  });
+
+  // 监听项目加载
+  vm.runtime.on("PROJECT_LOADED", fullReload);
+
+  // 监听角色切换 - 只在编辑目标变化时重新加载
+  let lastEditingTargetId = null;
+  vm.on("targetsUpdate", () => {
+    const currentEditingTarget = vm.editingTarget;
+    const currentId = currentEditingTarget ? currentEditingTarget.id : null;
+    if (currentId !== lastEditingTargetId) {
+      lastEditingTargetId = currentId;
+      fullReload();
+    }
+  });
+
+  // 初始加载
+  fullReload();
+
+  // 在每一步后更新变量值
+  const originalStep = vm.runtime._step;
+  vm.runtime._step = function () {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+    const ret = originalStep.apply(this, args);
+    quickUpdate();
+    return ret;
+  };
+  return {
+    tab,
+    content,
+    buttons: [],
+    show: () => {},
+    hide: () => {}
+  };
+}
 
 /***/ }),
 
