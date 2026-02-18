@@ -277,3 +277,126 @@
 .sa-debugger-compiler-warning[hidden] {
   display: none;
 }
+
+/* Variables Tab Styles */
+.sa-debugger-variables {
+  height: 100%;
+  overflow-y: auto;
+  padding: 10px;
+  background-color: var(--ui-modal-background);
+  color: var(--ui-modal-foreground);
+}
+
+.sa-debugger-variables-header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.sa-debugger-variables-search {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.15));
+  border-radius: 4px;
+  font-size: 13px;
+  background-color: var(--ui-white, #fff);
+  color: var(--text-primary, #575e75);
+}
+
+.sa-debugger-variables-uncheck-all {
+  padding: 8px 16px;
+  background-color: var(--looks-secondary, #4c97ff);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.sa-debugger-variables-uncheck-all:hover {
+  background-color: var(--looks, #3373cc);
+}
+
+.sa-debugger-variables-section {
+  margin-bottom: 20px;
+}
+
+.sa-debugger-variables-heading {
+  font-size: 12px;
+  color: var(--text-secondary, #8f8f8f);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.15));
+}
+
+.sa-debugger-variables-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sa-debugger-variable-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: var(--ui-tertiary, #f2f2f2);
+  border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.15));
+  border-radius: 4px;
+  transition: opacity 0.2s;
+}
+
+.sa-debugger-variable-row.sa-debugger-variable-unchecked {
+  opacity: 0.6;
+  background: var(--ui-secondary, #e5e5e5);
+}
+
+.sa-debugger-variable-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.sa-debugger-variable-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary, #575e75);
+  min-width: 100px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sa-debugger-variable-unchecked .sa-debugger-variable-name {
+  color: var(--text-secondary, #8f8f8f);
+}
+
+.sa-debugger-variable-value-container {
+  flex: 1;
+}
+
+.sa-debugger-variable-value {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.15));
+  border-radius: 3px;
+  font-size: 13px;
+  font-family: monospace;
+  background: var(--ui-white, #fff);
+  color: var(--text-primary, #575e75);
+}
+
+.sa-debugger-variable-value:focus {
+  border-color: var(--looks-secondary, #4c97ff);
+  outline: none;
+}
+
+.sa-debugger-variable-list {
+  min-height: 60px;
+  resize: vertical;
+  white-space: pre-wrap;
+}
