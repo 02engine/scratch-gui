@@ -25,13 +25,13 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Skip Scripts Install 📦
-        run: bun install --skip-scripts  --loglevel=info
+        run: bun install --skip-scripts  --loglevel=info --no-cache
 
       - name: Install cross-fetch 📦
-        run: bun install cross-fetch  --loglevel=info
+        run: bun install cross-fetch  --loglevel=info --no-cache
 
       - name: Install dependencies 📦
-        run: bun install  --loglevel=info
+        run: bun install  --loglevel=info --no-cache
 
       - name: Prepublish 🔧
         run: bun run prepublishOnly
