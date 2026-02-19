@@ -13,44 +13,38 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout code 🛎️
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ⚙️
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Setup bun ⚙️
+      - name: Setup bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Clean cache and node_modules 🧹
+      - name: Clean cache and node_modules
         run: |
           rm -rf node_modules ~/.bun/install/cache
           rm -f bun.lockb
 
-      - name: Skip Scripts Install 📦
-        run: bun install --skip-scripts  --loglevel=info --no-cache
-
-      - name: Install cross-fetch 📦
-        run: bun install cross-fetch  --loglevel=info --no-cache
-
-      - name: Install dependencies 📦
+      - name: Install dependencies
         run: bun install  --loglevel=info --no-cache
 
-      - name: Prepublish 🔧
+      - name: Prepublish
         run: bun run prepublishOnly
 
-      - name: Build 🏗️
+      - name: Build
         run: bun run build
 
-      - name: Upload build artifact 📤
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-artifact
           path: ./
 
-      - name: Deploy to cf-page branch 🚀
+      - name: Deploy to cf-page branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
