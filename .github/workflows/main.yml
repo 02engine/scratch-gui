@@ -1,0 +1,42 @@
+name: 111
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Clean cache and node_modules
+        run: |
+          rm -rf node_modules ~/.bun/install/cache
+          rm -f bun.lockb
+
+      - name: Install dependencies
+        run: bun install  --loglevel=info --no-cache
+
+      - name: Install dependencies
+        run: bun add @nlux/core @nlux/langchain     
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: ./
