@@ -86,7 +86,7 @@ export default async function ({ addon, console, msg }) {
   
   /**
    * 设置注释内容
-   * 同时更新 VM 数据和 DOM，并标记项目已更改
+   * 使用原版 VM 逻辑：构造 comment_change 事件触发 blocklyListen
    */
   function setCommentContent(commentEl, content) {
     const textarea = commentEl.querySelector('textarea');
@@ -102,27 +102,29 @@ export default async function ({ addon, console, msg }) {
     const inputEvent = new Event('input', { bubbles: true });
     textarea.dispatchEvent(inputEvent);
     
-    // 3. 使用缓存的 VM 真实 ID 更新注释数据（关键！）
+    // 3. 使用原版 VM 逻辑触发注释更新（关键！）
     const vmCommentId = commentEl.dataset.vmCommentId;
     if (vmCommentId) {
       const target = vm.editingTarget;
-      if (target && target.comments && target.comments[vmCommentId]) {
-        target.comments[vmCommentId].text = content;
+      if (target && target.blocks && target.blocks.blocklyListen) {
+        // 构造原版 Blockly 事件对象
+        const event = {
+          type: 'comment_change',
+          commentId: vmCommentId,
+          newContents_: { text: content }
+        };
         
-        // 4. 标记项目已更改（关键！）
-        if (vm.runtime && vm.runtime.emitProjectChanged) {
-          vm.runtime.emitProjectChanged();
-        }
-        
-        console.log('[CommentVSCodeSync] Updated VM comment:', vmCommentId);
+        // 调用 VM 的 blocklyListen 处理事件
+        target.blocks.blocklyListen(event);
+        console.log('[CommentVSCodeSync] Triggered comment_change event:', vmCommentId);
       } else {
-        console.warn('[CommentVSCodeSync] VM comment not found:', vmCommentId);
+        console.warn('[CommentVSCodeSync] VM blocks or blocklyListen not available');
       }
     } else {
       console.warn('[CommentVSCodeSync] No VM comment ID cached');
     }
     
-    // 5. 如果之前有焦点，恢复焦点
+    // 4. 如果之前有焦点，恢复焦点
     if (wasFocused) {
       textarea.focus();
     }
