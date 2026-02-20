@@ -113,7 +113,6 @@ __webpack_require__.r(__webpack_exports__);
 
   /**
    * 获取注释 ID
-   * 从 DOM 或 Blockly 对象中提取唯一标识
    * 使用 data 属性缓存 ID，确保同一注释始终使用相同 ID
    */
   function getCommentId(commentEl) {
@@ -122,25 +121,31 @@ __webpack_require__.r(__webpack_exports__);
       return commentEl.dataset.commentId;
     }
 
-    // 尝试从 Blockly 工作区获取
-    const workspace = Blockly.getMainWorkspace();
-    if (workspace) {
-      const topComments = workspace.getTopComments();
-      for (const comment of topComments) {
-        // 通过位置匹配查找注释
-        const commentSvg = comment.getSvgRoot();
-        if (commentSvg === commentEl || commentSvg.contains(commentEl)) {
-          // 缓存 ID 到 DOM 元素
-          commentEl.dataset.commentId = comment.id;
-          return comment.id;
-        }
-      }
-    }
-
-    // 生成临时 ID 并缓存到 DOM 元素
+    // 直接生成临时 ID 并缓存到 DOM 元素
+    // 注意：WorkspaceComment 没有 getSvgRoot() 方法，不使用 Blockly 匹配
     const tempId = 'comment_' + Math.random().toString(36).substr(2, 9);
     commentEl.dataset.commentId = tempId;
     return tempId;
+  }
+
+  /**
+   * 通过内容匹配获取 VM 中的真实注释 ID
+   * 适用于工作区注释和积木关联注释
+   */
+  function findVMCommentId(commentEl) {
+    const target = vm.editingTarget;
+    if (!target || !target.comments) return null;
+
+    // 获取当前注释内容
+    const content = getCommentContent(commentEl);
+
+    // 遍历 VM 中的所有注释，通过内容匹配
+    for (const [id, comment] of Object.entries(target.comments)) {
+      if (comment.text === content) {
+        return id;
+      }
+    }
+    return null;
   }
 
   /**
@@ -153,7 +158,7 @@ __webpack_require__.r(__webpack_exports__);
 
   /**
    * 设置注释内容
-   * 同时更新 VM 数据和 DOM，并标记项目已更改
+   * 使用原版 VM 逻辑：构造 comment_change 事件触发 blocklyListen
    */
   function setCommentContent(commentEl, content) {
     const textarea = commentEl.querySelector('textarea');
@@ -171,19 +176,31 @@ __webpack_require__.r(__webpack_exports__);
     });
     textarea.dispatchEvent(inputEvent);
 
-    // 3. 更新 VM 中的注释数据（关键！）
-    const commentId = getCommentId(commentEl);
-    const target = vm.editingTarget;
-    if (target && target.comments && target.comments[commentId]) {
-      target.comments[commentId].text = content;
+    // 3. 使用原版 VM 逻辑触发注释更新（关键！）
+    const vmCommentId = commentEl.dataset.vmCommentId;
+    if (vmCommentId) {
+      const target = vm.editingTarget;
+      if (target && target.blocks && target.blocks.blocklyListen) {
+        // 构造原版 Blockly 事件对象
+        const event = {
+          type: 'comment_change',
+          commentId: vmCommentId,
+          newContents_: {
+            text: content
+          }
+        };
 
-      // 4. 标记项目已更改（关键！）
-      if (vm.runtime && vm.runtime.emitProjectChanged) {
-        vm.runtime.emitProjectChanged();
+        // 调用 VM 的 blocklyListen 处理事件
+        target.blocks.blocklyListen(event);
+        console.log('[CommentVSCodeSync] Triggered comment_change event:', vmCommentId);
+      } else {
+        console.warn('[CommentVSCodeSync] VM blocks or blocklyListen not available');
       }
+    } else {
+      console.warn('[CommentVSCodeSync] No VM comment ID cached');
     }
 
-    // 5. 如果之前有焦点，恢复焦点
+    // 4. 如果之前有焦点，恢复焦点
     if (wasFocused) {
       textarea.focus();
     }
@@ -209,9 +226,21 @@ __webpack_require__.r(__webpack_exports__);
       alert(msg('not-connected'));
       return;
     }
+
+    // 获取 VSCode 通信用 ID（临时 ID）
     const commentId = getCommentId(commentEl);
     const content = getCommentContent(commentEl);
     const target = getCurrentTarget();
+
+    // 获取 VM 中的真实注释 ID（关键！）
+    const vmCommentId = findVMCommentId(commentEl);
+    if (vmCommentId) {
+      // 缓存 VM 真实 ID 到 DOM 元素
+      commentEl.dataset.vmCommentId = vmCommentId;
+      console.log('[CommentVSCodeSync] Found VM comment ID:', vmCommentId);
+    } else {
+      console.warn('[CommentVSCodeSync] Could not find VM comment ID');
+    }
 
     // 发送打开注释消息
     const message = {
