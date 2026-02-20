@@ -41,9 +41,10 @@ export default async function ({ addon, console, msg }) {
   /**
    * 获取注释 ID
    * 从 DOM 或 Blockly 对象中提取唯一标识
+   * 使用 data 属性缓存 ID，确保同一注释始终使用相同 ID
    */
   function getCommentId(commentEl) {
-    // 尝试从 data 属性获取
+    // 如果已经有缓存的 ID，直接返回
     if (commentEl.dataset.commentId) {
       return commentEl.dataset.commentId;
     }
@@ -56,13 +57,17 @@ export default async function ({ addon, console, msg }) {
         // 通过位置匹配查找注释
         const commentSvg = comment.getSvgRoot();
         if (commentSvg === commentEl || commentSvg.contains(commentEl)) {
+          // 缓存 ID 到 DOM 元素
+          commentEl.dataset.commentId = comment.id;
           return comment.id;
         }
       }
     }
     
-    // 生成临时 ID
-    return 'comment_' + Math.random().toString(36).substr(2, 9);
+    // 生成临时 ID 并缓存到 DOM 元素
+    const tempId = 'comment_' + Math.random().toString(36).substr(2, 9);
+    commentEl.dataset.commentId = tempId;
+    return tempId;
   }
   
   /**
@@ -75,23 +80,37 @@ export default async function ({ addon, console, msg }) {
   
   /**
    * 设置注释内容
+   * 同时更新 VM 数据和 DOM，并标记项目已更改
    */
   function setCommentContent(commentEl, content) {
     const textarea = commentEl.querySelector('textarea');
-    if (textarea) {
-      // 保存焦点状态
-      const wasFocused = document.activeElement === textarea;
+    if (!textarea) return;
+    
+    // 保存焦点状态
+    const wasFocused = document.activeElement === textarea;
+    
+    // 1. 更新 DOM
+    textarea.value = content;
+    
+    // 2. 触发 input 事件以更新其他监听器
+    const inputEvent = new Event('input', { bubbles: true });
+    textarea.dispatchEvent(inputEvent);
+    
+    // 3. 更新 VM 中的注释数据（关键！）
+    const commentId = getCommentId(commentEl);
+    const target = vm.editingTarget;
+    if (target && target.comments && target.comments[commentId]) {
+      target.comments[commentId].text = content;
       
-      textarea.value = content;
-      
-      // 触发 input 事件以更新其他监听器
-      const inputEvent = new Event('input', { bubbles: true });
-      textarea.dispatchEvent(inputEvent);
-      
-      // 如果之前有焦点，恢复焦点
-      if (wasFocused) {
-        textarea.focus();
+      // 4. 标记项目已更改（关键！）
+      if (vm.runtime && vm.runtime.emitProjectChanged) {
+        vm.runtime.emitProjectChanged();
       }
+    }
+    
+    // 5. 如果之前有焦点，恢复焦点
+    if (wasFocused) {
+      textarea.focus();
     }
   }
   
