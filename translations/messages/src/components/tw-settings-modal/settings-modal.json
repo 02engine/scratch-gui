@@ -161,12 +161,12 @@
   {
     "id": "tw.settingsModal.extensionDebuggingServer",
     "description": "Extension debugging server status",
-    "defaultMessage": "Extension Debugging Server"
+    "defaultMessage": "02Engine VScode Toolbox Server"
   },
   {
     "id": "tw.settingsModal.extensionDebugConnected",
     "description": "Extension debugging server connected",
-    "defaultMessage": "Connected to extension debugging server"
+    "defaultMessage": "Connected to 02Engine VScode Toolbox Server"
   },
   {
     "id": "tw.settingsModal.extensionDebugFailed",
@@ -176,12 +176,12 @@
   {
     "id": "tw.settingsModal.extensionDebugNotConnected",
     "description": "Extension debugging server not connected",
-    "defaultMessage": "Not connected to extension debugging server"
+    "defaultMessage": "Not connected to 02Engine VScode Toolbox Server"
   },
   {
     "id": "tw.settingsModal.extensionDebugConnect",
     "description": "Connect to extension debugging server button",
-    "defaultMessage": "Connect to Extension Debugging Server"
+    "defaultMessage": "Connect to 02Engine VScode Toolbox Server"
   },
   {
     "id": "tw.settingsModal.featured",
@@ -201,6 +201,6 @@
   {
     "id": "tw.settingsModal.extensionDebugging",
     "description": "Settings modal section",
-    "defaultMessage": "Extension Debugging"
+    "defaultMessage": "02Engine VScode Toolbox"
   }
 ]

@@ -524,7 +524,7 @@ const ExtensionDebugging = ({isConnected, isConnectionFailed, onConnect}) => (
     <div className={styles.setting}>
         <div className={styles.label}>
             <FormattedMessage
-                defaultMessage="Extension Debugging Server"
+                defaultMessage="02Engine VScode Toolbox Server"
                 description="Extension debugging server status"
                 id="tw.settingsModal.extensionDebuggingServer"
             />
@@ -532,7 +532,7 @@ const ExtensionDebugging = ({isConnected, isConnectionFailed, onConnect}) => (
         <div className={styles.extensionDebugStatus}>
             {isConnected ? (
                 <FormattedMessage
-                    defaultMessage="Connected to extension debugging server"
+                    defaultMessage="Connected to 02Engine VScode Toolbox Server"
                     description="Extension debugging server connected"
                     id="tw.settingsModal.extensionDebugConnected"
                 />
@@ -544,7 +544,7 @@ const ExtensionDebugging = ({isConnected, isConnectionFailed, onConnect}) => (
                 />
             ) : (
                 <FormattedMessage
-                    defaultMessage="Not connected to extension debugging server"
+                    defaultMessage="Not connected to 02Engine VScode Toolbox Server"
                     description="Extension debugging server not connected"
                     id="tw.settingsModal.extensionDebugNotConnected"
                 />
@@ -555,7 +555,7 @@ const ExtensionDebugging = ({isConnected, isConnectionFailed, onConnect}) => (
             onClick={onConnect}
         >
             <FormattedMessage
-                defaultMessage="Connect to Extension Debugging Server"
+                defaultMessage="Connect to 02Engine VScode Toolbox Server"
                 description="Connect to extension debugging server button"
                 id="tw.settingsModal.extensionDebugConnect"
             />
@@ -667,7 +667,7 @@ const SettingsModalComponent = props => (
             )}
             <Header>
                 <FormattedMessage
-                    defaultMessage="Extension Debugging"
+                    defaultMessage="02Engine VScode Toolbox"
                     description="Settings modal section"
                     id="tw.settingsModal.extensionDebugging"
                 />

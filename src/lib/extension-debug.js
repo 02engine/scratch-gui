@@ -275,7 +275,7 @@ async function loadExtension(extensionCode) {
      * 处理WebSocket打开
      */
     function handleWebSocketOpen() {
-        console.log('Extension debugging server connected');
+        console.log('02Engine VScode Toolbox Server connected');
         connectionFailed = false;
 
         // 发送连接状态
@@ -299,7 +299,7 @@ async function loadExtension(extensionCode) {
      * 处理WebSocket关闭
      */
     function handleWebSocketClose() {
-        console.log('Extension debugging server disconnected');
+        console.log('02Engine VScode Toolbox Server disconnected');
         stopHeartbeat();
 
         // 通知外部（如果有的话）
@@ -315,7 +315,7 @@ async function loadExtension(extensionCode) {
      */
     function handleWebSocketError(event) {
         const error = event.message || 'Connection failed';
-        console.error('Extension debugging server error:', error);
+        console.error('02Engine VScode Toolbox Server error:', error);
         connectionFailed = true;
 
         // 通知外部（如果有的话）
