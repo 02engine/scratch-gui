@@ -276,5 +276,9 @@
     "swap-local-global/edit-variable-option": "重命名或改变变量类型",
     "swap-local-global/to-global": "转换为“适用于所有角色”",
     "swap-local-global/to-local": "转换为“仅适用于当前角色”",
-    "hide-stage/hide-stage": "隐藏舞台"
+    "hide-stage/hide-stage": "隐藏舞台",
+    "comment-vscode-sync/sync-tooltip": "在 VSCode 中编辑",
+    "comment-vscode-sync/synced-tooltip": "已同步到 VSCode",
+    "comment-vscode-sync/not-connected": "未连接到 02Engine Toolbox Server",
+    "comment-vscode-sync/send-failed": "发送失败，请检查连接"
 }

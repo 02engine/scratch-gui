@@ -263,6 +263,16 @@ async function loadExtension(extensionCode) {
                     // 心跳响应，不需要处理
                     break;
 
+                case 'comment':
+                    // 注释同步消息，转发给 addon 处理
+                    if (message.action === 'update' || message.action === 'sync') {
+                        window.dispatchEvent(new CustomEvent('commentSyncUpdate', {
+                            detail: message
+                        }));
+                        console.log('Comment sync message received:', message.action);
+                    }
+                    break;
+
                 default:
                     console.warn('Unknown message type:', message.type);
             }
@@ -382,6 +392,13 @@ async function loadExtension(extensionCode) {
         connect();
     }
 
+    /**
+     * 获取 WebSocket 实例
+     */
+    function getWebSocket() {
+        return ws;
+    }
+
     // 导出到全局对象，方便外部调用
     if (typeof window !== 'undefined') {
         window.ScratchExtensionDebug = {
@@ -389,7 +406,9 @@ async function loadExtension(extensionCode) {
             connect: connect,
             disconnect: disconnect,
             isConnected: isConnected,
-            isConnectionFailed: isConnectionFailed
+            isConnectionFailed: isConnectionFailed,
+            get ws() { return ws; },
+            sendMessage: sendMessage
         };
         console.log('Extension debug service loaded');
     }

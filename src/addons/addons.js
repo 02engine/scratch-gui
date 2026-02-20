@@ -82,7 +82,8 @@ const addons = [
     'tw-remove-feedback',
     'tw-disable-cloud-variables',
     'tw-disable-compiler',
-    'editor-stepping'
+    'editor-stepping',
+    'comment-vscode-sync'
 ];
 
 const newAddons = [

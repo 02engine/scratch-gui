@@ -81,6 +81,7 @@ import _tw_disable_cloud_variables from "../addons/tw-disable-cloud-variables/_m
 import _tw_disable_compiler from "../addons/tw-disable-compiler/_manifest_entry.js";
 import _editor_stepping from "../addons/editor-stepping/_manifest_entry.js";
 import _tw_markdown_comment_editor from "../addons/tw-comment-markdown-editor/_manifest_entry.js";
+import _comment_vscode_sync from "../addons/comment-vscode-sync/_manifest_entry.js";
 export default {
   "cat-blocks": _cat_blocks,
   "coder-style": _coder_style,
@@ -163,5 +164,6 @@ export default {
   "tw-disable-cloud-variables": _tw_disable_cloud_variables,
   "tw-disable-compiler": _tw_disable_compiler,
   "editor-stepping": _editor_stepping,
-  "tw-comment-markdown-editor": _tw_markdown_comment_editor
+  "tw-comment-markdown-editor": _tw_markdown_comment_editor,
+  "comment-vscode-sync": _comment_vscode_sync
 };

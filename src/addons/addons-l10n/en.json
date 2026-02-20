@@ -284,5 +284,9 @@
     "swap-local-global/edit-variable-option": "Rename or edit variable",
     "swap-local-global/to-global": "Convert to \"For all sprites\"",
     "swap-local-global/to-local": "Convert to \"For this sprite only\"",
-    "hide-stage/hide-stage": "Hide stage"
+    "hide-stage/hide-stage": "Hide stage",
+    "comment-vscode-sync/sync-tooltip": "Edit in VSCode",
+    "comment-vscode-sync/synced-tooltip": "Synced to VSCode",
+    "comment-vscode-sync/not-connected": "Not connected to 02Engine Toolbox Server",
+    "comment-vscode-sync/send-failed": "Failed to send, please check connection"
 }

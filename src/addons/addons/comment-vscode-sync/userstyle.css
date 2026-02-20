@@ -1,0 +1,76 @@
+/* Comment VSCode Sync Button Styles */
+
+.sa-comment-vscode-btn {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s, filter 0.2s;
+  z-index: 100;
+}
+
+.sa-comment-vscode-btn:hover {
+  opacity: 1;
+  filter: brightness(1.2);
+}
+
+.sa-comment-vscode-btn.sa-comment-vscode-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+}
+
+.sa-comment-vscode-btn.sa-comment-vscode-synced {
+  opacity: 1;
+}
+
+.sa-comment-vscode-btn.sa-comment-vscode-synced::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 6px;
+  height: 6px;
+  background-color: #4caf50;
+  border-radius: 50%;
+  border: 1px solid var(--ui-modal-background, #fff);
+}
+
+.sa-comment-vscode-icon {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+/* 确保按钮在注释顶部栏正确显示 */
+.scratchCommentBody,
+[class*="scratchCommentBody"],
+[class*="TopBar"] {
+  position: relative;
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .sa-comment-vscode-btn,
+.dark .sa-comment-vscode-btn {
+  opacity: 0.8;
+}
+
+[data-theme="dark"] .sa-comment-vscode-btn:hover,
+.dark .sa-comment-vscode-btn:hover {
+  opacity: 1;
+}
+
+[data-theme="dark"] .sa-comment-vscode-btn.sa-comment-vscode-disabled,
+.dark .sa-comment-vscode-btn.sa-comment-vscode-disabled {
+  opacity: 0.2;
+}
