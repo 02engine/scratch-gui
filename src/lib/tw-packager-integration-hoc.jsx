@@ -25,10 +25,13 @@ const PackagerIntegrationHOC = function (WrappedComponent) {
                 window.open(`${PACKAGER_URL}/?import_from=${location.origin}`);
             }
         }
-        handleMessage (e) {
+        handleMessage(e) {
+            /*
             if (e.origin !== PACKAGER_ORIGIN) {
-                return;
+                 return;
             }
+            这里不检查origin是因为在开发环境下packager可能会被运行在localhost:3000以外的地址上，而我们想让它能正常工作
+            */
 
             if (!this.props.canOpenPackager) {
                 return;
