@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-02-20T14:05:24.075Z
+// Synced at: 2026-02-25T13:45:32.900Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -653,6 +653,16 @@ export default [
         creator: "FloppyDisk-OSC",
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
+    },
+        {
+        name: "Array Buffers",
+        description: "Read, parse, and write raw data efficiently using Array Buffers",
+        code: "AndrewGaming587/agBuffer.js",
+        banner: "AndrewGaming587/agBuffer.svg",
+        creator: "AndrewScripter587",
+        isGitHub: true,
+        tags: ["customtype","data","utility","new","large"],
+        creatorAlias: "AndrewGaming587"
     },
 ];
 
