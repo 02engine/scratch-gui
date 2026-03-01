@@ -74,7 +74,7 @@ const SortableHOC = function (WrappedComponent) {
             // the dragging object. Obviously only exists if there is a drag (i.e. currentOffset).
             // Return null if outside the container, zero if there are no boxes.
             let mouseOverIndex = null;
-            if (this.props.dragInfo.currentOffset) {
+            if (this.props.dragInfo.currentOffset && this.containerBox) {
                 const {x, y} = this.props.dragInfo.currentOffset;
                 const {top, left, bottom, right} = this.containerBox;
                 if (x >= left && x <= right && y >= top && y <= bottom) {

@@ -64,10 +64,10 @@ const DropAreaHOC = function (dragTypes) {
                     dragTypes.includes(this.props.dragInfo.dragType)) {
                     const {x, y} = this.props.dragInfo.currentOffset;
                     const {top, right, bottom, left} = this.dropAreaRect;
-                    if (x > left && x < right && y > top && y < bottom) {
-                        this.setState({dragOver: true});
-                    } else {
-                        this.setState({dragOver: false});
+                    const isOver = x > left && x < right && y > top && y < bottom;
+                    // 只在状态真正改变时才调用 setState，避免无限循环
+                    if (isOver !== this.state.dragOver) {
+                        this.setState({dragOver: isOver});
                     }
                 }
             }
