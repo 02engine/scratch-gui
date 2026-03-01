@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-02-25T13:45:32.900Z
+// Synced at: 2026-03-01T10:26:22.064Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -54,6 +54,14 @@ export default [
         code: "pooiod/Box2D.js",
         banner: "pooiod/B2Dimg.svg",
         creator: "pooiod7",
+    },
+    {
+        name: "Lighting",
+        description: "A fast, powerful and easy-to-use lighting engine powered by WebGL!",
+        code: "Gen1x/lighting.js",
+        banner: "Gen1x/lighting.avif",
+        creator: "G1nX",
+        tags: ["new"],
     },
     {
         name: "3D Math",

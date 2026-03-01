@@ -5116,15 +5116,18 @@ const addDefaultAssetFolderIfMissing = asset => {
         if (typeof itemData.realIndex === "number" && this.props.dragging) {
           // If the item is being dragged onto another group (eg. costume list -> sprite list)
           // then we fake a drag event to make the `index` be the real index
-          const originalIndex = this.props.index;
+          const originalProps = this.props;
           const realIndex = itemData.realIndex;
-          if (originalIndex !== realIndex) {
+          if (originalProps.index !== realIndex) {
             const currentOffset = addon.tab.redux.state.scratchGui.assetDrag.currentOffset;
             const sortableHOCInstance = getSortableHOCFromElement(this.ref);
             if (currentOffset && sortableHOCInstance && sortableHOCInstance.getMouseOverIndex() === null) {
-              this.props.index = realIndex;
+              // 替换整个 props 对象而不是修改单个属性（React 17+ props 是只读的）
+              this.props = _objectSpread(_objectSpread({}, originalProps), {}, {
+                index: realIndex
+              });
               this.handleDrag(currentOffset);
-              this.props.index = originalIndex;
+              this.props = originalProps;
             }
           }
         }
