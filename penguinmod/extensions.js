@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-03-01T10:26:22.064Z
+// Synced at: 2026-03-21T17:25:08.268Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -314,6 +314,16 @@ export default [
         creatorAlias: "Div",
         isGitHub: true,
         tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
+    },
+    {
+        name: "Algebraic Effects",
+        description: "Intercept custom actions in your scripts to pause, resume, or redirect their flow using modular handlers.",
+        code: "Div/divAlgEffects.js",
+        banner: "Div/divAlgEffects.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "effects", "control", "data", "utility"]
     },
     {
         name: "Blobs",
