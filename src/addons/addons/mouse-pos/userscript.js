@@ -20,8 +20,22 @@ export default async function ({ addon, console }) {
 
   var x = vm.runtime.ioDevices.mouse.__scratchX ? vm.runtime.ioDevices.mouse.__scratchX : 0;
   var y = vm.runtime.ioDevices.mouse.__scratchY ? vm.runtime.ioDevices.mouse.__scratchY : 0;
+  let lastRenderedValue = "";
+  let pendingFrame = null;
 
-  const showUpdatedValue = () => pos.setAttribute("data-content", `${Math.round(x)}, ${Math.round(y)}`);
+  const flushUpdatedValue = () => {
+    pendingFrame = null;
+    const nextValue = `${Math.round(x)}, ${Math.round(y)}`;
+    if (nextValue !== lastRenderedValue) {
+      lastRenderedValue = nextValue;
+      pos.setAttribute("data-content", nextValue);
+    }
+  };
+
+  const showUpdatedValue = () => {
+    if (pendingFrame !== null) return;
+    pendingFrame = requestAnimationFrame(flushUpdatedValue);
+  };
 
   Object.defineProperty(vm.runtime.ioDevices.mouse, "_scratchX", {
     get: function () {
@@ -44,6 +58,7 @@ export default async function ({ addon, console }) {
       this.__scratchY = sety;
     },
   });
+  showUpdatedValue();
 
   addSmallStageClass();
 

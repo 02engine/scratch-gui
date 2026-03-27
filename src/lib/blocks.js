@@ -1,5 +1,404 @@
 import LazyScratchBlocks from './tw-lazy-scratch-blocks';
 
+const applyScratchBlocksPerformancePatches = ScratchBlocks => {
+    if (!ScratchBlocks || ScratchBlocks.__twPerformancePatchesApplied) {
+        return;
+    }
+    ScratchBlocks.__twPerformancePatchesApplied = true;
+
+    const workspaceProto = ScratchBlocks.WorkspaceSvg && ScratchBlocks.WorkspaceSvg.prototype;
+    const draggerProto = ScratchBlocks.WorkspaceDragger && ScratchBlocks.WorkspaceDragger.prototype;
+    const intersectionProto = ScratchBlocks.IntersectionObserver && ScratchBlocks.IntersectionObserver.prototype;
+    const blockProto = ScratchBlocks.BlockSvg && ScratchBlocks.BlockSvg.prototype;
+
+    if (workspaceProto) {
+        workspaceProto.offscreenTopBlockCullingEnabled_ = false;
+        workspaceProto.deferBlockRendering_ = false;
+        workspaceProto.intersectionCheckPendingAfterDrag_ = false;
+        workspaceProto.pendingWheelFrame_ = null;
+        workspaceProto.pendingWheelScrollDelta_ = null;
+        workspaceProto.pendingWheelZoomDelta_ = 0;
+        workspaceProto.pendingWheelZoomPosition_ = null;
+        workspaceProto.pendingGridUpdateTimer_ = null;
+        workspaceProto.deferGridUpdate_ = false;
+
+        workspaceProto.setOffscreenTopBlockCullingEnabled = function (enabled) {
+            if (this.offscreenTopBlockCullingEnabled_ === enabled) {
+                if (enabled) this.queueIntersectionCheck();
+                return;
+            }
+            this.offscreenTopBlockCullingEnabled_ = enabled;
+
+            const topBlocks = this.getTopBlocks(false);
+            let needsFullRender = false;
+            for (const block of topBlocks) {
+                if (block.setIntersects) block.setIntersects(true);
+                if (!enabled && block.deferredRenderPending_) {
+                    needsFullRender = true;
+                }
+            }
+
+            if (!enabled && needsFullRender) {
+                this.render();
+                if (!this.isFlyout) {
+                    setTimeout(() => {
+                        for (const block of topBlocks) {
+                            if (block.workspace) {
+                                block.setConnectionsHidden(false);
+                                block.deferredRenderPending_ = false;
+                            }
+                        }
+                    }, 1);
+                }
+            }
+
+            this.queueIntersectionCheck();
+        };
+
+        workspaceProto.ensureTopBlockRendered_ = function (block) {
+            if (block.deferredRenderPending_) {
+                block.render(false);
+                block.deferredRenderPending_ = false;
+                this.resizeContents();
+                if (!this.isFlyout) {
+                    setTimeout(() => {
+                        if (block.workspace) {
+                            block.setConnectionsHidden(false);
+                        }
+                    }, 1);
+                }
+                return;
+            }
+            if (!block.rendered) {
+                block.render(false);
+            }
+        };
+
+        workspaceProto.renderVisibleTopBlocks = function () {
+            for (const block of this.getTopBlocks(false)) {
+                if (this.isBlockInViewport_ && this.isBlockInViewport_(block)) {
+                    this.ensureTopBlockRendered_(block);
+                }
+            }
+        };
+
+        workspaceProto.queueIntersectionCheck = function () {
+            if (!this.offscreenTopBlockCullingEnabled_) return;
+            if (this.isDragSurfaceActive_ || (this.isDragging && this.isDragging())) {
+                this.intersectionCheckPendingAfterDrag_ = true;
+                return;
+            }
+            if (this.renderVisibleTopBlocks) {
+                this.renderVisibleTopBlocks();
+            }
+            if (this.intersectionObserver) {
+                this.intersectionObserver.queueIntersectionCheck();
+            }
+        };
+
+        workspaceProto.scheduleWheelScroll_ = function (deltaX, deltaY) {
+            if (!this.pendingWheelScrollDelta_) {
+                this.pendingWheelScrollDelta_ = new ScratchBlocks.goog.math.Coordinate(0, 0);
+            }
+            this.pendingWheelScrollDelta_.x += deltaX;
+            this.pendingWheelScrollDelta_.y += deltaY;
+            this.scheduleWheelUpdate_();
+        };
+
+        workspaceProto.scheduleWheelZoom_ = function (x, y, delta) {
+            this.pendingWheelZoomDelta_ += delta;
+            this.pendingWheelZoomPosition_ = new ScratchBlocks.goog.math.Coordinate(x, y);
+            this.scheduleWheelUpdate_();
+        };
+
+        workspaceProto.scheduleWheelUpdate_ = function () {
+            if (this.pendingWheelFrame_ !== null) return;
+            this.pendingWheelFrame_ = requestAnimationFrame(() => {
+                this.pendingWheelFrame_ = null;
+                this.flushWheelUpdate_();
+            });
+        };
+
+        workspaceProto.flushWheelUpdate_ = function () {
+            if (this.pendingWheelZoomDelta_ && this.pendingWheelZoomPosition_) {
+                const zoomDelta = this.pendingWheelZoomDelta_;
+                const zoomPosition = this.pendingWheelZoomPosition_;
+                this.pendingWheelZoomDelta_ = 0;
+                this.pendingWheelZoomPosition_ = null;
+                this.deferGridUpdate_ = true;
+                this.zoom(zoomPosition.x, zoomPosition.y, zoomDelta);
+                this.deferGridUpdate_ = false;
+                this.scheduleDeferredGridUpdate_();
+            }
+
+            if (this.pendingWheelScrollDelta_) {
+                const scrollDelta = this.pendingWheelScrollDelta_;
+                this.pendingWheelScrollDelta_ = null;
+                this.startDragMetrics = this.getMetrics();
+                this.scroll(this.scrollX - scrollDelta.x, this.scrollY - scrollDelta.y);
+            }
+        };
+
+        workspaceProto.scheduleDeferredGridUpdate_ = function () {
+            if (!this.grid_) return;
+            if (this.pendingGridUpdateTimer_ !== null) {
+                clearTimeout(this.pendingGridUpdateTimer_);
+            }
+            this.pendingGridUpdateTimer_ = setTimeout(() => {
+                this.pendingGridUpdateTimer_ = null;
+                if (this.grid_) {
+                    this.grid_.update(this.scale);
+                }
+            }, 80);
+        };
+
+        workspaceProto.onMouseWheel_ = function (e) {
+            if (this.currentGesture_) {
+                this.currentGesture_.cancel();
+            }
+
+            const multiplier = e.deltaMode === 0x1 ? ScratchBlocks.LINE_SCROLL_MULTIPLIER : 1;
+            if (e.ctrlKey) {
+                const delta = (-e.deltaY / 50) * multiplier;
+                const position = ScratchBlocks.utils.mouseToSvg(
+                    e,
+                    this.getParentSvg(),
+                    this.getInverseScreenCTM()
+                );
+                this.scheduleWheelZoom_(position.x, position.y, delta);
+            } else {
+                ScratchBlocks.WidgetDiv.hide(true);
+                ScratchBlocks.DropDownDiv.hideWithoutAnimation();
+
+                let deltaX = e.deltaX * multiplier;
+                let deltaY = e.deltaY * multiplier;
+                if (e.shiftKey && e.deltaX === 0) {
+                    deltaX = e.deltaY * multiplier;
+                    deltaY = 0;
+                }
+                this.scheduleWheelScroll_(deltaX, deltaY);
+            }
+            e.preventDefault();
+        };
+
+        workspaceProto.setScale = function (newScale) {
+            if (this.options.zoomOptions.maxScale && newScale > this.options.zoomOptions.maxScale) {
+                newScale = this.options.zoomOptions.maxScale;
+            } else if (this.options.zoomOptions.minScale && newScale < this.options.zoomOptions.minScale) {
+                newScale = this.options.zoomOptions.minScale;
+            }
+            this.scale = newScale;
+            if (this.grid_) {
+                if (this.deferGridUpdate_) {
+                    this.scheduleDeferredGridUpdate_();
+                } else {
+                    this.grid_.update(this.scale);
+                }
+            }
+            if (this.scrollbar) {
+                this.scrollbar.resize();
+            } else {
+                this.translate(this.scrollX, this.scrollY);
+            }
+            ScratchBlocks.hideChaff(false);
+            if (this.flyout_) {
+                this.flyout_.reflow();
+            }
+            this.queueIntersectionCheck();
+        };
+
+        const originalWorkspaceDispose = workspaceProto.dispose;
+        workspaceProto.dispose = function () {
+            if (this.pendingWheelFrame_ !== null) {
+                cancelAnimationFrame(this.pendingWheelFrame_);
+                this.pendingWheelFrame_ = null;
+            }
+            if (this.pendingGridUpdateTimer_ !== null) {
+                clearTimeout(this.pendingGridUpdateTimer_);
+                this.pendingGridUpdateTimer_ = null;
+            }
+            originalWorkspaceDispose.call(this);
+        };
+
+        const originalResetDragSurface = workspaceProto.resetDragSurface;
+        workspaceProto.resetDragSurface = function () {
+            originalResetDragSurface.call(this);
+            if (this.intersectionCheckPendingAfterDrag_) {
+                this.intersectionCheckPendingAfterDrag_ = false;
+                this.queueIntersectionCheck();
+            }
+        };
+    }
+
+    if (intersectionProto) {
+        const originalIntersectionDispose = intersectionProto.dispose;
+        intersectionProto.dispose = function () {
+            if (this.intersectionCheckFrame_ !== null && this.intersectionCheckFrame_ !== undefined) {
+                cancelAnimationFrame(this.intersectionCheckFrame_);
+                this.intersectionCheckFrame_ = null;
+            }
+            originalIntersectionDispose.call(this);
+        };
+
+        intersectionProto.queueIntersectionCheck = function () {
+            if (this.intersectionCheckQueued) return;
+            this.intersectionCheckQueued = true;
+            if (window.requestAnimationFrame) {
+                this.intersectionCheckFrame_ = window.requestAnimationFrame(this.checkForIntersections);
+            } else {
+                this.intersectionCheckFrame_ = setTimeout(this.checkForIntersections, 16);
+            }
+        };
+
+        const originalIntersectionCheck = intersectionProto.checkForIntersections;
+        intersectionProto.checkForIntersections = function () {
+            this.intersectionCheckQueued = false;
+            this.intersectionCheckFrame_ = null;
+            originalIntersectionCheck.call(this);
+        };
+    }
+
+    if (draggerProto) {
+        const originalDraggerDispose = draggerProto.dispose;
+        draggerProto.dispose = function () {
+            if (this.pendingDragFrame_ !== null && this.pendingDragFrame_ !== undefined) {
+                cancelAnimationFrame(this.pendingDragFrame_);
+                this.pendingDragFrame_ = null;
+            }
+            this.pendingScrollUpdate_ = null;
+            originalDraggerDispose.call(this);
+        };
+
+        draggerProto.endDrag = function (currentDragDeltaXY) {
+            this.drag(currentDragDeltaXY);
+            this.flushDrag_();
+            this.workspace_.resetDragSurface();
+        };
+
+        draggerProto.updateScroll_ = function (x, y) {
+            this.pendingScrollUpdate_ = {x, y};
+            if (this.pendingDragFrame_ !== null && this.pendingDragFrame_ !== undefined) {
+                return;
+            }
+            this.pendingDragFrame_ = requestAnimationFrame(this.flushDrag_.bind(this));
+        };
+
+        draggerProto.flushDrag_ = function () {
+            if (!this.workspace_ || !this.pendingScrollUpdate_) {
+                this.pendingDragFrame_ = null;
+                return;
+            }
+
+            const update = this.pendingScrollUpdate_;
+            const metrics = this.startDragMetrics_;
+            const workspace = this.workspace_;
+            this.pendingScrollUpdate_ = null;
+            this.pendingDragFrame_ = null;
+
+            workspace.scrollX = -update.x - metrics.contentLeft;
+            workspace.scrollY = -update.y - metrics.contentTop;
+
+            const translatedX = workspace.scrollX + metrics.absoluteLeft;
+            const translatedY = workspace.scrollY + metrics.absoluteTop;
+            workspace.translate(translatedX, translatedY);
+            if (workspace.grid_) {
+                workspace.grid_.moveTo(translatedX, translatedY);
+            }
+
+            if (workspace.scrollbar) {
+                workspace.scrollbar.hScroll.setHandlePosition(update.x * workspace.scrollbar.hScroll.ratio_);
+                workspace.scrollbar.vScroll.setHandlePosition(update.y * workspace.scrollbar.vScroll.ratio_);
+            }
+        };
+    }
+
+    if (blockProto) {
+        const originalInitSvg = blockProto.initSvg;
+        blockProto.initSvg = function () {
+            originalInitSvg.call(this);
+            if (this.updateIntersectionObserver) {
+                this.updateIntersectionObserver();
+            }
+        };
+    }
+
+    const originalClearWorkspaceAndLoadFromXml = ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml;
+    ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml = function (xml, workspace) {
+        const deferBlockRendering = !!(
+            workspace.rendered &&
+            workspace.setOffscreenTopBlockCullingEnabled &&
+            workspace.offscreenTopBlockCullingEnabled_
+        );
+        if (deferBlockRendering) {
+            workspace.deferBlockRendering_ = true;
+        }
+        const blockIds = originalClearWorkspaceAndLoadFromXml(xml, workspace);
+        if (deferBlockRendering) {
+            workspace.deferBlockRendering_ = false;
+            if (workspace.renderVisibleTopBlocks) {
+                workspace.renderVisibleTopBlocks();
+            }
+            if (workspace.queueIntersectionCheck) {
+                workspace.queueIntersectionCheck();
+            }
+        }
+        return blockIds;
+    };
+
+    ScratchBlocks.Xml.domToBlock = function (xmlBlock, workspace) {
+        if (xmlBlock instanceof ScratchBlocks.Workspace) {
+            const swap = xmlBlock;
+            xmlBlock = workspace;
+            workspace = swap;
+            console.warn('Deprecated call to Blockly.Xml.domToBlock, swap the arguments.');
+        }
+        ScratchBlocks.Events.disable();
+        const variablesBeforeCreation = workspace.getAllVariables();
+        let topBlock;
+        try {
+            topBlock = ScratchBlocks.Xml.domToBlockHeadless_(xmlBlock, workspace);
+            const blocks = topBlock.getDescendants(false);
+            const deferBlockRendering = !!workspace.deferBlockRendering_;
+            if (workspace.rendered) {
+                topBlock.setConnectionsHidden(true);
+                for (let i = blocks.length - 1; i >= 0; i--) {
+                    blocks[i].initSvg();
+                }
+                if (!deferBlockRendering) {
+                    for (let i = blocks.length - 1; i >= 0; i--) {
+                        blocks[i].render(false);
+                    }
+                    if (!workspace.isFlyout) {
+                        setTimeout(() => {
+                            if (topBlock.workspace) {
+                                topBlock.setConnectionsHidden(false);
+                            }
+                        }, 1);
+                    }
+                    workspace.resizeContents();
+                } else {
+                    topBlock.deferredRenderPending_ = true;
+                }
+                topBlock.updateDisabled();
+            } else {
+                for (let i = blocks.length - 1; i >= 0; i--) {
+                    blocks[i].initModel();
+                }
+            }
+        } finally {
+            ScratchBlocks.Events.enable();
+        }
+        if (ScratchBlocks.Events.isEnabled()) {
+            const newVariables = ScratchBlocks.Variables.getAddedVariables(workspace, variablesBeforeCreation);
+            for (const variable of newVariables) {
+                ScratchBlocks.Events.fire(new ScratchBlocks.Events.VarCreate(variable));
+            }
+            ScratchBlocks.Events.fire(new ScratchBlocks.Events.BlockCreate(topBlock));
+        }
+        return topBlock;
+    };
+};
+
 /**
  * Connect scratch blocks with the vm
  * @param {VirtualMachine} vm - The scratch vm
@@ -7,6 +406,7 @@ import LazyScratchBlocks from './tw-lazy-scratch-blocks';
  */
 export default function (vm) {
     const ScratchBlocks = LazyScratchBlocks.get();
+    applyScratchBlocksPerformancePatches(ScratchBlocks);
     const jsonForMenuBlock = function (name, menuOptionsFn, colors, start) {
         return {
             message0: '%1',

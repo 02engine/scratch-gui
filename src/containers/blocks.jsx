@@ -89,6 +89,9 @@ const DroppableBlocks = DropAreaHOC([
     DragConstants.BACKPACK_CODE
 ])(BlocksComponent);
 
+const WORKSPACE_METRICS_DEBOUNCE_MS = 120;
+const LARGE_WORKSPACE_BLOCK_COUNT = 1000;
+
 class Blocks extends React.Component {
     constructor(props) {
         super(props);
@@ -125,7 +128,14 @@ class Blocks extends React.Component {
             'onTargetsUpdate',
             'onVisualReport',
             'onWorkspaceUpdate',
+            'flushWorkspaceUpdate',
             'onWorkspaceMetricsChange',
+            'flushWorkspaceMetrics',
+            'flushMonitorUpdate',
+            'requestToolboxStateSync',
+            'flushToolboxStateSync',
+            'syncWorkspaceCullingState',
+            'updateToolboxStateIfNeeded',
             'setBlocks',
             'setLocale',
             'handleEnableProcedureReturns'
@@ -138,7 +148,23 @@ class Blocks extends React.Component {
             prompt: null
         };
         this.onTargetsUpdate = debounce(this.onTargetsUpdate, 100);
+        this.flushWorkspaceMetrics = debounce(this.flushWorkspaceMetrics, WORKSPACE_METRICS_DEBOUNCE_MS);
         this.toolboxUpdateQueue = [];
+        this.toolboxDirty = true;
+        this.lastEditingTargetId = null;
+        this.lastAppliedWorkspaceXML = null;
+        this.lastToolboxXML = props.toolboxXML || null;
+        this.pendingWorkspaceData = null;
+        this.pendingWorkspaceMetricsTargetId = null;
+        this.pendingMonitorState = null;
+        this.workspaceUpdateFrame = null;
+        this.toolboxUpdateFrame = null;
+        this.monitorUpdateFrame = null;
+        this.toolboxStateSyncFrame = null;
+        this.pendingToolboxStateSyncForce = false;
+        this.toolboxUpdateScheduled = false;
+        this.monitorCheckboxStates = new Map();
+        this.isLargeWorkspace = false;
     }
     componentDidMount() {
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
@@ -172,6 +198,7 @@ class Blocks extends React.Component {
         );
         this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
         AddonHooks.blocklyWorkspace = this.workspace;
+        this.syncWorkspaceCullingState();
 
         // Register buttons under new callback keys for creating variables,
         // lists, and procedures from extensions.
@@ -234,6 +261,8 @@ class Blocks extends React.Component {
             this.handleExtensionAdded(category);
         }
 
+        this.lastEditingTargetId = this.props.vm.editingTarget ? this.props.vm.editingTarget.id : null;
+
         gentlyRequestPersistentStorage();
 
         // Initialize block disable(now copy JS code) functionality
@@ -292,6 +321,7 @@ class Blocks extends React.Component {
             }
 
             window.dispatchEvent(new Event('resize'));
+            this.syncWorkspaceCullingState();
         } else {
             this.workspace.setVisible(false);
         }
@@ -299,8 +329,24 @@ class Blocks extends React.Component {
     componentWillUnmount() {
         this.detachVM();
         this.unmounted = true;
+        this.flushWorkspaceMetrics.cancel();
+        if (this.workspaceUpdateFrame) {
+            cancelAnimationFrame(this.workspaceUpdateFrame);
+            this.workspaceUpdateFrame = null;
+        }
+        if (this.toolboxUpdateFrame) {
+            cancelAnimationFrame(this.toolboxUpdateFrame);
+            this.toolboxUpdateFrame = null;
+        }
+        if (this.monitorUpdateFrame) {
+            cancelAnimationFrame(this.monitorUpdateFrame);
+            this.monitorUpdateFrame = null;
+        }
+        if (this.toolboxStateSyncFrame) {
+            cancelAnimationFrame(this.toolboxStateSyncFrame);
+            this.toolboxStateSyncFrame = null;
+        }
         this.workspace.dispose();
-        clearTimeout(this.toolboxUpdateTimeout);
 
         // Clear the flyout blocks so that they can be recreated on mount.
         this.props.vm.clearFlyoutBlocks();
@@ -323,18 +369,55 @@ class Blocks extends React.Component {
         AddonHooks.blocklyWorkspace = null;
     }
     requestToolboxUpdate() {
-        clearTimeout(this.toolboxUpdateTimeout);
-        this.toolboxUpdateTimeout = setTimeout(() => {
+        if (!this.props.isVisible) {
+            this.toolboxDirty = true;
+            return;
+        }
+        if (this.toolboxUpdateFrame) {
+            cancelAnimationFrame(this.toolboxUpdateFrame);
+        }
+        this.toolboxUpdateScheduled = true;
+        this.toolboxUpdateFrame = requestAnimationFrame(() => {
+            this.toolboxUpdateFrame = null;
             this.updateToolbox();
-        }, 0);
+        });
+    }
+    requestToolboxStateSync(force = false) {
+        if (!this.props.isVisible) {
+            this.toolboxDirty = true;
+            return;
+        }
+        this.pendingToolboxStateSyncForce = this.pendingToolboxStateSyncForce || force;
+        if (this.toolboxStateSyncFrame) {
+            return;
+        }
+        this.toolboxStateSyncFrame = requestAnimationFrame(this.flushToolboxStateSync);
+    }
+    flushToolboxStateSync() {
+        this.toolboxStateSyncFrame = null;
+        const force = this.pendingToolboxStateSyncForce;
+        this.pendingToolboxStateSyncForce = false;
+        const toolboxXML = this.getToolboxXML();
+        this.updateToolboxStateIfNeeded(toolboxXML, force);
+        if (toolboxXML) {
+            this.toolboxDirty = false;
+        }
+    }
+    syncWorkspaceCullingState() {
+        if (!this.workspace || !this.workspace.setOffscreenTopBlockCullingEnabled) {
+            return;
+        }
+        this.workspace.setOffscreenTopBlockCullingEnabled(this.isLargeWorkspace);
     }
     setLocale() {
         this.ScratchBlocks.ScratchMsgs.setLocale(this.props.locale);
         this.props.vm.setLocale(this.props.locale, this.props.messages)
             .then(() => {
                 if (this.unmounted) return;
+                this.toolboxDirty = true;
                 this.workspace.getFlyout().setRecyclingEnabled(false);
                 this.props.vm.refreshWorkspace();
+                this.requestToolboxStateSync(true);
                 this.requestToolboxUpdate();
                 this.withToolboxUpdates(() => {
                     this.workspace.getFlyout().setRecyclingEnabled(true);
@@ -343,7 +426,14 @@ class Blocks extends React.Component {
     }
 
     updateToolbox() {
-        this.toolboxUpdateTimeout = false;
+        this.toolboxUpdateScheduled = false;
+        const queue = this.toolboxUpdateQueue;
+        this.toolboxUpdateQueue = [];
+
+        if (!this.workspace || !this.workspace.toolbox_ || this.props.toolboxXML === this._renderedToolboxXML) {
+            queue.forEach(fn => fn());
+            return;
+        }
 
         const categoryId = this.workspace.toolbox_.getSelectedCategoryId();
         const offset = this.workspace.toolbox_.getCategoryScrollOffset();
@@ -363,14 +453,23 @@ class Blocks extends React.Component {
             this.workspace.toolbox_.setFlyoutScrollPos(currentCategoryPos);
         }
 
-        const queue = this.toolboxUpdateQueue;
-        this.toolboxUpdateQueue = [];
         queue.forEach(fn => fn());
+    }
+
+    restoreWorkspaceMetrics(targetId) {
+        const metrics = targetId && this.props.workspaceMetrics.targets[targetId];
+        if (!metrics) return;
+
+        const { scrollX, scrollY, scale } = metrics;
+        this.workspace.scrollX = scrollX;
+        this.workspace.scrollY = scrollY;
+        this.workspace.scale = scale;
+        this.workspace.resize();
     }
 
     withToolboxUpdates(fn) {
         // if there is a queued toolbox update, we need to wait
-        if (this.toolboxUpdateTimeout) {
+        if (this.toolboxUpdateScheduled) {
             this.toolboxUpdateQueue.push(fn);
         } else {
             fn();
@@ -435,33 +534,48 @@ class Blocks extends React.Component {
     onWorkspaceMetricsChange() {
         const target = this.props.vm.editingTarget;
         if (target && target.id) {
-            // Dispatch updateMetrics later, since onWorkspaceMetricsChange may be (very indirectly)
-            // called from a reducer, i.e. when you create a custom procedure.
-            // TODO: Is this a vehement hack?
-            setTimeout(() => {
-                this.props.updateMetrics({
-                    targetID: target.id,
-                    scrollX: this.workspace.scrollX,
-                    scrollY: this.workspace.scrollY,
-                    scale: this.workspace.scale
-                });
-            }, 0);
+            this.pendingWorkspaceMetricsTargetId = target.id;
+            this.flushWorkspaceMetrics();
         }
     }
+    flushWorkspaceMetrics() {
+        const targetId = this.pendingWorkspaceMetricsTargetId ||
+            (this.props.vm.editingTarget && this.props.vm.editingTarget.id);
+        if (!this.workspace || !targetId) return;
+        this.props.updateMetrics({
+            targetID: targetId,
+            scrollX: this.workspace.scrollX,
+            scrollY: this.workspace.scrollY,
+            scale: this.workspace.scale
+        });
+        this.pendingWorkspaceMetricsTargetId = null;
+    }
     onScriptGlowOn(data) {
+        if (this.isLargeWorkspace) return;
         this.workspace.glowStack(data.id, true);
     }
     onScriptGlowOff(data) {
+        if (this.isLargeWorkspace) return;
         this.workspace.glowStack(data.id, false);
     }
     onBlockGlowOn(data) {
+        if (this.isLargeWorkspace) return;
         this.workspace.glowBlock(data.id, true);
     }
     onBlockGlowOff(data) {
+        if (this.isLargeWorkspace) return;
         this.workspace.glowBlock(data.id, false);
     }
     onVisualReport(data) {
+        if (this.isLargeWorkspace) return;
         this.workspace.reportValue(data.id, data.value);
+    }
+    updateToolboxStateIfNeeded(toolboxXML, force = false) {
+        if (!toolboxXML || (!force && toolboxXML === this.lastToolboxXML)) {
+            return;
+        }
+        this.lastToolboxXML = toolboxXML;
+        this.props.updateToolboxState(toolboxXML);
     }
     getToolboxXML() {
         // Use try/catch because this requires digging pretty deep into the VM
@@ -490,14 +604,45 @@ class Blocks extends React.Component {
         }
     }
     onWorkspaceUpdate(data) {
-        // When we change sprites, update the toolbox to have the new sprite's blocks
-        const toolboxXML = this.getToolboxXML();
-        if (toolboxXML) {
-            this.props.updateToolboxState(toolboxXML);
+        if (!this.props.isVisible) {
+            this.pendingWorkspaceData = data;
+            this.toolboxDirty = true;
+            return;
+        }
+        this.pendingWorkspaceData = data;
+        if (this.workspaceUpdateFrame) {
+            return;
+        }
+        this.workspaceUpdateFrame = requestAnimationFrame(this.flushWorkspaceUpdate);
+    }
+    flushWorkspaceUpdate() {
+        this.workspaceUpdateFrame = null;
+
+        if (!this.pendingWorkspaceData || !this.workspace) {
+            return;
         }
 
-        if (this.props.vm.editingTarget && !this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id]) {
+        const data = this.pendingWorkspaceData;
+        this.pendingWorkspaceData = null;
+
+        const editingTarget = this.props.vm.editingTarget;
+        const editingTargetId = editingTarget ? editingTarget.id : null;
+        const targetChanged = editingTargetId !== this.lastEditingTargetId;
+        const workspaceChanged = data.xml !== this.lastAppliedWorkspaceXML;
+
+        if (targetChanged || this.toolboxDirty) {
+            this.requestToolboxStateSync(targetChanged);
+        }
+
+        if (editingTarget && !this.props.workspaceMetrics.targets[editingTarget.id]) {
             this.onWorkspaceMetricsChange();
+        }
+
+        if (!workspaceChanged) {
+            this.syncWorkspaceCullingState();
+            this.restoreWorkspaceMetrics(editingTargetId);
+            this.lastEditingTargetId = editingTargetId;
+            return;
         }
 
         // Remove and reattach the workspace listener (but allow flyout events)
@@ -505,6 +650,9 @@ class Blocks extends React.Component {
         const dom = this.ScratchBlocks.Xml.textToDom(data.xml);
         try {
             this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
+            this.lastAppliedWorkspaceXML = data.xml;
+            this.isLargeWorkspace = this.workspace.getAllBlocks(false).length >= LARGE_WORKSPACE_BLOCK_COUNT;
+            this.syncWorkspaceCullingState();
         } catch (error) {
             // The workspace is likely incomplete. What did update should be
             // functional.
@@ -522,36 +670,62 @@ class Blocks extends React.Component {
         }
         this.workspace.addChangeListener(this.props.vm.blockListener);
 
-        if (this.props.vm.editingTarget && this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id]) {
-            const { scrollX, scrollY, scale } = this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id];
-            this.workspace.scrollX = scrollX;
-            this.workspace.scrollY = scrollY;
-            this.workspace.scale = scale;
-            this.workspace.resize();
-        }
+        this.restoreWorkspaceMetrics(editingTargetId);
 
         // Clear the undo state of the workspace since this is a
         // fresh workspace and we don't want any changes made to another sprites
         // workspace to be 'undone' here.
         this.workspace.clearUndo();
+        this.lastEditingTargetId = editingTargetId;
     }
     handleMonitorsUpdate(monitors) {
+        this.pendingMonitorState = monitors;
+        if (this.monitorUpdateFrame) {
+            return;
+        }
+        this.monitorUpdateFrame = requestAnimationFrame(this.flushMonitorUpdate);
+    }
+    flushMonitorUpdate() {
+        this.monitorUpdateFrame = null;
+        if (!this.pendingMonitorState || !this.workspace) {
+            return;
+        }
+
         // Update the checkboxes of the relevant monitors.
         // TODO: What about monitors that have fields? See todo in scratch-vm blocks.js changeBlock:
         // https://github.com/LLK/scratch-vm/blob/2373f9483edaf705f11d62662f7bb2a57fbb5e28/src/engine/blocks.js#L569-L576
+        const monitors = this.pendingMonitorState;
+        this.pendingMonitorState = null;
         const flyout = this.workspace.getFlyout();
-        for (const monitor of monitors.values()) {
-            const blockId = monitor.get('id');
-            const isVisible = monitor.get('visible');
-            flyout.setCheckboxState(blockId, isVisible);
-            // We also need to update the isMonitored flag for this block on the VM, since it's used to determine
-            // whether the checkbox is activated or not when the checkbox is re-displayed (e.g. local variables/blocks
-            // when switching between sprites).
+        const nextMonitorCheckboxStates = new Map();
+        const setMonitorBlockState = (blockId, isVisible) => {
             const block = this.props.vm.runtime.monitorBlocks.getBlock(blockId);
             if (block) {
                 block.isMonitored = isVisible;
             }
+        };
+        if (!flyout) {
+            return;
         }
+        for (const monitor of monitors.values()) {
+            const blockId = monitor.get('id');
+            const isVisible = monitor.get('visible');
+            nextMonitorCheckboxStates.set(blockId, isVisible);
+            if (this.monitorCheckboxStates.get(blockId) !== isVisible) {
+                flyout.setCheckboxState(blockId, isVisible);
+            }
+            // We also need to update the isMonitored flag for this block on the VM, since it's used to determine
+            // whether the checkbox is activated or not when the checkbox is re-displayed (e.g. local variables/blocks
+            // when switching between sprites).
+            setMonitorBlockState(blockId, isVisible);
+        }
+        for (const [blockId, isVisible] of this.monitorCheckboxStates.entries()) {
+            if (isVisible && !nextMonitorCheckboxStates.has(blockId)) {
+                flyout.setCheckboxState(blockId, false);
+                setMonitorBlockState(blockId, false);
+            }
+        }
+        this.monitorCheckboxStates = nextMonitorCheckboxStates;
     }
     handleExtensionAdded(categoryInfo) {
         const defineBlocks = blockInfoArray => {
@@ -594,10 +768,8 @@ class Blocks extends React.Component {
         defineBlocks(categoryInfo.blocks);
 
         // Update the toolbox with new blocks if possible
-        const toolboxXML = this.getToolboxXML();
-        if (toolboxXML) {
-            this.props.updateToolboxState(toolboxXML);
-        }
+        this.toolboxDirty = true;
+        this.requestToolboxStateSync(true);
     }
     handleBlocksInfoUpdate(categoryInfo) {
         // @todo Later we should replace this to avoid all the warnings from redefining blocks.
@@ -918,10 +1090,9 @@ class Blocks extends React.Component {
             toolbox.removeCategory(extensionId);
         }
 
-        const toolboxXML = this.getToolboxXML();
-        if (toolboxXML && this.props.updateToolboxState) {
-            this.props.updateToolboxState(toolboxXML);
-        }
+        this.toolboxDirty = true;
+        this.requestToolboxStateSync(true);
+        this.requestToolboxUpdate();
     }
 
     handleCategorySelected(categoryId) {
@@ -1002,12 +1173,16 @@ class Blocks extends React.Component {
                 return this.props.vm.shareBlocksToTarget(payload, this.props.vm.editingTarget.id);
             })
             .then(() => {
+                this.toolboxDirty = true;
                 this.props.vm.refreshWorkspace();
+                this.requestToolboxStateSync(true);
                 this.updateToolbox(); // To show new variables/custom blocks
             });
     }
     handleEnableProcedureReturns() {
+        this.toolboxDirty = true;
         this.workspace.enableProcedureReturns();
+        this.requestToolboxStateSync(true);
         this.requestToolboxUpdate();
     }
     render() {
