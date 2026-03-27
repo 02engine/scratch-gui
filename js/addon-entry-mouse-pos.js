@@ -73,7 +73,20 @@ __webpack_require__.r(__webpack_exports__);
   vm.runtime.ioDevices.mouse.__scratchY = vm.runtime.ioDevices.mouse._scratchY;
   var x = vm.runtime.ioDevices.mouse.__scratchX ? vm.runtime.ioDevices.mouse.__scratchX : 0;
   var y = vm.runtime.ioDevices.mouse.__scratchY ? vm.runtime.ioDevices.mouse.__scratchY : 0;
-  const showUpdatedValue = () => pos.setAttribute("data-content", "".concat(Math.round(x), ", ").concat(Math.round(y)));
+  let lastRenderedValue = "";
+  let pendingFrame = null;
+  const flushUpdatedValue = () => {
+    pendingFrame = null;
+    const nextValue = "".concat(Math.round(x), ", ").concat(Math.round(y));
+    if (nextValue !== lastRenderedValue) {
+      lastRenderedValue = nextValue;
+      pos.setAttribute("data-content", nextValue);
+    }
+  };
+  const showUpdatedValue = () => {
+    if (pendingFrame !== null) return;
+    pendingFrame = requestAnimationFrame(flushUpdatedValue);
+  };
   Object.defineProperty(vm.runtime.ioDevices.mouse, "_scratchX", {
     get: function get() {
       return this.__scratchX;
@@ -94,6 +107,7 @@ __webpack_require__.r(__webpack_exports__);
       this.__scratchY = sety;
     }
   });
+  showUpdatedValue();
   Object(_libraries_common_cs_small_stage_js__WEBPACK_IMPORTED_MODULE_0__["default"])();
   while (true) {
     await addon.tab.waitForElement('[class*="controls_controls-container"]', {
