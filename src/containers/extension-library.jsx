@@ -2,7 +2,7 @@ import bindAll from 'lodash.bindall';
 import PropTypes from 'prop-types';
 import React from 'react';
 import VM from 'scratch-vm';
-import {defineMessages, injectIntl, intlShape} from 'react-intl';
+import {defineMessages, injectIntl, intlShape, FormattedMessage} from 'react-intl';
 import log from '../lib/log';
 
 import extensionLibraryContent, {
@@ -14,15 +14,53 @@ import extensionTags from '../lib/libraries/tw-extension-tags';
 
 import LibraryComponent from '../components/library/library.jsx';
 import extensionIcon from '../components/action-menu/icon--sprite.svg';
-import {length} from 'file-loader';
+import libraryStyles from '../components/library/library.css';
 
 const messages = defineMessages({
     extensionTitle: {
         defaultMessage: 'Choose an Extension',
         description: 'Heading for the extension library',
         id: 'gui.extensionLibrary.chooseAnExtension'
+    },
+    batchImport: {
+        defaultMessage: '批量导入 {count} 个扩展',
+        description: 'Button label for importing multiple selected extensions',
+        id: 'tw.extensionLibrary.batchImport'
     }
 });
+
+const getItemSelectionKey = item => item.extensionURL || item.extensionId;
+const isBatchSelectableItem = item => {
+    if (!item || item === '---' || item.disabled || item.href || !item.extensionId) {
+        return false;
+    }
+    return item.extensionId !== 'custom_extension';
+};
+const supportsTextImport = item => Boolean(item && item.extensionURL);
+
+const toBatchItem = item => {
+    if (item.extensionId === 'procedures_enable_return') {
+        return {
+            kind: 'procedure-returns',
+            extensionId: item.extensionId,
+            displayName: typeof item.name === 'string' ? item.name : item.extensionId
+        };
+    }
+    if (!supportsTextImport(item)) {
+        return {
+            kind: 'native-extension',
+            extensionId: item.extensionId,
+            extensionURL: item.extensionId,
+            displayName: typeof item.name === 'string' ? item.name : item.extensionId
+        };
+    }
+    return {
+        kind: 'extension-url',
+        extensionId: item.extensionId,
+        extensionURL: item.extensionURL || item.extensionId,
+        displayName: typeof item.name === 'string' ? item.name : item.extensionId
+    };
+};
 
 const toLibraryItem = extension => {
     if (typeof extension === 'object') {
@@ -35,11 +73,10 @@ const toLibraryItem = extension => {
 };
 
 const translateGalleryItem = (extension, locale) => {
-    // 如果是分割线，直接返回
     if (extension === '---') {
         return extension;
     }
-    // 处理扩展对象
+    // 澶勭悊鎵╁睍瀵硅薄
     return {
         ...extension,
         name: extension.nameTranslations?.[locale] || extension.name,
@@ -81,7 +118,6 @@ const fetchPenguinModLibrary = async () => {
 
 
 const fetchLibrary = async () => {
-    // 辅助函数：安全获取数据
     const safeFetch = async (url, processor, defaultData = []) => {
         try {
             const res = await fetch(url);
@@ -96,7 +132,7 @@ const fetchLibrary = async () => {
         }
     };
 
-    // 并行执行所有fetch请求
+    // 骞惰鎵ц鎵€鏈塮etch璇锋眰
     const [ztdata, twdata, mistdata, spdata, pmdata] = await Promise.all([
         // 02engine
         safeFetch(
@@ -255,9 +291,7 @@ const fetchLibrary = async () => {
         await fetchPenguinModLibrary()
     ]);
 
-    // 合并所有数据
     const result = [];
-    // 扩展来源列表，方便以后添加新的来源
     const sources = [
         { data: twdata, name: 'turbowarp' },
         { data: ztdata, name: 'ztengine' },
@@ -266,12 +300,12 @@ const fetchLibrary = async () => {
         { data: spdata, name: 'sharkpool' }
     ];
     
-    // 遍历所有来源，添加扩展和分割线
+    // 閬嶅巻鎵€鏈夋潵婧愶紝娣诲姞鎵╁睍鍜屽垎鍓茬嚎
     for (let i = 0; i < sources.length; i++) {
         const { data } = sources[i];
         if (data.length > 0) {
             result.push(...data);
-            // 不是最后一个来源且有数据时，添加分割线
+            // 涓嶆槸鏈€鍚庝竴涓潵婧愪笖鏈夋暟鎹椂锛屾坊鍔犲垎鍓茬嚎
             if (i < sources.length - 1) {
                 result.push('---');
             }
@@ -285,12 +319,21 @@ class ExtensionLibrary extends React.PureComponent {
     constructor (props) {
         super(props);
         bindAll(this, [
-            'handleItemSelect'
+            'executeItemAction',
+            'getBatchSelectableItems',
+            'getLibraryItems',
+            'handleBatchImport',
+            'handleEnableProcedureReturns',
+            'handleItemSelect',
+            'handleSelectionToggle',
+            'isItemSelectable',
+            'isItemSelected'
         ]);
         this.state = {
             gallery: cachedGallery,
             galleryError: null,
-            galleryTimedOut: false
+            galleryTimedOut: false,
+            selectedItemKeys: []
         };
     }
     componentDidMount () {
@@ -318,7 +361,31 @@ class ExtensionLibrary extends React.PureComponent {
                 });
         }
     }
-    handleItemSelect (item) {
+    handleEnableProcedureReturns () {
+        if (this.props.onEnableProcedureReturns) {
+            this.props.onEnableProcedureReturns();
+            if (this.props.onCategorySelected) {
+                this.props.onCategorySelected('myBlocks');
+            }
+            return;
+        }
+        if (window.__twEnableProcedureReturns) {
+            window.__twEnableProcedureReturns();
+            return;
+        }
+        const Blockly = window.ScratchBlocks || window.Blockly;
+        const workspace = Blockly && Blockly.getMainWorkspace ? Blockly.getMainWorkspace() : null;
+        if (workspace && workspace.enableProcedureReturns) {
+            workspace.enableProcedureReturns();
+            if (workspace.refreshToolboxSelection_) {
+                workspace.refreshToolboxSelection_();
+            }
+        }
+        if (this.props.onCategorySelected) {
+            this.props.onCategorySelected('myBlocks');
+        }
+    }
+    executeItemAction (item, {useImportModal}) {
         if (item.href) {
             return;
         }
@@ -332,8 +399,7 @@ class ExtensionLibrary extends React.PureComponent {
         }
 
         if (extensionId === 'procedures_enable_return') {
-            this.props.onEnableProcedureReturns();
-            this.props.onCategorySelected('myBlocks');
+            this.handleEnableProcedureReturns();
             return;
         }
 
@@ -341,15 +407,23 @@ class ExtensionLibrary extends React.PureComponent {
             return;
         }
 
-        // 显示导入方式选择模态框
-        if (this.props.onSetSelectedExtension && this.props.onOpenExtensionImportMethodModal) {
+        // 鏄剧ず瀵煎叆鏂瑰紡閫夋嫨妯℃€佹
+        if (
+            useImportModal &&
+            supportsTextImport(item) &&
+            this.props.onSetSelectedExtension &&
+            this.props.onOpenExtensionImportMethodModal
+        ) {
+            if (this.props.onSetSelectedExtensions) {
+                this.props.onSetSelectedExtensions([]);
+            }
             this.props.onSetSelectedExtension({
                 extensionId,
                 extensionURL
             });
             this.props.onOpenExtensionImportMethodModal();
         } else {
-            // 回退到原来的行为
+            // 鍥為€€鍒板師鏉ョ殑琛屼负
             if (this.props.vm.extensionManager.isExtensionLoaded(extensionId)) {
                 this.props.onCategorySelected(extensionId);
             } else {
@@ -365,35 +439,87 @@ class ExtensionLibrary extends React.PureComponent {
             }
         }
     }
+    handleItemSelect (item) {
+        this.executeItemAction(item, {useImportModal: true});
+    }
+    handleSelectionToggle (item) {
+        const selectionKey = getItemSelectionKey(item);
+        this.setState(prevState => ({
+            selectedItemKeys: prevState.selectedItemKeys.includes(selectionKey) ?
+                prevState.selectedItemKeys.filter(key => key !== selectionKey) :
+                [...prevState.selectedItemKeys, selectionKey]
+        }));
+    }
+    isItemSelectable (item) {
+        return isBatchSelectableItem(item);
+    }
+    isItemSelected (item) {
+        return this.state.selectedItemKeys.includes(getItemSelectionKey(item));
+    }
+    getLibraryItems () {
+        const library = extensionLibraryContent.map(toLibraryItem);
+        library.push('---');
+        if (this.state.gallery) {
+            library.push(toLibraryItem(galleryMore));
+            const locale = this.props.intl.locale;
+            library.push(
+                ...this.state.gallery
+                    .map(i => translateGalleryItem(i, locale))
+                    .map(toLibraryItem)
+            );
+        } else if (this.state.galleryError) {
+            library.push(toLibraryItem(galleryError));
+        } else {
+            library.push(toLibraryItem(galleryLoading));
+        }
+        return library;
+    }
+    getBatchSelectableItems () {
+        return this.getLibraryItems().filter(isBatchSelectableItem);
+    }
+    handleBatchImport () {
+        const selectedExtensions = this.getBatchSelectableItems()
+            .filter(item => this.state.selectedItemKeys.includes(getItemSelectionKey(item)))
+            .map(toBatchItem);
+        if (!selectedExtensions.length) {
+            return;
+        }
+        if (this.props.onSetSelectedExtension) {
+            this.props.onSetSelectedExtension(null);
+        }
+        this.props.onSetSelectedExtensions(selectedExtensions);
+        this.props.onOpenExtensionImportMethodModal();
+    }
     render () {
         let library = null;
         if (this.state.gallery || this.state.galleryError || this.state.galleryTimedOut) {
-            library = extensionLibraryContent.map(toLibraryItem);
-            library.push('---');
-            if (this.state.gallery) {
-                library.push(toLibraryItem(galleryMore));
-                const locale = this.props.intl.locale;
-                library.push(
-                    ...this.state.gallery
-                        .map(i => translateGalleryItem(i, locale))
-                        .map(toLibraryItem)
-                );
-            } else if (this.state.galleryError) {
-                library.push(toLibraryItem(galleryError));
-            } else {
-                library.push(toLibraryItem(galleryLoading));
-            }
+            library = this.getLibraryItems();
         }
 
         return (
             <LibraryComponent
                 data={library}
                 filterable
+                headerAction={this.state.selectedItemKeys.length > 0 ? (
+                    <button
+                        type="button"
+                        className={libraryStyles.headerActionButton}
+                        onClick={this.handleBatchImport}
+                    >
+                        <FormattedMessage
+                            {...messages.batchImport}
+                            values={{count: this.state.selectedItemKeys.length}}
+                        />
+                    </button>
+                ) : null}
                 persistableKey="extensionId"
                 id="extensionLibrary"
+                isItemSelectable={this.isItemSelectable}
+                isItemSelected={this.isItemSelected}
                 tags={extensionTags}
                 title={this.props.intl.formatMessage(messages.extensionTitle)}
                 visible={this.props.visible}
+                onItemSelectionToggle={this.handleSelectionToggle}
                 onItemSelected={this.handleItemSelect}
                 onRequestClose={this.props.onRequestClose}
             />
@@ -409,8 +535,10 @@ ExtensionLibrary.propTypes = {
     onOpenExtensionImportMethodModal: PropTypes.func,
     onRequestClose: PropTypes.func,
     onSetSelectedExtension: PropTypes.func,
+    onSetSelectedExtensions: PropTypes.func,
     visible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired // eslint-disable-line react/no-unused-prop-types
 };
 
 export default injectIntl(ExtensionLibrary);
+

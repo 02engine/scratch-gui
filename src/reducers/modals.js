@@ -1,6 +1,7 @@
 const OPEN_MODAL = 'scratch-gui/modals/OPEN_MODAL';
 const CLOSE_MODAL = 'scratch-gui/modals/CLOSE_MODAL';
 const SET_SELECTED_EXTENSION = 'scratch-gui/modals/SET_SELECTED_EXTENSION';
+const SET_SELECTED_EXTENSIONS = 'scratch-gui/modals/SET_SELECTED_EXTENSIONS';
 
 const MODAL_BACKDROP_LIBRARY = 'backdropLibrary';
 const MODAL_COSTUME_LIBRARY = 'costumeLibrary';
@@ -40,7 +41,8 @@ const initialState = {
     [MODAL_FONTS]: false,
     [MODAL_UNKNOWN_PLATFORM]: false,
     [MODAL_INVALID_PROJECT]: false,
-    selectedExtension: null
+    selectedExtension: null,
+    selectedExtensions: []
 };
 
 const reducer = function (state, action) {
@@ -57,6 +59,10 @@ const reducer = function (state, action) {
     case SET_SELECTED_EXTENSION:
         return Object.assign({}, state, {
             selectedExtension: action.extension
+        });
+    case SET_SELECTED_EXTENSIONS:
+        return Object.assign({}, state, {
+            selectedExtensions: action.extensions
         });
     default:
         return state;
@@ -120,6 +126,12 @@ const setSelectedExtension = function (extension) {
     return {
         type: SET_SELECTED_EXTENSION,
         extension: extension
+    };
+};
+const setSelectedExtensions = function (extensions) {
+    return {
+        type: SET_SELECTED_EXTENSIONS,
+        extensions
     };
 };
 const openRestorePointModal = function () {
@@ -207,6 +219,7 @@ export {
     openExtensionImportMethodModal,
     openRestorePointModal,
     setSelectedExtension,
+    setSelectedExtensions,
     openFontsModal,
     openUnknownPlatformModal,
     openInvalidProjectModal,

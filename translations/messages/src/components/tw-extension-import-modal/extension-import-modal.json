@@ -10,6 +10,16 @@
     "defaultMessage": "How would you like to import this extension?"
   },
   {
+    "id": "tw.extensionImportModal.batchDescription",
+    "description": "Description for batch extension import method selection",
+    "defaultMessage": "How would you like to import these {count} extensions?"
+  },
+  {
+    "id": "tw.extensionImportModal.progress",
+    "description": "Progress text shown while importing extensions in batch",
+    "defaultMessage": "Importing {current} / {total}"
+  },
+  {
     "id": "tw.extensionImportModal.normalImport",
     "description": "Button to import extension normally",
     "defaultMessage": "Normal Import"

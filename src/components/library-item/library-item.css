@@ -240,3 +240,41 @@
 .library-item:hover .favorite-container {
     display: block;
 }
+
+.selection-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    cursor: pointer;
+}
+
+.selection-checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid $motion-primary;
+    background: $ui-white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.selection-active .selection-checkbox {
+    background: $motion-primary;
+}
+
+.selection-checkmark {
+    width: 6px;
+    height: 10px;
+    border-right: 2px solid $ui-white;
+    border-bottom: 2px solid $ui-white;
+    transform: rotate(45deg) translate(-1px, -1px);
+}

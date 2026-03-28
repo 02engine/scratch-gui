@@ -32,7 +32,8 @@ import {
     openConnectionModal,
     openCustomExtensionModal,
     openExtensionImportMethodModal,
-    setSelectedExtension
+    setSelectedExtension,
+    setSelectedExtensions
 } from '../reducers/modals';
 import { activateCustomProcedures, deactivateCustomProcedures } from '../reducers/custom-procedures';
 import { setConnectionModalExtensionId } from '../reducers/connection-modal';
@@ -199,6 +200,10 @@ class Blocks extends React.Component {
         this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
         AddonHooks.blocklyWorkspace = this.workspace;
         this.syncWorkspaceCullingState();
+        window.__twEnableProcedureReturns = () => {
+            this.handleEnableProcedureReturns();
+            this.handleCategorySelected('myBlocks');
+        };
 
         // Register buttons under new callback keys for creating variables,
         // lists, and procedures from extensions.
@@ -345,6 +350,9 @@ class Blocks extends React.Component {
         if (this.toolboxStateSyncFrame) {
             cancelAnimationFrame(this.toolboxStateSyncFrame);
             this.toolboxStateSyncFrame = null;
+        }
+        if (window.__twEnableProcedureReturns) {
+            delete window.__twEnableProcedureReturns;
         }
         this.workspace.dispose();
 
@@ -1204,6 +1212,7 @@ class Blocks extends React.Component {
             onOpenCustomExtensionModal,
             onOpenExtensionImportMethodModal,
             onSetSelectedExtension,
+            onSetSelectedExtensions,
             reduxOnOpenCustomExtensionModal,
             updateToolboxState,
             onActivateCustomProcedures,
@@ -1246,6 +1255,7 @@ class Blocks extends React.Component {
                         onOpenCustomExtensionModal={onOpenCustomExtensionModal || reduxOnOpenCustomExtensionModal}
                         onOpenExtensionImportMethodModal={onOpenExtensionImportMethodModal}
                         onSetSelectedExtension={onSetSelectedExtension}
+                        onSetSelectedExtensions={onSetSelectedExtensions}
                     />
                 ) : null}
                 {customProceduresVisible ? (
@@ -1282,6 +1292,7 @@ Blocks.propTypes = {
     onOpenCustomExtensionModal: PropTypes.func,
     onOpenExtensionImportMethodModal: PropTypes.func,
     onSetSelectedExtension: PropTypes.func,
+    onSetSelectedExtensions: PropTypes.func,
     reduxOnOpenCustomExtensionModal: PropTypes.func,
     onRequestCloseCustomProcedures: PropTypes.func,
     onRequestCloseExtensionLibrary: PropTypes.func,
@@ -1359,6 +1370,7 @@ const mapDispatchToProps = dispatch => ({
     reduxOnOpenCustomExtensionModal: () => dispatch(openCustomExtensionModal()),
     onOpenExtensionImportMethodModal: () => dispatch(openExtensionImportMethodModal()),
     onSetSelectedExtension: extension => dispatch(setSelectedExtension(extension)),
+    onSetSelectedExtensions: extensions => dispatch(setSelectedExtensions(extensions)),
     onRequestCloseExtensionLibrary: () => {
         dispatch(closeExtensionLibrary());
     },

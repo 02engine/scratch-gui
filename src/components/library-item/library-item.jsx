@@ -45,6 +45,19 @@ class LibraryItemComponent extends React.PureComponent {
                 />
             </button>
         );
+        const selectionCheckbox = this.props.isSelectable ? (
+            <button
+                className={classNames(styles.selectionContainer, {
+                    [styles.selectionActive]: this.props.isSelected
+                })}
+                onClick={this.props.onSelectionToggle}
+                title={this.props.isSelected ? 'Cancel selection' : 'Select'}
+            >
+                <span className={styles.selectionCheckbox}>
+                    {this.props.isSelected ? <span className={styles.selectionCheckmark} /> : null}
+                </span>
+            </button>
+        ) : null;
 
         return this.props.featured ? (
             <div
@@ -203,6 +216,7 @@ class LibraryItemComponent extends React.PureComponent {
                 ) : null}
 
                 {favorite}
+                {selectionCheckbox}
             </div>
         ) : (
             <Box
@@ -245,6 +259,7 @@ class LibraryItemComponent extends React.PureComponent {
                 ) : null}
 
                 {favorite}
+                {selectionCheckbox}
             </Box>
         );
     }
@@ -268,6 +283,8 @@ LibraryItemComponent.propTypes = {
     insetIconURL: PropTypes.string,
     internetConnectionRequired: PropTypes.bool,
     isPlaying: PropTypes.bool,
+    isSelectable: PropTypes.bool,
+    isSelected: PropTypes.bool,
     name: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.node
@@ -290,6 +307,7 @@ LibraryItemComponent.propTypes = {
     onMouseEnter: PropTypes.func.isRequired,
     onMouseLeave: PropTypes.func.isRequired,
     onPlay: PropTypes.func.isRequired,
+    onSelectionToggle: PropTypes.func,
     onStop: PropTypes.func.isRequired,
     showPlayButton: PropTypes.bool
 };

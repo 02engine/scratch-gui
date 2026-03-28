@@ -41,6 +41,7 @@ class LibraryComponent extends React.Component {
             'handleFilterClear',
             'handleMouseEnter',
             'handleMouseLeave',
+            'handleItemSelectionToggle',
             'handlePlayingEnd',
             'handleSelect',
             'handleFavorite',
@@ -84,6 +85,11 @@ class LibraryComponent extends React.Component {
     handleSelect (id) {
         this.handleClose();
         this.props.onItemSelected(this.getFilteredData()[id]);
+    }
+    handleItemSelectionToggle (id) {
+        if (this.props.onItemSelectionToggle) {
+            this.props.onItemSelectionToggle(this.getFilteredData()[id]);
+        }
     }
     readFavoritesFromStorage () {
         let data;
@@ -290,6 +296,11 @@ class LibraryComponent extends React.Component {
                                 ))}
                             </div>
                         }
+                        {this.props.headerAction ? (
+                            <div className={styles.headerAction}>
+                                {this.props.headerAction}
+                            </div>
+                        ) : null}
                     </div>
                 )}
                 <div
@@ -321,6 +332,8 @@ class LibraryComponent extends React.Component {
                                 insetIconURL={dataItem.insetIconURL}
                                 internetConnectionRequired={dataItem.internetConnectionRequired}
                                 isPlaying={this.state.playingItem === index}
+                                isSelectable={this.props.isItemSelectable && this.props.isItemSelectable(dataItem)}
+                                isSelected={this.props.isItemSelected && this.props.isItemSelected(dataItem)}
                                 key={dataItem.key || (
                                     typeof dataItem.name === 'string' ?
                                         dataItem.name :
@@ -333,6 +346,7 @@ class LibraryComponent extends React.Component {
                                 showPlayButton={this.props.showPlayButton}
                                 onMouseEnter={this.handleMouseEnter}
                                 onMouseLeave={this.handleMouseLeave}
+                                onSelectionToggle={this.handleItemSelectionToggle}
                                 onSelect={this.handleSelect}
                             />
                         )
@@ -379,11 +393,15 @@ LibraryComponent.propTypes = {
         PropTypes.instanceOf(Promise)
     ]),
     filterable: PropTypes.bool,
+    headerAction: PropTypes.node,
     id: PropTypes.string.isRequired,
+    isItemSelectable: PropTypes.func,
+    isItemSelected: PropTypes.func,
     persistableKey: PropTypes.string,
     intl: intlShape.isRequired,
     onItemMouseEnter: PropTypes.func,
     onItemMouseLeave: PropTypes.func,
+    onItemSelectionToggle: PropTypes.func,
     onItemSelected: PropTypes.func,
     onRequestClose: PropTypes.func,
     setStopHandler: PropTypes.func,

@@ -3,5 +3,10 @@
     "id": "gui.extensionLibrary.chooseAnExtension",
     "description": "Heading for the extension library",
     "defaultMessage": "Choose an Extension"
+  },
+  {
+    "id": "tw.extensionLibrary.batchImport",
+    "description": "Button label for importing multiple selected extensions",
+    "defaultMessage": "批量导入 {count} 个扩展"
   }
 ]

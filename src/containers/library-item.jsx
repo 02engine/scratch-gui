@@ -69,8 +69,15 @@ class LibraryItem extends React.PureComponent {
     }
     handleFavorite (e) {
         e.stopPropagation();
-        this.props.onFavorite(this.props.id);
+            this.props.onFavorite(this.props.id);
     }
+    handleSelectionToggle = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.props.onSelectionToggle) {
+            this.props.onSelectionToggle(this.props.id);
+        }
+    };
     handleFocus (id) {
         if (!this.props.showPlayButton) {
             this.handleMouseEnter(id);
@@ -157,6 +164,8 @@ class LibraryItem extends React.PureComponent {
                 insetIconURL={this.props.insetIconURL}
                 internetConnectionRequired={this.props.internetConnectionRequired}
                 isPlaying={this.props.isPlaying}
+                isSelectable={this.props.isSelectable}
+                isSelected={this.props.isSelected}
                 name={this.props.name}
                 credits={this.props.credits}
                 docsURI={this.props.docsURI}
@@ -171,6 +180,7 @@ class LibraryItem extends React.PureComponent {
                 onMouseEnter={this.handleMouseEnter}
                 onMouseLeave={this.handleMouseLeave}
                 onPlay={this.handlePlay}
+                onSelectionToggle={this.handleSelectionToggle}
                 onStop={this.handleStop}
             />
         );
@@ -203,6 +213,8 @@ LibraryItem.propTypes = {
     insetIconURL: PropTypes.string,
     internetConnectionRequired: PropTypes.bool,
     isPlaying: PropTypes.bool,
+    isSelectable: PropTypes.bool,
+    isSelected: PropTypes.bool,
     name: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.node
@@ -221,6 +233,7 @@ LibraryItem.propTypes = {
     onMouseEnter: PropTypes.func.isRequired,
     onMouseLeave: PropTypes.func.isRequired,
     onSelect: PropTypes.func.isRequired,
+    onSelectionToggle: PropTypes.func,
     showPlayButton: PropTypes.bool
 };
 

@@ -17,6 +17,16 @@ const messages = defineMessages({
         description: 'Description for extension import method selection',
         id: 'tw.extensionImportModal.description'
     },
+    batchDescription: {
+        defaultMessage: 'How would you like to import these {count} extensions?',
+        description: 'Description for batch extension import method selection',
+        id: 'tw.extensionImportModal.batchDescription'
+    },
+    progress: {
+        defaultMessage: 'Importing {current} / {total}',
+        description: 'Progress text shown while importing extensions in batch',
+        id: 'tw.extensionImportModal.progress'
+    },
     normalImport: {
         defaultMessage: 'Normal Import',
         description: 'Button to import extension normally',
@@ -46,8 +56,24 @@ const ExtensionImportModal = props => (
                 <FormattedMessage {...messages.title} />
             </h3>
             <p className={styles.description}>
-                <FormattedMessage {...messages.description} />
+                {props.batchMode ? (
+                    <FormattedMessage {...messages.batchDescription} values={{count: props.itemCount}} />
+                ) : (
+                    <FormattedMessage {...messages.description} />
+                )}
             </p>
+
+            {props.loading && props.batchMode && props.itemCount > 1 ? (
+                <p className={styles.progressText}>
+                    <FormattedMessage
+                        {...messages.progress}
+                        values={{
+                            current: props.progressIndex || 1,
+                            total: props.itemCount
+                        }}
+                    />
+                </p>
+            ) : null}
 
             {props.error && (
                 <div className={styles.errorMessage}>
@@ -91,12 +117,15 @@ const ExtensionImportModal = props => (
 );
 
 ExtensionImportModal.propTypes = {
+    batchMode: PropTypes.bool,
     extensionName: PropTypes.string,
+    itemCount: PropTypes.number,
     loading: PropTypes.bool,
     error: PropTypes.string,
     onClose: PropTypes.func,
     onNormalImport: PropTypes.func,
     onTextImport: PropTypes.func,
+    progressIndex: PropTypes.number,
     intl: intlShape.isRequired
 };
 
