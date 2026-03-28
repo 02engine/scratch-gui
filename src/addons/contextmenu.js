@@ -6,6 +6,21 @@
 let initialized = false;
 let hasDynamicContextMenu = false;
 let contextMenus = [];
+const contextMenuRegistrationKeys = new Set();
+
+const getContextMenuRegistrationKey = (callback, opts) => {
+  const optsKey = opts
+    ? JSON.stringify({
+        className: opts.className || "",
+        dangerous: Boolean(opts.dangerous),
+        border: Boolean(opts.border),
+        order: opts.order ?? null,
+        position: opts.position || "",
+        types: Array.isArray(opts.types) ? opts.types : [],
+      })
+    : "__dynamic__";
+  return `${optsKey}::${callback.toString()}`;
+};
 
 const onReactContextMenu = function (e) {
   if (!e.target) return;
@@ -100,6 +115,12 @@ const initialize = (tab) => {
 };
 
 export const addContextMenu = (tab, callback, opts) => {
+  const registrationKey = getContextMenuRegistrationKey(callback, opts);
+  if (contextMenuRegistrationKeys.has(registrationKey)) {
+    initialize(tab);
+    return;
+  }
+  contextMenuRegistrationKeys.add(registrationKey);
   if (typeof opts === "undefined") {
     contextMenus.push(callback);
     hasDynamicContextMenu = true;
