@@ -21,6 +21,7 @@ import coordinateOnIcon from './icon--coordinate-on.svg';
 import coordinateOffIcon from './icon--coordinate-off.svg';
 import ZoomInFontIcon from './icon--zoom-in-font.svg';
 import ZoomOutFontIcon from './icon--zoom-out-font.svg';
+import autoFitIcon from '!../../lib/tw-recolor/build!./icon--auto-fit.svg';
 
 import styles from './stage-header.css';
 
@@ -63,6 +64,11 @@ const messages = defineMessages({
         defaultMessage: 'Open advanced settings',
         description: 'Button to open advanced settings in embeds',
         id: 'tw.openAdvanced'
+    },
+    autoFitStageMessage: {
+        defaultMessage: 'Auto fit stage to window',
+        description: 'Button to toggle stage auto fit in the separated stage window',
+        id: 'tw.stageHeader.autoFit'
     }
     ,
     openInEditorMessage: {
@@ -87,9 +93,13 @@ const StageHeaderComponent = function (props) {
         onSetStageSmall,
         onSetStageFull,
         onOpenSettings,
+        onToggleStageWindowAutoFit,
         isEmbedded,
+        isStageWindowAutoFit,
         stageSize,
+        stageDimensionsOverride,
         stageSizeMode,
+        showStageWindowAutoFitButton,
         vm,
 
         isShowCoordinate,
@@ -100,7 +110,11 @@ const StageHeaderComponent = function (props) {
 
     let header = null;
 
-    const stageDimensions = getStageDimensions(stageSize, customStageSize, isFullScreen || isEmbedded);
+    const stageDimensions = stageDimensionsOverride || getStageDimensions(
+        stageSize,
+        customStageSize,
+        isFullScreen || isEmbedded
+    );
     const projectUrl = new URLSearchParams(location.search).get('project_url');
     const handleOpenInEditor = (event) => {
         event.preventDefault();
@@ -290,6 +304,25 @@ const StageHeaderComponent = function (props) {
                         key="editor" // addons require the HTML element to be not be re-used by in-editor buttons
                     >
                         {stageControls}
+                        {showStageWindowAutoFitButton ? (
+                            <div className={styles.unselectWrapper}>
+                                <Button
+                                    aria-pressed={isStageWindowAutoFit}
+                                    className={classNames(styles.stageButton, {
+                                        [styles.stageButtonToggled]: isStageWindowAutoFit
+                                    })}
+                                    onClick={onToggleStageWindowAutoFit}
+                                >
+                                    <img
+                                        alt={props.intl.formatMessage(messages.autoFitStageMessage)}
+                                        className={styles.stageButtonIcon}
+                                        draggable={false}
+                                        src={autoFitIcon()}
+                                        title={props.intl.formatMessage(messages.autoFitStageMessage)}
+                                    />
+                                </Button>
+                            </div>
+                        ) : null}
                         <div>
                             <Button
                                 className={styles.stageButton}
@@ -334,9 +367,19 @@ StageHeaderComponent.propTypes = {
     onSetStageSmall: PropTypes.func.isRequired,
     onSetStageFull: PropTypes.func.isRequired,
     onOpenSettings: PropTypes.func.isRequired,
+    onToggleStageWindowAutoFit: PropTypes.func,
     isEmbedded: PropTypes.bool.isRequired,
+    isStageWindowAutoFit: PropTypes.bool,
     stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)),
+    stageDimensionsOverride: PropTypes.shape({
+        width: PropTypes.number,
+        height: PropTypes.number,
+        widthDefault: PropTypes.number,
+        heightDefault: PropTypes.number,
+        scale: PropTypes.number
+    }),
     stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)),
+    showStageWindowAutoFitButton: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired,
 
     isShowCoordinate: PropTypes.bool.isRequired, // 标识是否显示网格坐标

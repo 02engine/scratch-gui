@@ -35,6 +35,11 @@
     "defaultMessage": "Open advanced settings"
   },
   {
+    "id": "tw.stageHeader.autoFit",
+    "description": "Button to toggle stage auto fit in the separated stage window",
+    "defaultMessage": "Auto fit stage to window"
+  },
+  {
     "id": "tw.stageHeader.openInEditor",
     "description": "Link to open the embedded project in the editor",
     "defaultMessage": "Open in Editor"

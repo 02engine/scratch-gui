@@ -1,5 +1,6 @@
 @import "../../css/units.css";
 @import "../../css/colors.css";
+@import "../../css/default-colors.css";
 @import "../../css/z-index.css";
 @import "../../css/filters.css";
 
@@ -82,6 +83,10 @@
     width: 100%;
     height: 100%;
     filter: $filter-icon-gray;
+}
+
+.stage-button-toggled {
+    background: $looks-transparent;
 }
 
 [dir="rtl"] .stage-button-icon {

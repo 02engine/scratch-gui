@@ -94,6 +94,39 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen) => {
 };
 
 /**
+ * Fit the stage into an arbitrary container while preserving the stage aspect ratio.
+ * The returned dimensions describe only the stage surface itself and do not include
+ * header height or border thickness applied by the caller.
+ * @param {{width: number, height: number}} containerSize available stage content size
+ * @param {{width: number, height: number}} customStageSize native stage size
+ * @return {StageDimensions} dimensions that fit inside the provided container
+ */
+const getStageDimensionsToFitContainer = (containerSize, customStageSize) => {
+    const stageDimensions = {
+        heightDefault: customStageSize.height,
+        widthDefault: customStageSize.width,
+        height: customStageSize.height,
+        width: customStageSize.width,
+        scale: 1
+    };
+
+    const availableWidth = Math.max(0, containerSize.width);
+    const availableHeight = Math.max(0, containerSize.height);
+    if (availableWidth === 0 || availableHeight === 0) {
+        return stageDimensions;
+    }
+
+    const widthScale = availableWidth / customStageSize.width;
+    const heightScale = availableHeight / customStageSize.height;
+    const scale = Math.min(widthScale, heightScale);
+
+    stageDimensions.scale = scale;
+    stageDimensions.width = Math.round(customStageSize.width * scale);
+    stageDimensions.height = Math.round(customStageSize.height * scale);
+    return stageDimensions;
+};
+
+/**
  * @param {STAGE_DISPLAY_SIZES} stageSize - the current fully-resolved stage size.
  * @returns {number} Minimum width to display the stage area of the screen at. May be wider than the stage's actual size
  */
@@ -128,6 +161,7 @@ const stageSizeToTransform = ({width, height, widthDefault, heightDefault}) => {
 
 export {
     getStageDimensions,
+    getStageDimensionsToFitContainer,
     getMinWidth,
     resolveStageSize,
     stageSizeToTransform

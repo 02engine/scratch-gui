@@ -21,6 +21,7 @@ const DraggableWindow = props => {
         onResizeStart,
         onResize,
         onResizeStop,
+        onContentResize,
         onMinimizeToggle,
         title,
         windowId,
@@ -70,6 +71,8 @@ const DraggableWindow = props => {
 
     const windowRef = React.useRef();
     const headerRef = React.useRef();
+    const contentRef = React.useRef();
+    const contentResizeFrameRef = React.useRef(null);
 
     // 保存窗口状态到本地存储
     const saveWindowState = React.useCallback(() => {
@@ -92,6 +95,53 @@ const DraggableWindow = props => {
     React.useEffect(() => {
         saveWindowState();
     }, [position, size, isMinimized, isFullScreen, saveWindowState]);
+
+    React.useEffect(() => {
+        if (!onContentResize || !contentRef.current) {
+            return undefined;
+        }
+
+        const emitSize = () => {
+            if (!contentRef.current) return;
+            const nextSize = {
+                width: contentRef.current.clientWidth,
+                height: contentRef.current.clientHeight
+            };
+            onContentResize(windowId, nextSize);
+        };
+
+        const scheduleEmitSize = () => {
+            if (contentResizeFrameRef.current !== null) {
+                cancelAnimationFrame(contentResizeFrameRef.current);
+            }
+            contentResizeFrameRef.current = requestAnimationFrame(() => {
+                contentResizeFrameRef.current = null;
+                emitSize();
+            });
+        };
+
+        emitSize();
+
+        let resizeObserver;
+        if (typeof ResizeObserver !== 'undefined') {
+            resizeObserver = new ResizeObserver(scheduleEmitSize);
+            resizeObserver.observe(contentRef.current);
+        } else {
+            window.addEventListener('resize', scheduleEmitSize);
+        }
+
+        return () => {
+            if (contentResizeFrameRef.current !== null) {
+                cancelAnimationFrame(contentResizeFrameRef.current);
+                contentResizeFrameRef.current = null;
+            }
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            } else {
+                window.removeEventListener('resize', scheduleEmitSize);
+            }
+        };
+    }, [onContentResize, size.width, size.height, windowId]);
     
     // 清理函数，在组件卸载时调用
     React.useEffect(() => {
@@ -403,7 +453,10 @@ const DraggableWindow = props => {
                     )}
                 </div>
             </div>
-            <div className={styles.windowContent}>
+            <div
+                ref={contentRef}
+                className={styles.windowContent}
+            >
                 {children}
             </div>
             {isResizable && allowResize && (
@@ -456,6 +509,7 @@ DraggableWindow.propTypes = {
     onResizeStart: PropTypes.func,
     onResize: PropTypes.func,
     onResizeStop: PropTypes.func,
+    onContentResize: PropTypes.func,
     onMinimizeToggle: PropTypes.func,
     title: PropTypes.string.isRequired,
     windowId: PropTypes.string.isRequired,

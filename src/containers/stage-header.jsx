@@ -112,6 +112,7 @@ checkInvalidStageSizeMode () {
                 onKeyPress={this.handleKeyPress}
                 showFixedLargeSize={this.showFixedLargeSize()}
                 onTriggerCoordinate={this.handleTriggerCoordinate}
+                onToggleStageWindowAutoFit={this.props.onToggleStageWindowAutoFit}
                 onZoomOutCoordinateFontSize={this.handleZoomOutCoordinateFontSize}
                 onZoomInCoordinateFontSize={this.handleZoomInCoordinateFontSize}
             />
@@ -132,9 +133,19 @@ StageHeader.propTypes = {
     onSetStageUnFullScreen: PropTypes.func.isRequired,
     onSetStageFull: PropTypes.func.isRequired,
     onOpenSettings: PropTypes.func.isRequired,
+    onToggleStageWindowAutoFit: PropTypes.func,
     // tw: replace showBranding
     isEmbedded: PropTypes.bool.isRequired,
+    isStageWindowAutoFit: PropTypes.bool,
+    stageDimensionsOverride: PropTypes.shape({
+        width: PropTypes.number,
+        height: PropTypes.number,
+        widthDefault: PropTypes.number,
+        heightDefault: PropTypes.number,
+        scale: PropTypes.number
+    }),
     stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)).isRequired,
+    showStageWindowAutoFitButton: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 

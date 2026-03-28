@@ -16,6 +16,7 @@ import GitQuickModal from '../git-quick-modal/git-quick-modal.jsx';
 import GitHubOAuthModal from '../github-oauth-modal/github-oauth-modal.jsx';
 import ProjectExporter from '../../lib/project-exporter.js';
 import githubApi from '../../lib/github-api.js';
+import windowStateStorage from '../../lib/window-state-storage';
 
 import Blocks from '../../containers/blocks.jsx';
 import CostumeTab from '../../containers/costume-tab.jsx';
@@ -177,6 +178,11 @@ const GUIComponent = props => {
 
     const [stageWindowPosition, setStageWindowPosition] = React.useState({x: 350, y: 200}); //其实没什么实际含义
     const [stageWindowSize, setStageWindowSize] = React.useState({width: 485, height: 483});
+    const [stageWindowContentSize, setStageWindowContentSize] = React.useState({width: 0, height: 0});
+    const [stageWindowAutoFit, setStageWindowAutoFit] = React.useState(() => {
+        const savedStageWindowState = windowStateStorage.getWindowState('stage');
+        return !!(savedStageWindowState && savedStageWindowState.autoFit);
+    });
     const [stageWindowMinimized, setStageWindowMinimized] = React.useState(false);
     const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({x: 400, y: 275}); //也没什么含义
     const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({width: 485, height: 447});
@@ -196,6 +202,19 @@ const GUIComponent = props => {
 
     // OAuth 认证相关状态
     const [isOAuthModalOpen, setIsOAuthModalOpen] = React.useState(false);
+
+    const handleStageWindowContentResize = React.useCallback((id, contentSize) => {
+        setStageWindowContentSize(prevSize => {
+            if (prevSize.width === contentSize.width && prevSize.height === contentSize.height) {
+                return prevSize;
+            }
+            return contentSize;
+        });
+    }, []);
+
+    const handleToggleStageWindowAutoFit = React.useCallback(() => {
+        setStageWindowAutoFit(value => !value);
+    }, []);
 
     // 处理 Git 提交按钮点击
     const handleClickGitCommit = React.useCallback(async () => {
@@ -319,6 +338,12 @@ const GUIComponent = props => {
     }, []);
 
     // 更新 Git 状态的函数
+    React.useEffect(() => {
+        windowStateStorage.saveWindowState('stage', {
+            autoFit: stageWindowAutoFit
+        });
+    }, [stageWindowAutoFit]);
+
     const updateGitRepositoryState = React.useCallback(() => {
         if (!vm || !vm.runtime || !vm.runtime.platform) {
             setGitRepositoryExists(false);
@@ -958,11 +983,12 @@ const GUIComponent = props => {
                                     windowId="stage"
                                     title="Stage"
                                     defaultPosition={stageWindowPosition}
-                                    defaultSize={{width: stageWindowSize[0]+4, height: stageWindowSize[1]+75}}
+                                    defaultSize={stageWindowSize}
                                     minSize={{width: 74, height: 25}}
                                     maxSize={{width: 960+4, height: 720+75}}
                                     allowResize={true}
                                     allowMaximize={false}
+                                    onContentResize={handleStageWindowContentResize}
                                     onDragStop={(id, position) => setStageWindowPosition(position)}
                                     onResizeStop={(id, size) => setStageWindowSize(size)}
                                     onMinimizeToggle={(id, minimized) => setStageWindowMinimized(minimized)}
@@ -970,10 +996,16 @@ const GUIComponent = props => {
                                     enableStatePersistence={true}
                                 >
                                     <StageWrapper
+                                        containerSize={stageWindowContentSize}
+                                        customStageSize={customStageSize}
+                                        fitToContainer={stageWindowAutoFit}
                                         isFullScreen={isFullScreen}
                                         isRendererSupported={isRendererSupported()}
                                         isRtl={isRtl}
+                                        onToggleAutoFit={handleToggleStageWindowAutoFit}
+                                        showAutoFitButton
                                         stageSize={stageSize}
+                                        stageWindowAutoFit={stageWindowAutoFit}
                                         vm={vm}
                                     />
                                 </DraggableWindow>

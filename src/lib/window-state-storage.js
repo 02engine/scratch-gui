@@ -16,6 +16,7 @@ class WindowStateStorage {
         try {
             const allStates = this.getAllWindowStates();
             allStates[windowId] = {
+                ...(allStates[windowId] || {}),
                 ...state,
                 lastUpdated: Date.now()
             };
