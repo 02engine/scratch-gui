@@ -85,6 +85,7 @@ const StageHeaderComponent = function (props) {
         customStageSize,
         showFixedLargeSize,
         isFullScreen,
+        isWindowFullScreen,
         isPlayerOnly,
         onKeyPress,
         onSetStageFullScreen,
@@ -277,13 +278,13 @@ const StageHeaderComponent = function (props) {
                                     title: props.intl.formatMessage(messages.largeStageSizeMessage)
                                 }
                             ] : []),
-                            {
+                            ...(!isWindowFullScreen ? [{
                                 handleClick: onSetStageFull,
                                 icon: showFixedLargeSize ? fullStageIcon : largeStageIcon,
                                 iconClassName: styles.stageButtonIcon,
                                 isSelected: stageSizeMode === STAGE_SIZE_MODES.full,
                                 title: props.intl.formatMessage(messages.fullStageSizeMessage)
-                            }
+                            }] : [])
                         ]}
                     />
                 </div>
@@ -323,20 +324,22 @@ const StageHeaderComponent = function (props) {
                                 </Button>
                             </div>
                         ) : null}
-                        <div>
-                            <Button
-                                className={styles.stageButton}
-                                onClick={onSetStageFullScreen}
-                            >
-                                <img
-                                    alt={props.intl.formatMessage(messages.fullStageSizeMessage)}
-                                    className={styles.stageButtonIcon}
-                                    draggable={false}
-                                    src={fullScreenIcon}
-                                    title={props.intl.formatMessage(messages.fullscreenControl)}
-                                />
-                            </Button>
-                        </div>
+                        {isStageWindowAutoFit ? null : (
+                            <div>
+                                <Button
+                                    className={styles.stageButton}
+                                    onClick={onSetStageFullScreen}
+                                >
+                                    <img
+                                        alt={props.intl.formatMessage(messages.fullStageSizeMessage)}
+                                        className={styles.stageButtonIcon}
+                                        draggable={false}
+                                        src={fullScreenIcon}
+                                        title={props.intl.formatMessage(messages.fullscreenControl)}
+                                    />
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </Box>
             </Box>
@@ -359,6 +362,7 @@ StageHeaderComponent.propTypes = {
     }),
     showFixedLargeSize: PropTypes.bool,
     isFullScreen: PropTypes.bool.isRequired,
+    isWindowFullScreen: PropTypes.bool,
     isPlayerOnly: PropTypes.bool.isRequired,
     onKeyPress: PropTypes.func.isRequired,
     onSetStageFullScreen: PropTypes.func.isRequired,
