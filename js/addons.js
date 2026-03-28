@@ -1434,13 +1434,37 @@ const getScratchClassNames = () => {
 };
 let _mutationObserver;
 let _mutationObserverCallbacks = [];
+const runMutationObserverCallbacks = () => {
+  for (const cb of _mutationObserverCallbacks) {
+    try {
+      cb();
+    } catch (error) {
+      console.error('Error while running addon mutation observer callback', error);
+    }
+  }
+};
+const DOM_REMOUNT_REDUX_EVENTS = ['fontsLoaded/SET_FONTS_LOADED', 'scratch-gui/locales/SELECT_LOCALE', 'scratch-gui/mode/SET_PLAYER', 'scratch-gui/mode/SET_FULL_SCREEN', 'scratch-gui/StageSize/SET_STAGE_SIZE'];
+const notifyAddonWaitersForDomRemount = () => {
+  const currentState = _redux__WEBPACK_IMPORTED_MODULE_14__["default"].state;
+  for (const type of DOM_REMOUNT_REDUX_EVENTS) {
+    _redux__WEBPACK_IMPORTED_MODULE_14__["default"].dispatchEvent(new CustomEvent('statechanged', {
+      detail: {
+        action: {
+          type,
+          meta: {
+            synthetic: true,
+            reason: 'addon-dom-remount'
+          }
+        },
+        prev: currentState,
+        next: currentState
+      }
+    }));
+  }
+};
 const addMutationObserverCallback = newCallback => {
   if (!_mutationObserver) {
-    _mutationObserver = new MutationObserver(() => {
-      for (const cb of _mutationObserverCallbacks) {
-        cb();
-      }
-    });
+    _mutationObserver = new MutationObserver(runMutationObserverCallbacks);
     _mutationObserver.observe(document.documentElement, {
       attributes: false,
       childList: true,
@@ -1500,8 +1524,17 @@ const fixDisplayName = displayName => displayName.replace(/([^\s])(%[nbs])/g, (_
 const compareArrays = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let _firstAddBlockRan = false;
 const contextMenuCallbacks = [];
+const blockContextMenuRegistrationKeys = new Set();
 const CONTEXT_MENU_ORDER = ['editor-devtools', 'block-switching', 'blocks2image', 'swap-local-global'];
 let createdAnyBlockContextMenus = false;
+const getBlockContextMenuRegistrationKey = (addonId, callback, options) => JSON.stringify({
+  addonId,
+  workspace: Boolean(options.workspace),
+  blocks: Boolean(options.blocks),
+  flyout: Boolean(options.flyout),
+  comments: Boolean(options.comments),
+  callback: callback.toString()
+});
 const updateClasses = () => {
   const state = _redux__WEBPACK_IMPORTED_MODULE_14__["default"].state;
   const isSmallStage = state.scratchGui.stageSize.stageSize === 'small';
@@ -1521,7 +1554,7 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
   constructor(id) {
     super();
     this._id = id;
-    this._seenElements = new WeakSet();
+    this._seenElements = new Set();
     // traps is public API
     this.traps = {
       get vm() {
@@ -1571,7 +1604,21 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
   }
   resetSeenElements() {
     // Clear seen elements to allow re-detection after DOM changes
-    this._seenElements = new WeakSet();
+    this._seenElements = new Set();
+  }
+  pruneSeenElements() {
+    let {
+      disconnectedOnly = true
+    } = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    for (const element of this._seenElements) {
+      if (!element) {
+        this._seenElements.delete(element);
+        continue;
+      }
+      if (!disconnectedOnly || !element.isConnected) {
+        this._seenElements.delete(element);
+      }
+    }
   }
   waitForElement(selector) {
     let {
@@ -1866,6 +1913,16 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
       flyout = false,
       comments = false
     } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    const registrationKey = getBlockContextMenuRegistrationKey(this._id, callback, {
+      workspace,
+      blocks,
+      flyout,
+      comments
+    });
+    if (blockContextMenuRegistrationKeys.has(registrationKey)) {
+      return;
+    }
+    blockContextMenuRegistrationKeys.add(registrationKey);
     contextMenuCallbacks.push({
       addonId: this._id,
       callback,
@@ -2308,6 +2365,31 @@ window.addonAPI = {
       if (runner.publicAPI && runner.publicAPI.addon && runner.publicAPI.addon.tab) {
         runner.publicAPI.addon.tab.resetSeenElements();
       }
+    }
+  },
+  pruneDisconnectedSeenElements() {
+    for (const runner of AddonRunner.instances) {
+      if (runner.publicAPI && runner.publicAPI.addon && runner.publicAPI.addon.tab) {
+        runner.publicAPI.addon.tab.pruneSeenElements({
+          disconnectedOnly: true
+        });
+      }
+    }
+  },
+  refreshAfterDomRemount() {
+    this.pruneDisconnectedSeenElements();
+    notifyAddonWaitersForDomRemount();
+    const triggerCallbacks = () => {
+      runMutationObserverCallbacks();
+    };
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(() => {
+        triggerCallbacks();
+        window.requestAnimationFrame(triggerCallbacks);
+      });
+    } else {
+      queueMicrotask(triggerCallbacks);
+      setTimeout(triggerCallbacks, 0);
     }
   },
   // Addons that should NOT be re-run / cleaned by the global DOM cleanup
