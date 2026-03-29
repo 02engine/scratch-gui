@@ -29,7 +29,7 @@ import DeletionRestorer from '../../containers/deletion-restorer.jsx';
 import TurboMode from '../../containers/turbo-mode.jsx';
 import MenuBarHOC from '../../containers/menu-bar-hoc.jsx';
 import SettingsMenu from './settings-menu.jsx';
- 
+
 import FramerateChanger from '../../containers/tw-framerate-changer.jsx';
 import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
@@ -431,7 +431,7 @@ class MenuBar extends React.Component {
             }
 
             console.log('Calling saveProjectSb3 with arraybuffer parameter...');
-            
+
             // Try saveProjectSb3 first -参考 git-quick-modal 和 tw-packager-integration-hoc 中的用法
             let arrayBuffer;
             try {
@@ -446,29 +446,29 @@ class MenuBar extends React.Component {
                     arrayBuffer = await this.props.vm.saveProjectSb3();
                 }
                 console.log('saveProjectSb3 returned:', typeof arrayBuffer, arrayBuffer ? arrayBuffer.byteLength : 'undefined');
-                
+
                 if (!arrayBuffer || arrayBuffer.byteLength === 0) {
                     console.warn('saveProjectSb3 returned empty or undefined, trying saveProjectSb3DontZip');
                     throw new Error('Empty project data from saveProjectSb3');
                 }
-                
+
                 // 保存到 storage
                 storage.setCustomDefaultProject(arrayBuffer);
                 console.log('Current project saved as default via saveProjectSb3, size:', arrayBuffer.byteLength);
                 alert('当前作品已设置为默认作品，下次启动时将加载此作品。');
-                
+
             } catch (firstError) {
                 console.warn('First method failed, trying saveProjectSb3DontZip:', firstError.message);
-                
+
                 // Try alternative method using saveProjectSb3DontZip (参考 tw-restore-point-api.js)
                 if (typeof this.props.vm.saveProjectSb3DontZip === 'function') {
                     const projectFiles = this.props.vm.saveProjectSb3DontZip();
                     console.log('saveProjectSb3DontZip returned files:', Object.keys(projectFiles));
-                    
+
                     if (!projectFiles || Object.keys(projectFiles).length === 0) {
                         throw new Error('No project files returned from saveProjectSb3DontZip');
                     }
-                    
+
                     // Convert to SB3 using jszip (参考 git 中的模式)
                     const zip = new JSZip();
                     for (const [filename, data] of Object.entries(projectFiles)) {
@@ -476,7 +476,7 @@ class MenuBar extends React.Component {
                     }
                     const sb3Buffer = await zip.generateAsync({type: 'arraybuffer'});
                     console.log('Generated SB3 buffer size:', sb3Buffer.byteLength);
-                    
+
                     storage.setCustomDefaultProject(sb3Buffer);
                     console.log('Current project saved as default via saveProjectSb3DontZip, size:', sb3Buffer.byteLength);
                     alert('当前作品已设置为默认作品，下次启动时将加载此作品。');
@@ -484,12 +484,12 @@ class MenuBar extends React.Component {
                     throw new Error('Both saveProjectSb3 and saveProjectSb3DontZip methods failed');
                 }
             }
-            
+
         } catch (error) {
             console.error('Failed to save project as default:', error);
             alert('保存默认作品失败: ' + error.message);
         }
-        
+
         if (this.props.onSetDefaultProject) {
             this.props.onSetDefaultProject();
         }
@@ -1132,6 +1132,9 @@ class MenuBar extends React.Component {
                             />
                         ) : []))}
                     </div>
+                    <div className={styles.menuBarItem}>
+                    <Button id="zerocattool">ZeroCat Scratchtool</Button>
+                </div>
                     {/* tw: add a feedback button */}
                     {/* <div className={styles.menuBarItem}>
                         <a
