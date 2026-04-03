@@ -3,18 +3,17 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import VM from 'scratch-vm';
 import {defineMessages, injectIntl, intlShape, FormattedMessage} from 'react-intl';
-import log from '../lib/log';
 
 import extensionLibraryContent, {
     galleryError,
     galleryLoading,
     galleryMore
 } from '../lib/libraries/extensions/index.jsx';
-import extensionTags from '../lib/libraries/tw-extension-tags';
-
 import LibraryComponent from '../components/library/library.jsx';
 import extensionIcon from '../components/action-menu/icon--sprite.svg';
 import libraryStyles from '../components/library/library.css';
+import {APP_NAME} from '../lib/brand.js';
+import log from '../lib/log';
 
 const messages = defineMessages({
     extensionTitle: {
@@ -23,11 +22,187 @@ const messages = defineMessages({
         id: 'gui.extensionLibrary.chooseAnExtension'
     },
     batchImport: {
-        defaultMessage: '批量导入 {count} 个扩展',
+        defaultMessage: 'Batch import {count} extensions',
         description: 'Button label for importing multiple selected extensions',
         id: 'tw.extensionLibrary.batchImport'
+    },
+    clearSelection: {
+        defaultMessage: 'Clear selection',
+        description: 'Button label for clearing selected extensions from the batch queue',
+        id: 'tw.extensionLibrary.clearSelection'
+    },
+    sourcesTitle: {
+        defaultMessage: 'Sources',
+        description: 'Sidebar title in the extension library',
+        id: 'tw.extensionLibrary.sourcesTitle'
+    },
+    allSources: {
+        defaultMessage: 'All',
+        description: 'Label for the all-sources filter in the extension library',
+        id: 'tw.extensionLibrary.source.all'
+    },
+    sourceScratch: {
+        defaultMessage: 'Official Scratch',
+        description: 'Label for the Scratch source filter in the extension library',
+        id: 'tw.extensionLibrary.source.scratch'
+    },
+    source02Engine: {
+        defaultMessage: '02Engine',
+        description: 'Label for the 02Engine source filter in the extension library',
+        id: 'tw.extensionLibrary.source.02engine'
+    },
+    sourceTurboWarp: {
+        defaultMessage: 'TurboWarp',
+        description: 'Label for the TurboWarp source filter in the extension library',
+        id: 'tw.extensionLibrary.source.tw'
+    },
+    sourcePenguinMod: {
+        defaultMessage: 'PenguinMod',
+        description: 'Label for the PenguinMod source filter in the extension library',
+        id: 'tw.extensionLibrary.source.pm'
+    },
+    sourceMist: {
+        defaultMessage: 'Mist',
+        description: 'Label for the Mist source filter in the extension library',
+        id: 'tw.extensionLibrary.source.mist'
+    },
+    sourceSharkPool: {
+        defaultMessage: 'SharkPool',
+        description: 'Label for the SharkPool source filter in the extension library',
+        id: 'tw.extensionLibrary.source.sharkpool'
+    },
+    sourceOther: {
+        defaultMessage: 'Other',
+        description: 'Label for the Other source filter in the extension library',
+        id: 'tw.extensionLibrary.source.other'
+    },
+    sourceCustom: {
+        defaultMessage: 'Custom',
+        description: 'Label for custom extension items in the extension library',
+        id: 'tw.extensionLibrary.source.custom'
+    },
+    sourceBuiltIn: {
+        defaultMessage: 'Built-in',
+        description: 'Label for special built-in feature items in the extension library',
+        id: 'tw.extensionLibrary.source.builtin'
+    },
+    quickFavorites: {
+        defaultMessage: 'Favorites',
+        description: 'Quick filter label for favorite extensions',
+        id: 'tw.extensionLibrary.quickFilter.favorites'
+    },
+    quickSelected: {
+        defaultMessage: 'Selected',
+        description: 'Quick filter label for selected extensions',
+        id: 'tw.extensionLibrary.quickFilter.selected'
+    },
+    quickCompatible: {
+        defaultMessage: 'Scratch-compatible',
+        description: 'Quick filter label for Scratch-compatible extensions',
+        id: 'tw.extensionLibrary.quickFilter.compatible'
+    },
+    quickNative: {
+        defaultMessage: 'Native only',
+        description: 'Quick filter label for native extensions',
+        id: 'tw.extensionLibrary.quickFilter.native'
+    },
+    quickCustom: {
+        defaultMessage: 'Custom only',
+        description: 'Quick filter label for custom extensions',
+        id: 'tw.extensionLibrary.quickFilter.custom'
+    },
+    commonSection: {
+        defaultMessage: 'Favorites',
+        description: 'Section title for favorite extensions',
+        id: 'tw.extensionLibrary.section.common'
+    },
+    sourceSection: {
+        defaultMessage: '{source} Extensions',
+        description: 'Section title for a source group in the extension library',
+        id: 'tw.extensionLibrary.section.source'
+    },
+    moreSection: {
+        defaultMessage: 'More from {source}',
+        description: 'Section title for remaining source extensions after the common section',
+        id: 'tw.extensionLibrary.section.more'
+    },
+    emptyTitle: {
+        defaultMessage: 'No extensions match those filters',
+        description: 'Empty state title in the extension library',
+        id: 'tw.extensionLibrary.emptyTitle'
+    },
+    emptyDescription: {
+        defaultMessage: 'Try another source, clear a filter, or search for a different keyword.',
+        description: 'Empty state description in the extension library',
+        id: 'tw.extensionLibrary.emptyDescription'
+    },
+    clearFilters: {
+        defaultMessage: 'Clear filters',
+        description: 'Button label to clear extension library filters',
+        id: 'tw.extensionLibrary.clearFilters'
+    },
+    badgeIncompatible: {
+        defaultMessage: 'Not Scratch-compatible',
+        description: 'Status badge for incompatible extensions',
+        id: 'tw.extensionLibrary.badge.incompatible'
+    },
+    badgeNative: {
+        defaultMessage: 'Native',
+        description: 'Status badge for native extensions',
+        id: 'tw.extensionLibrary.badge.native'
+    },
+    badgeBatch: {
+        defaultMessage: 'Batch',
+        description: 'Status badge for extensions that support batch selection',
+        id: 'tw.extensionLibrary.badge.batch'
+    },
+    openCustomLoader: {
+        defaultMessage: 'Open custom loader',
+        description: 'Action hint for the custom extension item',
+        id: 'tw.extensionLibrary.action.custom'
+    },
+    openWebsite: {
+        defaultMessage: 'Open website',
+        description: 'Action hint for extension library website links',
+        id: 'tw.extensionLibrary.action.website'
+    },
+    enableFeature: {
+        defaultMessage: 'Enable feature',
+        description: 'Action hint for special extension actions',
+        id: 'tw.extensionLibrary.action.enableFeature'
+    },
+    importExtension: {
+        defaultMessage: 'Click to import',
+        description: 'Action hint for importing an extension',
+        id: 'tw.extensionLibrary.action.import'
     }
 });
+
+const SOURCE_KEYS = {
+    ALL: 'all',
+    SCRATCH: 'scratch',
+    ENGINE: '02engine',
+    TW: 'tw',
+    PM: 'pm',
+    MIST: 'mist',
+    SHARKPOOL: 'sharkpool',
+    OTHER: 'other',
+    CUSTOM: 'custom',
+    SPECIAL: 'special'
+};
+
+const SOURCE_NAV_ORDER = [
+    SOURCE_KEYS.ALL,
+    SOURCE_KEYS.SCRATCH,
+    SOURCE_KEYS.ENGINE,
+    SOURCE_KEYS.TW,
+    SOURCE_KEYS.PM,
+    SOURCE_KEYS.MIST,
+    SOURCE_KEYS.SHARKPOOL,
+    SOURCE_KEYS.OTHER
+];
+
+const FAVORITES_STORAGE_KEY = 'tw:library-favorites:extensionLibrary';
 
 const getItemSelectionKey = item => item.extensionURL || item.extensionId;
 const isBatchSelectableItem = item => {
@@ -72,19 +247,36 @@ const toLibraryItem = extension => {
     return extension;
 };
 
-const translateGalleryItem = (extension, locale) => {
-    if (extension === '---') {
-        return extension;
-    }
-    // 澶勭悊鎵╁睍瀵硅薄
-    return {
-        ...extension,
-        name: extension.nameTranslations?.[locale] || extension.name,
-        description: extension.descriptionTranslations?.[locale] || extension.description
-    };
+const normalizeMatchValue = value => {
+    if (!value) return '';
+    return String(value)
+        .toLowerCase()
+        .replace(/\.js$/i, '')
+        .replace(/[^a-z0-9]+/g, '');
 };
 
-let cachedGallery = null;
+const getURLStem = value => {
+    if (!value || typeof value !== 'string' || value.startsWith('data:')) {
+        return '';
+    }
+    try {
+        const parsed = new URL(value);
+        const segments = parsed.pathname.split('/').filter(Boolean);
+        return segments.length ? segments[segments.length - 1].replace(/\.js$/i, '') : '';
+    } catch (error) {
+        return '';
+    }
+};
+
+const getNameText = (intl, value) => {
+    if (typeof value === 'string') {
+        return value;
+    }
+    if (React.isValidElement(value) && value.props) {
+        return intl.formatMessage(value.props, {APP_NAME});
+    }
+    return '';
+};
 
 const fetchPenguinModLibrary = async () => {
     try {
@@ -92,10 +284,7 @@ const fetchPenguinModLibrary = async () => {
             /* webpackIgnore: true */
             '/penguinmod/extensions.js'
         );
-
-        const extensions = module.default;
-
-        return extensions.map(extension => ({
+        return module.default.map(extension => ({
             name: extension.name,
             nameTranslations: {},
             description: extension.description,
@@ -111,11 +300,12 @@ const fetchPenguinModLibrary = async () => {
             featured: true
         }));
     } catch (err) {
-        console.error('[PenguinMod] Failed to load gallery:', err);
+        log.error(err);
         return [];
     }
 };
 
+let cachedGallery = null;
 
 const fetchLibrary = async () => {
     const safeFetch = async (url, processor, defaultData = []) => {
@@ -127,14 +317,12 @@ const fetchLibrary = async () => {
             const data = await res.json();
             return processor(data);
         } catch (error) {
-            console.error(`Failed to fetch from ${url}:`, error);
+            log.error(error);
             return defaultData;
         }
     };
 
-    // 骞惰鎵ц鎵€鏈塮etch璇锋眰
-    const [ztdata, twdata, mistdata, spdata, pmdata] = await Promise.all([
-        // 02engine
+    const [engineData, twData, mistData, sharkPoolData, penguinModData] = await Promise.all([
         safeFetch(
             'https://extensions.02engine.02studio.xyz/extensions.json',
             data => data.extensions.map(extension => ({
@@ -152,12 +340,7 @@ const fetchLibrary = async () => {
                 ].map(credit => {
                     if (credit.link) {
                         return (
-                            <a
-                                href={credit.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                key={credit.name}
-                            >
+                            <a href={credit.link} target="_blank" rel="noreferrer" key={credit.name}>
                                 {credit.name}
                             </a>
                         );
@@ -174,8 +357,6 @@ const fetchLibrary = async () => {
             })),
             []
         ),
-
-        // turbowarp
         safeFetch(
             'https://extensions.turbowarp.org/generated-metadata/extensions-v0.json',
             data => data.extensions.map(extension => ({
@@ -193,12 +374,7 @@ const fetchLibrary = async () => {
                 ].map(credit => {
                     if (credit.link) {
                         return (
-                            <a
-                                href={credit.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                key={credit.name}
-                            >
+                            <a href={credit.link} target="_blank" rel="noreferrer" key={credit.name}>
                                 {credit.name}
                             </a>
                         );
@@ -215,8 +391,6 @@ const fetchLibrary = async () => {
             })),
             []
         ),
-
-        // Mist
         safeFetch(
             'https://mistiumextensions.02studio.xyz/generated-metadata/extensions-v0.json',
             data => data.extensions.map(extension => ({
@@ -234,12 +408,7 @@ const fetchLibrary = async () => {
                 ].map(credit => {
                     if (credit.link) {
                         return (
-                            <a
-                                href={credit.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                key={credit.name}
-                            >
+                            <a href={credit.link} target="_blank" rel="noreferrer" key={credit.name}>
                                 {credit.name}
                             </a>
                         );
@@ -256,8 +425,6 @@ const fetchLibrary = async () => {
             })),
             []
         ),
-
-        // sharkpool
         safeFetch(
             'https://sharkpoolextensions.02studio.xyz/Gallery%20Files/Extension-Keys.json',
             data => Object.entries(data.extensions).map(([slug, extension]) => ({
@@ -278,41 +445,20 @@ const fetchLibrary = async () => {
                 docsURI: null,
                 samples: null,
                 incompatibleWithScratch: false,
-                featured: true,
-                originalData: {
-                    creator: extension.creator,
-                    status: extension.status,
-                    date: extension.date
-                }
+                featured: true
             })),
             []
         ),
-        // PenguinMod
-        await fetchPenguinModLibrary()
+        fetchPenguinModLibrary()
     ]);
 
-    const result = [];
-    const sources = [
-        { data: twdata, name: 'turbowarp' },
-        { data: ztdata, name: 'ztengine' },
-        { data: pmdata, name: 'penguinmod' },
-        { data: mistdata, name: 'mist' },
-        { data: spdata, name: 'sharkpool' }
+    return [
+        ...engineData,
+        ...twData,
+        ...penguinModData,
+        ...mistData,
+        ...sharkPoolData
     ];
-    
-    // 閬嶅巻鎵€鏈夋潵婧愶紝娣诲姞鎵╁睍鍜屽垎鍓茬嚎
-    for (let i = 0; i < sources.length; i++) {
-        const { data } = sources[i];
-        if (data.length > 0) {
-            result.push(...data);
-            // 涓嶆槸鏈€鍚庝竴涓潵婧愪笖鏈夋暟鎹椂锛屾坊鍔犲垎鍓茬嚎
-            if (i < sources.length - 1) {
-                result.push('---');
-            }
-        }
-    }
-    
-    return result;
 };
 
 class ExtensionLibrary extends React.PureComponent {
@@ -320,20 +466,51 @@ class ExtensionLibrary extends React.PureComponent {
         super(props);
         bindAll(this, [
             'executeItemAction',
+            'getActionLabel',
             'getBatchSelectableItems',
+            'getCardProps',
             'getLibraryItems',
+            'getNormalizedItems',
+            'getQuickFilterButtons',
+            'getSidebar',
+            'getSourceCounts',
+            'getSourceLabel',
+            'getSections',
             'handleBatchImport',
+            'handleClearFilters',
+            'handleClearQuery',
+            'handleClearSelection',
             'handleEnableProcedureReturns',
+            'handleFavoritesChange',
             'handleItemSelect',
+            'handleQueryChange',
             'handleSelectionToggle',
+            'handleSourceSelect',
+            'handleToggleQuickFilter',
             'isItemSelectable',
-            'isItemSelected'
+            'isItemSelected',
+            'matchesQuickFilters',
+            'matchesSearch',
+            'matchesSource',
+            'readFavoritesFromStorage',
+            'renderEmptyState',
+            'sortItems'
         ]);
         this.state = {
+            favorites: this.readFavoritesFromStorage(),
             gallery: cachedGallery,
             galleryError: null,
             galleryTimedOut: false,
-            selectedItemKeys: []
+            query: '',
+            quickFilters: {
+                favorites: false,
+                selected: false,
+                compatible: false,
+                native: false,
+                custom: false
+            },
+            selectedItemKeys: [],
+            selectedSource: SOURCE_KEYS.ALL
         };
     }
     componentDidMount () {
@@ -360,6 +537,158 @@ class ExtensionLibrary extends React.PureComponent {
                     clearTimeout(timeout);
                 });
         }
+    }
+    readFavoritesFromStorage () {
+        let data;
+        try {
+            data = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY));
+        } catch (error) {
+            data = [];
+        }
+        return Array.isArray(data) ? data : [];
+    }
+    getSourceLabel (sourceKey) {
+        const sourceMessages = {
+            [SOURCE_KEYS.ALL]: messages.allSources,
+            [SOURCE_KEYS.SCRATCH]: messages.sourceScratch,
+            [SOURCE_KEYS.ENGINE]: messages.source02Engine,
+            [SOURCE_KEYS.TW]: messages.sourceTurboWarp,
+            [SOURCE_KEYS.PM]: messages.sourcePenguinMod,
+            [SOURCE_KEYS.MIST]: messages.sourceMist,
+            [SOURCE_KEYS.SHARKPOOL]: messages.sourceSharkPool,
+            [SOURCE_KEYS.OTHER]: messages.sourceOther,
+            [SOURCE_KEYS.CUSTOM]: messages.sourceCustom,
+            [SOURCE_KEYS.SPECIAL]: messages.sourceBuiltIn
+        };
+        return this.props.intl.formatMessage(sourceMessages[sourceKey] || messages.sourceOther);
+    }
+    getLibraryItems () {
+        const baseLibrary = extensionLibraryContent.map(toLibraryItem);
+        if (this.state.gallery) {
+            return [
+                ...baseLibrary,
+                toLibraryItem(galleryMore),
+                ...this.state.gallery.map(toLibraryItem)
+            ];
+        }
+        if (this.state.galleryError) {
+            return [
+                ...baseLibrary,
+                toLibraryItem(galleryError)
+            ];
+        }
+        return [
+            ...baseLibrary,
+            toLibraryItem(galleryLoading)
+        ];
+    }
+    getNormalizedItems () {
+        const library = this.getLibraryItems();
+        if (!library) {
+            return [];
+        }
+        const loadedExtensionURLs = this.props.vm.extensionManager.getExtensionURLs ?
+            this.props.vm.extensionManager.getExtensionURLs() :
+            {};
+        const loadedURLValues = new Set(Object.values(loadedExtensionURLs));
+        const loadedIds = new Set([
+            ...Object.keys(loadedExtensionURLs),
+            ...Array.from(this.props.vm.extensionManager._loadedExtensions?.keys?.() || [])
+        ]);
+        const loadedEntries = Array.from(loadedIds).map(loadedId => ({
+            id: loadedId,
+            normalizedId: normalizeMatchValue(loadedId),
+            normalizedURLStem: normalizeMatchValue(getURLStem(loadedExtensionURLs[loadedId]))
+        }));
+        return library
+            .filter(item => item && item !== '---')
+            .map((item, originalIndex) => {
+                const extensionId = item.extensionId || '';
+                let source = SOURCE_KEYS.OTHER;
+                if (extensionId === 'custom_extension') {
+                    source = SOURCE_KEYS.CUSTOM;
+                } else if (extensionId === 'procedures_enable_return') {
+                    source = SOURCE_KEYS.SPECIAL;
+                } else if (item.tags && item.tags.includes('scratch')) {
+                    source = SOURCE_KEYS.SCRATCH;
+                } else if (item.tags && item.tags.includes('ztengine')) {
+                    source = SOURCE_KEYS.ENGINE;
+                } else if (item.tags && item.tags.includes('pm')) {
+                    source = SOURCE_KEYS.PM;
+                } else if (item.tags && item.tags.includes('mist')) {
+                    source = SOURCE_KEYS.MIST;
+                } else if (item.tags && item.tags.includes('sp')) {
+                    source = SOURCE_KEYS.SHARKPOOL;
+                } else if (item.tags && item.tags.includes('tw')) {
+                    source = SOURCE_KEYS.TW;
+                }
+
+                const isCustomLoad = extensionId === 'custom_extension';
+                const isSpecialAction = extensionId === 'procedures_enable_return';
+                const isNative = Boolean(extensionId && !item.extensionURL && !item.href && !isCustomLoad && !isSpecialAction);
+                const candidateValues = new Set([
+                    normalizeMatchValue(extensionId),
+                    normalizeMatchValue(getNameText(this.props.intl, item.name)),
+                    normalizeMatchValue(getURLStem(item.extensionURL))
+                ].filter(Boolean));
+                const fuzzyInstalled = loadedEntries.some(loadedEntry => (
+                    candidateValues.has(loadedEntry.normalizedId) ||
+                    candidateValues.has(loadedEntry.normalizedURLStem)
+                ));
+                const isInstalled = Boolean(
+                    extensionId &&
+                    !item.href &&
+                    !item.disabled &&
+                    !isSpecialAction &&
+                    (
+                        this.props.vm.extensionManager.isExtensionLoaded(extensionId) ||
+                        loadedIds.has(extensionId) ||
+                        (item.extensionURL && loadedURLValues.has(item.extensionURL)) ||
+                        fuzzyInstalled
+                    )
+                );
+                const sourceLabel = this.getSourceLabel(source);
+                const textParts = [];
+                textParts.push(getNameText(this.props.intl, item.name));
+                if (typeof item.description === 'string') {
+                    textParts.push(item.description);
+                } else if (React.isValidElement(item.description) && item.description.props) {
+                    textParts.push(this.props.intl.formatMessage(item.description.props, {APP_NAME}));
+                }
+                if (Array.isArray(item.tags)) {
+                    textParts.push(...item.tags);
+                }
+                if (Array.isArray(item.credits)) {
+                    textParts.push(...item.credits.map(credit => {
+                        if (typeof credit === 'string') {
+                            return credit;
+                        }
+                        if (React.isValidElement(credit) && typeof credit.props?.children === 'string') {
+                            return credit.props.children;
+                        }
+                        return '';
+                    }));
+                }
+                textParts.push(sourceLabel);
+
+                return {
+                    ...item,
+                    favoriteKey: item.extensionURL || item.extensionId,
+                    isBatchSelectable: isBatchSelectableItem(item),
+                    isCompatible: !item.incompatibleWithScratch,
+                    isCustomLoad,
+                    isInstalled,
+                    isNative,
+                    originalIndex,
+                    isSpecialAction,
+                    searchText: textParts.join('\n').toLowerCase(),
+                    source,
+                    sourceLabel
+                };
+            });
+    }
+    getBatchSelectableItems () {
+        return this.getNormalizedItems().filter(item => item.isBatchSelectable);
     }
     handleEnableProcedureReturns () {
         if (this.props.onEnableProcedureReturns) {
@@ -407,7 +736,6 @@ class ExtensionLibrary extends React.PureComponent {
             return;
         }
 
-        // 鏄剧ず瀵煎叆鏂瑰紡閫夋嫨妯℃€佹
         if (
             useImportModal &&
             supportsTextImport(item) &&
@@ -422,21 +750,18 @@ class ExtensionLibrary extends React.PureComponent {
                 extensionURL
             });
             this.props.onOpenExtensionImportMethodModal();
+        } else if (this.props.vm.extensionManager.isExtensionLoaded(extensionId)) {
+            this.props.onCategorySelected(extensionId);
         } else {
-            // 鍥為€€鍒板師鏉ョ殑琛屼负
-            if (this.props.vm.extensionManager.isExtensionLoaded(extensionId)) {
-                this.props.onCategorySelected(extensionId);
-            } else {
-                this.props.vm.extensionManager.loadExtensionURL(extensionURL)
-                    .then(() => {
-                        this.props.onCategorySelected(extensionId);
-                    })
-                    .catch(err => {
-                        log.error(err);
-                        // eslint-disable-next-line no-alert
-                        alert(err);
-                    });
-            }
+            this.props.vm.extensionManager.loadExtensionURL(extensionURL)
+                .then(() => {
+                    this.props.onCategorySelected(extensionId);
+                })
+                .catch(err => {
+                    log.error(err);
+                    // eslint-disable-next-line no-alert
+                    alert(err);
+                });
         }
     }
     handleItemSelect (item) {
@@ -449,33 +774,6 @@ class ExtensionLibrary extends React.PureComponent {
                 prevState.selectedItemKeys.filter(key => key !== selectionKey) :
                 [...prevState.selectedItemKeys, selectionKey]
         }));
-    }
-    isItemSelectable (item) {
-        return isBatchSelectableItem(item);
-    }
-    isItemSelected (item) {
-        return this.state.selectedItemKeys.includes(getItemSelectionKey(item));
-    }
-    getLibraryItems () {
-        const library = extensionLibraryContent.map(toLibraryItem);
-        library.push('---');
-        if (this.state.gallery) {
-            library.push(toLibraryItem(galleryMore));
-            const locale = this.props.intl.locale;
-            library.push(
-                ...this.state.gallery
-                    .map(i => translateGalleryItem(i, locale))
-                    .map(toLibraryItem)
-            );
-        } else if (this.state.galleryError) {
-            library.push(toLibraryItem(galleryError));
-        } else {
-            library.push(toLibraryItem(galleryLoading));
-        }
-        return library;
-    }
-    getBatchSelectableItems () {
-        return this.getLibraryItems().filter(isBatchSelectableItem);
     }
     handleBatchImport () {
         const selectedExtensions = this.getBatchSelectableItems()
@@ -490,35 +788,347 @@ class ExtensionLibrary extends React.PureComponent {
         this.props.onSetSelectedExtensions(selectedExtensions);
         this.props.onOpenExtensionImportMethodModal();
     }
-    render () {
-        let library = null;
-        if (this.state.gallery || this.state.galleryError || this.state.galleryTimedOut) {
-            library = this.getLibraryItems();
+    handleClearSelection () {
+        this.setState({
+            selectedItemKeys: []
+        });
+    }
+    handleFavoritesChange (favorites) {
+        this.setState({
+            favorites
+        });
+    }
+    handleSourceSelect (selectedSource) {
+        this.setState({
+            selectedSource
+        });
+    }
+    handleQueryChange (query) {
+        this.setState({
+            query
+        });
+    }
+    handleToggleQuickFilter (filterKey) {
+        this.setState(prevState => ({
+            quickFilters: {
+                ...prevState.quickFilters,
+                [filterKey]: !prevState.quickFilters[filterKey]
+            }
+        }));
+    }
+    handleClearQuery () {
+        this.setState({
+            query: ''
+        });
+    }
+    handleClearFilters () {
+        this.setState({
+            query: '',
+            quickFilters: {
+                favorites: false,
+                selected: false,
+                compatible: false,
+                native: false,
+                custom: false
+            },
+            selectedSource: SOURCE_KEYS.ALL
+        });
+    }
+    isItemSelectable (item) {
+        return item.isBatchSelectable;
+    }
+    isItemSelected (item) {
+        return this.state.selectedItemKeys.includes(getItemSelectionKey(item));
+    }
+    matchesSource (item, sourceKey) {
+        if (sourceKey === SOURCE_KEYS.ALL) {
+            return true;
         }
+        if (sourceKey === SOURCE_KEYS.OTHER) {
+            return ![
+                SOURCE_KEYS.SCRATCH,
+                SOURCE_KEYS.ENGINE,
+                SOURCE_KEYS.TW,
+                SOURCE_KEYS.PM,
+                SOURCE_KEYS.MIST,
+                SOURCE_KEYS.SHARKPOOL
+            ].includes(item.source);
+        }
+        return item.source === sourceKey;
+    }
+    matchesQuickFilters (item) {
+        const filters = this.state.quickFilters;
+        const selectionKey = getItemSelectionKey(item);
+        if (filters.favorites && !this.state.favorites.includes(selectionKey)) {
+            return false;
+        }
+        if (filters.selected && !this.state.selectedItemKeys.includes(selectionKey)) {
+            return false;
+        }
+        if (filters.compatible && !item.isCompatible) {
+            return false;
+        }
+        if (filters.native && !item.isNative) {
+            return false;
+        }
+        if (filters.custom && !item.isCustomLoad) {
+            return false;
+        }
+        return true;
+    }
+    matchesSearch (item) {
+        if (!this.state.query) {
+            return true;
+        }
+        return item.searchText.includes(this.state.query.toLowerCase());
+    }
+    sortItems (a, b) {
+        return a.originalIndex - b.originalIndex;
+    }
+    getSourceCounts (items) {
+        const counts = {
+            [SOURCE_KEYS.ALL]: items.length,
+            [SOURCE_KEYS.SCRATCH]: 0,
+            [SOURCE_KEYS.ENGINE]: 0,
+            [SOURCE_KEYS.TW]: 0,
+            [SOURCE_KEYS.PM]: 0,
+            [SOURCE_KEYS.MIST]: 0,
+            [SOURCE_KEYS.SHARKPOOL]: 0,
+            [SOURCE_KEYS.OTHER]: 0
+        };
+        for (const item of items) {
+            if (this.matchesSource(item, SOURCE_KEYS.OTHER)) {
+                counts[SOURCE_KEYS.OTHER] += 1;
+            } else if (counts[item.source] !== undefined) {
+                counts[item.source] += 1;
+            }
+        }
+        return counts;
+    }
+    getSections () {
+        const normalized = this.getNormalizedItems()
+            .filter(item => this.matchesQuickFilters(item) && this.matchesSearch(item));
+        const visibleItems = normalized
+            .filter(item => this.matchesSource(item, this.state.selectedSource))
+            .sort(this.sortItems);
+        const commonItems = visibleItems.filter(item => {
+            const selectionKey = getItemSelectionKey(item);
+            return this.state.favorites.includes(selectionKey);
+        });
+        const commonKeys = new Set(commonItems.map(getItemSelectionKey));
+        const remainingItems = visibleItems.filter(item => !commonKeys.has(getItemSelectionKey(item)));
+        const sections = [];
+
+        if (commonItems.length) {
+            sections.push({
+                key: 'common',
+                title: this.props.intl.formatMessage(messages.commonSection),
+                items: commonItems
+            });
+        }
+
+        if (this.state.selectedSource === SOURCE_KEYS.ALL) {
+            for (const sourceKey of SOURCE_NAV_ORDER.slice(1)) {
+                const sourceItems = remainingItems.filter(item => this.matchesSource(item, sourceKey));
+                if (!sourceItems.length) {
+                    continue;
+                }
+                sections.push({
+                    key: `source-${sourceKey}`,
+                    title: this.props.intl.formatMessage(messages.sourceSection, {
+                        source: this.getSourceLabel(sourceKey)
+                    }),
+                    items: sourceItems
+                });
+            }
+        } else if (remainingItems.length) {
+            sections.push({
+                key: `source-${this.state.selectedSource}`,
+                title: this.props.intl.formatMessage(messages.moreSection, {
+                    source: this.getSourceLabel(this.state.selectedSource)
+                }),
+                items: remainingItems
+            });
+        }
+
+        return {
+            counts: this.getSourceCounts(normalized),
+            sections
+        };
+    }
+    getActionLabel (item) {
+        if (item.isCustomLoad) {
+            return <FormattedMessage {...messages.openCustomLoader} />;
+        }
+        if (item.href) {
+            return <FormattedMessage {...messages.openWebsite} />;
+        }
+        if (item.isSpecialAction) {
+            return <FormattedMessage {...messages.enableFeature} />;
+        }
+        return <FormattedMessage {...messages.importExtension} />;
+    }
+    getCardProps (item) {
+        const badges = [];
+        if (!item.isCompatible) {
+            badges.push({
+                key: 'incompatible',
+                label: <FormattedMessage {...messages.badgeIncompatible} />
+            });
+        }
+        if (item.isNative) {
+            badges.push({
+                key: 'native',
+                label: <FormattedMessage {...messages.badgeNative} />
+            });
+        }
+        if (item.isBatchSelectable) {
+            badges.push({
+                key: 'batch',
+                label: <FormattedMessage {...messages.badgeBatch} />
+            });
+        }
+
+        const sourceToneMap = {
+            [SOURCE_KEYS.SCRATCH]: 'Scratch',
+            [SOURCE_KEYS.ENGINE]: '02engine',
+            [SOURCE_KEYS.TW]: 'Tw',
+            [SOURCE_KEYS.PM]: 'Pm',
+            [SOURCE_KEYS.MIST]: 'Mist',
+            [SOURCE_KEYS.SHARKPOOL]: 'Sharkpool',
+            [SOURCE_KEYS.CUSTOM]: 'Custom',
+            [SOURCE_KEYS.SPECIAL]: 'Special',
+            [SOURCE_KEYS.OTHER]: 'Other'
+        };
+
+        return {
+            actionLabel: this.getActionLabel(item),
+            badges,
+            sourceLabel: item.sourceLabel,
+            sourceTone: sourceToneMap[item.source] || 'Other'
+        };
+    }
+    getSidebar (counts) {
+        return (
+            <React.Fragment>
+                <div className={libraryStyles.sidebarTitle}>
+                    <FormattedMessage {...messages.sourcesTitle} />
+                </div>
+                <div className={libraryStyles.sidebarNav}>
+                    {SOURCE_NAV_ORDER.map(sourceKey => (
+                        <button
+                            key={sourceKey}
+                            type="button"
+                            className={[
+                                libraryStyles.sidebarButton,
+                                this.state.selectedSource === sourceKey ? libraryStyles.sidebarButtonActive : ''
+                            ].join(' ')}
+                            onClick={() => this.handleSourceSelect(sourceKey)}
+                        >
+                            <div className={libraryStyles.sidebarButtonLabel}>
+                                {this.getSourceLabel(sourceKey)}
+                            </div>
+                            <span className={libraryStyles.sidebarButtonCount}>
+                                {counts[sourceKey] || 0}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </React.Fragment>
+        );
+    }
+    getQuickFilterButtons () {
+        const quickFilterConfig = [
+            ['favorites', messages.quickFavorites],
+            ['selected', messages.quickSelected],
+            ['compatible', messages.quickCompatible],
+            ['native', messages.quickNative],
+            ['custom', messages.quickCustom]
+        ];
+        return quickFilterConfig.map(([key, message]) => (
+            <button
+                key={key}
+                type="button"
+                className={[
+                    libraryStyles.quickFilterButton,
+                    this.state.quickFilters[key] ? libraryStyles.quickFilterButtonActive : ''
+                ].join(' ')}
+                onClick={() => this.handleToggleQuickFilter(key)}
+            >
+                {this.props.intl.formatMessage(message)}
+            </button>
+        ));
+    }
+    renderEmptyState () {
+        return (
+            <div className={libraryStyles.emptyState}>
+                <div className={libraryStyles.emptyStateTitle}>
+                    <FormattedMessage {...messages.emptyTitle} />
+                </div>
+                <div className={libraryStyles.emptyStateDescription}>
+                    <FormattedMessage {...messages.emptyDescription} />
+                </div>
+                <button
+                    type="button"
+                    className={libraryStyles.headerSecondaryButton}
+                    onClick={this.handleClearFilters}
+                >
+                    <FormattedMessage {...messages.clearFilters} />
+                </button>
+            </div>
+        );
+    }
+    render () {
+        const library = this.getLibraryItems();
+        const {counts, sections} = this.getSections();
 
         return (
             <LibraryComponent
+                contentKey={[
+                    this.state.query,
+                    this.state.selectedSource,
+                    ...Object.keys(this.state.quickFilters)
+                        .filter(key => this.state.quickFilters[key])
+                ].join(':')}
                 data={library}
+                emptyState={this.renderEmptyState()}
+                favorites={this.state.favorites}
+                filterQuery={this.state.query}
                 filterable
+                getItemProps={this.getCardProps}
                 headerAction={this.state.selectedItemKeys.length > 0 ? (
-                    <button
-                        type="button"
-                        className={libraryStyles.headerActionButton}
-                        onClick={this.handleBatchImport}
-                    >
-                        <FormattedMessage
-                            {...messages.batchImport}
-                            values={{count: this.state.selectedItemKeys.length}}
-                        />
-                    </button>
+                    <React.Fragment>
+                        <button
+                            type="button"
+                            className={libraryStyles.headerSecondaryButton}
+                            onClick={this.handleClearSelection}
+                        >
+                            <FormattedMessage {...messages.clearSelection} />
+                        </button>
+                        <button
+                            type="button"
+                            className={libraryStyles.headerActionButton}
+                            onClick={this.handleBatchImport}
+                        >
+                            <FormattedMessage
+                                {...messages.batchImport}
+                                values={{count: this.state.selectedItemKeys.length}}
+                            />
+                        </button>
+                    </React.Fragment>
                 ) : null}
-                persistableKey="extensionId"
                 id="extensionLibrary"
                 isItemSelectable={this.isItemSelectable}
                 isItemSelected={this.isItemSelected}
-                tags={extensionTags}
+                persistableKey="favoriteKey"
+                quickFilters={this.getQuickFilterButtons()}
+                sections={library ? sections : []}
+                sidebar={this.getSidebar(counts)}
                 title={this.props.intl.formatMessage(messages.extensionTitle)}
                 visible={this.props.visible}
+                onFavoritesChange={this.handleFavoritesChange}
+                onFilterQueryChange={this.handleQueryChange}
+                onFilterQueryClear={this.handleClearQuery}
                 onItemSelectionToggle={this.handleSelectionToggle}
                 onItemSelected={this.handleItemSelect}
                 onRequestClose={this.props.onRequestClose}
@@ -537,8 +1147,7 @@ ExtensionLibrary.propTypes = {
     onSetSelectedExtension: PropTypes.func,
     onSetSelectedExtensions: PropTypes.func,
     visible: PropTypes.bool,
-    vm: PropTypes.instanceOf(VM).isRequired // eslint-disable-line react/no-unused-prop-types
+    vm: PropTypes.instanceOf(VM).isRequired
 };
 
 export default injectIntl(ExtensionLibrary);
-

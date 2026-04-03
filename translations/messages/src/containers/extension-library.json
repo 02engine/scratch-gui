@@ -7,6 +7,156 @@
   {
     "id": "tw.extensionLibrary.batchImport",
     "description": "Button label for importing multiple selected extensions",
-    "defaultMessage": "批量导入 {count} 个扩展"
+    "defaultMessage": "Batch import {count} extensions"
+  },
+  {
+    "id": "tw.extensionLibrary.clearSelection",
+    "description": "Button label for clearing selected extensions from the batch queue",
+    "defaultMessage": "Clear selection"
+  },
+  {
+    "id": "tw.extensionLibrary.sourcesTitle",
+    "description": "Sidebar title in the extension library",
+    "defaultMessage": "Sources"
+  },
+  {
+    "id": "tw.extensionLibrary.source.all",
+    "description": "Label for the all-sources filter in the extension library",
+    "defaultMessage": "All"
+  },
+  {
+    "id": "tw.extensionLibrary.source.scratch",
+    "description": "Label for the Scratch source filter in the extension library",
+    "defaultMessage": "Official Scratch"
+  },
+  {
+    "id": "tw.extensionLibrary.source.02engine",
+    "description": "Label for the 02Engine source filter in the extension library",
+    "defaultMessage": "02Engine"
+  },
+  {
+    "id": "tw.extensionLibrary.source.tw",
+    "description": "Label for the TurboWarp source filter in the extension library",
+    "defaultMessage": "TurboWarp"
+  },
+  {
+    "id": "tw.extensionLibrary.source.pm",
+    "description": "Label for the PenguinMod source filter in the extension library",
+    "defaultMessage": "PenguinMod"
+  },
+  {
+    "id": "tw.extensionLibrary.source.mist",
+    "description": "Label for the Mist source filter in the extension library",
+    "defaultMessage": "Mist"
+  },
+  {
+    "id": "tw.extensionLibrary.source.sharkpool",
+    "description": "Label for the SharkPool source filter in the extension library",
+    "defaultMessage": "SharkPool"
+  },
+  {
+    "id": "tw.extensionLibrary.source.other",
+    "description": "Label for the Other source filter in the extension library",
+    "defaultMessage": "Other"
+  },
+  {
+    "id": "tw.extensionLibrary.source.custom",
+    "description": "Label for custom extension items in the extension library",
+    "defaultMessage": "Custom"
+  },
+  {
+    "id": "tw.extensionLibrary.source.builtin",
+    "description": "Label for special built-in feature items in the extension library",
+    "defaultMessage": "Built-in"
+  },
+  {
+    "id": "tw.extensionLibrary.quickFilter.favorites",
+    "description": "Quick filter label for favorite extensions",
+    "defaultMessage": "Favorites"
+  },
+  {
+    "id": "tw.extensionLibrary.quickFilter.selected",
+    "description": "Quick filter label for selected extensions",
+    "defaultMessage": "Selected"
+  },
+  {
+    "id": "tw.extensionLibrary.quickFilter.compatible",
+    "description": "Quick filter label for Scratch-compatible extensions",
+    "defaultMessage": "Scratch-compatible"
+  },
+  {
+    "id": "tw.extensionLibrary.quickFilter.native",
+    "description": "Quick filter label for native extensions",
+    "defaultMessage": "Native only"
+  },
+  {
+    "id": "tw.extensionLibrary.quickFilter.custom",
+    "description": "Quick filter label for custom extensions",
+    "defaultMessage": "Custom only"
+  },
+  {
+    "id": "tw.extensionLibrary.section.common",
+    "description": "Section title for favorite extensions",
+    "defaultMessage": "Favorites"
+  },
+  {
+    "id": "tw.extensionLibrary.section.source",
+    "description": "Section title for a source group in the extension library",
+    "defaultMessage": "{source} Extensions"
+  },
+  {
+    "id": "tw.extensionLibrary.section.more",
+    "description": "Section title for remaining source extensions after the common section",
+    "defaultMessage": "More from {source}"
+  },
+  {
+    "id": "tw.extensionLibrary.emptyTitle",
+    "description": "Empty state title in the extension library",
+    "defaultMessage": "No extensions match those filters"
+  },
+  {
+    "id": "tw.extensionLibrary.emptyDescription",
+    "description": "Empty state description in the extension library",
+    "defaultMessage": "Try another source, clear a filter, or search for a different keyword."
+  },
+  {
+    "id": "tw.extensionLibrary.clearFilters",
+    "description": "Button label to clear extension library filters",
+    "defaultMessage": "Clear filters"
+  },
+  {
+    "id": "tw.extensionLibrary.badge.incompatible",
+    "description": "Status badge for incompatible extensions",
+    "defaultMessage": "Not Scratch-compatible"
+  },
+  {
+    "id": "tw.extensionLibrary.badge.native",
+    "description": "Status badge for native extensions",
+    "defaultMessage": "Native"
+  },
+  {
+    "id": "tw.extensionLibrary.badge.batch",
+    "description": "Status badge for extensions that support batch selection",
+    "defaultMessage": "Batch"
+  },
+  {
+    "id": "tw.extensionLibrary.action.custom",
+    "description": "Action hint for the custom extension item",
+    "defaultMessage": "Open custom loader"
+  },
+  {
+    "id": "tw.extensionLibrary.action.website",
+    "description": "Action hint for extension library website links",
+    "defaultMessage": "Open website"
+  },
+  {
+    "id": "tw.extensionLibrary.action.enableFeature",
+    "description": "Action hint for special extension actions",
+    "defaultMessage": "Enable feature"
+  },
+  {
+    "id": "tw.extensionLibrary.action.import",
+    "description": "Action hint for importing an extension",
+    "defaultMessage": "Click to import"
   }
 ]

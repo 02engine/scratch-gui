@@ -21,6 +21,7 @@
     border-radius: $space;
     text-align: center;
     cursor: pointer;
+    transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 }
 
 .library-item-extension {
@@ -30,6 +31,8 @@
 .library-item:hover {
     border-width: 2px;
     border-color: $looks-secondary;
+    box-shadow: 0 0.5rem 1.25rem hsla(225, 15%, 15%, 0.08);
+    transform: translateY(-1px);
 }
 
 .hidden {
@@ -104,8 +107,8 @@
 }
 
 .featured-item {
-    flex-basis: 300px;
-    max-width: 300px;
+    flex-basis: 280px;
+    max-width: 280px;
     height: auto;
     overflow: hidden;
     padding: 0;
@@ -119,13 +122,16 @@
 .featured-image {
     width: 100%;
     aspect-ratio: 2;
+    object-fit: cover;
 }
 
 .featured-text {
     font-weight: bold;
-    padding: 10px;
-    /* height: 140px; */
-    width: 300px;
+    padding: 0.9rem 1rem 0.25rem 1rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
 }
 
 [dir="ltr"] .featured-extension-text {
@@ -141,14 +147,42 @@
 .featured-description {
     display: block;
     font-weight: normal;
-    line-height: 1.375rem;
-    padding-top: .3125rem;
-    padding-bottom: .25rem;
+    line-height: 1.25rem;
+    min-height: 2.5rem;
+    color: $text-primary;
+    opacity: 0.85;
+}
+
+.badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    width: 100%;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 1.5rem;
+    padding: 0 0.55rem;
+    border-radius: 999px;
+    background: $ui-tertiary;
+    color: $text-primary;
+    font-size: 0.68rem;
+    font-weight: bold;
+}
+
+.action-hint {
+    width: 100%;
+    font-size: 0.75rem;
+    color: $text-primary;
+    opacity: 0.7;
+    min-height: 1rem;
 }
 
 .featured-extension-metadata {
     width: 100%;
-    padding: 0 1.25rem 1rem 1.25rem;
+    padding: 0 1rem 1rem 1rem;
     display: flex;
     flex-direction: row;
     align-items: flex-start;
@@ -190,13 +224,15 @@
 }
 
 .extension-links {
-    width: 300px;
-    padding: 0 1.25rem 1rem 1.25rem;
+    width: 100%;
+    padding: 0 1rem 0.85rem 1rem;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     opacity: 0.75;
     text-align: left;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 .extension-links a {
     color: inherit !important;
@@ -277,4 +313,56 @@
     border-right: 2px solid $ui-white;
     border-bottom: 2px solid $ui-white;
     transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.source-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    height: 1.6rem;
+    padding: 0 0.65rem;
+    border-radius: 999px;
+    background: hsla(225, 15%, 20%, 0.78);
+    color: $ui-white;
+    font-size: 0.68rem;
+    font-weight: bold;
+    backdrop-filter: blur(4px);
+}
+
+.source-badgeScratch {
+    background: rgba(76, 151, 255, 0.9);
+}
+
+.source-badge02engine {
+    background: rgba(255, 140, 0, 0.92);
+}
+
+.source-badgeTw {
+    background: rgba(255, 74, 74, 0.9);
+}
+
+.source-badgePm {
+    background: rgba(0, 176, 111, 0.9);
+}
+
+.source-badgeMist {
+    background: rgba(79, 70, 229, 0.9);
+}
+
+.source-badgeSharkpool {
+    background: rgba(0, 153, 204, 0.92);
+}
+
+.source-badgeCustom {
+    background: rgba(126, 87, 194, 0.9);
+}
+
+.source-badgeSpecial {
+    background: rgba(255, 171, 26, 0.95);
+}
+
+.source-badgeOther {
+    background: rgba(87, 96, 111, 0.92);
 }

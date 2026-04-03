@@ -172,7 +172,11 @@ class LibraryItem extends React.PureComponent {
                 samples={this.props.samples}
                 favorite={this.props.favorite}
                 onFavorite={this.handleFavorite}
+                actionLabel={this.props.actionLabel}
+                badges={this.props.badges}
                 showPlayButton={this.props.showPlayButton}
+                sourceLabel={this.props.sourceLabel}
+                sourceTone={this.props.sourceTone}
                 onBlur={this.handleBlur}
                 onClick={this.handleClick}
                 onFocus={this.handleFocus}
@@ -191,6 +195,17 @@ LibraryItem.propTypes = {
     intl: intlShape,
     bluetoothRequired: PropTypes.bool,
     collaborator: PropTypes.string,
+    actionLabel: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.node
+    ]),
+    badges: PropTypes.arrayOf(PropTypes.shape({
+        key: PropTypes.string,
+        label: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.node
+        ])
+    })),
     description: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.node
@@ -234,7 +249,12 @@ LibraryItem.propTypes = {
     onMouseLeave: PropTypes.func.isRequired,
     onSelect: PropTypes.func.isRequired,
     onSelectionToggle: PropTypes.func,
-    showPlayButton: PropTypes.bool
+    showPlayButton: PropTypes.bool,
+    sourceLabel: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.node
+    ]),
+    sourceTone: PropTypes.string
 };
 
 export default injectIntl(LibraryItem);
