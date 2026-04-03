@@ -92,7 +92,7 @@
 }
 
 .library-item-name {
-    width: 80%;
+    width: 100%;
     margin: 0.25rem 0;
     text-align: center;
 
@@ -104,6 +104,12 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     min-width: 0;
+}
+
+.featured-text .library-item-name,
+.featured-extension-text .library-item-name {
+    width: 100%;
+    text-align: inherit;
 }
 
 .featured-item {
@@ -335,8 +341,8 @@
     background: rgba(76, 151, 255, 0.9);
 }
 
-.source-badge02engine {
-    background: rgba(255, 140, 0, 0.92);
+.source-badgeEngine {
+    background: #00BAAD;
 }
 
 .source-badgeTw {

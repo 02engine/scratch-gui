@@ -278,6 +278,39 @@ const getNameText = (intl, value) => {
     return '';
 };
 
+const getLocalizedGalleryText = (fallbackValue, translations, locale) => {
+    if (!translations || typeof translations !== 'object') {
+        return fallbackValue;
+    }
+    const normalizedLocale = typeof locale === 'string' ? locale.replace(/_/g, '-').toLowerCase() : '';
+    const languageCode = normalizedLocale.split('-')[0];
+    const entries = Object.entries(translations);
+    const exactMatch = entries.find(([key]) => key.replace(/_/g, '-').toLowerCase() === normalizedLocale);
+    if (exactMatch && typeof exactMatch[1] === 'string' && exactMatch[1]) {
+        return exactMatch[1];
+    }
+    const languageMatch = entries.find(([key]) => key.replace(/_/g, '-').toLowerCase().split('-')[0] === languageCode);
+    if (languageMatch && typeof languageMatch[1] === 'string' && languageMatch[1]) {
+        return languageMatch[1];
+    }
+    return fallbackValue;
+};
+
+const translateGalleryItem = (item, locale) => {
+    if (!item || typeof item !== 'object') {
+        return item;
+    }
+    return {
+        ...item,
+        name: typeof item.name === 'string' ?
+            getLocalizedGalleryText(item.name, item.nameTranslations, locale) :
+            item.name,
+        description: typeof item.description === 'string' ?
+            getLocalizedGalleryText(item.description, item.descriptionTranslations, locale) :
+            item.description
+    };
+};
+
 const fetchPenguinModLibrary = async () => {
     try {
         const module = await import(
@@ -563,12 +596,17 @@ class ExtensionLibrary extends React.PureComponent {
         return this.props.intl.formatMessage(sourceMessages[sourceKey] || messages.sourceOther);
     }
     getLibraryItems () {
-        const baseLibrary = extensionLibraryContent.map(toLibraryItem);
+        const locale = this.props.intl?.locale;
+        const baseLibrary = extensionLibraryContent
+            .map(toLibraryItem)
+            .map(item => translateGalleryItem(item, locale));
         if (this.state.gallery) {
             return [
                 ...baseLibrary,
                 toLibraryItem(galleryMore),
-                ...this.state.gallery.map(toLibraryItem)
+                ...this.state.gallery
+                    .map(toLibraryItem)
+                    .map(item => translateGalleryItem(item, locale))
             ];
         }
         if (this.state.galleryError) {
@@ -991,7 +1029,7 @@ class ExtensionLibrary extends React.PureComponent {
 
         const sourceToneMap = {
             [SOURCE_KEYS.SCRATCH]: 'Scratch',
-            [SOURCE_KEYS.ENGINE]: '02engine',
+            [SOURCE_KEYS.ENGINE]: 'Engine',
             [SOURCE_KEYS.TW]: 'Tw',
             [SOURCE_KEYS.PM]: 'Pm',
             [SOURCE_KEYS.MIST]: 'Mist',
