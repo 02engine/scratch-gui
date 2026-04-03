@@ -102,8 +102,8 @@ const messages = defineMessages({
 });
 
 const EDITOR_WINDOW_BASE_Z_INDEX = 120;
-const TARGET_PANE_WINDOW_Z_INDEX = 5000;
-const STAGE_WINDOW_Z_INDEX = 5010;
+const TARGET_PANE_WINDOW_Z_INDEX = 470;
+const STAGE_WINDOW_Z_INDEX = 475;
 const EDITOR_WINDOW_DEFAULT_SIZE = {width: 760, height: 560};
 const EDITOR_WINDOW_MIN_SIZE = {width: 420, height: 320};
 const EDITOR_WINDOW_MAX_SIZE = {width: 1200, height: 860};
@@ -1757,7 +1757,7 @@ const GUIComponent = props => {
                                     onDragStop={(id, position) => setStageWindowPosition(position)}
                                     onResizeStop={(id, size) => setStageWindowSize(size)}
                                     onMinimizeToggle={(id, minimized) => setStageWindowMinimized(minimized)}
-                                    zIndex={isFullScreen ? 600 : STAGE_WINDOW_Z_INDEX}
+                                    zIndex={isFullScreen ? 500 : STAGE_WINDOW_Z_INDEX}
                                     enableStatePersistence={true}
                                 >
                                     <StageWrapper

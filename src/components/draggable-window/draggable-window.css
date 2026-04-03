@@ -132,7 +132,7 @@
     padding: 0;
     background: none;
     box-shadow: none;
-    z-index: 9999;
+    z-index: 479;
     pointer-events: none;
     overflow: visible;
 }
