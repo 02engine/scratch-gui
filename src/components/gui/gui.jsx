@@ -17,6 +17,7 @@ import GitHubOAuthModal from '../github-oauth-modal/github-oauth-modal.jsx';
 import ProjectExporter from '../../lib/project-exporter.js';
 import githubApi from '../../lib/github-api.js';
 import windowStateStorage from '../../lib/window-state-storage';
+import computedStyleToInlineStyle from 'computed-style-to-inline-style';
 
 import Blocks from '../../containers/blocks.jsx';
 import CostumeTab from '../../containers/costume-tab.jsx';
@@ -50,7 +51,9 @@ import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx
 
 import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/layout-constants';
 import {resolveStageSize} from '../../lib/screen-utils';
+import getCostumeUrl from '../../lib/get-costume-url';
 import {Theme} from '../../lib/themes';
+import {BLOCKS_TAB_INDEX, COSTUMES_TAB_INDEX, SOUNDS_TAB_INDEX} from '../../reducers/editor-tab';
 
 import {isRendererSupported, isBrowserSupported} from '../../lib/tw-environment-support-prober';
 
@@ -65,8 +68,108 @@ const messages = defineMessages({
         id: 'gui.gui.addExtension',
         description: 'Button to add an extension in the target pane',
         defaultMessage: 'Add Extension'
+    },
+    stageTargetName: {
+        id: 'tw.gui.stageTargetName',
+        description: 'Display name for the stage target in newUI editor windows',
+        defaultMessage: 'Stage'
+    },
+    editorDesktopEmpty: {
+        id: 'tw.gui.editorDesktopEmpty',
+        description: 'Empty state message shown when there are no open editor windows in newUI',
+        defaultMessage: 'Select a target to open an editor window.'
+    },
+    editorWindowLock: {
+        id: 'tw.gui.editorWindowLock',
+        description: 'Tooltip for the lock button in a newUI editor window',
+        defaultMessage: 'Lock this editor window'
+    },
+    editorWindowUnlock: {
+        id: 'tw.gui.editorWindowUnlock',
+        description: 'Tooltip for the unlock button in a newUI editor window',
+        defaultMessage: 'Unlock this editor window'
+    },
+    editorWindowPreviewHint: {
+        id: 'tw.gui.editorWindowPreviewHint',
+        description: 'Hint shown inside inactive editor windows in newUI',
+        defaultMessage: 'Click this window to activate the editor'
+    },
+    editorWindowNoPreview: {
+        id: 'tw.gui.editorWindowNoPreview',
+        description: 'Fallback text for targets without a current costume preview',
+        defaultMessage: 'No current costume preview'
     }
 });
+
+const EDITOR_WINDOW_BASE_Z_INDEX = 120;
+const TARGET_PANE_WINDOW_Z_INDEX = 5000;
+const STAGE_WINDOW_Z_INDEX = 5010;
+const EDITOR_WINDOW_DEFAULT_SIZE = {width: 760, height: 560};
+const EDITOR_WINDOW_MIN_SIZE = {width: 420, height: 320};
+const EDITOR_WINDOW_MAX_SIZE = {width: 1200, height: 860};
+
+const clampIndex = (value, length) => {
+    if (!length) {
+        return 0;
+    }
+    return Math.min(Math.max(value || 0, 0), length - 1);
+};
+
+const WindowLockIcon = props => (
+    <svg
+        aria-hidden="true"
+        height="14"
+        viewBox="0 0 16 16"
+        width="14"
+        {...props}
+    >
+        <path
+            d="M5 7V5.8A3 3 0 0 1 8 2.9a3 3 0 0 1 3 2.9V7"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.4"
+        />
+        <rect
+            fill="none"
+            height="6.5"
+            rx="1.4"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            width="8"
+            x="4"
+            y="7"
+        />
+        <circle cx="8" cy="10.2" fill="currentColor" r="1" />
+    </svg>
+);
+
+const WindowUnlockIcon = props => (
+    <svg
+        aria-hidden="true"
+        height="14"
+        viewBox="0 0 16 16"
+        width="14"
+        {...props}
+    >
+        <path
+            d="M10.6 5.8a2.6 2.6 0 1 0-5.2 0V7"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.4"
+        />
+        <path
+            d="M10.6 7H4.4A1.4 1.4 0 0 0 3 8.4v4.1A1.5 1.5 0 0 0 4.5 14h6.7a1.5 1.5 0 0 0 1.5-1.5V8.4A1.4 1.4 0 0 0 11.3 7Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+        />
+        <circle cx="8" cy="10.2" fill="currentColor" r="1" />
+    </svg>
+);
 
 const getFullscreenBackgroundColor = () => {
     const params = new URLSearchParams(location.search);
@@ -173,6 +276,9 @@ const GUIComponent = props => {
         invalidProjectModalVisible,
         vm,
         customUI,
+        editingTargetId,
+        sprites,
+        stage,
         ...componentProps
     } = omit(props, 'dispatch');
 
@@ -187,6 +293,15 @@ const GUIComponent = props => {
     const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({x: 400, y: 275}); //也没什么含义
     const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({width: 485, height: 447});
     const [targetPaneWindowMinimized, setTargetPaneWindowMinimized] = React.useState(false);
+    const [editorWindowSessions, setEditorWindowSessions] = React.useState([]);
+    const [activeEditorWindowId, setActiveEditorWindowId] = React.useState(null);
+    const editorWindowSessionsRef = React.useRef(editorWindowSessions);
+    const activeEditorWindowIdRef = React.useRef(activeEditorWindowId);
+    const editorWindowIdCounterRef = React.useRef(0);
+    const editorWindowZIndexRef = React.useRef(EDITOR_WINDOW_BASE_Z_INDEX);
+    const lastRequestedEditingTargetIdRef = React.useRef(null);
+    const previousCustomUIRef = React.useRef(customUI);
+    const activeEditorContentRef = React.useRef(null);
 
     // Git 状态跟踪
     const [gitRepositoryExists, setGitRepositoryExists] = React.useState(false);
@@ -215,6 +330,441 @@ const GUIComponent = props => {
     const handleToggleStageWindowAutoFit = React.useCallback(() => {
         setStageWindowAutoFit(value => !value);
     }, []);
+
+    const setActiveEditorContentNode = React.useCallback(node => {
+        activeEditorContentRef.current = node;
+    }, []);
+
+    React.useEffect(() => {
+        editorWindowSessionsRef.current = editorWindowSessions;
+    }, [editorWindowSessions]);
+
+    React.useEffect(() => {
+        activeEditorWindowIdRef.current = activeEditorWindowId;
+    }, [activeEditorWindowId]);
+
+    const getTargetById = React.useCallback(targetId => {
+        if (!targetId) {
+            return null;
+        }
+        if (stage && stage.id === targetId) {
+            return stage;
+        }
+        return sprites[targetId] || null;
+    }, [sprites, stage]);
+
+    const getTargetDisplayName = React.useCallback(targetId => {
+        const target = getTargetById(targetId);
+        if (!target) {
+            return intl.formatMessage(messages.stageTargetName);
+        }
+        if (target.isStage) {
+            return target.name || intl.formatMessage(messages.stageTargetName);
+        }
+        return target.name;
+    }, [getTargetById, intl]);
+
+    const commitEditorWindowState = React.useCallback((nextSessions, nextActiveId = activeEditorWindowIdRef.current) => {
+        editorWindowSessionsRef.current = nextSessions;
+        activeEditorWindowIdRef.current = nextActiveId;
+        setEditorWindowSessions(nextSessions);
+        setActiveEditorWindowId(nextActiveId);
+    }, []);
+
+    const createEditorWindowSession = React.useCallback((targetId, overrides = {}) => {
+        const cascadeIndex = editorWindowSessionsRef.current.length % 6;
+        const nextZIndex = ++editorWindowZIndexRef.current;
+        editorWindowIdCounterRef.current += 1;
+        return {
+            id: `editor-${editorWindowIdCounterRef.current}`,
+            targetId,
+            locked: false,
+            activeTabIndex: BLOCKS_TAB_INDEX,
+            isMinimized: false,
+            snapshotMarkup: null,
+            snapshotSize: null,
+            position: {
+                x: 96 + (cascadeIndex * 34),
+                y: 96 + (cascadeIndex * 28)
+            },
+            size: EDITOR_WINDOW_DEFAULT_SIZE,
+            zIndex: nextZIndex,
+            lastFocusedAt: nextZIndex,
+            ...overrides
+        };
+    }, []);
+
+    const createEditorWindowSnapshot = React.useCallback(() => {
+        const sourceNode = activeEditorContentRef.current;
+        if (!sourceNode) {
+            return null;
+        }
+        const width = sourceNode.clientWidth;
+        const height = sourceNode.clientHeight;
+        if (!width || !height) {
+            return null;
+        }
+
+        const snapshotRoot = sourceNode.cloneNode(true);
+        snapshotRoot.style.width = `${width}px`;
+        snapshotRoot.style.height = `${height}px`;
+
+        const originalCanvases = sourceNode.querySelectorAll('canvas');
+        const clonedCanvases = snapshotRoot.querySelectorAll('canvas');
+        clonedCanvases.forEach((clonedCanvas, index) => {
+            const originalCanvas = originalCanvases[index];
+            if (!originalCanvas || !clonedCanvas.parentNode) {
+                return;
+            }
+            try {
+                const image = document.createElement('img');
+                image.src = originalCanvas.toDataURL();
+                image.width = originalCanvas.width;
+                image.height = originalCanvas.height;
+                image.className = clonedCanvas.className;
+                image.style.cssText = clonedCanvas.getAttribute('style') || '';
+                image.setAttribute('draggable', 'false');
+                clonedCanvas.parentNode.replaceChild(image, clonedCanvas);
+            } catch (error) {
+                // Ignore canvases that cannot be serialized.
+            }
+        });
+
+        computedStyleToInlineStyle(snapshotRoot, {recursive: true});
+
+        snapshotRoot.style.width = '100%';
+        snapshotRoot.style.height = '100%';
+        snapshotRoot.style.pointerEvents = 'none';
+
+        return {
+            snapshotMarkup: snapshotRoot.outerHTML,
+            snapshotSize: {width, height}
+        };
+    }, []);
+
+    const captureSessionSnapshot = React.useCallback((sessions, sessionId) => {
+        if (!sessionId) {
+            return sessions;
+        }
+        const snapshot = createEditorWindowSnapshot();
+        if (!snapshot) {
+            return sessions;
+        }
+        return sessions.map(session => {
+            if (session.id !== sessionId) {
+                return session;
+            }
+            return {
+                ...session,
+                snapshotMarkup: snapshot.snapshotMarkup,
+                snapshotSize: snapshot.snapshotSize
+            };
+        });
+    }, [createEditorWindowSnapshot]);
+
+    const findEditorWindowFallback = React.useCallback((sessions, excludedId = null) => {
+        const candidates = sessions.filter(session => session.id !== excludedId);
+        const visibleCandidates = candidates.filter(session => !session.isMinimized);
+        const orderedCandidates = (visibleCandidates.length ? visibleCandidates : candidates)
+            .slice()
+            .sort((a, b) => b.lastFocusedAt - a.lastFocusedAt);
+        return orderedCandidates[0] || null;
+    }, []);
+
+    const syncEditorWindowContext = React.useCallback((session, {syncVm = true, syncTab = true} = {}) => {
+        if (!session) {
+            return;
+        }
+        if (syncVm && session.targetId) {
+            const currentTargetId = vm.editingTarget ? vm.editingTarget.id : null;
+            if (currentTargetId !== session.targetId) {
+                lastRequestedEditingTargetIdRef.current = session.targetId;
+                vm.setEditingTarget(session.targetId);
+            }
+        }
+        if (syncTab && session.activeTabIndex !== activeTabIndex) {
+            onActivateTab(session.activeTabIndex);
+        }
+    }, [activeTabIndex, onActivateTab, vm]);
+
+    const updateEditorWindowSession = React.useCallback((windowId, updater) => {
+        let updatedSession = null;
+        let hasChanges = false;
+        const nextSessions = editorWindowSessionsRef.current.map(session => {
+            if (session.id !== windowId) {
+                return session;
+            }
+            const partialUpdate = updater(session);
+            if (!partialUpdate) {
+                updatedSession = session;
+                return session;
+            }
+            const hasSessionChanges = Object.keys(partialUpdate)
+                .some(key => session[key] !== partialUpdate[key]);
+            if (!hasSessionChanges) {
+                updatedSession = session;
+                return session;
+            }
+            updatedSession = {
+                ...session,
+                ...partialUpdate
+            };
+            hasChanges = true;
+            return updatedSession;
+        });
+        if (hasChanges) {
+            commitEditorWindowState(nextSessions);
+        }
+        return updatedSession;
+    }, [commitEditorWindowState]);
+
+    const activateEditorWindow = React.useCallback((windowId, options = {}) => {
+        const currentSessions = editorWindowSessionsRef.current;
+        const sessionIndex = currentSessions.findIndex(session => session.id === windowId);
+        if (sessionIndex === -1) {
+            return;
+        }
+        const currentActiveId = activeEditorWindowIdRef.current;
+        let nextSessions = currentSessions;
+        if (currentActiveId && currentActiveId !== windowId) {
+            nextSessions = captureSessionSnapshot(nextSessions, currentActiveId);
+        }
+        const nextZIndex = ++editorWindowZIndexRef.current;
+        nextSessions = nextSessions.map((session, index) => {
+            if (index !== sessionIndex) {
+                return session;
+            }
+            return {
+                ...session,
+                activeTabIndex: typeof options.activeTabIndex === 'number' ? options.activeTabIndex : session.activeTabIndex,
+                isMinimized: false,
+                zIndex: nextZIndex,
+                lastFocusedAt: nextZIndex
+            };
+        });
+        const activeSession = nextSessions[sessionIndex];
+        commitEditorWindowState(nextSessions, windowId);
+        syncEditorWindowContext(activeSession, {
+            syncVm: options.syncVm !== false,
+            syncTab: options.syncTab !== false
+        });
+    }, [captureSessionSnapshot, commitEditorWindowState, syncEditorWindowContext]);
+
+    const handleEditorTargetSelection = React.useCallback((targetId, options = {}) => {
+        if (!targetId || !getTargetById(targetId)) {
+            return;
+        }
+
+        const currentSessions = editorWindowSessionsRef.current.slice();
+        const activeSession = currentSessions.find(session => session.id === activeEditorWindowIdRef.current) || null;
+        const inheritedTabIndex = typeof options.activeTabIndex === 'number' ?
+            options.activeTabIndex :
+            (activeSession ? activeSession.activeTabIndex : BLOCKS_TAB_INDEX);
+
+        let nextSessions = currentSessions;
+        let nextActiveId = null;
+        const existingSession = currentSessions.find(session => session.targetId === targetId);
+
+        if (existingSession) {
+            nextActiveId = existingSession.id;
+            nextSessions = currentSessions.map(session => (
+                session.id === existingSession.id ? {
+                    ...session,
+                    isMinimized: false
+                } : session
+            ));
+        } else if (activeSession && !activeSession.locked) {
+            nextActiveId = activeSession.id;
+            nextSessions = currentSessions.map(session => (
+                session.id === activeSession.id ? {
+                    ...session,
+                    targetId,
+                    activeTabIndex: inheritedTabIndex,
+                    isMinimized: false
+                } : session
+            ));
+        } else {
+            const newSession = createEditorWindowSession(targetId, {
+                activeTabIndex: inheritedTabIndex
+            });
+            nextSessions = currentSessions.concat(newSession);
+            nextActiveId = newSession.id;
+        }
+
+        if (activeSession && activeSession.id !== nextActiveId) {
+            nextSessions = captureSessionSnapshot(nextSessions, activeSession.id);
+        }
+
+        const nextZIndex = ++editorWindowZIndexRef.current;
+        nextSessions = nextSessions.map(session => (
+            session.id === nextActiveId ? {
+                ...session,
+                isMinimized: false,
+                zIndex: nextZIndex,
+                lastFocusedAt: nextZIndex
+            } : session
+        ));
+
+        commitEditorWindowState(nextSessions, nextActiveId);
+        const nextActiveSession = nextSessions.find(session => session.id === nextActiveId);
+        syncEditorWindowContext(nextActiveSession, {
+            syncVm: options.syncVm !== false,
+            syncTab: options.syncTab !== false
+        });
+    }, [commitEditorWindowState, createEditorWindowSession, getTargetById, syncEditorWindowContext]);
+
+    const handleEditorWindowPositionChange = React.useCallback((windowId, position) => {
+        updateEditorWindowSession(windowId, () => ({position}));
+    }, [updateEditorWindowSession]);
+
+    const handleEditorWindowSizeChange = React.useCallback((windowId, size) => {
+        updateEditorWindowSession(windowId, () => ({size}));
+    }, [updateEditorWindowSession]);
+
+    const handleEditorWindowLockToggle = React.useCallback(windowId => {
+        updateEditorWindowSession(windowId, session => ({
+            locked: !session.locked
+        }));
+    }, [updateEditorWindowSession]);
+
+    const restoreEditorWindow = React.useCallback(windowId => {
+        updateEditorWindowSession(windowId, () => ({isMinimized: false}));
+        activateEditorWindow(windowId);
+    }, [activateEditorWindow, updateEditorWindowSession]);
+
+    const handleEditorWindowMinimizeToggle = React.useCallback((windowId, minimized) => {
+        const nextSessions = editorWindowSessionsRef.current.map(session => (
+            session.id === windowId ? {
+                ...session,
+                isMinimized: minimized
+            } : session
+        ));
+        let nextActiveId = activeEditorWindowIdRef.current;
+        if (minimized && activeEditorWindowIdRef.current === windowId) {
+            const fallbackSession = findEditorWindowFallback(nextSessions, windowId);
+            nextActiveId = fallbackSession ? fallbackSession.id : null;
+        }
+        commitEditorWindowState(nextSessions, nextActiveId);
+        if (nextActiveId) {
+            const nextActiveSession = nextSessions.find(session => session.id === nextActiveId);
+            syncEditorWindowContext(nextActiveSession, {
+                syncVm: true,
+                syncTab: true
+            });
+        }
+    }, [commitEditorWindowState, findEditorWindowFallback, syncEditorWindowContext]);
+
+    const handleEditorWindowClose = React.useCallback(windowId => {
+        const nextSessions = editorWindowSessionsRef.current.filter(session => session.id !== windowId);
+        let nextActiveId = activeEditorWindowIdRef.current;
+        if (activeEditorWindowIdRef.current === windowId) {
+            const fallbackSession = findEditorWindowFallback(nextSessions);
+            nextActiveId = fallbackSession ? fallbackSession.id : null;
+        }
+        commitEditorWindowState(nextSessions, nextActiveId);
+        if (nextActiveId) {
+            const nextActiveSession = nextSessions.find(session => session.id === nextActiveId);
+            syncEditorWindowContext(nextActiveSession, {
+                syncVm: true,
+                syncTab: true
+            });
+        }
+    }, [commitEditorWindowState, findEditorWindowFallback, syncEditorWindowContext]);
+
+    const handleActiveEditorTabSelect = React.useCallback(tabIndex => {
+        onActivateTab(tabIndex);
+        if (!customUI) {
+            return;
+        }
+        const activeWindowId = activeEditorWindowIdRef.current;
+        if (!activeWindowId) {
+            return;
+        }
+        updateEditorWindowSession(activeWindowId, session => (
+            session.activeTabIndex === tabIndex ? null : {activeTabIndex: tabIndex}
+        ));
+    }, [customUI, onActivateTab, updateEditorWindowSession]);
+
+    React.useEffect(() => {
+        const wasCustomUI = previousCustomUIRef.current;
+        previousCustomUIRef.current = customUI;
+        if (customUI && !wasCustomUI && !editorWindowSessionsRef.current.length && editingTargetId) {
+            handleEditorTargetSelection(editingTargetId, {
+                activeTabIndex,
+                syncVm: false
+            });
+        }
+    }, [activeTabIndex, customUI, editingTargetId, handleEditorTargetSelection]);
+
+    React.useEffect(() => {
+        if (!customUI || !editingTargetId) {
+            return;
+        }
+        if (lastRequestedEditingTargetIdRef.current === editingTargetId) {
+            lastRequestedEditingTargetIdRef.current = null;
+            return;
+        }
+        const activeSession = editorWindowSessionsRef.current.find(
+            session => session.id === activeEditorWindowIdRef.current
+        );
+        if (activeSession && activeSession.targetId === editingTargetId) {
+            return;
+        }
+        handleEditorTargetSelection(editingTargetId, {
+            syncVm: false
+        });
+    }, [customUI, editingTargetId, handleEditorTargetSelection]);
+
+    React.useEffect(() => {
+        if (!customUI) {
+            return;
+        }
+        const validTargetIds = new Set(Object.keys(sprites));
+        if (stage && stage.id) {
+            validTargetIds.add(stage.id);
+        }
+        const currentSessions = editorWindowSessionsRef.current;
+        let nextSessions = currentSessions.filter(session => validTargetIds.has(session.targetId));
+        if (nextSessions.length === currentSessions.length) {
+            return;
+        }
+
+        let nextActiveId = nextSessions.some(session => session.id === activeEditorWindowIdRef.current) ?
+            activeEditorWindowIdRef.current :
+            null;
+
+        if (!nextActiveId) {
+            const fallbackSession = findEditorWindowFallback(nextSessions);
+            nextActiveId = fallbackSession ? fallbackSession.id : null;
+        }
+
+        if (!nextSessions.length && editingTargetId && validTargetIds.has(editingTargetId)) {
+            const newSession = createEditorWindowSession(editingTargetId, {
+                activeTabIndex
+            });
+            nextSessions = [newSession];
+            nextActiveId = newSession.id;
+        }
+
+        commitEditorWindowState(nextSessions, nextActiveId);
+        if (nextActiveId) {
+            const nextActiveSession = nextSessions.find(session => session.id === nextActiveId);
+            syncEditorWindowContext(nextActiveSession, {
+                syncVm: true,
+                syncTab: true
+            });
+        }
+    }, [
+        activeTabIndex,
+        commitEditorWindowState,
+        createEditorWindowSession,
+        customUI,
+        editingTargetId,
+        findEditorWindowFallback,
+        sprites,
+        stage,
+        syncEditorWindowContext
+    ]);
 
     // 处理 Git 提交按钮点击
     const handleClickGitCommit = React.useCallback(async () => {
@@ -666,6 +1216,271 @@ const GUIComponent = props => {
         };
     }, [vm, gitRepositoryExists]);
 
+    const renderEditorWindowTitle = React.useCallback(session => (
+        <span className={styles.editorWindowTitleText}>
+            {getTargetDisplayName(session.targetId)}
+        </span>
+    ), [getTargetDisplayName]);
+
+    const renderEditorWindowHeaderActions = React.useCallback(session => (
+        <button
+            className={styles.editorWindowHeaderButton}
+            onClick={event => {
+                event.preventDefault();
+                event.stopPropagation();
+                handleEditorWindowLockToggle(session.id);
+            }}
+            title={intl.formatMessage(
+                session.locked ? messages.editorWindowUnlock : messages.editorWindowLock
+            )}
+            type="button"
+        >
+            {session.locked ? <WindowLockIcon /> : <WindowUnlockIcon />}
+        </button>
+    ), [handleEditorWindowLockToggle, intl]);
+
+    const renderEditorWrapper = stageSize => (
+        <Box
+            className={styles.editorWrapper}
+            componentRef={setActiveEditorContentNode}
+        >
+            <Tabs
+                forceRenderTabPanel
+                className={tabClassNames.tabs}
+                selectedIndex={activeTabIndex}
+                selectedTabClassName={tabClassNames.tabSelected}
+                selectedTabPanelClassName={tabClassNames.tabPanelSelected}
+                onSelect={handleActiveEditorTabSelect}
+            >
+                <TabList className={tabClassNames.tabList}>
+                    <Tab className={tabClassNames.tab}>
+                        <img
+                            draggable={false}
+                            src={codeIcon()}
+                        />
+                        <FormattedMessage
+                            defaultMessage="Code"
+                            description="Button to get to the code panel"
+                            id="gui.gui.codeTab"
+                        />
+                    </Tab>
+                    <Tab className={tabClassNames.tab}>
+                        <img
+                            draggable={false}
+                            src={costumesIcon()}
+                        />
+                        {targetIsStage ? (
+                            <FormattedMessage
+                                defaultMessage="Backdrops"
+                                description="Button to get to the backdrops panel"
+                                id="gui.gui.backdropsTab"
+                            />
+                        ) : (
+                            <FormattedMessage
+                                defaultMessage="Costumes"
+                                description="Button to get to the costumes panel"
+                                id="gui.gui.costumesTab"
+                            />
+                        )}
+                    </Tab>
+                    <Tab className={tabClassNames.tab}>
+                        <img
+                            draggable={false}
+                            src={soundsIcon()}
+                        />
+                        <FormattedMessage
+                            defaultMessage="Sounds"
+                            description="Button to get to the sounds panel"
+                            id="gui.gui.soundsTab"
+                        />
+                    </Tab>
+                </TabList>
+                <TabPanel className={tabClassNames.tabPanel}>
+                    <Box className={styles.blocksWrapper}>
+                        <Blocks
+                            key={`${blocksId}/${theme.id}`}
+                            canUseCloud={canUseCloud}
+                            grow={1}
+                            isVisible={blocksTabVisible}
+                            options={{
+                                media: `${basePath}static/${theme.getBlocksMediaFolder()}/`
+                            }}
+                            stageSize={stageSize}
+                            onOpenCustomExtensionModal={onOpenCustomExtensionModal}
+                            onOpenExtensionImportMethodModal={onOpenExtensionImportMethodModal}
+                            onSetSelectedExtension={onSetSelectedExtension}
+                            theme={theme}
+                            vm={vm}
+                        />
+                    </Box>
+                    <Box className={styles.extensionButtonContainer}>
+                        <button
+                            className={styles.extensionButton}
+                            title={intl.formatMessage(messages.addExtension)}
+                            onClick={onExtensionButtonClick}
+                        >
+                            <img
+                                className={styles.extensionButtonIcon}
+                                draggable={false}
+                                src={addExtensionIcon}
+                            />
+                        </button>
+                    </Box>
+                    <Box className={styles.watermark}>
+                        <Watermark />
+                    </Box>
+                </TabPanel>
+                <TabPanel className={tabClassNames.tabPanel}>
+                    {costumesTabVisible ? <CostumeTab vm={vm} /> : null}
+                </TabPanel>
+                <TabPanel className={tabClassNames.tabPanel}>
+                    {soundsTabVisible ? <SoundTab vm={vm} /> : null}
+                </TabPanel>
+            </Tabs>
+            {backpackVisible ? (
+                <Backpack host={backpackHost} />
+            ) : null}
+        </Box>
+    );
+
+    const renderEditorWindowPreview = React.useCallback(session => {
+        if (session.snapshotMarkup) {
+            return (
+                <Box className={styles.editorWindowSnapshot}>
+                    <div
+                        className={styles.editorWindowSnapshotContent}
+                        dangerouslySetInnerHTML={{__html: session.snapshotMarkup}}
+                    />
+                </Box>
+            );
+        }
+
+        const target = getTargetById(session.targetId);
+        if (!target) {
+            return (
+                <Box className={styles.editorWindowPreview}>
+                    <div className={styles.editorWindowPreviewTitle}>
+                        {getTargetDisplayName(session.targetId)}
+                    </div>
+                    <div className={styles.editorWindowPreviewHint}>
+                        {intl.formatMessage(messages.editorWindowNoPreview)}
+                    </div>
+                </Box>
+            );
+        }
+
+        const costumes = target.costumes || [];
+        const currentCostume = costumes[clampIndex(target.currentCostume, costumes.length)] || null;
+        const costumeUrl = currentCostume && currentCostume.asset ? getCostumeUrl(currentCostume.asset) : null;
+
+        return (
+            <Box className={styles.editorWindowPreview}>
+                <div className={styles.editorWindowPreviewTitle}>
+                    {getTargetDisplayName(session.targetId)}
+                </div>
+                <div className={styles.editorWindowPreviewBody}>
+                    <div className={styles.editorWindowPreviewImageFrame}>
+                        {costumeUrl ? (
+                            <img
+                                alt={currentCostume.name}
+                                className={styles.editorWindowPreviewImage}
+                                draggable={false}
+                                src={costumeUrl}
+                            />
+                        ) : (
+                            <div className={styles.editorWindowPreviewEmpty}>
+                                {intl.formatMessage(messages.editorWindowNoPreview)}
+                            </div>
+                        )}
+                    </div>
+                    <div className={styles.editorWindowPreviewMeta}>
+                        <div className={styles.editorWindowPreviewSubtitle}>
+                            {currentCostume ? currentCostume.name : intl.formatMessage(messages.editorWindowNoPreview)}
+                        </div>
+                        <div className={styles.editorWindowPreviewHint}>
+                            {intl.formatMessage(messages.editorWindowPreviewHint)}
+                        </div>
+                    </div>
+                </div>
+            </Box>
+        );
+    }, [getTargetById, getTargetDisplayName, intl]);
+
+    const renderEditorWindows = React.useCallback(stageSize => {
+        const activeSession = editorWindowSessions.find(session => session.id === activeEditorWindowId) || null;
+        const inactiveWindows = editorWindowSessions
+            .filter(session => session.id !== activeEditorWindowId)
+            .map(session => (
+                <DraggableWindow
+                    key={session.id}
+                    allowMaximize={false}
+                    className={styles.editorDraggableWindow}
+                    defaultPosition={session.position}
+                    defaultSize={session.size}
+                    enableStatePersistence={false}
+                    headerActions={renderEditorWindowHeaderActions(session)}
+                    isMinimized={session.isMinimized}
+                    maxSize={EDITOR_WINDOW_MAX_SIZE}
+                    minSize={EDITOR_WINDOW_MIN_SIZE}
+                    onActivate={activateEditorWindow}
+                    onClose={handleEditorWindowClose}
+                    onDragStop={handleEditorWindowPositionChange}
+                    onMinimizeToggle={handleEditorWindowMinimizeToggle}
+                    onResizeStop={handleEditorWindowSizeChange}
+                    position={session.position}
+                    size={session.size}
+                    title={renderEditorWindowTitle(session)}
+                    windowId={session.id}
+                    zIndex={session.zIndex}
+                >
+                    {renderEditorWindowPreview(session)}
+                </DraggableWindow>
+            ));
+
+        if (!activeSession) {
+            return inactiveWindows;
+        }
+
+        return inactiveWindows.concat(
+            <DraggableWindow
+                key="active-editor-window"
+                allowMaximize={false}
+                className={styles.editorDraggableWindow}
+                defaultPosition={activeSession.position}
+                defaultSize={activeSession.size}
+                enableStatePersistence={false}
+                headerActions={renderEditorWindowHeaderActions(activeSession)}
+                isMinimized={activeSession.isMinimized}
+                maxSize={EDITOR_WINDOW_MAX_SIZE}
+                minSize={EDITOR_WINDOW_MIN_SIZE}
+                onActivate={activateEditorWindow}
+                onClose={handleEditorWindowClose}
+                onDragStop={handleEditorWindowPositionChange}
+                onMinimizeToggle={handleEditorWindowMinimizeToggle}
+                onResizeStop={handleEditorWindowSizeChange}
+                position={activeSession.position}
+                size={activeSession.size}
+                title={renderEditorWindowTitle(activeSession)}
+                windowId={activeSession.id}
+                zIndex={activeSession.zIndex}
+            >
+                <Box className={styles.editorWindowBody}>
+                    {renderEditorWrapper(stageSize)}
+                </Box>
+            </DraggableWindow>
+        );
+    }, [
+        activateEditorWindow,
+        editorWindowSessions,
+        handleEditorWindowClose,
+        handleEditorWindowMinimizeToggle,
+        handleEditorWindowPositionChange,
+        handleEditorWindowSizeChange,
+        renderEditorWindowHeaderActions,
+        renderEditorWindowPreview,
+        renderEditorWindowTitle
+    ]);
+
     if (children) {
         return <Box {...componentProps}>{children}</Box>;
     }
@@ -699,6 +1514,26 @@ const GUIComponent = props => {
             onRestore: () => setTargetPaneWindowMinimized(false)
         });
     }
+    editorWindowSessions
+        .filter(session => session.isMinimized)
+        .forEach(session => {
+            const iconSource = session.activeTabIndex === COSTUMES_TAB_INDEX ?
+                costumesIcon() :
+                (session.activeTabIndex === SOUNDS_TAB_INDEX ? soundsIcon() : codeIcon());
+            minimizedWindows.push({
+                windowId: session.id,
+                title: getTargetDisplayName(session.targetId),
+                icon: (
+                    <img
+                        alt=""
+                        draggable={false}
+                        src={iconSource}
+                        style={{height: 18, width: 18}}
+                    />
+                ),
+                onRestore: () => restoreEditorWindow(session.id)
+            });
+        });
 
     const tabClassNames = {
         tabs: styles.tabs,
@@ -869,115 +1704,17 @@ const GUIComponent = props => {
 
                 <Box className={styles.bodyWrapper}>
                     <Box className={styles.flexWrapper}>
-                        <Box className={styles.editorWrapper}>
-                            <Tabs
-                                forceRenderTabPanel
-                                className={tabClassNames.tabs}
-                                selectedIndex={activeTabIndex}
-                                selectedTabClassName={tabClassNames.tabSelected}
-                                selectedTabPanelClassName={tabClassNames.tabPanelSelected}
-                                onSelect={onActivateTab}
-                            >
-                                <TabList className={tabClassNames.tabList}>
-                                    <Tab className={tabClassNames.tab}>
-                                        <img
-                                            draggable={false}
-                                            src={codeIcon()}
-                                        />
-                                        <FormattedMessage
-                                            defaultMessage="Code"
-                                            description="Button to get to the code panel"
-                                            id="gui.gui.codeTab"
-                                        />
-                                    </Tab>
-                                    <Tab
-                                        className={tabClassNames.tab}
-                                        onClick={onActivateCostumesTab}
-                                    >
-                                        <img
-                                            draggable={false}
-                                            src={costumesIcon()}
-                                        />
-                                        {targetIsStage ? (
-                                            <FormattedMessage
-                                                defaultMessage="Backdrops"
-                                                description="Button to get to the backdrops panel"
-                                                id="gui.gui.backdropsTab"
-                                            />
-                                        ) : (
-                                            <FormattedMessage
-                                                defaultMessage="Costumes"
-                                                description="Button to get to the costumes panel"
-                                                id="gui.gui.costumesTab"
-                                            />
-                                        )}
-                                    </Tab>
-                                    <Tab
-                                        className={tabClassNames.tab}
-                                        onClick={onActivateSoundsTab}
-                                    >
-                                        <img
-                                            draggable={false}
-                                            src={soundsIcon()}
-                                        />
-                                        <FormattedMessage
-                                            defaultMessage="Sounds"
-                                            description="Button to get to the sounds panel"
-                                            id="gui.gui.soundsTab"
-                                        />
-                                    </Tab>
-                                </TabList>
-                                <TabPanel className={tabClassNames.tabPanel}>
-                                    <Box className={styles.blocksWrapper}>
-                                        <Blocks
-                                            key={`${blocksId}/${theme.id}`}
-                                            canUseCloud={canUseCloud}
-                                            grow={1}
-                                            isVisible={blocksTabVisible}
-                                            options={{
-                                                media: `${basePath}static/${theme.getBlocksMediaFolder()}/`
-                                            }}
-                                            stageSize={stageSize}
-                                            onOpenCustomExtensionModal={onOpenCustomExtensionModal}
-                                            onOpenExtensionImportMethodModal={onOpenExtensionImportMethodModal}
-                                            onSetSelectedExtension={onSetSelectedExtension}
-                                            theme={theme}
-                                            vm={vm}
-                                        />
-                                    </Box>
-                                    <Box className={styles.extensionButtonContainer}>
-                                        <button
-                                            className={styles.extensionButton}
-                                            title={intl.formatMessage(messages.addExtension)}
-                                            onClick={onExtensionButtonClick}
-                                        >
-                                            <img
-                                                className={styles.extensionButtonIcon}
-                                                draggable={false}
-                                                src={addExtensionIcon}
-                                            />
-                                        </button>
-                                    </Box>
-                                    <Box className={styles.watermark}>
-                                        <Watermark />
-                                    </Box>
-                                </TabPanel>
-                                <TabPanel className={tabClassNames.tabPanel}>
-                                    {costumesTabVisible ? <CostumeTab
-                                        vm={vm}
-                                    /> : null}
-                                </TabPanel>
-                                <TabPanel className={tabClassNames.tabPanel}>
-                                    {soundsTabVisible ? <SoundTab vm={vm} /> : null}
-                                </TabPanel>
-                            </Tabs>
-                            {backpackVisible ? (
-                                <Backpack host={backpackHost} />
-                            ) : null}
-                        </Box>
+                        {!customUI ? renderEditorWrapper(stageSize) : null}
 
                         {props.customUI ? (
                         <>
+                            <Box className={styles.editorDesktop}>
+                                {editorWindowSessions.length ? renderEditorWindows(stageSize) : (
+                                    <div className={styles.editorDesktopEmpty}>
+                                        {intl.formatMessage(messages.editorDesktopEmpty)}
+                                    </div>
+                                )}
+                            </Box>
                             {!stageWindowMinimized && (
                                 <DraggableWindow
                                     windowId="stage"
@@ -992,7 +1729,7 @@ const GUIComponent = props => {
                                     onDragStop={(id, position) => setStageWindowPosition(position)}
                                     onResizeStop={(id, size) => setStageWindowSize(size)}
                                     onMinimizeToggle={(id, minimized) => setStageWindowMinimized(minimized)}
-                                    zIndex={isFullScreen ? 600 : 100}
+                                    zIndex={isFullScreen ? 600 : STAGE_WINDOW_Z_INDEX}
                                     enableStatePersistence={true}
                                 >
                                     <StageWrapper
@@ -1002,6 +1739,7 @@ const GUIComponent = props => {
                                         isFullScreen={isFullScreen}
                                         isRendererSupported={isRendererSupported()}
                                         isRtl={isRtl}
+                                        onRequestSelectTarget={handleEditorTargetSelection}
                                         onToggleAutoFit={handleToggleStageWindowAutoFit}
                                         showAutoFitButton
                                         stageSize={stageSize}
@@ -1021,10 +1759,11 @@ const GUIComponent = props => {
                                     onDragStop={(id, position) => setTargetPaneWindowPosition(position)}
                                     onResizeStop={(id, size) => setTargetPaneWindowSize(size)}
                                     onMinimizeToggle={(id, minimized) => setTargetPaneWindowMinimized(minimized)}
-                                    zIndex={100}
+                                    zIndex={TARGET_PANE_WINDOW_Z_INDEX}
                                     enableStatePersistence={true}
                                 >
                                     <TargetPane
+                                        onRequestSelectTarget={handleEditorTargetSelection}
                                         stageSize={stageSize}
                                         vm={vm}
                                     />
@@ -1130,6 +1869,8 @@ GUIComponent.propTypes = {
         width: PropTypes.number,
         height: PropTypes.number
     }),
+    customUI: PropTypes.bool,
+    editingTargetId: PropTypes.string,
     enableCommunity: PropTypes.bool,
     intl: intlShape.isRequired,
     isCreating: PropTypes.bool,
@@ -1177,6 +1918,12 @@ GUIComponent.propTypes = {
     showSaveFilePicker: PropTypes.func,
     soundsTabVisible: PropTypes.bool,
     stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)),
+    stage: PropTypes.shape({
+        id: PropTypes.string
+    }),
+    sprites: PropTypes.objectOf(PropTypes.shape({
+        id: PropTypes.string
+    })),
     targetIsStage: PropTypes.bool,
     telemetryModalVisible: PropTypes.bool,
     theme: PropTypes.instanceOf(Theme),
@@ -1218,6 +1965,9 @@ const mapStateToProps = state => ({
     customStageSize: state.scratchGui.customStageSize,
     isWindowFullScreen: state.scratchGui.tw.isWindowFullScreen,
     customUI: !!state.scratchGui.tw.customUI,
+    editingTargetId: state.scratchGui.targets.editingTarget,
+    sprites: state.scratchGui.targets.sprites,
+    stage: state.scratchGui.targets.stage,
     // This is the button's mode, as opposed to the actual current state
     blocksId: state.scratchGui.timeTravel.year.toString(),
     stageSizeMode: state.scratchGui.stageSize.stageSize,

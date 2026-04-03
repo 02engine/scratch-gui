@@ -5,6 +5,36 @@
     "defaultMessage": "Add Extension"
   },
   {
+    "id": "tw.gui.stageTargetName",
+    "description": "Display name for the stage target in newUI editor windows",
+    "defaultMessage": "Stage"
+  },
+  {
+    "id": "tw.gui.editorDesktopEmpty",
+    "description": "Empty state message shown when there are no open editor windows in newUI",
+    "defaultMessage": "Select a target to open an editor window."
+  },
+  {
+    "id": "tw.gui.editorWindowLock",
+    "description": "Tooltip for the lock button in a newUI editor window",
+    "defaultMessage": "Lock this editor window"
+  },
+  {
+    "id": "tw.gui.editorWindowUnlock",
+    "description": "Tooltip for the unlock button in a newUI editor window",
+    "defaultMessage": "Unlock this editor window"
+  },
+  {
+    "id": "tw.gui.editorWindowPreviewHint",
+    "description": "Hint shown inside inactive editor windows in newUI",
+    "defaultMessage": "Click this window to activate the editor"
+  },
+  {
+    "id": "tw.gui.editorWindowNoPreview",
+    "description": "Fallback text for targets without a current costume preview",
+    "defaultMessage": "No current costume preview"
+  },
+  {
     "id": "gui.gui.codeTab",
     "description": "Button to get to the code panel",
     "defaultMessage": "Code"

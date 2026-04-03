@@ -102,7 +102,11 @@ class TargetPane extends React.Component {
         });
     }
     handleSelectSprite (id) {
-        this.props.vm.setEditingTarget(id);
+        if (this.props.onRequestSelectTarget) {
+            this.props.onRequestSelectTarget(id);
+        } else {
+            this.props.vm.setEditingTarget(id);
+        }
         if (this.props.stage && id !== this.props.stage.id) {
             this.props.onHighlightTarget(id);
         }
@@ -281,6 +285,7 @@ const {
 TargetPane.propTypes = {
     intl: intlShape.isRequired,
     onCloseImporting: PropTypes.func,
+    onRequestSelectTarget: PropTypes.func,
     onShowImporting: PropTypes.func,
     ...targetPaneProps
 };

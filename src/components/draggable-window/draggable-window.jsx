@@ -1,41 +1,47 @@
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import classNames from 'classnames';
 
 import styles from './draggable-window.css';
 import windowStateStorage from '../../lib/window-state-storage';
 
 const DraggableWindow = props => {
     const {
+        allowMaximize = true,
+        allowResize = true,
         children,
         className,
         defaultPosition = {x: 100, y: 100},
         defaultSize = {width: 400, height: 300},
+        enableStatePersistence = true,
+        headerActions,
         isDraggable = true,
+        isFullScreen: controlledFullScreen,
+        isMinimized: controlledMinimized,
         isResizable = true,
-        minSize = {width: 200, height: 150},
         maxSize = {width: 800, height: 600},
-        onDragStart,
-        onDrag,
-        onDragStop,
-        onResizeStart,
-        onResize,
-        onResizeStop,
+        minSize = {width: 200, height: 150},
+        onActivate,
+        onClose,
         onContentResize,
+        onDrag,
+        onDragStart,
+        onDragStop,
         onMinimizeToggle,
+        onResize,
+        onResizeStart,
+        onResizeStop,
+        position: controlledPosition,
+        size: controlledSize,
         title,
         windowId,
         zIndex = 1,
-        enableStatePersistence = true,
-        allowResize = true, // 默认允许调整大小
-        allowMaximize = true, // 默认允许最大化
         ...componentProps
     } = props;
 
-    // 从本地存储恢复窗口状态
-    const getInitialState = () => {
+    const getInitialState = React.useCallback(() => {
         if (enableStatePersistence && windowId) {
-            const savedState = windowStateStorage.getValidWindowState(windowId, {
+            return windowStateStorage.getValidWindowState(windowId, {
                 position: defaultPosition,
                 size: defaultSize,
                 isMinimized: false,
@@ -43,7 +49,6 @@ const DraggableWindow = props => {
                 originalPosition: defaultPosition,
                 originalSize: defaultSize
             });
-            return savedState;
         }
         return {
             position: defaultPosition,
@@ -53,48 +58,86 @@ const DraggableWindow = props => {
             originalPosition: defaultPosition,
             originalSize: defaultSize
         };
-    };
+    }, [defaultPosition, defaultSize, enableStatePersistence, windowId]);
 
-    const initialState = getInitialState();
+    const initialState = React.useMemo(() => getInitialState(), [getInitialState]);
     const [position, setPosition] = React.useState(initialState.position);
     const [size, setSize] = React.useState(initialState.size);
     const [isDragging, setIsDragging] = React.useState(false);
     const [isResizing, setIsResizing] = React.useState(false);
-    const [dragOffset, setDragOffset] = React.useState({x: 0, y: 0});
-    const [resizeHandle, setResizeHandle] = React.useState(null);
     const [isMinimized, setIsMinimized] = React.useState(initialState.isMinimized);
     const [isFullScreen, setIsFullScreen] = React.useState(initialState.isFullScreen);
     const [originalPosition, setOriginalPosition] = React.useState(initialState.originalPosition);
     const [originalSize, setOriginalSize] = React.useState(initialState.originalSize);
     const [isDraggingMinimized, setIsDraggingMinimized] = React.useState(false);
-    const [dragStartPosition, setDragStartPosition] = React.useState({x: 0, y: 0});
 
-    const windowRef = React.useRef();
-    const headerRef = React.useRef();
-    const contentRef = React.useRef();
+    const windowRef = React.useRef(null);
+    const contentRef = React.useRef(null);
     const contentResizeFrameRef = React.useRef(null);
+    const latestPositionRef = React.useRef(position);
+    const latestSizeRef = React.useRef(size);
 
-    // 保存窗口状态到本地存储
+    React.useEffect(() => {
+        latestPositionRef.current = position;
+    }, [position]);
+
+    React.useEffect(() => {
+        latestSizeRef.current = size;
+    }, [size]);
+
     const saveWindowState = React.useCallback(() => {
-        if (enableStatePersistence && windowId) {
-            const stateToSave = {
-                position,
-                size,
-                isMinimized,
-                isFullScreen
-            };
-            if (isFullScreen) {
-                stateToSave.originalPosition = originalPosition;
-                stateToSave.originalSize = originalSize;
-            }
-            windowStateStorage.saveWindowState(windowId, stateToSave);
+        if (!enableStatePersistence || !windowId) {
+            return;
         }
-    }, [enableStatePersistence, windowId, position, size, isMinimized, isFullScreen, originalPosition, originalSize]);
+        const nextState = {
+            position,
+            size,
+            isMinimized,
+            isFullScreen
+        };
+        if (isFullScreen) {
+            nextState.originalPosition = originalPosition;
+            nextState.originalSize = originalSize;
+        }
+        windowStateStorage.saveWindowState(windowId, nextState);
+    }, [
+        enableStatePersistence,
+        windowId,
+        position,
+        size,
+        isMinimized,
+        isFullScreen,
+        originalPosition,
+        originalSize
+    ]);
 
-    // 当状态变化时自动保存
     React.useEffect(() => {
         saveWindowState();
-    }, [position, size, isMinimized, isFullScreen, saveWindowState]);
+    }, [saveWindowState]);
+
+    React.useEffect(() => {
+        if (controlledPosition) {
+            setPosition(controlledPosition);
+        }
+    }, [controlledPosition]);
+
+    React.useEffect(() => {
+        if (controlledSize) {
+            setSize(controlledSize);
+        }
+    }, [controlledSize]);
+
+    React.useEffect(() => {
+        if (typeof controlledMinimized === 'boolean') {
+            setIsMinimized(controlledMinimized);
+        }
+    }, [controlledMinimized]);
+
+    React.useEffect(() => {
+        if (typeof controlledFullScreen === 'boolean') {
+            setIsFullScreen(controlledFullScreen);
+        }
+    }, [controlledFullScreen]);
 
     React.useEffect(() => {
         if (!onContentResize || !contentRef.current) {
@@ -102,12 +145,13 @@ const DraggableWindow = props => {
         }
 
         const emitSize = () => {
-            if (!contentRef.current) return;
-            const nextSize = {
+            if (!contentRef.current) {
+                return;
+            }
+            onContentResize(windowId, {
                 width: contentRef.current.clientWidth,
                 height: contentRef.current.clientHeight
-            };
-            onContentResize(windowId, nextSize);
+            });
         };
 
         const scheduleEmitSize = () => {
@@ -141,278 +185,247 @@ const DraggableWindow = props => {
                 window.removeEventListener('resize', scheduleEmitSize);
             }
         };
-    }, [onContentResize, size.width, size.height, windowId]);
-    
-    // 清理函数，在组件卸载时调用
-    React.useEffect(() => {
-        // 组件卸载时不需要重置状态，因为组件实例会被销毁
-        // 这里可以添加其他需要清理的资源
-        return () => {
-            // 组件卸载时的清理逻辑
-        };
-    }, []);
-    
-    // 监听最小化状态变化，确保在最小化时清理状态
+    }, [onContentResize, windowId]);
+
     React.useEffect(() => {
         if (isMinimized) {
-            // 最小化时清理拖拽和调整大小状态
             setIsDragging(false);
             setIsResizing(false);
-            setResizeHandle(null);
         }
     }, [isMinimized]);
 
-    const handleMouseDown = React.useCallback(e => {
-        if (!isDraggable) return;
-        if (!e.touches && e.button !== 0) return; // 只在非触摸事件时检查鼠标按钮
-        
-        // 检查是否是触摸事件
-        const touch = e.touches ? e.touches[0] : null;
-        const clientX = touch ? touch.clientX : e.clientX;
-        const clientY = touch ? touch.clientY : e.clientY;
-        
+    const emitActivate = React.useCallback(() => {
+        if (onActivate) {
+            onActivate(windowId);
+        }
+    }, [onActivate, windowId]);
+
+    const stopControlPropagation = React.useCallback(event => {
+        event.stopPropagation();
+    }, []);
+
+    const handleMouseDown = React.useCallback(event => {
+        if (!isDraggable || isMinimized) {
+            return;
+        }
+        if (!event.touches && event.button !== 0) {
+            return;
+        }
+
+        const point = event.touches ? event.touches[0] : event;
         const rect = windowRef.current.getBoundingClientRect();
+        const positioningParent = windowRef.current.offsetParent;
+        const parentRect = positioningParent ? positioningParent.getBoundingClientRect() : {
+            left: 0,
+            top: 0
+        };
         const offset = {
-            x: clientX - rect.left,
-            y: clientY - rect.top
+            x: point.clientX - rect.left,
+            y: point.clientY - rect.top
         };
-        setDragOffset(offset);
+
         setIsDragging(true);
-        onDragStart && onDragStart(windowId, position);
+        if (onDragStart) {
+            onDragStart(windowId, latestPositionRef.current);
+        }
 
-        const handleGlobalMove = (moveEvent) => {
-            moveEvent.preventDefault(); // 阻止默认滚动行为
-            
-            const moveTouch = moveEvent.touches ? moveEvent.touches[0] : null;
-            const moveClientX = moveTouch ? moveTouch.clientX : moveEvent.clientX;
-            const moveClientY = moveTouch ? moveTouch.clientY : moveEvent.clientY;
-            
-            const newX = moveClientX - offset.x;
-            const newY = moveClientY - offset.y;
-            
-            // 使用实时的窗口尺寸来计算限制
-            const rect = windowRef.current.getBoundingClientRect();
-            const currentWidth = rect.width;
-            const currentHeight = rect.height;
-            
-            const extBarWidth = 61;
-
-            const targetX = Math.max(extBarWidth, Math.min(window.innerWidth - currentWidth, newX));
-            // 限制窗口不能被拖动到顶栏之上 (顶栏高度为 3rem = 48px)
-            const menuBarHeight = window.addonAPI.isAddonLoaded('editor-compact').disabled ? 92 : 64; // 3rem = 48px (based on $menu-bar-height in units.css)
-            const targetY = Math.max(menuBarHeight, Math.min(window.innerHeight - currentHeight, newY));
-            
-            const newPosition = {
-                x: targetX,
-                y: targetY
+        const handleGlobalMove = moveEvent => {
+            moveEvent.preventDefault();
+            const movePoint = moveEvent.touches ? moveEvent.touches[0] : moveEvent;
+            const nextX = movePoint.clientX - parentRect.left - offset.x;
+            const nextY = movePoint.clientY - parentRect.top - offset.y;
+            const nextPosition = {
+                x: nextX,
+                y: Math.max(6, nextY)
             };
-            
-            setPosition(newPosition);
-            onDrag && onDrag(windowId, newPosition);
+            latestPositionRef.current = nextPosition;
+            setPosition(nextPosition);
+            if (onDrag) {
+                onDrag(windowId, nextPosition);
+            }
         };
 
-        const handleGlobalEnd = (endEvent) => {
+        const handleGlobalEnd = endEvent => {
             endEvent.preventDefault();
             setIsDragging(false);
             setIsDraggingMinimized(false);
-            
-            // 清理所有事件监听
             document.removeEventListener('mousemove', handleGlobalMove);
             document.removeEventListener('mouseup', handleGlobalEnd);
             document.removeEventListener('touchmove', handleGlobalMove);
             document.removeEventListener('touchend', handleGlobalEnd);
             document.removeEventListener('touchcancel', handleGlobalEnd);
-            
-            onDragStop && onDragStop(windowId, position);
+            if (onDragStop) {
+                onDragStop(windowId, latestPositionRef.current);
+            }
         };
 
-        if (touch) {
-            // 触摸事件
-            document.addEventListener('touchmove', handleGlobalMove, { passive: false });
-            document.addEventListener('touchend', handleGlobalEnd, { passive: false });
-            document.addEventListener('touchcancel', handleGlobalEnd, { passive: false });
+        if (event.touches) {
+            document.addEventListener('touchmove', handleGlobalMove, {passive: false});
+            document.addEventListener('touchend', handleGlobalEnd, {passive: false});
+            document.addEventListener('touchcancel', handleGlobalEnd, {passive: false});
         } else {
-            // 鼠标事件
             document.addEventListener('mousemove', handleGlobalMove);
             document.addEventListener('mouseup', handleGlobalEnd);
         }
 
-        e.preventDefault();
-        e.stopPropagation();
-    }, [isDraggable, onDragStart, onDrag, onDragStop, windowId, position, size]);
+        event.preventDefault();
+        event.stopPropagation();
+    }, [isDraggable, isMinimized, onDrag, onDragStart, onDragStop, windowId]);
 
-    const handleResizeMove = React.useCallback(e => {
-        if (isResizing && resizeHandle) {
-            const touch = e.touches ? e.touches[0] : null;
-            const clientX = touch ? touch.clientX : e.clientX;
-            const clientY = touch ? touch.clientY : e.clientY;
-            
-            const rect = windowRef.current.getBoundingClientRect();
-            let newWidth = size.width;
-            let newHeight = size.height;
-            
-            if (!allowResize) return;
-            switch (resizeHandle) {
-            case 'e':
-                newWidth = Math.max(minSize.width, Math.min(maxSize.width, e.clientX - rect.left));
-                break;
-            case 's':
-                newHeight = Math.max(minSize.height, Math.min(maxSize.height, e.clientY - rect.top));
-                break;
-            case 'se':
-                newWidth = Math.max(minSize.width, Math.min(maxSize.width, e.clientX - rect.left));
-                newHeight = Math.max(minSize.height, Math.min(maxSize.height, e.clientY - rect.top));
-                break;
-            default:
-                break;
-            }
-            
-            const newSize = {width: newWidth, height: newHeight};
-            setSize(newSize);
-            onResize && onResize(windowId, newSize);
+    const handleResizeMouseDown = React.useCallback((handle, event) => {
+        if (!isResizable || !allowResize || isMinimized) {
+            return;
         }
-    }, [isDragging, isResizing, resizeHandle, dragOffset, size, minSize, maxSize, onDrag, onResize, windowId]);
-
-    const handleResizeUp = React.useCallback(() => {
-        if (isResizing) {
-            setIsResizing(false);
-            setResizeHandle(null);
-            onResizeStop && onResizeStop(windowId, size);
-            // 清除resize相关的事件监听器
-            document.removeEventListener('mousemove', handleResizeMove);
-            document.removeEventListener('mouseup', handleResizeUp);
-            document.removeEventListener('touchmove', handleResizeMove);
-            document.removeEventListener('touchend', handleResizeUp);
+        if (!event.touches && event.button !== 0) {
+            return;
         }
-    }, [isResizing, onResizeStop, windowId, size, handleResizeMove]);
 
-    const handleResizeMouseDown = React.useCallback((handle, e) => {
-        if (!isResizable || isMinimized) return;
-        if (!e.touches && e.button !== 0) return; // 只在非触摸事件时检查鼠标按钮
-        
-        const touch = e.touches ? e.touches[0] : null;
+        const startSize = latestSizeRef.current;
         setIsResizing(true);
-        setResizeHandle(handle);
-        onResizeStart && onResizeStart(windowId, size);
+        if (onResizeStart) {
+            onResizeStart(windowId, startSize);
+        }
 
-        const handleResizeGlobalMove = (moveEvent) => {
+        const handleResizeMove = moveEvent => {
             moveEvent.preventDefault();
-            const moveTouch = moveEvent.touches ? moveEvent.touches[0] : null;
-            const moveClientX = moveTouch ? moveTouch.clientX : moveEvent.clientX;
-            const moveClientY = moveTouch ? moveTouch.clientY : moveEvent.clientY;
-
+            const movePoint = moveEvent.touches ? moveEvent.touches[0] : moveEvent;
             const rect = windowRef.current.getBoundingClientRect();
-            let newWidth = size.width;
-            let newHeight = size.height;
-            
-            if (!allowResize) return;
-            switch (handle) {
-                case 'e':
-                    newWidth = Math.max(minSize.width, Math.min(maxSize.width, moveClientX - rect.left));
-                    break;
-                case 's':
-                    newHeight = Math.max(minSize.height, Math.min(maxSize.height, moveClientY - rect.top));
-                    break;
-                case 'se':
-                    newWidth = Math.max(minSize.width, Math.min(maxSize.width, moveClientX - rect.left));
-                    newHeight = Math.max(minSize.height, Math.min(maxSize.height, moveClientY - rect.top));
-                    break;
-                default:
-                    break;
+            let newWidth = startSize.width;
+            let newHeight = startSize.height;
+
+            if (handle === 'e' || handle === 'se') {
+                newWidth = Math.max(minSize.width, Math.min(maxSize.width, movePoint.clientX - rect.left));
             }
-            
-            const newSize = {width: newWidth, height: newHeight};
-            setSize(newSize);
-            onResize && onResize(windowId, newSize);
+            if (handle === 's' || handle === 'se') {
+                newHeight = Math.max(minSize.height, Math.min(maxSize.height, movePoint.clientY - rect.top));
+            }
+
+            const nextSize = {
+                width: newWidth,
+                height: newHeight
+            };
+            latestSizeRef.current = nextSize;
+            setSize(nextSize);
+            if (onResize) {
+                onResize(windowId, nextSize);
+            }
         };
 
-        const handleResizeGlobalEnd = (endEvent) => {
+        const handleResizeEnd = endEvent => {
             endEvent.preventDefault();
             setIsResizing(false);
-            setResizeHandle(null);
-            
-            // 清理所有事件监听
-            document.removeEventListener('mousemove', handleResizeGlobalMove);
-            document.removeEventListener('mouseup', handleResizeGlobalEnd);
-            document.removeEventListener('touchmove', handleResizeGlobalMove);
-            document.removeEventListener('touchend', handleResizeGlobalEnd);
-            document.removeEventListener('touchcancel', handleResizeGlobalEnd);
-            
-            onResizeStop && onResizeStop(windowId, size);
+            document.removeEventListener('mousemove', handleResizeMove);
+            document.removeEventListener('mouseup', handleResizeEnd);
+            document.removeEventListener('touchmove', handleResizeMove);
+            document.removeEventListener('touchend', handleResizeEnd);
+            document.removeEventListener('touchcancel', handleResizeEnd);
+            if (onResizeStop) {
+                onResizeStop(windowId, latestSizeRef.current);
+            }
         };
 
-        if (touch) {
-            // 触摸事件
-            document.addEventListener('touchmove', handleResizeGlobalMove, { passive: false });
-            document.addEventListener('touchend', handleResizeGlobalEnd, { passive: false });
-            document.addEventListener('touchcancel', handleResizeGlobalEnd, { passive: false });
+        if (event.touches) {
+            document.addEventListener('touchmove', handleResizeMove, {passive: false});
+            document.addEventListener('touchend', handleResizeEnd, {passive: false});
+            document.addEventListener('touchcancel', handleResizeEnd, {passive: false});
         } else {
-            // 鼠标事件
-            document.addEventListener('mousemove', handleResizeGlobalMove);
-            document.addEventListener('mouseup', handleResizeGlobalEnd);
+            document.addEventListener('mousemove', handleResizeMove);
+            document.addEventListener('mouseup', handleResizeEnd);
         }
 
-        e.preventDefault();
-        e.stopPropagation();
-    }, [isResizable, isMinimized, onResizeStart, onResize, onResizeStop, windowId, size, minSize, maxSize]);
+        event.preventDefault();
+        event.stopPropagation();
+    }, [
+        allowResize,
+        isMinimized,
+        isResizable,
+        maxSize.height,
+        maxSize.width,
+        minSize.height,
+        minSize.width,
+        onResize,
+        onResizeStart,
+        onResizeStop,
+        windowId
+    ]);
 
     const handleToggleMinimize = React.useCallback(() => {
-        if (!isDraggingMinimized) {
-            if (isMinimized) {
-                // 恢复时回到原始位置和尺寸，避免重叠
-                setIsMinimized(false);
-                setPosition(originalPosition);
-                setSize(originalSize);
-                setIsDragging(false);
-                setIsResizing(false);
-                setResizeHandle(null);
-                onMinimizeToggle && onMinimizeToggle(windowId, false);
-            } else {
-                // 清理所有全局事件监听器，防止内存泄漏
-                // 注意：这里我们无法直接访问内部事件监听器，但可以通过重置状态来防止问题
-                setIsDragging(false);
-                setIsResizing(false);
-                setResizeHandle(null);
-                
-                // 最小化时记录当前位置和尺寸
-                setOriginalPosition(position);
-                setOriginalSize(size);
-                setIsMinimized(true);
-                setIsFullScreen(false);
-                onMinimizeToggle && onMinimizeToggle(windowId, true);
-            }
+        if (isDraggingMinimized) {
+            setIsDraggingMinimized(false);
+            return;
         }
-        setIsDraggingMinimized(false);
-    }, [isMinimized, isDraggingMinimized, originalPosition, originalSize, position, size, onMinimizeToggle, windowId]);
+
+        if (isMinimized) {
+            setIsMinimized(false);
+            setPosition(originalPosition);
+            setSize(originalSize);
+            latestPositionRef.current = originalPosition;
+            latestSizeRef.current = originalSize;
+            if (onMinimizeToggle) {
+                onMinimizeToggle(windowId, false);
+            }
+            return;
+        }
+
+        setOriginalPosition(latestPositionRef.current);
+        setOriginalSize(latestSizeRef.current);
+        setIsDragging(false);
+        setIsResizing(false);
+        setIsMinimized(true);
+        setIsFullScreen(false);
+        if (onMinimizeToggle) {
+            onMinimizeToggle(windowId, true);
+        }
+    }, [
+        isDraggingMinimized,
+        isMinimized,
+        onMinimizeToggle,
+        originalPosition,
+        originalSize,
+        windowId
+    ]);
 
     const handleToggleFullScreen = React.useCallback(() => {
         if (isFullScreen) {
-            // Restore window
             setPosition(originalPosition);
             setSize(originalSize);
+            latestPositionRef.current = originalPosition;
+            latestSizeRef.current = originalSize;
             setIsFullScreen(false);
-        } else {
-            // Full screen
-            setOriginalPosition(position);
-            setOriginalSize(size);
-            setPosition({x: 50, y: 50});
-            setSize({width: window.innerWidth - 100, height: window.innerHeight - 100});
-            setIsFullScreen(true);
-            setIsMinimized(false);
+            return;
         }
-    }, [isFullScreen, originalPosition, originalSize, position, size]);
+
+        setOriginalPosition(latestPositionRef.current);
+        setOriginalSize(latestSizeRef.current);
+        const fullScreenPosition = {x: 50, y: 50};
+        const fullScreenSize = {
+            width: window.innerWidth - 100,
+            height: window.innerHeight - 100
+        };
+        setPosition(fullScreenPosition);
+        setSize(fullScreenSize);
+        latestPositionRef.current = fullScreenPosition;
+        latestSizeRef.current = fullScreenSize;
+        setIsFullScreen(true);
+        setIsMinimized(false);
+    }, [isFullScreen, originalPosition, originalSize]);
 
     const handleClose = React.useCallback(() => {
-        // Hide the window
-        setPosition({x: -1000, y: -1000});
+        if (onClose) {
+            onClose(windowId);
+            return;
+        }
+        const hiddenPosition = {x: -1000, y: -1000};
+        setPosition(hiddenPosition);
+        latestPositionRef.current = hiddenPosition;
         setIsMinimized(false);
         setIsFullScreen(false);
-    }, []);
+    }, [onClose, windowId]);
 
-    // 由父组件统一渲染最小化栏，最小化时本窗口不渲染内容
-    if (isMinimized) return null;
+    if (isMinimized) {
+        return null;
+    }
 
-    // 正常窗口
     return (
         <div
             ref={windowRef}
@@ -424,33 +437,57 @@ const DraggableWindow = props => {
                 height: size.height,
                 zIndex
             }}
+            onMouseDownCapture={emitActivate}
+            onTouchStartCapture={emitActivate}
             {...componentProps}
         >
             <div
-                ref={headerRef}
                 className={styles.windowHeader}
+                onDoubleClick={handleToggleMinimize}
                 onMouseDown={handleMouseDown}
                 onTouchStart={handleMouseDown}
-                onDoubleClick={handleToggleMinimize}
             >
                 <span className={styles.windowTitle}>{title}</span>
+                {headerActions ? (
+                    <div className={styles.headerActions}>
+                        {headerActions}
+                    </div>
+                ) : null}
                 <div className={styles.windowControls}>
                     <button
                         className={styles.controlButton}
                         onClick={handleToggleMinimize}
-                        title="最小化"
+                        onMouseDown={stopControlPropagation}
+                        onTouchStart={stopControlPropagation}
+                        title="Minimize"
+                        type="button"
                     >
-                        −
+                        <span className={styles.controlGlyph}>-</span>
                     </button>
-                    {allowMaximize && (
+                    {allowMaximize ? (
                         <button
                             className={styles.controlButton}
                             onClick={handleToggleFullScreen}
-                            title="全屏"
+                            onMouseDown={stopControlPropagation}
+                            onTouchStart={stopControlPropagation}
+                            title="Fullscreen"
+                            type="button"
                         >
-                            □
+                            <span className={styles.controlGlyph}>[]</span>
                         </button>
-                    )}
+                    ) : null}
+                    {onClose ? (
+                        <button
+                            className={styles.controlButton}
+                            onClick={handleClose}
+                            onMouseDown={stopControlPropagation}
+                            onTouchStart={stopControlPropagation}
+                            title="Close"
+                            type="button"
+                        >
+                            <span className={styles.controlGlyph}>x</span>
+                        </button>
+                    ) : null}
                 </div>
             </div>
             <div
@@ -459,30 +496,32 @@ const DraggableWindow = props => {
             >
                 {children}
             </div>
-            {isResizable && allowResize && (
-                <>
+            {isResizable && allowResize ? (
+                <React.Fragment>
                     <div
                         className={styles.resizeHandleE}
-                        onMouseDown={e => handleResizeMouseDown('e', e)}
-                        onTouchStart={e => handleResizeMouseDown('e', e)}
+                        onMouseDown={event => handleResizeMouseDown('e', event)}
+                        onTouchStart={event => handleResizeMouseDown('e', event)}
                     />
                     <div
                         className={styles.resizeHandleS}
-                        onMouseDown={e => handleResizeMouseDown('s', e)}
-                        onTouchStart={e => handleResizeMouseDown('s', e)}
+                        onMouseDown={event => handleResizeMouseDown('s', event)}
+                        onTouchStart={event => handleResizeMouseDown('s', event)}
                     />
                     <div
                         className={styles.resizeHandleSE}
-                        onMouseDown={e => handleResizeMouseDown('se', e)}
-                        onTouchStart={e => handleResizeMouseDown('se', e)}
+                        onMouseDown={event => handleResizeMouseDown('se', event)}
+                        onTouchStart={event => handleResizeMouseDown('se', event)}
                     />
-                </>
-            )}
+                </React.Fragment>
+            ) : null}
         </div>
     );
 };
 
 DraggableWindow.propTypes = {
+    allowMaximize: PropTypes.bool,
+    allowResize: PropTypes.bool,
     children: PropTypes.node,
     className: PropTypes.string,
     defaultPosition: PropTypes.shape({
@@ -493,30 +532,41 @@ DraggableWindow.propTypes = {
         width: PropTypes.number,
         height: PropTypes.number
     }),
+    enableStatePersistence: PropTypes.bool,
+    headerActions: PropTypes.node,
     isDraggable: PropTypes.bool,
+    isFullScreen: PropTypes.bool,
+    isMinimized: PropTypes.bool,
     isResizable: PropTypes.bool,
-    minSize: PropTypes.shape({
-        width: PropTypes.number,
-        height: PropTypes.number
-    }),
     maxSize: PropTypes.shape({
         width: PropTypes.number,
         height: PropTypes.number
     }),
-    onDragStart: PropTypes.func,
-    onDrag: PropTypes.func,
-    onDragStop: PropTypes.func,
-    onResizeStart: PropTypes.func,
-    onResize: PropTypes.func,
-    onResizeStop: PropTypes.func,
+    minSize: PropTypes.shape({
+        width: PropTypes.number,
+        height: PropTypes.number
+    }),
+    onActivate: PropTypes.func,
+    onClose: PropTypes.func,
     onContentResize: PropTypes.func,
+    onDrag: PropTypes.func,
+    onDragStart: PropTypes.func,
+    onDragStop: PropTypes.func,
     onMinimizeToggle: PropTypes.func,
-    title: PropTypes.string.isRequired,
+    onResize: PropTypes.func,
+    onResizeStart: PropTypes.func,
+    onResizeStop: PropTypes.func,
+    position: PropTypes.shape({
+        x: PropTypes.number,
+        y: PropTypes.number
+    }),
+    size: PropTypes.shape({
+        width: PropTypes.number,
+        height: PropTypes.number
+    }),
+    title: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
     windowId: PropTypes.string.isRequired,
-    zIndex: PropTypes.number,
-    enableStatePersistence: PropTypes.bool,
-    allowResize: PropTypes.bool,
-    allowMaximize: PropTypes.bool
+    zIndex: PropTypes.number
 };
 
 export default DraggableWindow;
