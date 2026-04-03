@@ -5,9 +5,60 @@ import React from 'react';
 import styles from './draggable-window.css';
 import windowStateStorage from '../../lib/window-state-storage';
 
+const MinimizeIcon = () => (
+    <svg aria-hidden="true" height="12" viewBox="0 0 16 16" width="12">
+        <path
+            d="M4 8.75h8"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.6"
+        />
+    </svg>
+);
+
+const FullscreenIcon = () => (
+    <svg aria-hidden="true" height="12" viewBox="0 0 16 16" width="12">
+        <path
+            d="M5 3.5H3.5V5M11 3.5h1.5V5M3.5 11V12.5H5M12.5 11V12.5H11"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.4"
+        />
+    </svg>
+);
+
+const RestoreIcon = () => (
+    <svg aria-hidden="true" height="12" viewBox="0 0 16 16" width="12">
+        <path
+            d="M5 4.5h6.5v6.5H5zM3.5 6V12.5H10"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.3"
+        />
+    </svg>
+);
+
+const CloseIcon = () => (
+    <svg aria-hidden="true" height="12" viewBox="0 0 16 16" width="12">
+        <path
+            d="M4.5 4.5l7 7m0-7l-7 7"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.5"
+        />
+    </svg>
+);
+
 const DraggableWindow = props => {
     const {
         allowMaximize = true,
+        allowMinimize = true,
         allowResize = true,
         children,
         className,
@@ -27,6 +78,7 @@ const DraggableWindow = props => {
         onDrag,
         onDragStart,
         onDragStop,
+        onFullScreenToggle,
         onMinimizeToggle,
         onResize,
         onResizeStart,
@@ -350,6 +402,9 @@ const DraggableWindow = props => {
     ]);
 
     const handleToggleMinimize = React.useCallback(() => {
+        if (!allowMinimize) {
+            return;
+        }
         if (isDraggingMinimized) {
             setIsDraggingMinimized(false);
             return;
@@ -377,6 +432,7 @@ const DraggableWindow = props => {
             onMinimizeToggle(windowId, true);
         }
     }, [
+        allowMinimize,
         isDraggingMinimized,
         isMinimized,
         onMinimizeToggle,
@@ -386,6 +442,10 @@ const DraggableWindow = props => {
     ]);
 
     const handleToggleFullScreen = React.useCallback(() => {
+        if (onFullScreenToggle) {
+            onFullScreenToggle(windowId, isFullScreen, latestPositionRef.current, latestSizeRef.current);
+            return;
+        }
         if (isFullScreen) {
             setPosition(originalPosition);
             setSize(originalSize);
@@ -408,7 +468,7 @@ const DraggableWindow = props => {
         latestSizeRef.current = fullScreenSize;
         setIsFullScreen(true);
         setIsMinimized(false);
-    }, [isFullScreen, originalPosition, originalSize]);
+    }, [isFullScreen, onFullScreenToggle, originalPosition, originalSize, windowId]);
 
     const handleClose = React.useCallback(() => {
         if (onClose) {
@@ -443,7 +503,7 @@ const DraggableWindow = props => {
         >
             <div
                 className={styles.windowHeader}
-                onDoubleClick={handleToggleMinimize}
+                onDoubleClick={allowMinimize ? handleToggleMinimize : undefined}
                 onMouseDown={handleMouseDown}
                 onTouchStart={handleMouseDown}
             >
@@ -454,16 +514,18 @@ const DraggableWindow = props => {
                     </div>
                 ) : null}
                 <div className={styles.windowControls}>
-                    <button
-                        className={styles.controlButton}
-                        onClick={handleToggleMinimize}
-                        onMouseDown={stopControlPropagation}
-                        onTouchStart={stopControlPropagation}
-                        title="Minimize"
-                        type="button"
-                    >
-                        <span className={styles.controlGlyph}>-</span>
-                    </button>
+                    {allowMinimize ? (
+                        <button
+                            className={styles.controlButton}
+                            onClick={handleToggleMinimize}
+                            onMouseDown={stopControlPropagation}
+                            onTouchStart={stopControlPropagation}
+                            title="Minimize"
+                            type="button"
+                        >
+                            <span className={styles.controlGlyph}><MinimizeIcon /></span>
+                        </button>
+                    ) : null}
                     {allowMaximize ? (
                         <button
                             className={styles.controlButton}
@@ -473,7 +535,9 @@ const DraggableWindow = props => {
                             title="Fullscreen"
                             type="button"
                         >
-                            <span className={styles.controlGlyph}>[]</span>
+                            <span className={styles.controlGlyph}>
+                                {isFullScreen ? <RestoreIcon /> : <FullscreenIcon />}
+                            </span>
                         </button>
                     ) : null}
                     {onClose ? (
@@ -485,7 +549,7 @@ const DraggableWindow = props => {
                             title="Close"
                             type="button"
                         >
-                            <span className={styles.controlGlyph}>x</span>
+                            <span className={styles.controlGlyph}><CloseIcon /></span>
                         </button>
                     ) : null}
                 </div>
@@ -521,6 +585,7 @@ const DraggableWindow = props => {
 
 DraggableWindow.propTypes = {
     allowMaximize: PropTypes.bool,
+    allowMinimize: PropTypes.bool,
     allowResize: PropTypes.bool,
     children: PropTypes.node,
     className: PropTypes.string,
@@ -552,6 +617,7 @@ DraggableWindow.propTypes = {
     onDrag: PropTypes.func,
     onDragStart: PropTypes.func,
     onDragStop: PropTypes.func,
+    onFullScreenToggle: PropTypes.func,
     onMinimizeToggle: PropTypes.func,
     onResize: PropTypes.func,
     onResizeStart: PropTypes.func,

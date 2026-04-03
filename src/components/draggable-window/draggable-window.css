@@ -13,14 +13,15 @@
 .windowHeader {
     background-color: #00BAAD;
     color: white;
-    padding: 4px 8px;
+    padding: 2px 7px;
     cursor: move;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 12px;
     border-bottom: 1px solid #ddd;
     display: flex;
     align-items: center;
-    min-height: 24px;
+    min-height: 22px;
+    line-height: 1.1;
 }
 
 .windowHeader:hover {
@@ -35,7 +36,7 @@
 .headerActions {
     display: flex;
     align-items: center;
-    margin-right: 0.25rem;
+    margin-right: 0.2rem;
 }
 
 .windowContent {
@@ -86,7 +87,7 @@
 
 .windowControls {
     display: flex;
-    gap: 4px;
+    gap: 3px;
 }
 
 .controlButton {
@@ -94,22 +95,26 @@
     border: none;
     color: white;
     cursor: pointer;
-    font-size: 12px;
-    width: 18px;
-    height: 18px;
-    border-radius: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .controlButton:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 .controlGlyph {
     line-height: 1;
     font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 

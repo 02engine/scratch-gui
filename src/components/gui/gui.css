@@ -92,6 +92,10 @@
     min-height: 0;
 }
 
+.editor-window-body .tab-list {
+    width: 100%;
+}
+
 .editor-window-body .tab-panel {
     min-height: 0;
 }
@@ -199,18 +203,24 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.35rem;
+    height: 1.35rem;
     padding: 0;
     border: none;
-    border-radius: 0.3rem;
+    border-radius: 0.35rem;
     background: transparent;
     color: $ui-white;
     cursor: pointer;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .editor-window-header-button:hover {
     background: rgba(255, 255, 255, 0.18);
+}
+
+.editor-window-header-button-active {
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
 }
 
 .editor-wrapper {

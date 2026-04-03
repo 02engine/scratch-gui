@@ -82,12 +82,12 @@ const messages = defineMessages({
     editorWindowLock: {
         id: 'tw.gui.editorWindowLock',
         description: 'Tooltip for the lock button in a newUI editor window',
-        defaultMessage: 'Lock this editor window'
+        defaultMessage: 'Lock window: switching targets opens a new editor'
     },
     editorWindowUnlock: {
         id: 'tw.gui.editorWindowUnlock',
         description: 'Tooltip for the unlock button in a newUI editor window',
-        defaultMessage: 'Unlock this editor window'
+        defaultMessage: 'Unlock window: switching targets reuses this editor'
     },
     editorWindowPreviewHint: {
         id: 'tw.gui.editorWindowPreviewHint',
@@ -140,32 +140,6 @@ const WindowLockIcon = props => (
             width="8"
             x="4"
             y="7"
-        />
-        <circle cx="8" cy="10.2" fill="currentColor" r="1" />
-    </svg>
-);
-
-const WindowUnlockIcon = props => (
-    <svg
-        aria-hidden="true"
-        height="14"
-        viewBox="0 0 16 16"
-        width="14"
-        {...props}
-    >
-        <path
-            d="M10.6 5.8a2.6 2.6 0 1 0-5.2 0V7"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="1.4"
-        />
-        <path
-            d="M10.6 7H4.4A1.4 1.4 0 0 0 3 8.4v4.1A1.5 1.5 0 0 0 4.5 14h6.7a1.5 1.5 0 0 0 1.5-1.5V8.4A1.4 1.4 0 0 0 11.3 7Z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.4"
         />
         <circle cx="8" cy="10.2" fill="currentColor" r="1" />
     </svg>
@@ -380,14 +354,23 @@ const GUIComponent = props => {
             targetId,
             locked: false,
             activeTabIndex: BLOCKS_TAB_INDEX,
+            isFullScreen: true,
             isMinimized: false,
             snapshotMarkup: null,
             snapshotSize: null,
             position: {
+                x: 12,
+                y: 12
+            },
+            size: {
+                width: Math.min(EDITOR_WINDOW_MAX_SIZE.width, Math.max(EDITOR_WINDOW_MIN_SIZE.width, window.innerWidth - 24)),
+                height: Math.min(EDITOR_WINDOW_MAX_SIZE.height, Math.max(EDITOR_WINDOW_MIN_SIZE.height, window.innerHeight - 92))
+            },
+            normalPosition: {
                 x: 96 + (cascadeIndex * 34),
                 y: 96 + (cascadeIndex * 28)
             },
-            size: EDITOR_WINDOW_DEFAULT_SIZE,
+            normalSize: EDITOR_WINDOW_DEFAULT_SIZE,
             zIndex: nextZIndex,
             lastFocusedAt: nextZIndex,
             ...overrides
@@ -614,11 +597,44 @@ const GUIComponent = props => {
     }, [commitEditorWindowState, createEditorWindowSession, getTargetById, syncEditorWindowContext]);
 
     const handleEditorWindowPositionChange = React.useCallback((windowId, position) => {
-        updateEditorWindowSession(windowId, () => ({position}));
+        updateEditorWindowSession(windowId, session => ({
+            position,
+            normalPosition: position,
+            isFullScreen: session.isFullScreen ? false : session.isFullScreen
+        }));
     }, [updateEditorWindowSession]);
 
     const handleEditorWindowSizeChange = React.useCallback((windowId, size) => {
-        updateEditorWindowSession(windowId, () => ({size}));
+        updateEditorWindowSession(windowId, session => ({
+            size,
+            normalSize: size,
+            isFullScreen: session.isFullScreen ? false : session.isFullScreen
+        }));
+    }, [updateEditorWindowSession]);
+
+    const handleEditorWindowFullScreenToggle = React.useCallback((windowId, currentlyFullScreen, currentPosition, currentSize) => {
+        updateEditorWindowSession(windowId, session => {
+            if (currentlyFullScreen || session.isFullScreen) {
+                return {
+                    isFullScreen: false,
+                    position: session.normalPosition || session.position,
+                    size: session.normalSize || session.size
+                };
+            }
+            return {
+                isFullScreen: true,
+                normalPosition: currentPosition,
+                normalSize: currentSize,
+                position: {
+                    x: 12,
+                    y: 12
+                },
+                size: {
+                    width: Math.min(EDITOR_WINDOW_MAX_SIZE.width, Math.max(EDITOR_WINDOW_MIN_SIZE.width, window.innerWidth - 24)),
+                    height: Math.min(EDITOR_WINDOW_MAX_SIZE.height, Math.max(EDITOR_WINDOW_MIN_SIZE.height, window.innerHeight - 92))
+                }
+            };
+        });
     }, [updateEditorWindowSession]);
 
     const handleEditorWindowLockToggle = React.useCallback(windowId => {
@@ -1224,7 +1240,9 @@ const GUIComponent = props => {
 
     const renderEditorWindowHeaderActions = React.useCallback(session => (
         <button
-            className={styles.editorWindowHeaderButton}
+            className={classNames(styles.editorWindowHeaderButton, {
+                [styles.editorWindowHeaderButtonActive]: session.locked
+            })}
             onClick={event => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -1235,7 +1253,7 @@ const GUIComponent = props => {
             )}
             type="button"
         >
-            {session.locked ? <WindowLockIcon /> : <WindowUnlockIcon />}
+            <WindowLockIcon />
         </button>
     ), [handleEditorWindowLockToggle, intl]);
 
@@ -1413,18 +1431,21 @@ const GUIComponent = props => {
             .map(session => (
                 <DraggableWindow
                     key={session.id}
-                    allowMaximize={false}
+                    allowMaximize
+                    allowMinimize={false}
                     className={styles.editorDraggableWindow}
                     defaultPosition={session.position}
                     defaultSize={session.size}
                     enableStatePersistence={false}
                     headerActions={renderEditorWindowHeaderActions(session)}
+                    isFullScreen={session.isFullScreen}
                     isMinimized={session.isMinimized}
                     maxSize={EDITOR_WINDOW_MAX_SIZE}
                     minSize={EDITOR_WINDOW_MIN_SIZE}
                     onActivate={activateEditorWindow}
                     onClose={handleEditorWindowClose}
                     onDragStop={handleEditorWindowPositionChange}
+                    onFullScreenToggle={handleEditorWindowFullScreenToggle}
                     onMinimizeToggle={handleEditorWindowMinimizeToggle}
                     onResizeStop={handleEditorWindowSizeChange}
                     position={session.position}
@@ -1442,20 +1463,23 @@ const GUIComponent = props => {
         }
 
         return inactiveWindows.concat(
-            <DraggableWindow
+                <DraggableWindow
                 key="active-editor-window"
-                allowMaximize={false}
+                allowMaximize
+                allowMinimize={false}
                 className={styles.editorDraggableWindow}
                 defaultPosition={activeSession.position}
                 defaultSize={activeSession.size}
                 enableStatePersistence={false}
                 headerActions={renderEditorWindowHeaderActions(activeSession)}
+                isFullScreen={activeSession.isFullScreen}
                 isMinimized={activeSession.isMinimized}
                 maxSize={EDITOR_WINDOW_MAX_SIZE}
                 minSize={EDITOR_WINDOW_MIN_SIZE}
                 onActivate={activateEditorWindow}
                 onClose={handleEditorWindowClose}
                 onDragStop={handleEditorWindowPositionChange}
+                onFullScreenToggle={handleEditorWindowFullScreenToggle}
                 onMinimizeToggle={handleEditorWindowMinimizeToggle}
                 onResizeStop={handleEditorWindowSizeChange}
                 position={activeSession.position}
@@ -1473,6 +1497,7 @@ const GUIComponent = props => {
         activateEditorWindow,
         editorWindowSessions,
         handleEditorWindowClose,
+        handleEditorWindowFullScreenToggle,
         handleEditorWindowMinimizeToggle,
         handleEditorWindowPositionChange,
         handleEditorWindowSizeChange,
@@ -1543,6 +1568,7 @@ const GUIComponent = props => {
         tabPanelSelected: classNames(tabStyles.reactTabsTabPanelSelected, styles.isSelected),
         tabSelected: classNames(tabStyles.reactTabsTabSelected, styles.isSelected)
     };
+    const hideFloatingWindows = loading || isCreating;
 
     const unconstrainedWidth = (
         UNCONSTRAINED_NON_STAGE_WIDTH +
@@ -1709,13 +1735,15 @@ const GUIComponent = props => {
                         {props.customUI ? (
                         <>
                             <Box className={styles.editorDesktop}>
-                                {editorWindowSessions.length ? renderEditorWindows(stageSize) : (
-                                    <div className={styles.editorDesktopEmpty}>
-                                        {intl.formatMessage(messages.editorDesktopEmpty)}
-                                    </div>
+                                {!hideFloatingWindows && (
+                                    editorWindowSessions.length ? renderEditorWindows(stageSize) : (
+                                        <div className={styles.editorDesktopEmpty}>
+                                            {intl.formatMessage(messages.editorDesktopEmpty)}
+                                        </div>
+                                    )
                                 )}
                             </Box>
-                            {!stageWindowMinimized && (
+                            {!hideFloatingWindows && !stageWindowMinimized && (
                                 <DraggableWindow
                                     windowId="stage"
                                     title="Stage"
@@ -1748,7 +1776,7 @@ const GUIComponent = props => {
                                     />
                                 </DraggableWindow>
                             )}
-                            {!targetPaneWindowMinimized && (
+                            {!hideFloatingWindows && !targetPaneWindowMinimized && (
                                 <DraggableWindow
                                     windowId="targets"
                                     title="Sprites"
@@ -1770,7 +1798,7 @@ const GUIComponent = props => {
                                 </DraggableWindow>
                             )}
                 {/* 全局唯一最小化栏 */}
-                <MinimizedBar windows={minimizedWindows} />
+                {!hideFloatingWindows ? <MinimizedBar windows={minimizedWindows} /> : null}
                         </>
                         ) : (
                         /* 原版内嵌布局（使用原始样式容器） */

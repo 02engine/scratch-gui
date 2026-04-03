@@ -17,12 +17,12 @@
   {
     "id": "tw.gui.editorWindowLock",
     "description": "Tooltip for the lock button in a newUI editor window",
-    "defaultMessage": "Lock this editor window"
+    "defaultMessage": "Lock window: switching targets opens a new editor"
   },
   {
     "id": "tw.gui.editorWindowUnlock",
     "description": "Tooltip for the unlock button in a newUI editor window",
-    "defaultMessage": "Unlock this editor window"
+    "defaultMessage": "Unlock window: switching targets reuses this editor"
   },
   {
     "id": "tw.gui.editorWindowPreviewHint",
