@@ -85,6 +85,19 @@ const getScratchClassNames = () => {
     return _scratchClassNames;
 };
 
+const getActiveEditorRoot = () => (
+    window.__scratchGuiActiveEditorRoot ||
+    document.querySelector('[data-sa-active-editor-root="true"]')
+);
+
+const queryFromActiveEditor = selector => {
+    const activeEditorRoot = getActiveEditorRoot();
+    if (activeEditorRoot) {
+        return activeEditorRoot.querySelector(selector);
+    }
+    return document.querySelector(selector);
+};
+
 let _mutationObserver;
 let _mutationObserverCallbacks = [];
 const runMutationObserverCallbacks = () => {
@@ -399,10 +412,16 @@ class Tab extends EventTargetShim {
                 until: () => []
             },
             afterSoundTab: {
-                element: () => q("[class^='react-tabs_react-tabs__tab-list']"),
-                from: () => [q("[class^='react-tabs_react-tabs__tab-list']").children[2]],
+                element: () => queryFromActiveEditor("[class^='react-tabs_react-tabs__tab-list']"),
+                from: () => {
+                    const tabList = queryFromActiveEditor("[class^='react-tabs_react-tabs__tab-list']");
+                    return tabList && tabList.children[2] ? [tabList.children[2]] : [];
+                },
                 // Element used in find-bar addon
-                until: () => [q('.sa-find-bar')]
+                until: () => {
+                    const findBar = queryFromActiveEditor('.sa-find-bar');
+                    return findBar ? [findBar] : [];
+                }
             },
             assetContextMenuAfterExport: {
                 element: () => scope,

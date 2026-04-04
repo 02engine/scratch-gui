@@ -307,7 +307,49 @@ const GUIComponent = props => {
     }, []);
 
     const setActiveEditorContentNode = React.useCallback(node => {
+        const previousNode = activeEditorContentRef.current;
+        if (previousNode && previousNode !== node) {
+            previousNode.removeAttribute('data-sa-active-editor-root');
+            if (window.__scratchGuiActiveEditorRoot === previousNode) {
+                delete window.__scratchGuiActiveEditorRoot;
+            }
+        }
+
         activeEditorContentRef.current = node;
+
+        if (node) {
+            node.setAttribute('data-sa-active-editor-root', 'true');
+            window.__scratchGuiActiveEditorRoot = node;
+        }
+    }, []);
+
+    const syncWorkspaceGrid = React.useCallback(() => {
+        const ScratchBlocks = window.ScratchBlocks;
+        const workspace = ScratchBlocks && typeof ScratchBlocks.getMainWorkspace === 'function' ?
+            ScratchBlocks.getMainWorkspace() :
+            null;
+        if (!workspace) {
+            return;
+        }
+
+        const grid = typeof workspace.getGrid === 'function' ? workspace.getGrid() : workspace.grid_;
+        if (!grid) {
+            return;
+        }
+
+        try {
+            if (typeof grid.update === 'function') {
+                grid.update(workspace.scale || 1);
+            }
+            const metrics = typeof workspace.getMetrics === 'function' ? workspace.getMetrics() : null;
+            const absoluteLeft = metrics && typeof metrics.absoluteLeft === 'number' ? metrics.absoluteLeft : 0;
+            const absoluteTop = metrics && typeof metrics.absoluteTop === 'number' ? metrics.absoluteTop : 0;
+            if (typeof grid.moveTo === 'function') {
+                grid.moveTo((workspace.scrollX || 0) + absoluteLeft, (workspace.scrollY || 0) + absoluteTop);
+            }
+        } catch (error) {
+            // Ignore transient grid sync errors during workspace remounts.
+        }
     }, []);
 
     const scheduleEditorLayoutRefresh = React.useCallback(() => {
@@ -330,8 +372,9 @@ const GUIComponent = props => {
                     }
                 }
             }
+            syncWorkspaceGrid();
         });
-    }, []);
+    }, [syncWorkspaceGrid]);
 
     React.useEffect(() => {
         editorWindowSessionsRef.current = editorWindowSessions;
@@ -420,6 +463,10 @@ const GUIComponent = props => {
         }
 
         const snapshotRoot = sourceNode.cloneNode(true);
+        snapshotRoot.removeAttribute('data-sa-active-editor-root');
+        snapshotRoot.querySelectorAll('[data-sa-active-editor-root]').forEach(element => {
+            element.removeAttribute('data-sa-active-editor-root');
+        });
         snapshotRoot.style.width = `${width}px`;
         snapshotRoot.style.height = `${height}px`;
 
@@ -1312,6 +1359,7 @@ const GUIComponent = props => {
         <Box
             className={styles.editorWrapper}
             componentRef={setActiveEditorContentNode}
+            data-sa-active-editor-root="true"
         >
             <Tabs
                 forceRenderTabPanel

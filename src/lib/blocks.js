@@ -55,6 +55,14 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             this.queueIntersectionCheck();
         };
 
+        const originalTranslate = workspaceProto.translate;
+        workspaceProto.translate = function (x, y) {
+            originalTranslate.call(this, x, y);
+            if (this.grid_) {
+                this.grid_.moveTo(x, y);
+            }
+        };
+
         workspaceProto.ensureTopBlockRendered_ = function (block) {
             if (block.deferredRenderPending_) {
                 block.render(false);
@@ -148,6 +156,10 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                 this.pendingGridUpdateTimer_ = null;
                 if (this.grid_) {
                     this.grid_.update(this.scale);
+                    const metrics = this.getMetrics ? this.getMetrics() : null;
+                    const absoluteLeft = metrics && typeof metrics.absoluteLeft === 'number' ? metrics.absoluteLeft : 0;
+                    const absoluteTop = metrics && typeof metrics.absoluteTop === 'number' ? metrics.absoluteTop : 0;
+                    this.grid_.moveTo((this.scrollX || 0) + absoluteLeft, (this.scrollY || 0) + absoluteTop);
                 }
             }, 80);
         };
