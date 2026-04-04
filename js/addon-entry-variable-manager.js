@@ -102,6 +102,11 @@ __webpack_require__.r(__webpack_exports__);
     msg
   } = _ref;
   const vm = addon.tab.traps.vm;
+  const getActiveEditorRoot = () => window.__scratchGuiActiveEditorRoot || document.querySelector('[data-sa-active-editor-root="true"]');
+  const queryActiveEditor = selector => {
+    const activeEditorRoot = getActiveEditorRoot();
+    return activeEditorRoot ? activeEditorRoot.querySelector(selector) : document.querySelector(selector);
+  };
   let localVariables = [];
   let globalVariables = [];
   let preventUpdate = false;
@@ -385,7 +390,13 @@ __webpack_require__.r(__webpack_exports__);
   function setVisible(visible) {
     if (visible) {
       varTab.classList.add(addon.tab.scratchClass("react-tabs_react-tabs__tab--selected"), addon.tab.scratchClass("gui_is-selected"));
-      const contentArea = document.querySelector("[class^=gui_tabs]");
+      addon.tab.appendToSharedSpace({
+        space: "afterSoundTab",
+        element: varTab,
+        order: 3
+      });
+      const contentArea = queryActiveEditor("[class^=gui_tabs]");
+      if (!contentArea) return;
       contentArea.insertAdjacentElement("beforeend", manager);
       fullReload();
     } else {
