@@ -22,37 +22,13 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         workspaceProto.pendingGridUpdateTimer_ = null;
         workspaceProto.deferGridUpdate_ = false;
 
-        workspaceProto.setOffscreenTopBlockCullingEnabled = function (enabled) {
-            if (this.offscreenTopBlockCullingEnabled_ === enabled) {
-                if (enabled) this.queueIntersectionCheck();
-                return;
-            }
-            this.offscreenTopBlockCullingEnabled_ = enabled;
-
-            const topBlocks = this.getTopBlocks(false);
-            let needsFullRender = false;
-            for (const block of topBlocks) {
-                if (block.setIntersects) block.setIntersects(true);
-                if (!enabled && block.deferredRenderPending_) {
-                    needsFullRender = true;
-                }
-            }
-
-            if (!enabled && needsFullRender) {
-                this.render();
-                if (!this.isFlyout) {
-                    setTimeout(() => {
-                        for (const block of topBlocks) {
-                            if (block.workspace) {
-                                block.setConnectionsHidden(false);
-                                block.deferredRenderPending_ = false;
-                            }
-                        }
-                    }, 1);
-                }
-            }
-
-            this.queueIntersectionCheck();
+        workspaceProto.setOffscreenTopBlockCullingEnabled = function () {
+            // Experimental top-block culling caused large projects to become
+            // much slower than upstream TurboWarp/Scratch. Keep the original
+            // full-render path by forcing this feature off.
+            this.offscreenTopBlockCullingEnabled_ = false;
+            this.deferBlockRendering_ = false;
+            this.intersectionCheckPendingAfterDrag_ = false;
         };
 
         const originalTranslate = workspaceProto.translate;
@@ -63,46 +39,9 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             }
         };
 
-        workspaceProto.ensureTopBlockRendered_ = function (block) {
-            if (block.deferredRenderPending_) {
-                block.render(false);
-                block.deferredRenderPending_ = false;
-                this.resizeContents();
-                if (!this.isFlyout) {
-                    setTimeout(() => {
-                        if (block.workspace) {
-                            block.setConnectionsHidden(false);
-                        }
-                    }, 1);
-                }
-                return;
-            }
-            if (!block.rendered) {
-                block.render(false);
-            }
-        };
-
-        workspaceProto.renderVisibleTopBlocks = function () {
-            for (const block of this.getTopBlocks(false)) {
-                if (this.isBlockInViewport_ && this.isBlockInViewport_(block)) {
-                    this.ensureTopBlockRendered_(block);
-                }
-            }
-        };
-
-        workspaceProto.queueIntersectionCheck = function () {
-            if (!this.offscreenTopBlockCullingEnabled_) return;
-            if (this.isDragSurfaceActive_ || (this.isDragging && this.isDragging())) {
-                this.intersectionCheckPendingAfterDrag_ = true;
-                return;
-            }
-            if (this.renderVisibleTopBlocks) {
-                this.renderVisibleTopBlocks();
-            }
-            if (this.intersectionObserver) {
-                this.intersectionObserver.queueIntersectionCheck();
-            }
-        };
+        workspaceProto.ensureTopBlockRendered_ = function () {};
+        workspaceProto.renderVisibleTopBlocks = function () {};
+        workspaceProto.queueIntersectionCheck = function () {};
 
         workspaceProto.scheduleWheelScroll_ = function (deltaX, deltaY) {
             if (!this.pendingWheelScrollDelta_) {
@@ -216,7 +155,7 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             if (this.flyout_) {
                 this.flyout_.reflow();
             }
-            this.queueIntersectionCheck();
+            // Disabled experimental intersection/culling refresh.
         };
 
         const originalWorkspaceDispose = workspaceProto.dispose;
@@ -235,38 +174,17 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         const originalResetDragSurface = workspaceProto.resetDragSurface;
         workspaceProto.resetDragSurface = function () {
             originalResetDragSurface.call(this);
-            if (this.intersectionCheckPendingAfterDrag_) {
-                this.intersectionCheckPendingAfterDrag_ = false;
-                this.queueIntersectionCheck();
-            }
+            this.intersectionCheckPendingAfterDrag_ = false;
         };
     }
 
     if (intersectionProto) {
-        const originalIntersectionDispose = intersectionProto.dispose;
-        intersectionProto.dispose = function () {
-            if (this.intersectionCheckFrame_ !== null && this.intersectionCheckFrame_ !== undefined) {
-                cancelAnimationFrame(this.intersectionCheckFrame_);
-                this.intersectionCheckFrame_ = null;
-            }
-            originalIntersectionDispose.call(this);
-        };
-
-        intersectionProto.queueIntersectionCheck = function () {
-            if (this.intersectionCheckQueued) return;
-            this.intersectionCheckQueued = true;
-            if (window.requestAnimationFrame) {
-                this.intersectionCheckFrame_ = window.requestAnimationFrame(this.checkForIntersections);
-            } else {
-                this.intersectionCheckFrame_ = setTimeout(this.checkForIntersections, 16);
-            }
-        };
-
-        const originalIntersectionCheck = intersectionProto.checkForIntersections;
+        intersectionProto.observe = function () {};
+        intersectionProto.unobserve = function () {};
+        intersectionProto.queueIntersectionCheck = function () {};
         intersectionProto.checkForIntersections = function () {
             this.intersectionCheckQueued = false;
             this.intersectionCheckFrame_ = null;
-            originalIntersectionCheck.call(this);
         };
     }
 
@@ -325,12 +243,10 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
     }
 
     if (blockProto) {
+        blockProto.updateIntersectionObserver = function () {};
         const originalInitSvg = blockProto.initSvg;
         blockProto.initSvg = function () {
             originalInitSvg.call(this);
-            if (this.updateIntersectionObserver) {
-                this.updateIntersectionObserver();
-            }
         };
     }
 

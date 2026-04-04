@@ -236,8 +236,10 @@ export default async function ({ addon, console, msg }) {
   const afterStepCallbacks = [];
   vm.runtime._step = function (...args) {
     const ret = originalStep.call(this, ...args);
-    for (const cb of afterStepCallbacks) {
-      cb();
+    if (isInterfaceVisible) {
+      for (const cb of afterStepCallbacks) {
+        cb();
+      }
     }
     return ret;
   };

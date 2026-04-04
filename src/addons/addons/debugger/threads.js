@@ -204,7 +204,12 @@ export default async function createThreadsTab({ debug, addon, console, msg }) {
     logView.queueUpdateContent();
   };
 
+  let isVisible = false;
+
   debug.addAfterStepCallback(() => {
+    if (!isVisible) {
+      return;
+    }
     updateContent();
 
     const runningThread = getRunningThread();
@@ -259,11 +264,14 @@ export default async function createThreadsTab({ debug, addon, console, msg }) {
   });
 
   const show = () => {
+    isVisible = true;
     logView.show();
     updateContent();
   };
   const hide = () => {
+    isVisible = false;
     logView.hide();
+    highlighter.setGlowingThreads([]);
   };
 
   return {

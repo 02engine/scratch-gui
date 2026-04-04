@@ -91,8 +91,6 @@ const DroppableBlocks = DropAreaHOC([
 ])(BlocksComponent);
 
 const WORKSPACE_METRICS_DEBOUNCE_MS = 120;
-const LARGE_WORKSPACE_BLOCK_COUNT = 1000;
-
 class Blocks extends React.Component {
     constructor(props) {
         super(props);
@@ -415,7 +413,12 @@ class Blocks extends React.Component {
         if (!this.workspace || !this.workspace.setOffscreenTopBlockCullingEnabled) {
             return;
         }
-        this.workspace.setOffscreenTopBlockCullingEnabled(this.isLargeWorkspace);
+        // The experimental offscreen top-block culling path caused very large
+        // projects to spend more time in XML load/render bookkeeping than they
+        // saved during interaction. Keep it disabled and use the original
+        // TurboWarp/Scratch Blocks rendering path for stability.
+        this.isLargeWorkspace = false;
+        this.workspace.setOffscreenTopBlockCullingEnabled(false);
     }
     setLocale() {
         this.ScratchBlocks.ScratchMsgs.setLocale(this.props.locale);
@@ -659,7 +662,7 @@ class Blocks extends React.Component {
         try {
             this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
             this.lastAppliedWorkspaceXML = data.xml;
-            this.isLargeWorkspace = this.workspace.getAllBlocks(false).length >= LARGE_WORKSPACE_BLOCK_COUNT;
+            this.isLargeWorkspace = false;
             this.syncWorkspaceCullingState();
         } catch (error) {
             // The workspace is likely incomplete. What did update should be

@@ -4,6 +4,10 @@ export default async function createVariablesTab({ debug, addon, msg }) {
   // 存储所有变量包装器
   let localVariables = [];
   let globalVariables = [];
+  let isVisible = false;
+  let reloadDirty = true;
+  let quickUpdateTimer = null;
+  const QUICK_UPDATE_INTERVAL = 100;
   
   // 创建 Tab
   const tab = debug.createHeaderTab({
@@ -240,7 +244,18 @@ export default async function createVariablesTab({ debug, addon, msg }) {
   };
 
   // 完全重新加载变量
+  const clearQuickUpdateTimer = () => {
+    if (quickUpdateTimer !== null) {
+      clearTimeout(quickUpdateTimer);
+      quickUpdateTimer = null;
+    }
+  };
+
   const fullReload = () => {
+    if (!isVisible) {
+      reloadDirty = true;
+      return;
+    }
     // 保存现有变量的 checked 状态
     const checkedState = new Map();
     [...localVariables, ...globalVariables].forEach(v => {
@@ -289,6 +304,7 @@ export default async function createVariablesTab({ debug, addon, msg }) {
 
     // 更新标题可见性
     updateHeadingVisibility();
+    reloadDirty = false;
   };
 
   const updateHeadingVisibility = () => {
@@ -298,6 +314,7 @@ export default async function createVariablesTab({ debug, addon, msg }) {
 
   // 快速更新（只更新勾选的变量）
   const quickUpdate = () => {
+    if (!isVisible) return;
     [...localVariables, ...globalVariables].forEach(v => {
       if (v.checked) {
         v.updateValue();
@@ -310,6 +327,24 @@ export default async function createVariablesTab({ debug, addon, msg }) {
     });
   };
 
+  const scheduleQuickUpdate = (force = false) => {
+    if (!isVisible) {
+      return;
+    }
+    if (reloadDirty) {
+      fullReload();
+      return;
+    }
+    if (!force && quickUpdateTimer !== null) {
+      return;
+    }
+    clearQuickUpdateTimer();
+    quickUpdateTimer = setTimeout(() => {
+      quickUpdateTimer = null;
+      quickUpdate();
+    }, force ? 0 : QUICK_UPDATE_INTERVAL);
+  };
+
   // 搜索功能
   searchBox.addEventListener("input", (e) => {
     const search = e.target.value;
@@ -318,7 +353,12 @@ export default async function createVariablesTab({ debug, addon, msg }) {
   });
 
   // 监听项目加载
-  vm.runtime.on("PROJECT_LOADED", fullReload);
+  vm.runtime.on("PROJECT_LOADED", () => {
+    reloadDirty = true;
+    if (isVisible) {
+      fullReload();
+    }
+  });
   
   // 监听角色切换 - 只在编辑目标变化时重新加载
   let lastEditingTargetId = null;
@@ -327,26 +367,37 @@ export default async function createVariablesTab({ debug, addon, msg }) {
     const currentId = currentEditingTarget ? currentEditingTarget.id : null;
     if (currentId !== lastEditingTargetId) {
       lastEditingTargetId = currentId;
-      fullReload();
+      reloadDirty = true;
+      if (isVisible) {
+        fullReload();
+      }
     }
   });
 
   // 初始加载
-  fullReload();
 
   // 在每一步后更新变量值
-  const originalStep = vm.runtime._step;
-  vm.runtime._step = function(...args) {
-    const ret = originalStep.apply(this, args);
-    quickUpdate();
-    return ret;
-  };
+  lastEditingTargetId = vm.editingTarget ? vm.editingTarget.id : null;
+
+  debug.addAfterStepCallback(() => {
+    scheduleQuickUpdate();
+  });
 
   return {
     tab,
     content,
     buttons: [],
-    show: () => {},
-    hide: () => {},
+    show: () => {
+      isVisible = true;
+      if (reloadDirty) {
+        fullReload();
+      } else {
+        scheduleQuickUpdate(true);
+      }
+    },
+    hide: () => {
+      isVisible = false;
+      clearQuickUpdateTimer();
+    },
   };
 }
