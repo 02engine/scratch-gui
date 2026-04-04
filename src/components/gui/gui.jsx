@@ -105,8 +105,8 @@ const EDITOR_WINDOW_BASE_Z_INDEX = 120;
 const TARGET_PANE_WINDOW_Z_INDEX = 470;
 const STAGE_WINDOW_Z_INDEX = 475;
 const EDITOR_WINDOW_DEFAULT_SIZE = {width: 760, height: 560};
-const EDITOR_WINDOW_MIN_SIZE = {width: 420, height: 320};
-const EDITOR_WINDOW_MAX_SIZE = {width: 1200, height: 860};
+const EDITOR_WINDOW_MIN_SIZE = {width: 0, height: 0};
+const EDITOR_WINDOW_MAX_SIZE = {width: Number.MAX_SAFE_INTEGER, height: Number.MAX_SAFE_INTEGER};
 
 const clampIndex = (value, length) => {
     if (!length) {
@@ -276,6 +276,7 @@ const GUIComponent = props => {
     const lastRequestedEditingTargetIdRef = React.useRef(null);
     const previousCustomUIRef = React.useRef(customUI);
     const activeEditorContentRef = React.useRef(null);
+    const editorLayoutRefreshFrameRef = React.useRef(null);
 
     // Git 状态跟踪
     const [gitRepositoryExists, setGitRepositoryExists] = React.useState(false);
@@ -309,6 +310,29 @@ const GUIComponent = props => {
         activeEditorContentRef.current = node;
     }, []);
 
+    const scheduleEditorLayoutRefresh = React.useCallback(() => {
+        if (editorLayoutRefreshFrameRef.current !== null) {
+            cancelAnimationFrame(editorLayoutRefreshFrameRef.current);
+        }
+        editorLayoutRefreshFrameRef.current = requestAnimationFrame(() => {
+            editorLayoutRefreshFrameRef.current = null;
+            window.dispatchEvent(new Event('resize'));
+            const ScratchBlocks = window.ScratchBlocks;
+            if (ScratchBlocks && typeof ScratchBlocks.svgResize === 'function') {
+                const workspace = typeof ScratchBlocks.getMainWorkspace === 'function' ?
+                    ScratchBlocks.getMainWorkspace() :
+                    null;
+                if (workspace) {
+                    try {
+                        ScratchBlocks.svgResize(workspace);
+                    } catch (error) {
+                        // Ignore transient workspace resize errors during remounts.
+                    }
+                }
+            }
+        });
+    }, []);
+
     React.useEffect(() => {
         editorWindowSessionsRef.current = editorWindowSessions;
     }, [editorWindowSessions]);
@@ -316,6 +340,13 @@ const GUIComponent = props => {
     React.useEffect(() => {
         activeEditorWindowIdRef.current = activeEditorWindowId;
     }, [activeEditorWindowId]);
+
+    React.useEffect(() => () => {
+        if (editorLayoutRefreshFrameRef.current !== null) {
+            cancelAnimationFrame(editorLayoutRefreshFrameRef.current);
+            editorLayoutRefreshFrameRef.current = null;
+        }
+    }, []);
 
     const getTargetById = React.useCallback(targetId => {
         if (!targetId) {
@@ -363,8 +394,8 @@ const GUIComponent = props => {
                 y: 12
             },
             size: {
-                width: Math.min(EDITOR_WINDOW_MAX_SIZE.width, Math.max(EDITOR_WINDOW_MIN_SIZE.width, window.innerWidth - 24)),
-                height: Math.min(EDITOR_WINDOW_MAX_SIZE.height, Math.max(EDITOR_WINDOW_MIN_SIZE.height, window.innerHeight - 92))
+                width: Math.max(0, window.innerWidth - 24),
+                height: Math.max(0, window.innerHeight - 92)
             },
             normalPosition: {
                 x: 96 + (cascadeIndex * 34),
@@ -610,7 +641,10 @@ const GUIComponent = props => {
             normalSize: size,
             isFullScreen: session.isFullScreen ? false : session.isFullScreen
         }));
-    }, [updateEditorWindowSession]);
+        if (windowId === activeEditorWindowIdRef.current) {
+            scheduleEditorLayoutRefresh();
+        }
+    }, [scheduleEditorLayoutRefresh, updateEditorWindowSession]);
 
     const handleEditorWindowFullScreenToggle = React.useCallback((windowId, currentlyFullScreen, currentPosition, currentSize) => {
         updateEditorWindowSession(windowId, session => {
@@ -630,12 +664,15 @@ const GUIComponent = props => {
                     y: 12
                 },
                 size: {
-                    width: Math.min(EDITOR_WINDOW_MAX_SIZE.width, Math.max(EDITOR_WINDOW_MIN_SIZE.width, window.innerWidth - 24)),
-                    height: Math.min(EDITOR_WINDOW_MAX_SIZE.height, Math.max(EDITOR_WINDOW_MIN_SIZE.height, window.innerHeight - 92))
+                    width: Math.max(0, window.innerWidth - 24),
+                    height: Math.max(0, window.innerHeight - 92)
                 }
             };
         });
-    }, [updateEditorWindowSession]);
+        if (windowId === activeEditorWindowIdRef.current) {
+            scheduleEditorLayoutRefresh();
+        }
+    }, [scheduleEditorLayoutRefresh, updateEditorWindowSession]);
 
     const handleEditorWindowLockToggle = React.useCallback(windowId => {
         updateEditorWindowSession(windowId, session => ({
@@ -699,7 +736,14 @@ const GUIComponent = props => {
         updateEditorWindowSession(activeWindowId, session => (
             session.activeTabIndex === tabIndex ? null : {activeTabIndex: tabIndex}
         ));
-    }, [customUI, onActivateTab, updateEditorWindowSession]);
+        scheduleEditorLayoutRefresh();
+    }, [customUI, onActivateTab, scheduleEditorLayoutRefresh, updateEditorWindowSession]);
+
+    const handleEditorWindowContentResize = React.useCallback(windowId => {
+        if (windowId === activeEditorWindowIdRef.current) {
+            scheduleEditorLayoutRefresh();
+        }
+    }, [scheduleEditorLayoutRefresh]);
 
     React.useEffect(() => {
         const wasCustomUI = previousCustomUIRef.current;
@@ -730,6 +774,13 @@ const GUIComponent = props => {
             syncVm: false
         });
     }, [customUI, editingTargetId, handleEditorTargetSelection]);
+
+    React.useEffect(() => {
+        if (!customUI || !activeEditorWindowId) {
+            return;
+        }
+        scheduleEditorLayoutRefresh();
+    }, [activeEditorWindowId, activeTabIndex, customUI, scheduleEditorLayoutRefresh]);
 
     React.useEffect(() => {
         if (!customUI) {
@@ -1464,25 +1515,26 @@ const GUIComponent = props => {
 
         return inactiveWindows.concat(
                 <DraggableWindow
-                key="active-editor-window"
-                allowMaximize
-                allowMinimize={false}
-                className={styles.editorDraggableWindow}
+                    key="active-editor-window"
+                    allowMaximize
+                    allowMinimize={false}
+                    className={styles.editorDraggableWindow}
                 defaultPosition={activeSession.position}
                 defaultSize={activeSession.size}
-                enableStatePersistence={false}
-                headerActions={renderEditorWindowHeaderActions(activeSession)}
-                isFullScreen={activeSession.isFullScreen}
-                isMinimized={activeSession.isMinimized}
-                maxSize={EDITOR_WINDOW_MAX_SIZE}
-                minSize={EDITOR_WINDOW_MIN_SIZE}
-                onActivate={activateEditorWindow}
-                onClose={handleEditorWindowClose}
-                onDragStop={handleEditorWindowPositionChange}
-                onFullScreenToggle={handleEditorWindowFullScreenToggle}
-                onMinimizeToggle={handleEditorWindowMinimizeToggle}
-                onResizeStop={handleEditorWindowSizeChange}
-                position={activeSession.position}
+                    enableStatePersistence={false}
+                    headerActions={renderEditorWindowHeaderActions(activeSession)}
+                    isFullScreen={activeSession.isFullScreen}
+                    isMinimized={activeSession.isMinimized}
+                    maxSize={EDITOR_WINDOW_MAX_SIZE}
+                    minSize={EDITOR_WINDOW_MIN_SIZE}
+                    onActivate={activateEditorWindow}
+                    onClose={handleEditorWindowClose}
+                    onContentResize={handleEditorWindowContentResize}
+                    onDragStop={handleEditorWindowPositionChange}
+                    onFullScreenToggle={handleEditorWindowFullScreenToggle}
+                    onMinimizeToggle={handleEditorWindowMinimizeToggle}
+                    onResizeStop={handleEditorWindowSizeChange}
+                    position={activeSession.position}
                 size={activeSession.size}
                 title={renderEditorWindowTitle(activeSession)}
                 windowId={activeSession.id}
@@ -1497,6 +1549,7 @@ const GUIComponent = props => {
         activateEditorWindow,
         editorWindowSessions,
         handleEditorWindowClose,
+        handleEditorWindowContentResize,
         handleEditorWindowFullScreenToggle,
         handleEditorWindowMinimizeToggle,
         handleEditorWindowPositionChange,

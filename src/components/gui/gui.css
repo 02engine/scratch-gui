@@ -79,7 +79,7 @@
 .editor-window-body > .editor-wrapper {
     width: 100%;
     height: 100%;
-    flex-basis: auto;
+    flex-basis: 0;
     flex-grow: 1;
     flex-shrink: 1;
     min-width: 0;
@@ -89,6 +89,8 @@
 
 .editor-window-body .tabs {
     height: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
     min-height: 0;
 }
 
@@ -97,10 +99,15 @@
 }
 
 .editor-window-body .tab-panel {
+    flex: 1 1 auto;
+    min-width: 0;
     min-height: 0;
 }
 
 .editor-window-body .blocks-wrapper {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
     min-height: 0;
 }
 
@@ -368,12 +375,16 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    min-height: 0;
 }
 
 .tab-panel {
     position: relative;
     flex-grow: 1;
     display: none;
+    min-width: 0;
+    min-height: 0;
 }
 
 .tab-panel.is-selected {
@@ -383,6 +394,8 @@
 .blocks-wrapper {
     flex-grow: 1;
     position: relative;
+    min-width: 0;
+    min-height: 0;
 }
 
 .stage-and-target-wrapper {
