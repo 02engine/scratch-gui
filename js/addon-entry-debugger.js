@@ -863,6 +863,9 @@ async function createPerformanceTab(_ref) {
   // The last time we pushed a new datapoint to the graph
   let lastFpsTime = now() + 3000;
   debug.addAfterStepCallback(() => {
+    if (!isVisible) {
+      return;
+    }
     if (Object(_module_js__WEBPACK_IMPORTED_MODULE_0__["isPaused"])()) {
       return;
     }
@@ -882,10 +885,8 @@ async function createPerformanceTab(_ref) {
       const clonesData = performanceClonesChart.data.datasets[0].data;
       clonesData.shift();
       clonesData.push(vm.runtime._cloneCounter);
-      if (isVisible) {
-        fpsChart.update();
-        performanceClonesChart.update();
-      }
+      fpsChart.update();
+      performanceClonesChart.update();
     }
   });
   content.appendChild(fpsElements.title);
@@ -1106,7 +1107,11 @@ async function createThreadsTab(_ref) {
     logView.rows = newRows;
     logView.queueUpdateContent();
   };
+  let isVisible = false;
   debug.addAfterStepCallback(() => {
+    if (!isVisible) {
+      return;
+    }
     updateContent();
     const runningThread = Object(_module_js__WEBPACK_IMPORTED_MODULE_0__["getRunningThread"])();
     if (runningThread) {
@@ -1155,11 +1160,14 @@ async function createThreadsTab(_ref) {
     });
   });
   const show = () => {
+    isVisible = true;
     logView.show();
     updateContent();
   };
   const hide = () => {
+    isVisible = false;
     logView.hide();
+    highlighter.setGlowingThreads([]);
   };
   return {
     tab,
@@ -1442,8 +1450,10 @@ const removeAllChildren = element => {
       args[_key2] = arguments[_key2];
     }
     const ret = originalStep.call(this, ...args);
-    for (const cb of afterStepCallbacks) {
-      cb();
+    if (isInterfaceVisible) {
+      for (const cb of afterStepCallbacks) {
+        cb();
+      }
     }
     return ret;
   };
@@ -1806,6 +1816,10 @@ async function createVariablesTab(_ref) {
   // 存储所有变量包装器
   let localVariables = [];
   let globalVariables = [];
+  let isVisible = false;
+  let reloadDirty = true;
+  let quickUpdateTimer = null;
+  const QUICK_UPDATE_INTERVAL = 100;
 
   // 创建 Tab
   const tab = debug.createHeaderTab({
@@ -2030,7 +2044,17 @@ async function createVariablesTab(_ref) {
   };
 
   // 完全重新加载变量
+  const clearQuickUpdateTimer = () => {
+    if (quickUpdateTimer !== null) {
+      clearTimeout(quickUpdateTimer);
+      quickUpdateTimer = null;
+    }
+  };
   const fullReload = () => {
+    if (!isVisible) {
+      reloadDirty = true;
+      return;
+    }
     // 保存现有变量的 checked 状态
     const checkedState = new Map();
     [...localVariables, ...globalVariables].forEach(v => {
@@ -2078,6 +2102,7 @@ async function createVariablesTab(_ref) {
 
     // 更新标题可见性
     updateHeadingVisibility();
+    reloadDirty = false;
   };
   const updateHeadingVisibility = () => {
     localHeading.style.display = localVariables.length === 0 ? "none" : "";
@@ -2086,6 +2111,7 @@ async function createVariablesTab(_ref) {
 
   // 快速更新（只更新勾选的变量）
   const quickUpdate = () => {
+    if (!isVisible) return;
     [...localVariables, ...globalVariables].forEach(v => {
       if (v.checked) {
         v.updateValue();
@@ -2097,6 +2123,24 @@ async function createVariablesTab(_ref) {
       }
     });
   };
+  const scheduleQuickUpdate = function scheduleQuickUpdate() {
+    let force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    if (!isVisible) {
+      return;
+    }
+    if (reloadDirty) {
+      fullReload();
+      return;
+    }
+    if (!force && quickUpdateTimer !== null) {
+      return;
+    }
+    clearQuickUpdateTimer();
+    quickUpdateTimer = setTimeout(() => {
+      quickUpdateTimer = null;
+      quickUpdate();
+    }, force ? 0 : QUICK_UPDATE_INTERVAL);
+  };
 
   // 搜索功能
   searchBox.addEventListener("input", e => {
@@ -2106,7 +2150,12 @@ async function createVariablesTab(_ref) {
   });
 
   // 监听项目加载
-  vm.runtime.on("PROJECT_LOADED", fullReload);
+  vm.runtime.on("PROJECT_LOADED", () => {
+    reloadDirty = true;
+    if (isVisible) {
+      fullReload();
+    }
+  });
 
   // 监听角色切换 - 只在编辑目标变化时重新加载
   let lastEditingTargetId = null;
@@ -2115,29 +2164,36 @@ async function createVariablesTab(_ref) {
     const currentId = currentEditingTarget ? currentEditingTarget.id : null;
     if (currentId !== lastEditingTargetId) {
       lastEditingTargetId = currentId;
-      fullReload();
+      reloadDirty = true;
+      if (isVisible) {
+        fullReload();
+      }
     }
   });
 
   // 初始加载
-  fullReload();
 
   // 在每一步后更新变量值
-  const originalStep = vm.runtime._step;
-  vm.runtime._step = function () {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-    const ret = originalStep.apply(this, args);
-    quickUpdate();
-    return ret;
-  };
+  lastEditingTargetId = vm.editingTarget ? vm.editingTarget.id : null;
+  debug.addAfterStepCallback(() => {
+    scheduleQuickUpdate();
+  });
   return {
     tab,
     content,
     buttons: [],
-    show: () => {},
-    hide: () => {}
+    show: () => {
+      isVisible = true;
+      if (reloadDirty) {
+        fullReload();
+      } else {
+        scheduleQuickUpdate(true);
+      }
+    },
+    hide: () => {
+      isVisible = false;
+      clearQuickUpdateTimer();
+    }
   };
 }
 
