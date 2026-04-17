@@ -101,6 +101,11 @@ __webpack_require__.r(__webpack_exports__);
   let scrollAnimation = true;
   const SVG_NS = "http://www.w3.org/2000/svg";
   const Blockly = await addon.tab.traps.getBlockly();
+  const getActiveEditorRoot = () => window.__scratchGuiActiveEditorRoot || document.querySelector('[data-sa-active-editor-root="true"]');
+  const queryActiveEditor = selector => {
+    const activeEditorRoot = getActiveEditorRoot();
+    return activeEditorRoot ? activeEditorRoot.querySelector(selector) : document.querySelector(selector);
+  };
   function getSpeedValue() {
     let data = {
       none: "0",
@@ -142,9 +147,10 @@ __webpack_require__.r(__webpack_exports__);
     }
   }
   function onmouseenter(e) {
+    var _queryActiveEditor;
     let speed = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     // If a mouse event was passed, only open flyout if the workspace isn't being dragged
-    if (!e || e.buttons === 0 || document.querySelector(".blocklyToolboxDiv").className.includes("blocklyToolboxDelete")) {
+    if (!e || e.buttons === 0 || (_queryActiveEditor = queryActiveEditor(".blocklyToolboxDiv")) !== null && _queryActiveEditor !== void 0 && _queryActiveEditor.className.includes("blocklyToolboxDelete")) {
       speed = typeof speed === "object" ? getSpeedValue() : speed;
       setTransition(speed);
       flyOut.classList.remove("sa-flyoutClose");
@@ -302,9 +308,9 @@ __webpack_require__.r(__webpack_exports__);
       reduxEvents: ["scratch-gui/mode/SET_PLAYER", "scratch-gui/locales/SELECT_LOCALE", "scratch-gui/theme/SET_THEME", "fontsLoaded/SET_FONTS_LOADED"],
       reduxCondition: state => !state.scratchGui.mode.isPlayerOnly
     });
-    scrollBar = document.querySelector(".blocklyFlyoutScrollbar");
-    const blocksWrapper = document.querySelector('[class*="gui_blocks-wrapper_"]');
-    const injectionDiv = document.querySelector(".injectionDiv");
+    scrollBar = queryActiveEditor(".blocklyFlyoutScrollbar");
+    const blocksWrapper = queryActiveEditor('[class*="gui_blocks-wrapper_"]');
+    const injectionDiv = queryActiveEditor(".injectionDiv");
 
     // Code editor left border
     const borderElement1 = document.createElement("div");
@@ -342,8 +348,8 @@ __webpack_require__.r(__webpack_exports__);
     flyOut.appendChild(lockObject);
     onmouseleave(null, 0);
     toggle = false;
-    const toolbox = document.querySelector(".blocklyToolboxDiv");
-    const addExtensionButton = document.querySelector("[class^=gui_extension-button-container_]");
+    const toolbox = queryActiveEditor(".blocklyToolboxDiv");
+    const addExtensionButton = queryActiveEditor("[class^=gui_extension-button-container_]");
     for (let element of [toolbox, addExtensionButton, flyOut, scrollBar]) {
       element.onmouseenter = e => {
         const toggleSetting = getToggleSetting();

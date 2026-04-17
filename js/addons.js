@@ -1433,6 +1433,7 @@ const getScratchClassNames = () => {
   return _scratchClassNames;
 };
 const getActiveEditorRoot = () => window.__scratchGuiActiveEditorRoot || document.querySelector('[data-sa-active-editor-root="true"]');
+const isElementInEditorSnapshot = element => Boolean(element && element.closest && element.closest('[data-editor-window-snapshot="true"]'));
 const queryFromActiveEditor = selector => {
   const activeEditorRoot = getActiveEditorRoot();
   if (activeEditorRoot) {
@@ -1645,6 +1646,7 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
     if (evaluateCondition()) {
       const firstQuery = document.querySelectorAll(selector);
       for (const element of firstQuery) {
+        if (isElementInEditorSnapshot(element)) continue;
         if (this._seenElements.has(element)) continue;
         if (markAsSeen) this._seenElements.add(element);
         return Promise.resolve(element);
@@ -1674,6 +1676,7 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
         }
         const elements = document.querySelectorAll(selector);
         for (const element of elements) {
+          if (isElementInEditorSnapshot(element)) continue;
           if (this._seenElements.has(element)) continue;
           resolve(element);
           removeMutationObserverCallback(callback);
