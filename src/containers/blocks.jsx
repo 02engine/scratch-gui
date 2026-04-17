@@ -48,6 +48,11 @@ import AddonHooks from '../addons/hooks.js';
 import LoadScratchBlocksHOC from '../lib/tw-load-scratch-blocks-hoc.jsx';
 import { findTopBlock } from '../lib/backpack/code-payload.js';
 import { gentlyRequestPersistentStorage } from '../lib/tw-persistent-storage.js';
+import {
+    EDITOR_BACKGROUND_TARGETS,
+    getEditorBackgroundStyle,
+    hasEditorBackgroundTarget
+} from '../lib/editor-background';
 
 // TW: Strings we add to scratch-blocks are localized here
 const messages = defineMessages({
@@ -1225,13 +1230,20 @@ class Blocks extends React.Component {
             updateMetrics: updateMetricsProp,
             useCatBlocks,
             workspaceMetrics,
+            editorBackground,
             ...props
         } = this.props;
         /* eslint-enable no-unused-vars */
+        const editorBackgroundActive = hasEditorBackgroundTarget(
+            editorBackground,
+            EDITOR_BACKGROUND_TARGETS.BLOCKS
+        );
         return (
             <React.Fragment>
                 <DroppableBlocks
                     componentRef={this.setBlocks}
+                    editorBackgroundActive={editorBackgroundActive}
+                    editorBackgroundStyle={editorBackgroundActive ? getEditorBackgroundStyle(editorBackground) : null}
                     onDrop={this.handleDrop}
                     {...props}
                 />
@@ -1284,6 +1296,11 @@ Blocks.propTypes = {
     }),
     customProceduresVisible: PropTypes.bool,
     extensionLibraryVisible: PropTypes.bool,
+    editorBackground: PropTypes.shape({
+        image: PropTypes.string,
+        blur: PropTypes.number,
+        target: PropTypes.string
+    }),
     isRtl: PropTypes.bool,
     isVisible: PropTypes.bool,
     locale: PropTypes.string.isRequired,
@@ -1349,6 +1366,7 @@ const mapStateToProps = state => ({
         state.scratchGui.mode.isFullScreen
     ),
     customStageSize: state.scratchGui.customStageSize,
+    editorBackground: state.scratchGui.tw.editorBackground,
     extensionLibraryVisible: state.scratchGui.modals.extensionLibrary,
     isRtl: state.locales.isRtl,
     locale: state.locales.locale,

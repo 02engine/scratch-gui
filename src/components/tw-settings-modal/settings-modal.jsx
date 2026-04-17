@@ -12,6 +12,7 @@ import DocumentationLink from '../tw-documentation-link/documentation-link.jsx';
 import styles from './settings-modal.css';
 import helpIcon from './help-icon.svg';
 import {APP_NAME} from '../../lib/brand.js';
+import {EDITOR_BACKGROUND_TARGETS, normalizeEditorBackground} from '../../lib/editor-background';
  
 /* eslint-disable react/no-multi-comp */
 
@@ -259,6 +260,153 @@ const CustomUI = props => (
 CustomUI.propTypes = {
     customUI: PropTypes.bool,
     onChange: PropTypes.func
+};
+
+const BackgroundSettings = props => {
+    const background = normalizeEditorBackground(props.editorBackground);
+    return (
+        <Setting
+            active={!!background.image}
+            primary={(
+                <div className={styles.label}>
+                    <FormattedMessage
+                        defaultMessage="Background Settings"
+                        description="Background settings title"
+                        id="tw.settingsModal.backgroundSettings"
+                    />
+                </div>
+            )}
+            help={(
+                <FormattedMessage
+                    defaultMessage="Choose a custom image for the blocks workspace background or for the area underneath NewUI windows. The image and blur amount are saved on this device."
+                    description="Help text for custom editor background settings"
+                    id="tw.settingsModal.backgroundSettingsHelp"
+                />
+            )}
+            secondary={(
+                <div className={styles.backgroundSettings}>
+                    <div className={styles.backgroundControlsRow}>
+                        <label className={styles.backgroundUploadButton}>
+                            <input
+                                accept="image/*"
+                                className={styles.backgroundFileInput}
+                                type="file"
+                                onChange={props.onImageChange}
+                            />
+                            <FormattedMessage
+                                defaultMessage="Upload Image"
+                                description="Button to upload a custom editor background image"
+                                id="tw.settingsModal.backgroundUpload"
+                            />
+                        </label>
+                        <button
+                            className={styles.backgroundClearButton}
+                            disabled={!background.image}
+                            type="button"
+                            onClick={props.onClearImage}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Clear"
+                                description="Button to clear the custom editor background image"
+                                id="tw.settingsModal.backgroundClear"
+                            />
+                        </button>
+                    </div>
+                    <label className={styles.backgroundField}>
+                        <span>
+                            <FormattedMessage
+                                defaultMessage="Apply to"
+                                description="Label for choosing where the custom editor background is applied"
+                                id="tw.settingsModal.backgroundTarget"
+                            />
+                        </span>
+                        <select
+                            className={styles.backgroundSelect}
+                            value={background.target}
+                            onChange={props.onTargetChange}
+                        >
+                            <option value={EDITOR_BACKGROUND_TARGETS.BLOCKS}>
+                                {props.intl.formatMessage({
+                                    id: 'tw.settingsModal.backgroundTarget.blocks',
+                                    defaultMessage: 'Blocks workspace'
+                                })}
+                            </option>
+                            <option value={EDITOR_BACKGROUND_TARGETS.WINDOW}>
+                                {props.intl.formatMessage({
+                                    id: 'tw.settingsModal.backgroundTarget.window',
+                                    defaultMessage: 'NewUI window background'
+                                })}
+                            </option>
+                            <option value={EDITOR_BACKGROUND_TARGETS.BOTH}>
+                                {props.intl.formatMessage({
+                                    id: 'tw.settingsModal.backgroundTarget.both',
+                                    defaultMessage: 'Both'
+                                })}
+                            </option>
+                        </select>
+                    </label>
+                    <label className={styles.backgroundField}>
+                        <span>
+                            <FormattedMessage
+                                defaultMessage="Blur"
+                                description="Label for custom editor background blur"
+                                id="tw.settingsModal.backgroundBlur"
+                            />
+                        </span>
+                        <div className={styles.backgroundBlurControl}>
+                            <input
+                                max="40"
+                                min="0"
+                                step="1"
+                                type="range"
+                                value={background.blur}
+                                onChange={props.onBlurChange}
+                            />
+                            <BufferedInput
+                                className={styles.backgroundBlurInput}
+                                max="40"
+                                min="0"
+                                step="1"
+                                type="number"
+                                value={background.blur}
+                                onSubmit={props.onBlurChange}
+                            />
+                            <span>{'px'}</span>
+                        </div>
+                    </label>
+                    {background.image ? (
+                        <div
+                            className={styles.backgroundPreview}
+                            style={{
+                                '--tw-settings-background-image': `url("${background.image.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`,
+                                '--tw-settings-background-blur': `${background.blur}px`
+                            }}
+                        />
+                    ) : (
+                        <div className={styles.backgroundEmptyPreview}>
+                            <FormattedMessage
+                                defaultMessage="No background image selected"
+                                description="Placeholder shown when there is no custom editor background image"
+                                id="tw.settingsModal.backgroundEmpty"
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+        />
+    );
+};
+BackgroundSettings.propTypes = {
+    editorBackground: PropTypes.shape({
+        image: PropTypes.string,
+        blur: PropTypes.number,
+        target: PropTypes.string
+    }),
+    intl: intlShape,
+    onBlurChange: PropTypes.func,
+    onClearImage: PropTypes.func,
+    onImageChange: PropTypes.func,
+    onTargetChange: PropTypes.func
 };
 
 
@@ -608,6 +756,14 @@ const SettingsModalComponent = props => (
                 customUI={props.customUI}
                 onChange={props.onCustomUIChange}
             />
+            <BackgroundSettings
+                editorBackground={props.editorBackground}
+                intl={props.intl}
+                onBlurChange={props.onBackgroundBlurChange}
+                onClearImage={props.onClearBackgroundImage}
+                onImageChange={props.onBackgroundImageChange}
+                onTargetChange={props.onBackgroundTargetChange}
+            />
             <Interpolation
                 value={props.interpolation}
                 onChange={props.onInterpolationChange}
@@ -707,6 +863,15 @@ SettingsModalComponent.propTypes = {
     onDisableCompilerChange: PropTypes.func,
     customUI: PropTypes.bool,
     onCustomUIChange: PropTypes.func,
+    editorBackground: PropTypes.shape({
+        image: PropTypes.string,
+        blur: PropTypes.number,
+        target: PropTypes.string
+    }),
+    onBackgroundImageChange: PropTypes.func,
+    onBackgroundBlurChange: PropTypes.func,
+    onBackgroundTargetChange: PropTypes.func,
+    onClearBackgroundImage: PropTypes.func,
     onResetWindowCoefficients: PropTypes.func,
     extensionDebugConnected: PropTypes.bool,
     extensionDebugFailed: PropTypes.bool,

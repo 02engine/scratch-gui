@@ -54,6 +54,11 @@ import {resolveStageSize} from '../../lib/screen-utils';
 import getCostumeUrl from '../../lib/get-costume-url';
 import {Theme} from '../../lib/themes';
 import {BLOCKS_TAB_INDEX, COSTUMES_TAB_INDEX, SOUNDS_TAB_INDEX} from '../../reducers/editor-tab';
+import {
+    EDITOR_BACKGROUND_TARGETS,
+    getEditorBackgroundStyle,
+    hasEditorBackgroundTarget
+} from '../../lib/editor-background';
 
 import {isRendererSupported, isBrowserSupported} from '../../lib/tw-environment-support-prober';
 
@@ -250,6 +255,7 @@ const GUIComponent = props => {
         invalidProjectModalVisible,
         vm,
         customUI,
+        editorBackground,
         editingTargetId,
         sprites,
         stage,
@@ -1670,6 +1676,10 @@ const GUIComponent = props => {
         tabSelected: classNames(tabStyles.reactTabsTabSelected, styles.isSelected)
     };
     const hideFloatingWindows = loading || isCreating;
+    const windowBackgroundActive = customUI && hasEditorBackgroundTarget(
+        editorBackground,
+        EDITOR_BACKGROUND_TARGETS.WINDOW
+    );
 
     const unconstrainedWidth = (
         UNCONSTRAINED_NON_STAGE_WIDTH +
@@ -1831,6 +1841,12 @@ const GUIComponent = props => {
 
                 <Box className={styles.bodyWrapper}>
                     <Box className={styles.flexWrapper}>
+                        {windowBackgroundActive ? (
+                            <div
+                                className={styles.windowBackgroundLayer}
+                                style={getEditorBackgroundStyle(editorBackground)}
+                            />
+                        ) : null}
                         {!customUI ? renderEditorWrapper(stageSize) : null}
 
                         {props.customUI ? (
@@ -1999,6 +2015,11 @@ GUIComponent.propTypes = {
         height: PropTypes.number
     }),
     customUI: PropTypes.bool,
+    editorBackground: PropTypes.shape({
+        image: PropTypes.string,
+        blur: PropTypes.number,
+        target: PropTypes.string
+    }),
     editingTargetId: PropTypes.string,
     enableCommunity: PropTypes.bool,
     intl: intlShape.isRequired,
@@ -2092,6 +2113,7 @@ GUIComponent.defaultProps = {
 
 const mapStateToProps = state => ({
     customStageSize: state.scratchGui.customStageSize,
+    editorBackground: state.scratchGui.tw.editorBackground,
     isWindowFullScreen: state.scratchGui.tw.isWindowFullScreen,
     customUI: !!state.scratchGui.tw.customUI,
     editingTargetId: state.scratchGui.targets.editingTarget,

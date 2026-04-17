@@ -4,6 +4,8 @@
 
 .blocks {
     height: 100%;
+    position: relative;
+    overflow: hidden;
 }
 
 .drag-over:after {
@@ -27,6 +29,25 @@
     border: 1px solid $ui-black-transparent;
     border-top-right-radius: $space;
     border-bottom-right-radius: $space;
+    background: transparent;
+}
+
+.blocks.custom-background :global(.injectionDiv) {
+    overflow: hidden;
+}
+
+.blocks.custom-background :global(.injectionDiv):before {
+    content: "";
+    position: absolute;
+    top: calc(-1 * var(--tw-editor-background-blur, 0px));
+    right: calc(-1 * var(--tw-editor-background-blur, 0px));
+    bottom: calc(-1 * var(--tw-editor-background-blur, 0px));
+    left: calc(-1 * var(--tw-editor-background-blur, 0px));
+    background-image: var(--tw-editor-background-image);
+    background-size: cover;
+    background-position: center;
+    filter: blur(var(--tw-editor-background-blur, 0px));
+    pointer-events: none;
 }
 
 [dir="rtl"] .blocks :global(.injectionDiv) {
@@ -38,6 +59,14 @@
 
 .blocks :global(.blocklyMainBackground) {
     stroke: none;
+}
+
+.blocks.custom-background :global(.blocklyMainBackground) {
+    fill: transparent !important;
+}
+
+.blocks.custom-background :global(.blocklySvg) {
+    background: transparent;
 }
 
 .blocks :global(.blocklyToolboxDiv) {

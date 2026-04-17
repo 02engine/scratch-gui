@@ -64,6 +64,41 @@
     "defaultMessage": "Switches between the custom separated-window stage/targets UI and the original single-window UI."
   },
   {
+    "id": "tw.settingsModal.backgroundSettings",
+    "description": "Background settings title",
+    "defaultMessage": "Background Settings"
+  },
+  {
+    "id": "tw.settingsModal.backgroundSettingsHelp",
+    "description": "Help text for custom editor background settings",
+    "defaultMessage": "Choose a custom image for the blocks workspace background or for the area underneath NewUI windows. The image and blur amount are saved on this device."
+  },
+  {
+    "id": "tw.settingsModal.backgroundUpload",
+    "description": "Button to upload a custom editor background image",
+    "defaultMessage": "Upload Image"
+  },
+  {
+    "id": "tw.settingsModal.backgroundClear",
+    "description": "Button to clear the custom editor background image",
+    "defaultMessage": "Clear"
+  },
+  {
+    "id": "tw.settingsModal.backgroundTarget",
+    "description": "Label for choosing where the custom editor background is applied",
+    "defaultMessage": "Apply to"
+  },
+  {
+    "id": "tw.settingsModal.backgroundBlur",
+    "description": "Label for custom editor background blur",
+    "defaultMessage": "Blur"
+  },
+  {
+    "id": "tw.settingsModal.backgroundEmpty",
+    "description": "Placeholder shown when there is no custom editor background image",
+    "defaultMessage": "No background image selected"
+  },
+  {
     "id": "tw.settingsModal.interpolation",
     "description": "Interpolation setting",
     "defaultMessage": "Interpolation"

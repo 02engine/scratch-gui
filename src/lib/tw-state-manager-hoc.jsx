@@ -9,7 +9,7 @@ import {defineMessages, intlShape, injectIntl} from 'react-intl';
 import {
     setUsername
 } from '../reducers/tw';
-import {setCustomUIState} from '../reducers/tw';
+import {setCustomUIState, setEditorBackgroundState} from '../reducers/tw';
 import {
     defaultProjectId,
     setProjectId
@@ -21,6 +21,7 @@ import {
 import {generateRandomUsername} from './tw-username';
 import {setSearchParams} from './tw-navigation-utils';
 import {defaultStageSize} from '../reducers/custom-stage-size';
+import {normalizeEditorBackground} from './editor-background';
 
 /* eslint-disable no-alert */
 
@@ -39,6 +40,7 @@ const messages = defineMessages({
 
 const USERNAME_KEY = 'tw:username';
 const CUSTOM_UI_KEY = 'tw:customUI';
+const EDITOR_BACKGROUND_KEY = 'tw:editorBackground';
 
 /**
  * The State Manager is responsible for managing persistent state and the URL.
@@ -350,6 +352,15 @@ const TWStateManager = function (WrappedComponent) {
                     // ignore
                 }
 
+                try {
+                    const persistedEditorBackground = getLocalStorage(EDITOR_BACKGROUND_KEY);
+                    if (persistedEditorBackground !== null && this.props.setEditorBackground) {
+                        this.props.setEditorBackground(normalizeEditorBackground(JSON.parse(persistedEditorBackground)));
+                    }
+                } catch (e) {
+                    // ignore
+                }
+
             if (urlParams.has('clones')) {
                 const clones = +urlParams.get('clones');
                 if (Number.isNaN(clones) || clones < 0) {
@@ -500,6 +511,14 @@ const TWStateManager = function (WrappedComponent) {
                     // ignore
                 }
             }
+
+            if (this.props.editorBackground !== prevProps.editorBackground) {
+                try {
+                    setLocalStorage(EDITOR_BACKGROUND_KEY, JSON.stringify(normalizeEditorBackground(this.props.editorBackground)));
+                } catch (e) {
+                    // ignore
+                }
+            }
         }
         componentWillUnmount () {
             window.removeEventListener('hashchange', this.handleHashChange);
@@ -553,7 +572,9 @@ const TWStateManager = function (WrappedComponent) {
                 username,
                 vm,
                 customUI,
+                editorBackground,
                 setCustomUI,
+                setEditorBackground,
                 /* eslint-enable no-unused-vars */
                 ...props
             } = this.props;
@@ -587,7 +608,12 @@ const TWStateManager = function (WrappedComponent) {
         highQualityPen: PropTypes.bool,
         framerate: PropTypes.number,
         interpolation: PropTypes.bool,
-    customUI: PropTypes.bool,
+        customUI: PropTypes.bool,
+        editorBackground: PropTypes.shape({
+            image: PropTypes.string,
+            blur: PropTypes.number,
+            target: PropTypes.string
+        }),
         turbo: PropTypes.bool,
         onSetIsFullScreen: PropTypes.func,
         onSetIsPlayerOnly: PropTypes.func,
@@ -616,14 +642,16 @@ const TWStateManager = function (WrappedComponent) {
         customUI: state.scratchGui.tw.customUI,
         turbo: state.scratchGui.vmStatus.turbo,
         username: state.scratchGui.tw.username,
+        editorBackground: state.scratchGui.tw.editorBackground,
         vm: state.scratchGui.vm
     });
     const mapDispatchToProps = dispatch => ({
         onSetIsFullScreen: isFullScreen => dispatch(setFullScreen(isFullScreen)),
         onSetIsPlayerOnly: isPlayerOnly => dispatch(setPlayer(isPlayerOnly)),
         onSetProjectId: projectId => dispatch(setProjectId(projectId)),
-        onSetUsername: username => dispatch(setUsername(username))
-        ,setCustomUI: value => dispatch(setCustomUIState(value))
+        onSetUsername: username => dispatch(setUsername(username)),
+        setCustomUI: value => dispatch(setCustomUIState(value)),
+        setEditorBackground: value => dispatch(setEditorBackgroundState(value))
     });
     return injectIntl(connect(
         mapStateToProps,

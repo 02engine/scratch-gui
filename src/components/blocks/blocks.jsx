@@ -8,20 +8,28 @@ const BlocksComponent = props => {
     const {
         containerRef,
         dragOver,
+        editorBackgroundActive,
+        editorBackgroundStyle,
+        style,
         ...componentProps
     } = props;
     return (
         <Box
             className={classNames(styles.blocks, {
-                [styles.dragOver]: dragOver
+                [styles.dragOver]: dragOver,
+                [styles.customBackground]: editorBackgroundActive
             })}
             {...componentProps}
             componentRef={containerRef}
+            style={Object.assign({}, style, editorBackgroundStyle)}
         />
     );
 };
 BlocksComponent.propTypes = {
     containerRef: PropTypes.func,
-    dragOver: PropTypes.bool
+    dragOver: PropTypes.bool,
+    editorBackgroundActive: PropTypes.bool,
+    editorBackgroundStyle: PropTypes.shape({}),
+    style: PropTypes.shape({})
 };
 export default BlocksComponent;

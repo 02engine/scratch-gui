@@ -35,9 +35,24 @@
     overflow: hidden;
 }
 
+.window-background-layer {
+    position: absolute;
+    top: calc(-1 * var(--tw-editor-background-blur, 0px));
+    right: calc(-1 * var(--tw-editor-background-blur, 0px));
+    bottom: calc(-1 * var(--tw-editor-background-blur, 0px));
+    left: calc(-1 * var(--tw-editor-background-blur, 0px));
+    background-image: var(--tw-editor-background-image);
+    background-size: cover;
+    background-position: center;
+    filter: blur(var(--tw-editor-background-blur, 0px));
+    pointer-events: none;
+    z-index: 0;
+}
+
 .editor-desktop {
     flex: 1;
     position: relative;
+    z-index: 1;
 }
 
 .editor-desktop-empty {

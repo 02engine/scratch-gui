@@ -1,7 +1,13 @@
+import {
+    defaultEditorBackground,
+    normalizeEditorBackground
+} from '../lib/editor-background';
+
 const SET_FRAMERATE = 'tw/SET_FRAMERATE';
 const SET_OPSPERFRAME = 'tw/SET_OPSPERFRAME';
 const SET_INTERPOLATION = 'tw/SET_INTERPOLATION';
 const SET_CUSTOM_UI = 'tw/SET_CUSTOM_UI';
+const SET_EDITOR_BACKGROUND = 'tw/SET_EDITOR_BACKGROUND';
 const SET_COMPILER_OPTIONS = 'tw/SET_COMPILER_OPTIONS';
 const SET_RUNTIME_OPTIONS = 'tw/SET_RUNTIME_OPTIONS';
 const SET_USERNAME = 'tw/SET_USERNAME';
@@ -25,6 +31,7 @@ export const initialState = {
     opsPerFrame: 1,
     interpolation: false,
     customUI: true,
+    editorBackground: defaultEditorBackground,
     cloud: true,
     username: '',
     highQualityPen: false,
@@ -73,6 +80,10 @@ const reducer = function (state, action) {
     case SET_CUSTOM_UI:
         return Object.assign({}, state, {
             customUI: action.customUI
+        });
+    case SET_EDITOR_BACKGROUND:
+        return Object.assign({}, state, {
+            editorBackground: normalizeEditorBackground(action.editorBackground)
         });
     case SET_INTERPOLATION:
         return Object.assign({}, state, {
@@ -175,6 +186,13 @@ const setCustomUIState = function (customUI) {
     return {
         type: SET_CUSTOM_UI,
         customUI: customUI
+    };
+};
+
+const setEditorBackgroundState = function (editorBackground) {
+    return {
+        type: SET_EDITOR_BACKGROUND,
+        editorBackground
     };
 };
 
@@ -310,6 +328,7 @@ export {
     setFramerateState,
     setOpsPerFrameState,
     setCustomUIState,
+    setEditorBackgroundState,
     setInterpolationState,
     setCompilerOptionsState,
     setRuntimeOptionsState,

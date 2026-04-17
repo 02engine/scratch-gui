@@ -6,8 +6,9 @@ import {connect} from 'react-redux';
 import {closeSettingsModal} from '../reducers/modals';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
 import {defaultStageSize} from '../reducers/custom-stage-size';
-import { setOpsPerFrameState, setCustomUIState } from '../reducers/tw';
+import { setOpsPerFrameState, setCustomUIState, setEditorBackgroundState } from '../reducers/tw';
 import windowStateStorage from '../lib/window-state-storage';
+import {normalizeEditorBackground} from '../lib/editor-background';
  
 const messages = defineMessages({
     newFramerate: {
@@ -21,6 +22,52 @@ const messages = defineMessages({
         id: 'tw.menuBar.newOpsPerFrame'
     }
 });
+
+const MAX_BACKGROUND_IMAGE_DIMENSION = 1920;
+const BACKGROUND_IMAGE_QUALITY = 0.86;
+
+const readFileAsDataURL = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+});
+
+const loadImage = src => new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+});
+
+const readEditorBackgroundFile = async file => {
+    const dataURL = await readFileAsDataURL(file);
+    if (!file.type || file.type === 'image/svg+xml') {
+        return dataURL;
+    }
+
+    try {
+        const image = await loadImage(dataURL);
+        const largestSide = Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height);
+        if (!largestSide) {
+            return dataURL;
+        }
+        const scale = Math.min(1, MAX_BACKGROUND_IMAGE_DIMENSION / largestSide);
+        const width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
+        const height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+        if (!context) {
+            return dataURL;
+        }
+        context.drawImage(image, 0, 0, width, height);
+        return canvas.toDataURL('image/jpeg', BACKGROUND_IMAGE_QUALITY);
+    } catch (e) {
+        return dataURL;
+    }
+};
 
 class UsernameModal extends React.Component {
     constructor (props) {
@@ -44,6 +91,10 @@ class UsernameModal extends React.Component {
             'handleStageHeightChange',
             'handleDisableCompilerChange',
             'handleCustomUIChange',
+            'handleBackgroundImageChange',
+            'handleBackgroundBlurChange',
+            'handleBackgroundTargetChange',
+            'handleClearBackgroundImage',
             'handleStoreProjectOptions',
             'handleResetWindowCoefficients',
             'handleExtensionDebugConnect'
@@ -115,6 +166,38 @@ class UsernameModal extends React.Component {
         // store the preference in redux. UI wiring elsewhere should observe this state.
         if (this.props.setCustomUI) this.props.setCustomUI(e.target.checked);
     }
+    async handleBackgroundImageChange (e) {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file || !file.type || !file.type.startsWith('image/')) {
+            return;
+        }
+        try {
+            const image = await readEditorBackgroundFile(file);
+            this.props.setEditorBackground(Object.assign({}, this.props.editorBackground, {
+                image
+            }));
+        } catch (error) {
+            // Ignore invalid image files.
+        }
+    }
+    handleBackgroundBlurChange (valueOrEvent) {
+        const value = valueOrEvent && valueOrEvent.target ? valueOrEvent.target.value : valueOrEvent;
+        const blur = Math.min(Math.max(parseFloat(value) || 0, 0), 40);
+        this.props.setEditorBackground(Object.assign({}, this.props.editorBackground, {
+            blur
+        }));
+    }
+    handleBackgroundTargetChange (e) {
+        this.props.setEditorBackground(Object.assign({}, this.props.editorBackground, {
+            target: e.target.value
+        }));
+    }
+    handleClearBackgroundImage () {
+        this.props.setEditorBackground(Object.assign({}, this.props.editorBackground, {
+            image: null
+        }));
+    }
     handleStageWidthChange (value) {
         this.props.vm.setStageSize(value, this.props.customStageSize.height);
     }
@@ -173,6 +256,11 @@ class UsernameModal extends React.Component {
                 onOpsPerFrameChange={this.handleOpsPerFrameChange}
                 onCustomizeOpsPerFrame={this.handleCustomizeOpsPerFrame}
                 onCustomUIChange={this.handleCustomUIChange}
+                editorBackground={this.props.editorBackground}
+                onBackgroundImageChange={this.handleBackgroundImageChange}
+                onBackgroundBlurChange={this.handleBackgroundBlurChange}
+                onBackgroundTargetChange={this.handleBackgroundTargetChange}
+                onClearBackgroundImage={this.handleClearBackgroundImage}
                 onHighQualityPenChange={this.handleHighQualityPenChange}
                 onInterpolationChange={this.handleInterpolationChange}
                 onInfiniteClonesChange={this.handleInfiniteClonesChange}
@@ -221,6 +309,11 @@ UsernameModal.propTypes = {
     highQualityPen: PropTypes.bool,
     interpolation: PropTypes.bool,
     customUI: PropTypes.bool,
+    editorBackground: PropTypes.shape({
+        image: PropTypes.string,
+        blur: PropTypes.number,
+        target: PropTypes.string
+    }),
     infiniteClones: PropTypes.bool,
     removeFencing: PropTypes.bool,
     removeLimits: PropTypes.bool,
@@ -229,7 +322,8 @@ UsernameModal.propTypes = {
         width: PropTypes.number,
         height: PropTypes.number
     }),
-    disableCompiler: PropTypes.bool
+    disableCompiler: PropTypes.bool,
+    setEditorBackground: PropTypes.func
 };
 
 const mapStateToProps = state => ({
@@ -238,6 +332,7 @@ const mapStateToProps = state => ({
     framerate: state.scratchGui.tw.framerate,
     opsPerFrame: state.scratchGui.tw.opsPerFrame,
     customUI: !!state.scratchGui.tw.customUI,
+    editorBackground: normalizeEditorBackground(state.scratchGui.tw.editorBackground),
     highQualityPen: state.scratchGui.tw.highQualityPen,
     interpolation: state.scratchGui.tw.interpolation,
     infiniteClones: state.scratchGui.tw.runtimeOptions.maxClones === Infinity,
@@ -251,7 +346,8 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeSettingsModal()),
     setOpsPerFrame: (value) => dispatch(setOpsPerFrameState(value)),
-    setCustomUI: value => dispatch(setCustomUIState(value))
+    setCustomUI: value => dispatch(setCustomUIState(value)),
+    setEditorBackground: value => dispatch(setEditorBackgroundState(value))
 });
 
 export default injectIntl(connect(

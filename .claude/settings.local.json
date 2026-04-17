@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const jsgen = require\\(''./node_modules/scratch-vm/src/compiler/jsgen.js''\\); console.log\\(''jsgen.js loaded successfully''\\)\")",
+      "Bash(node -e \"const jsexecute = require\\(''./node_modules/scratch-vm/src/compiler/jsexecute.js''\\); console.log\\(''jsexecute.js loaded successfully''\\)\")",
+      "Bash(npm test:*)",
+      "Bash(node -e \":*)"
+    ]
+  }
+}
