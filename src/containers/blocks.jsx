@@ -136,6 +136,8 @@ class Blocks extends React.Component {
             'onWorkspaceMetricsChange',
             'flushWorkspaceMetrics',
             'flushMonitorUpdate',
+            'scheduleWorkspaceChromeRefresh',
+            'flushWorkspaceChromeRefresh',
             'requestToolboxStateSync',
             'flushToolboxStateSync',
             'syncWorkspaceCullingState',
@@ -164,6 +166,7 @@ class Blocks extends React.Component {
         this.workspaceUpdateFrame = null;
         this.toolboxUpdateFrame = null;
         this.monitorUpdateFrame = null;
+        this.workspaceChromeRefreshFrame = null;
         this.toolboxStateSyncFrame = null;
         this.pendingToolboxStateSyncForce = false;
         this.toolboxUpdateScheduled = false;
@@ -288,6 +291,8 @@ class Blocks extends React.Component {
             this.props.customProceduresVisible !== nextProps.customProceduresVisible ||
             this.props.locale !== nextProps.locale ||
             this.props.anyModalVisible !== nextProps.anyModalVisible ||
+            this.props.layoutToken !== nextProps.layoutToken ||
+            this.props.editingTargetId !== nextProps.editingTargetId ||
             this.props.stageSize !== nextProps.stageSize ||
             this.props.customStageSize !== nextProps.customStageSize
         );
@@ -305,6 +310,20 @@ class Blocks extends React.Component {
             this.requestToolboxUpdate();
         }
 
+        if (
+            this.props.isVisible &&
+            (
+                this.props.layoutToken !== prevProps.layoutToken ||
+                this.props.editingTargetId !== prevProps.editingTargetId
+            )
+        ) {
+            if (this.props.editingTargetId !== prevProps.editingTargetId) {
+                this.props.vm.refreshWorkspace();
+                this.requestToolboxStateSync(true);
+            }
+            this.scheduleWorkspaceChromeRefresh();
+        }
+
         if (this.props.isVisible === prevProps.isVisible) {
             if (
                 this.props.stageSize !== prevProps.stageSize ||
@@ -312,6 +331,7 @@ class Blocks extends React.Component {
             ) {
                 // force workspace to redraw for the new stage size
                 window.dispatchEvent(new Event('resize'));
+                this.scheduleWorkspaceChromeRefresh();
             }
             return;
         }
@@ -329,6 +349,7 @@ class Blocks extends React.Component {
             }
 
             window.dispatchEvent(new Event('resize'));
+            this.scheduleWorkspaceChromeRefresh();
             this.syncWorkspaceCullingState();
         } else {
             this.workspace.setVisible(false);
@@ -349,6 +370,10 @@ class Blocks extends React.Component {
         if (this.monitorUpdateFrame) {
             cancelAnimationFrame(this.monitorUpdateFrame);
             this.monitorUpdateFrame = null;
+        }
+        if (this.workspaceChromeRefreshFrame) {
+            cancelAnimationFrame(this.workspaceChromeRefreshFrame);
+            this.workspaceChromeRefreshFrame = null;
         }
         if (this.toolboxStateSyncFrame) {
             cancelAnimationFrame(this.toolboxStateSyncFrame);
@@ -412,6 +437,76 @@ class Blocks extends React.Component {
         this.updateToolboxStateIfNeeded(toolboxXML, force);
         if (toolboxXML) {
             this.toolboxDirty = false;
+        }
+    }
+    scheduleWorkspaceChromeRefresh() {
+        if (!this.props.isVisible || !this.workspace) {
+            return;
+        }
+        if (this.workspaceChromeRefreshFrame) {
+            cancelAnimationFrame(this.workspaceChromeRefreshFrame);
+        }
+        this.workspaceChromeRefreshFrame = requestAnimationFrame(() => {
+            this.workspaceChromeRefreshFrame = requestAnimationFrame(this.flushWorkspaceChromeRefresh);
+        });
+    }
+    flushWorkspaceChromeRefresh() {
+        this.workspaceChromeRefreshFrame = null;
+        if (!this.workspace || !this.props.isVisible) {
+            return;
+        }
+
+        const toolbox = this.workspace.getToolbox ? this.workspace.getToolbox() : this.workspace.toolbox_;
+        const flyout = this.workspace.getFlyout ? this.workspace.getFlyout() : this.workspace.flyout_;
+
+        try {
+            this.ScratchBlocks.svgResize(this.workspace);
+        } catch (error) {
+            // Ignore transient resize errors during window switches.
+        }
+
+        try {
+            this.workspace.resize();
+            this.workspace.resizeContents();
+        } catch (error) {
+            // Ignore transient workspace resize errors during window switches.
+        }
+
+        if (toolbox) {
+            try {
+                toolbox.position();
+            } catch (error) {
+                // Ignore transient toolbox positioning errors.
+            }
+            if (typeof toolbox.refreshSelection === 'function') {
+                try {
+                    toolbox.refreshSelection();
+                } catch (error) {
+                    // Ignore transient toolbox refresh errors.
+                }
+            }
+        }
+
+        if (flyout) {
+            try {
+                flyout.position();
+            } catch (error) {
+                // Ignore transient flyout positioning errors.
+            }
+            if (typeof flyout.reflow === 'function') {
+                try {
+                    flyout.reflow();
+                } catch (error) {
+                    // Ignore transient flyout reflow errors.
+                }
+            }
+            if (flyout.scrollbar_ && typeof flyout.scrollbar_.resize === 'function') {
+                try {
+                    flyout.scrollbar_.resize();
+                } catch (error) {
+                    // Ignore transient flyout scrollbar resize errors.
+                }
+            }
         }
     }
     syncWorkspaceCullingState() {
@@ -813,7 +908,11 @@ class Blocks extends React.Component {
 
             // Method 2: Try to find by class name
             if (!toolboxElement) {
-                toolboxElement = document.querySelector('.blocklyToolboxDiv');
+                const activeEditorRoot = window.__scratchGuiActiveEditorRoot ||
+                    document.querySelector('[data-sa-active-editor-root="true"]');
+                toolboxElement = activeEditorRoot ?
+                    activeEditorRoot.querySelector('.blocklyToolboxDiv') :
+                    document.querySelector('.blocklyToolboxDiv');
             }
 
             if (!toolboxElement) {
@@ -1296,6 +1395,7 @@ Blocks.propTypes = {
     }),
     customProceduresVisible: PropTypes.bool,
     extensionLibraryVisible: PropTypes.bool,
+    editingTargetId: PropTypes.string,
     editorBackground: PropTypes.shape({
         image: PropTypes.string,
         blur: PropTypes.number,
@@ -1303,6 +1403,7 @@ Blocks.propTypes = {
     }),
     isRtl: PropTypes.bool,
     isVisible: PropTypes.bool,
+    layoutToken: PropTypes.string,
     locale: PropTypes.string.isRequired,
     messages: PropTypes.objectOf(PropTypes.string),
     onActivateColorPicker: PropTypes.func,
@@ -1367,6 +1468,7 @@ const mapStateToProps = state => ({
     ),
     customStageSize: state.scratchGui.customStageSize,
     editorBackground: state.scratchGui.tw.editorBackground,
+    editingTargetId: state.scratchGui.targets.editingTarget,
     extensionLibraryVisible: state.scratchGui.modals.extensionLibrary,
     isRtl: state.locales.isRtl,
     locale: state.locales.locale,

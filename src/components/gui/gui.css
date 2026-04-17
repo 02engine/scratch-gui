@@ -55,20 +55,6 @@
     z-index: 1;
 }
 
-.editor-desktop-empty {
-    position: absolute;
-    top: 6rem;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0.85rem 1.2rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid $ui-black-transparent;
-    color: $text-primary;
-    font-size: 0.9rem;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-}
-
 .editor-desktop-backpack {
     position: absolute;
     left: calc($space * 2);

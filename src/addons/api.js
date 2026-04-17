@@ -90,6 +90,12 @@ const getActiveEditorRoot = () => (
     document.querySelector('[data-sa-active-editor-root="true"]')
 );
 
+const isElementInEditorSnapshot = element => Boolean(
+    element &&
+    element.closest &&
+    element.closest('[data-editor-window-snapshot="true"]')
+);
+
 const queryFromActiveEditor = selector => {
     const activeEditorRoot = getActiveEditorRoot();
     if (activeEditorRoot) {
@@ -329,6 +335,7 @@ class Tab extends EventTargetShim {
         if (evaluateCondition()) {
             const firstQuery = document.querySelectorAll(selector);
             for (const element of firstQuery) {
+                if (isElementInEditorSnapshot(element)) continue;
                 if (this._seenElements.has(element)) continue;
                 if (markAsSeen) this._seenElements.add(element);
                 return Promise.resolve(element);
@@ -357,6 +364,7 @@ class Tab extends EventTargetShim {
                 }
                 const elements = document.querySelectorAll(selector);
                 for (const element of elements) {
+                    if (isElementInEditorSnapshot(element)) continue;
                     if (this._seenElements.has(element)) continue;
                     resolve(element);
                     removeMutationObserverCallback(callback);

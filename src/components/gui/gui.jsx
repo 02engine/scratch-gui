@@ -79,11 +79,6 @@ const messages = defineMessages({
         description: 'Display name for the stage target in newUI editor windows',
         defaultMessage: 'Stage'
     },
-    editorDesktopEmpty: {
-        id: 'tw.gui.editorDesktopEmpty',
-        description: 'Empty state message shown when there are no open editor windows in newUI',
-        defaultMessage: 'Select a target to open an editor window.'
-    },
     editorWindowLock: {
         id: 'tw.gui.editorWindowLock',
         description: 'Tooltip for the lock button in a newUI editor window',
@@ -162,6 +157,78 @@ const getFullscreenBackgroundColor = () => {
 };
 
 const fullscreenBackgroundColor = getFullscreenBackgroundColor();
+
+const SNAPSHOT_REFERENCE_ATTRIBUTE_NAMES = [
+    'fill',
+    'stroke',
+    'filter',
+    'mask',
+    'clip-path',
+    'marker-start',
+    'marker-mid',
+    'marker-end',
+    'href',
+    'xlink:href',
+    'aria-labelledby',
+    'aria-describedby',
+    'for'
+];
+
+const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const replaceSnapshotIdReferences = (value, idMap) => {
+    if (typeof value !== 'string' || !value) {
+        return value;
+    }
+
+    let nextValue = value;
+    idMap.forEach((nextId, previousId) => {
+        const escapedPreviousId = escapeRegExp(previousId);
+        nextValue = nextValue.replace(new RegExp(`url\\(#${escapedPreviousId}\\)`, 'g'), `url(#${nextId})`);
+        if (nextValue === `#${previousId}`) {
+            nextValue = `#${nextId}`;
+        }
+    });
+
+    return nextValue;
+};
+
+const sanitizeSnapshotDom = (snapshotRoot, snapshotNamespace) => {
+    if (!snapshotRoot) {
+        return;
+    }
+
+    snapshotRoot.setAttribute('data-editor-window-snapshot', 'true');
+    snapshotRoot.setAttribute('aria-hidden', 'true');
+
+    const idMap = new Map();
+    snapshotRoot.querySelectorAll('[id]').forEach((element, index) => {
+        const previousId = element.getAttribute('id');
+        if (!previousId) {
+            return;
+        }
+        const nextId = `${snapshotNamespace}-${index}-${previousId}`;
+        idMap.set(previousId, nextId);
+        element.setAttribute('id', nextId);
+    });
+
+    if (idMap.size) {
+        [snapshotRoot].concat(Array.from(snapshotRoot.querySelectorAll('*'))).forEach(element => {
+            SNAPSHOT_REFERENCE_ATTRIBUTE_NAMES.forEach(attributeName => {
+                const attributeValue = element.getAttribute(attributeName);
+                if (!attributeValue) {
+                    return;
+                }
+                element.setAttribute(attributeName, replaceSnapshotIdReferences(attributeValue, idMap));
+            });
+
+            const inlineStyle = element.getAttribute('style');
+            if (inlineStyle) {
+                element.setAttribute('style', replaceSnapshotIdReferences(inlineStyle, idMap));
+            }
+        });
+    }
+};
 
 const GUIComponent = props => {
     const {
@@ -280,9 +347,11 @@ const GUIComponent = props => {
     const editorWindowIdCounterRef = React.useRef(0);
     const editorWindowZIndexRef = React.useRef(EDITOR_WINDOW_BASE_Z_INDEX);
     const lastRequestedEditingTargetIdRef = React.useRef(null);
+    const pendingEditorWindowSyncRef = React.useRef(null);
     const previousCustomUIRef = React.useRef(customUI);
     const activeEditorContentRef = React.useRef(null);
     const editorLayoutRefreshFrameRef = React.useRef(null);
+    const snapshotNamespaceCounterRef = React.useRef(0);
 
     // Git 状态跟踪
     const [gitRepositoryExists, setGitRepositoryExists] = React.useState(false);
@@ -438,6 +507,7 @@ const GUIComponent = props => {
             isMinimized: false,
             snapshotMarkup: null,
             snapshotSize: null,
+            snapshotThemeId: null,
             position: {
                 x: 12,
                 y: 12
@@ -498,6 +568,8 @@ const GUIComponent = props => {
         });
 
         computedStyleToInlineStyle(snapshotRoot, {recursive: true});
+        snapshotNamespaceCounterRef.current += 1;
+        sanitizeSnapshotDom(snapshotRoot, `editor-snapshot-${snapshotNamespaceCounterRef.current}`);
 
         snapshotRoot.style.width = '100%';
         snapshotRoot.style.height = '100%';
@@ -505,9 +577,10 @@ const GUIComponent = props => {
 
         return {
             snapshotMarkup: snapshotRoot.outerHTML,
-            snapshotSize: {width, height}
+            snapshotSize: {width, height},
+            snapshotThemeId: theme.id
         };
-    }, []);
+    }, [theme.id]);
 
     const captureSessionSnapshot = React.useCallback((sessions, sessionId) => {
         if (!sessionId) {
@@ -524,10 +597,18 @@ const GUIComponent = props => {
             return {
                 ...session,
                 snapshotMarkup: snapshot.snapshotMarkup,
-                snapshotSize: snapshot.snapshotSize
+                snapshotSize: snapshot.snapshotSize,
+                snapshotThemeId: snapshot.snapshotThemeId
             };
         });
     }, [createEditorWindowSnapshot]);
+
+    React.useEffect(() => {
+        if (!customUI || !activeEditorWindowId) {
+            return;
+        }
+        scheduleEditorLayoutRefresh();
+    }, [activeEditorWindowId, customUI, scheduleEditorLayoutRefresh, theme.id]);
 
     const findEditorWindowFallback = React.useCallback((sessions, excludedId = null) => {
         const candidates = sessions.filter(session => session.id !== excludedId);
@@ -553,6 +634,42 @@ const GUIComponent = props => {
             onActivateTab(session.activeTabIndex);
         }
     }, [activeTabIndex, onActivateTab, vm]);
+
+    React.useLayoutEffect(() => {
+        if (!customUI) {
+            pendingEditorWindowSyncRef.current = null;
+            return;
+        }
+
+        const pendingSync = pendingEditorWindowSyncRef.current;
+        if (!pendingSync || pendingSync.windowId !== activeEditorWindowId) {
+            return;
+        }
+
+        const activeSession = editorWindowSessions.find(session => session.id === pendingSync.windowId);
+        if (!activeSession) {
+            pendingEditorWindowSyncRef.current = null;
+            return;
+        }
+
+        pendingEditorWindowSyncRef.current = null;
+        syncEditorWindowContext(activeSession, {
+            syncVm: pendingSync.syncVm,
+            syncTab: pendingSync.syncTab
+        });
+
+        requestAnimationFrame(() => {
+            if (activeEditorWindowIdRef.current === activeSession.id) {
+                scheduleEditorLayoutRefresh();
+            }
+        });
+    }, [
+        activeEditorWindowId,
+        customUI,
+        editorWindowSessions,
+        scheduleEditorLayoutRefresh,
+        syncEditorWindowContext
+    ]);
 
     const updateEditorWindowSession = React.useCallback((windowId, updater) => {
         let updatedSession = null;
@@ -609,13 +726,13 @@ const GUIComponent = props => {
                 lastFocusedAt: nextZIndex
             };
         });
-        const activeSession = nextSessions[sessionIndex];
         commitEditorWindowState(nextSessions, windowId);
-        syncEditorWindowContext(activeSession, {
+        pendingEditorWindowSyncRef.current = {
+            windowId,
             syncVm: options.syncVm !== false,
             syncTab: options.syncTab !== false
-        });
-    }, [captureSessionSnapshot, commitEditorWindowState, syncEditorWindowContext]);
+        };
+    }, [captureSessionSnapshot, commitEditorWindowState]);
 
     const handleEditorTargetSelection = React.useCallback((targetId, options = {}) => {
         if (!targetId || !getTargetById(targetId)) {
@@ -673,12 +790,12 @@ const GUIComponent = props => {
         ));
 
         commitEditorWindowState(nextSessions, nextActiveId);
-        const nextActiveSession = nextSessions.find(session => session.id === nextActiveId);
-        syncEditorWindowContext(nextActiveSession, {
+        pendingEditorWindowSyncRef.current = {
+            windowId: nextActiveId,
             syncVm: options.syncVm !== false,
             syncTab: options.syncTab !== false
-        });
-    }, [commitEditorWindowState, createEditorWindowSession, getTargetById, syncEditorWindowContext]);
+        };
+    }, [commitEditorWindowState, createEditorWindowSession, getTargetById]);
 
     const handleEditorWindowPositionChange = React.useCallback((windowId, position) => {
         updateEditorWindowSession(windowId, session => ({
@@ -752,13 +869,15 @@ const GUIComponent = props => {
         }
         commitEditorWindowState(nextSessions, nextActiveId);
         if (nextActiveId) {
-            const nextActiveSession = nextSessions.find(session => session.id === nextActiveId);
-            syncEditorWindowContext(nextActiveSession, {
+            pendingEditorWindowSyncRef.current = {
+                windowId: nextActiveId,
                 syncVm: true,
                 syncTab: true
-            });
+            };
+        } else {
+            pendingEditorWindowSyncRef.current = null;
         }
-    }, [commitEditorWindowState, findEditorWindowFallback, syncEditorWindowContext]);
+    }, [commitEditorWindowState, findEditorWindowFallback]);
 
     const handleEditorWindowClose = React.useCallback(windowId => {
         const nextSessions = editorWindowSessionsRef.current.filter(session => session.id !== windowId);
@@ -769,13 +888,15 @@ const GUIComponent = props => {
         }
         commitEditorWindowState(nextSessions, nextActiveId);
         if (nextActiveId) {
-            const nextActiveSession = nextSessions.find(session => session.id === nextActiveId);
-            syncEditorWindowContext(nextActiveSession, {
+            pendingEditorWindowSyncRef.current = {
+                windowId: nextActiveId,
                 syncVm: true,
                 syncTab: true
-            });
+            };
+        } else {
+            pendingEditorWindowSyncRef.current = null;
         }
-    }, [commitEditorWindowState, findEditorWindowFallback, syncEditorWindowContext]);
+    }, [commitEditorWindowState, findEditorWindowFallback]);
 
     const handleActiveEditorTabSelect = React.useCallback(tabIndex => {
         onActivateTab(tabIndex);
@@ -1361,6 +1482,25 @@ const GUIComponent = props => {
         </button>
     ), [handleEditorWindowLockToggle, intl]);
 
+    const activeEditorSession = customUI ?
+        (editorWindowSessions.find(session => session.id === activeEditorWindowId) || null) :
+        null;
+    const activeEditorSessionReady = !customUI || !activeEditorSession ||
+        (
+            activeEditorSession.targetId === editingTargetId &&
+            activeEditorSession.activeTabIndex === activeTabIndex
+        );
+    const blocksLayoutToken = customUI && activeEditorSession ?
+        [
+            activeEditorSession.id,
+            activeEditorSession.targetId || '',
+            activeEditorSession.activeTabIndex,
+            activeEditorSession.size && activeEditorSession.size.width,
+            activeEditorSession.size && activeEditorSession.size.height,
+            editingTargetId || ''
+        ].join(':') :
+        `legacy:${editingTargetId || ''}:${activeTabIndex}`;
+
     const renderEditorWrapper = stageSize => (
         <Box
             className={styles.editorWrapper}
@@ -1432,6 +1572,7 @@ const GUIComponent = props => {
                             onOpenCustomExtensionModal={onOpenCustomExtensionModal}
                             onOpenExtensionImportMethodModal={onOpenExtensionImportMethodModal}
                             onSetSelectedExtension={onSetSelectedExtension}
+                            layoutToken={blocksLayoutToken}
                             theme={theme}
                             vm={vm}
                         />
@@ -1569,7 +1710,7 @@ const GUIComponent = props => {
 
         return inactiveWindows.concat(
                 <DraggableWindow
-                    key="active-editor-window"
+                    key={activeSession.id}
                     allowMaximize
                     allowMinimize={false}
                     className={styles.editorDraggableWindow}
@@ -1595,12 +1736,14 @@ const GUIComponent = props => {
                 zIndex={activeSession.zIndex}
             >
                 <Box className={styles.editorWindowBody}>
-                    {renderEditorWrapper(stageSize)}
+                    {activeEditorSessionReady ? renderEditorWrapper(stageSize) : renderEditorWindowPreview(activeSession)}
                 </Box>
             </DraggableWindow>
         );
     }, [
         activateEditorWindow,
+        activeEditorSessionReady,
+        activeEditorWindowId,
         editorWindowSessions,
         handleEditorWindowClose,
         handleEditorWindowContentResize,
@@ -1610,7 +1753,8 @@ const GUIComponent = props => {
         handleEditorWindowSizeChange,
         renderEditorWindowHeaderActions,
         renderEditorWindowPreview,
-        renderEditorWindowTitle
+        renderEditorWindowTitle,
+        theme.id
     ]);
 
     if (children) {
@@ -1853,11 +1997,7 @@ const GUIComponent = props => {
                         <>
                             <Box className={styles.editorDesktop}>
                                 {!hideFloatingWindows && (
-                                    editorWindowSessions.length ? renderEditorWindows(stageSize) : (
-                                        <div className={styles.editorDesktopEmpty}>
-                                            {intl.formatMessage(messages.editorDesktopEmpty)}
-                                        </div>
-                                    )
+                                    editorWindowSessions.length ? renderEditorWindows(stageSize) : null
                                 )}
                             </Box>
                             {!hideFloatingWindows && !stageWindowMinimized && (

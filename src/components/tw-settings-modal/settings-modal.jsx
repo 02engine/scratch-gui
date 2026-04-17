@@ -270,9 +270,9 @@ const BackgroundSettings = props => {
             primary={(
                 <div className={styles.label}>
                     <FormattedMessage
-                        defaultMessage="Background Settings"
-                        description="Background settings title"
-                        id="tw.settingsModal.backgroundSettings"
+                        defaultMessage="Editor Background"
+                        description="Custom editor background setting title"
+                        id="tw.settingsModal.backgroundEditor"
                     />
                 </div>
             )}
@@ -756,14 +756,6 @@ const SettingsModalComponent = props => (
                 customUI={props.customUI}
                 onChange={props.onCustomUIChange}
             />
-            <BackgroundSettings
-                editorBackground={props.editorBackground}
-                intl={props.intl}
-                onBlurChange={props.onBackgroundBlurChange}
-                onClearImage={props.onClearBackgroundImage}
-                onImageChange={props.onBackgroundImageChange}
-                onTargetChange={props.onBackgroundTargetChange}
-            />
             <Interpolation
                 value={props.interpolation}
                 onChange={props.onInterpolationChange}
@@ -832,6 +824,21 @@ const SettingsModalComponent = props => (
                 isConnected={props.extensionDebugConnected}
                 isConnectionFailed={props.extensionDebugFailed}
                 onConnect={props.onExtensionDebugConnect}
+            />
+            <Header>
+                <FormattedMessage
+                    defaultMessage="Background Settings"
+                    description="Settings modal section for custom editor backgrounds"
+                    id="tw.settingsModal.backgroundSettings"
+                />
+            </Header>
+            <BackgroundSettings
+                editorBackground={props.editorBackground}
+                intl={props.intl}
+                onBlurChange={props.onBackgroundBlurChange}
+                onClearImage={props.onClearBackgroundImage}
+                onImageChange={props.onBackgroundImageChange}
+                onTargetChange={props.onBackgroundTargetChange}
             />
         </Box>
     </Modal>

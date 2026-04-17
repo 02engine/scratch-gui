@@ -61,10 +61,6 @@
     stroke: none;
 }
 
-.blocks.custom-background :global(.blocklyMainBackground) {
-    fill: transparent !important;
-}
-
 .blocks.custom-background :global(.blocklySvg) {
     background: transparent;
 }

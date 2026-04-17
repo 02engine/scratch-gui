@@ -10,11 +10,6 @@
     "defaultMessage": "Stage"
   },
   {
-    "id": "tw.gui.editorDesktopEmpty",
-    "description": "Empty state message shown when there are no open editor windows in newUI",
-    "defaultMessage": "Select a target to open an editor window."
-  },
-  {
     "id": "tw.gui.editorWindowLock",
     "description": "Tooltip for the lock button in a newUI editor window",
     "defaultMessage": "Lock window: switching targets opens a new editor"

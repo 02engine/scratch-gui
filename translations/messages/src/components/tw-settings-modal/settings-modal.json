@@ -64,9 +64,9 @@
     "defaultMessage": "Switches between the custom separated-window stage/targets UI and the original single-window UI."
   },
   {
-    "id": "tw.settingsModal.backgroundSettings",
-    "description": "Background settings title",
-    "defaultMessage": "Background Settings"
+    "id": "tw.settingsModal.backgroundEditor",
+    "description": "Custom editor background setting title",
+    "defaultMessage": "Editor Background"
   },
   {
     "id": "tw.settingsModal.backgroundSettingsHelp",
@@ -237,5 +237,10 @@
     "id": "tw.settingsModal.extensionDebugging",
     "description": "Settings modal section",
     "defaultMessage": "02Engine VScode Toolbox"
+  },
+  {
+    "id": "tw.settingsModal.backgroundSettings",
+    "description": "Settings modal section for custom editor backgrounds",
+    "defaultMessage": "Background Settings"
   }
 ]
