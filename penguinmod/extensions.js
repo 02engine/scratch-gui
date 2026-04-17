@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-04-04T13:31:13.365Z
+// Synced at: 2026-04-17T12:16:08.224Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -96,7 +96,7 @@ export default [
         creator: "skyhigh173",
         isGitHub: true,
     },
-    {
+    /*{
         name: "Scope Variable",
         description: "Manage your variables in a block-like structure.",
         code: "0znzw/ScopeVars.js",
@@ -105,7 +105,7 @@ export default [
         isGitHub: true,
         unstable: true,
         unstableReason: "This extension uses unstable techniques that may not always work.",
-    },
+    },*/
     {
         name: "Extra Timers",
         description: "Allows for the creation and management of additional timer blocks.",
