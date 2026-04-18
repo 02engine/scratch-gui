@@ -387,18 +387,30 @@ __webpack_require__.r(__webpack_exports__);
       activeTabIndex: 3
     });
   });
+  function mountVariableManager() {
+    addon.tab.appendToSharedSpace({
+      space: "afterSoundTab",
+      element: varTab,
+      order: 3
+    });
+    if (addon.tab.redux.state.scratchGui.editorTab.activeTabIndex !== 3) {
+      manager.remove();
+      return true;
+    }
+    const contentArea = queryActiveEditor("[class^=gui_tabs]");
+    if (!contentArea) return false;
+    if (manager.parentNode !== contentArea) {
+      contentArea.insertAdjacentElement("beforeend", manager);
+    }
+    return true;
+  }
   function setVisible(visible) {
     if (visible) {
       varTab.classList.add(addon.tab.scratchClass("react-tabs_react-tabs__tab--selected"), addon.tab.scratchClass("gui_is-selected"));
-      addon.tab.appendToSharedSpace({
-        space: "afterSoundTab",
-        element: varTab,
-        order: 3
-      });
-      const contentArea = queryActiveEditor("[class^=gui_tabs]");
-      if (!contentArea) return;
-      contentArea.insertAdjacentElement("beforeend", manager);
+      if (!mountVariableManager()) return;
       fullReload();
+      queueMicrotask(mountVariableManager);
+      requestAnimationFrame(mountVariableManager);
     } else {
       varTab.classList.remove(addon.tab.scratchClass("react-tabs_react-tabs__tab--selected"), addon.tab.scratchClass("gui_is-selected"));
       manager.remove();
@@ -466,11 +478,7 @@ __webpack_require__.r(__webpack_exports__);
       reduxEvents: ["scratch-gui/mode/SET_PLAYER", "fontsLoaded/SET_FONTS_LOADED", "scratch-gui/locales/SELECT_LOCALE"],
       reduxCondition: state => !state.scratchGui.mode.isPlayerOnly
     });
-    addon.tab.appendToSharedSpace({
-      space: "afterSoundTab",
-      element: varTab,
-      order: 3
-    });
+    mountVariableManager();
   }
 });
 

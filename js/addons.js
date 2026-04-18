@@ -2397,10 +2397,12 @@ window.addonAPI = {
     this.pruneDisconnectedSeenElements();
     notifyAddonWaitersForDomRemount();
     const triggerCallbacks = () => {
+      notifyAddonWaitersForDomRemount();
       runMutationObserverCallbacks();
     };
     if (window.requestAnimationFrame) {
       window.requestAnimationFrame(() => {
+        this.pruneDisconnectedSeenElements();
         triggerCallbacks();
         window.requestAnimationFrame(triggerCallbacks);
       });
