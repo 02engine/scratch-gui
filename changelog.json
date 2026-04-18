@@ -1,0 +1,195 @@
+[
+  {
+    "version": "1.2.5",
+    "date": "2026-04-04",
+    "notes": [
+      "本次更新带来了 `NewUI` 下的多编辑窗口支持，并同步完成了一批界面与稳定性优化。",
+      "主要更新：",
+      "- `NewUI` 现已支持多编辑窗口。",
+      "- 编辑窗口支持拖动、缩放、关闭、全屏，以及锁定当前窗口。",
+      "- 锁定窗口后，切换到其他角色会新建一个新的编辑窗口；未锁定时则会复用当前窗口。",
+      "- 当前激活的编辑窗口会显示完整编辑器，其他窗口会保留对应角色的信息与预览，方便同时管理多个角色。",
+      "- 舞台窗口支持自动适应窗口大小，并新增了对应的顶部按钮。",
+      "- 扩展选择界面进行了重新整理，搜索、筛选、来源分类和批量导入更清晰易用。",
+      "- 批量导入扩展现已支持更合理的导入逻辑，原生扩展会自动使用普通导入方式。",
+      "- 修复了 `NewUI` / 旧 UI 切换时部分 addon 重复加载、消失或显示异常的问题。",
+      "- 修复了多个窗口层级、最小化按钮遮挡、窗口拖动偏移、窗口缩放同步等问题。",
+      "- 优化了部分编辑器和 addon 的性能问题，减少了不必要的实时刷新和重复更新。",
+      "This update introduces multi-editor window support in `NewUI`, along with a series of UI, stability, and workflow improvements.",
+      "Highlights:",
+      "- `NewUI` now supports multiple editor windows.",
+      "- Editor windows can be dragged, resized, closed, fullscreened, and locked.",
+      "- When a window is locked, selecting another sprite opens a new editor window; when unlocked, the current window is reused.",
+      "- The active editor window shows the full editor, while inactive windows keep sprite info and preview content for easier multi-sprite management.",
+      "- The stage window now supports auto-fit resizing, with a dedicated top-bar button.",
+      "- The extension library UI has been redesigned for a cleaner workflow, with improved search, filtering, source grouping, and batch import.",
+      "- Batch extension import now follows better import rules, and built-in extensions automatically use normal import mode.",
+      "- Fixed issues where some addons were duplicated, disappeared, or rendered incorrectly when switching between `NewUI` and the classic UI.",
+      "- Fixed multiple window-related issues, including z-index conflicts, minimized button overlap, drag offset problems, and resize syncing issues.",
+      "- Improved performance in several editor/addon update paths by reducing unnecessary live refreshes and repeated updates."
+    ]
+  },
+  {
+    "version": "1.2.4",
+    "date": "2026-03-28",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.2.3",
+    "date": "2026-03-15",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.2.2",
+    "date": "2026-02-21",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.2.1",
+    "date": "2026-02-15",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.2.0",
+    "date": "2026-02-08",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.10",
+    "date": "2025-12-20",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.9",
+    "date": "2025-11-30",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.8",
+    "date": "2025-11-09",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.7",
+    "date": "2025-11-09",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.6",
+    "date": "2025-11-02",
+    "notes": [
+      "1.fixed compiler",
+      "2.add git to 02engine"
+    ]
+  },
+  {
+    "version": "1.1.5",
+    "date": "2025-11-01",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.4",
+    "date": "2025-10-25",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.3",
+    "date": "2025-10-25",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.2",
+    "date": "2025-10-25",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.1",
+    "date": "2025-10-06",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "date": "2025-09-18",
+    "notes": [
+      "大改UI，分离作品和舞台区，更加实用。彻底修复所有语言包bug"
+    ]
+  },
+  {
+    "version": "1.0.7",
+    "date": "2025-08-31",
+    "notes": [
+      "修复使用打包器跳回官方打包器的问题"
+    ]
+  },
+  {
+    "version": "1.0.6",
+    "date": "2025-08-27",
+    "notes": [
+      "采纳群内建议，修复了亿点点小bug"
+    ]
+  },
+  {
+    "version": "1.0.4",
+    "date": "2025-08-16",
+    "notes": [
+      "修复关于绘制新角色的小bug"
+    ]
+  },
+  {
+    "version": "1.0.3",
+    "date": "2025-08-14",
+    "notes": [
+      "fixed all \"paint\" button bugs"
+    ]
+  },
+  {
+    "version": "1.0.2",
+    "date": "2025-08-11",
+    "notes": [
+      "fixed may small bugs.like the \"paint\" button bug,some ui bugs and many other bugs.also changed vm.runtime.plateform to 02engine."
+    ]
+  },
+  {
+    "version": "1.0.1",
+    "date": "2025-08-10",
+    "notes": [
+      "添加了OPF(OpsPerFrame)，可以使项目运行得更快。",
+      "如果使用OPF，请记住在使用02engine packager打包时将设置存储在project中。"
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "2025-08-09",
+    "notes": [
+      "02engine out"
+    ]
+  }
+]
