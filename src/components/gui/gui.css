@@ -4,11 +4,25 @@
 
 .page-wrapper {
     height: 100%;
+    position: relative;
 }
 
 .body-wrapper {
     height: calc(100% - $menu-bar-height);
     background-color: $ui-primary;
+}
+
+.body-wrapper-custom-ui.body-wrapper-custom-ui {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: auto;
+}
+
+.body-wrapper-menu-collapsed {
+    height: 100%;
 }
 
 .body-wrapper * {
@@ -53,6 +67,14 @@
     flex: 1;
     position: relative;
     z-index: 1;
+}
+
+.editor-desktop-custom-ui.editor-desktop-custom-ui {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
 }
 
 .editor-desktop-backpack {
@@ -508,6 +530,14 @@ $fade-out-distance: 15px;
     position: relative;
     z-index: $z-index-menu-bar;
 }
+
+.menu-bar-position-custom-ui.menu-bar-position-custom-ui {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+}
+
 /* Alerts */
 
 .alerts-container {
@@ -518,6 +548,10 @@ $fade-out-distance: 15px;
     position: absolute;
     margin-top: 53px;
     pointer-events: none;
+}
+
+.alerts-container-hidden {
+    display: none;
 }
 
 /*

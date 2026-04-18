@@ -129,6 +129,16 @@ const twMessages = defineMessages({
         id: 'tw.menuBar.compileError',
         defaultMessage: '{sprite}: {error}',
         description: 'Error message in error menu'
+    },
+    collapseMenuBar: {
+        id: 'tw.menuBar.collapseMenuBar',
+        defaultMessage: 'Collapse menu bar',
+        description: 'Tooltip for the button that collapses the menu bar'
+    },
+    expandMenuBar: {
+        id: 'tw.menuBar.expandMenuBar',
+        defaultMessage: 'Expand menu bar',
+        description: 'Tooltip for the button that expands the menu bar'
     }
 });
 
@@ -240,18 +250,32 @@ class MenuBar extends React.Component {
             'handleSetDefaultProject',
             'handleRestoreDefaultProject',
             'handleOpenFlarumComposer',
-            'handleCloseFlarumComposer'
+            'handleCloseFlarumComposer',
+            'handleToggleMenuBarCollapsed'
         ]);
         this.state = {
             showComposer: false,
-            flarumToken: null
+            flarumToken: null,
+            menuBarCollapsed: false
         };
     }
     componentDidMount () {
         document.addEventListener('keydown', this.handleKeyPress);
     }
+    componentDidUpdate (prevProps) {
+        if (prevProps.canCollapseMenuBar && !this.props.canCollapseMenuBar && this.state.menuBarCollapsed) {
+            this.setState({menuBarCollapsed: false}, () => {
+                if (this.props.onMenuBarCollapseChange) {
+                    this.props.onMenuBarCollapseChange(false);
+                }
+            });
+        }
+    }
     componentWillUnmount () {
         document.removeEventListener('keydown', this.handleKeyPress);
+        if (this.state.menuBarCollapsed && this.props.onMenuBarCollapseChange) {
+            this.props.onMenuBarCollapseChange(false);
+        }
     }
     handleClickNew () {
         // if the project is dirty, and user owns the project, we will autosave.
@@ -509,6 +533,35 @@ class MenuBar extends React.Component {
     handleCloseFlarumComposer () {
         this.setState({showComposer: false});
     }
+    handleToggleMenuBarCollapsed () {
+        if (!this.props.canCollapseMenuBar) {
+            return;
+        }
+        const nextCollapsed = !this.state.menuBarCollapsed;
+        if (nextCollapsed) {
+            [
+                this.props.onRequestCloseAbout,
+                this.props.onRequestCloseAccount,
+                this.props.onRequestCloseEdit,
+                this.props.onRequestCloseErrors,
+                this.props.onRequestCloseFile,
+                this.props.onRequestCloseLogin,
+                this.props.onRequestCloseMode,
+                this.props.onRequestCloseSettings
+            ].forEach(closeMenu => {
+                if (typeof closeMenu === 'function') {
+                    closeMenu();
+                }
+            });
+        }
+        this.setState({
+            menuBarCollapsed: nextCollapsed
+        }, () => {
+            if (this.props.onMenuBarCollapseChange) {
+                this.props.onMenuBarCollapseChange(nextCollapsed);
+            }
+        });
+    }
     buildAboutMenu (onClickAbout) {
         if (!onClickAbout) {
             // hide the button
@@ -602,13 +655,41 @@ class MenuBar extends React.Component {
         );
         // Show the About button only if we have a handler for it (like in the desktop app)
         const aboutButton = this.buildAboutMenu(this.props.onClickAbout);
+        const canCollapseMenuBar = this.props.canCollapseMenuBar;
+        const collapseButtonLabel = canCollapseMenuBar ? this.props.intl.formatMessage(
+            this.state.menuBarCollapsed ? twMessages.expandMenuBar : twMessages.collapseMenuBar
+        ) : '';
+        const collapseButton = canCollapseMenuBar ? (
+            <button
+                aria-expanded={!this.state.menuBarCollapsed}
+                aria-label={collapseButtonLabel}
+                className={classNames(styles.menuBarCollapseButton, {
+                    [styles.menuBarCollapseButtonCollapsed]: this.state.menuBarCollapsed
+                })}
+                title={collapseButtonLabel}
+                type="button"
+                onClick={this.handleToggleMenuBarCollapsed}
+            >
+                <span
+                    className={classNames(styles.collapseIcon, {
+                        [styles.collapseIconCollapsed]: this.state.menuBarCollapsed,
+                        [styles.collapseIconExpanded]: !this.state.menuBarCollapsed
+                    })}
+                />
+            </button>
+        ) : null;
         return (
             <Box
                 className={classNames(
                     this.props.className,
-                    styles.menuBar
+                    styles.menuBar,
+                    styles.menuBarExpanded,
+                    {
+                        [styles.menuBarCollapsed]: canCollapseMenuBar && this.state.menuBarCollapsed
+                    }
                 )}
             >
+                <div className={styles.menuBarContent}>
                 <div className={styles.mainMenu}>
                     <div className={styles.fileGroup}>
                         {this.props.errors.length > 0 && <div>
@@ -1240,6 +1321,8 @@ class MenuBar extends React.Component {
                 </div> */}
 
                 {aboutButton}
+                </div>
+                {collapseButton}
                 {/* {this.state.showComposer && (
                     <FlarumComposer
                         vm={this.props.vm}
@@ -1255,6 +1338,7 @@ class MenuBar extends React.Component {
 }
 
 MenuBar.propTypes = {
+    canCollapseMenuBar: PropTypes.bool,
     enableSeeInside: PropTypes.bool,
     onClickSeeInside: PropTypes.func,
     aboutMenuOpen: PropTypes.bool,
@@ -1333,6 +1417,7 @@ MenuBar.propTypes = {
     onClickSettings: PropTypes.func,
     onClickSettingsModal: PropTypes.func,
     onLogOut: PropTypes.func,
+    onMenuBarCollapseChange: PropTypes.func,
     onOpenRegistration: PropTypes.func,
     onOpenTipLibrary: PropTypes.func,
     onProjectTelemetryEvent: PropTypes.func,
@@ -1363,6 +1448,7 @@ MenuBar.propTypes = {
 };
 
 MenuBar.defaultProps = {
+    canCollapseMenuBar: false,
     onShare: () => {}
 };
 

@@ -288,7 +288,7 @@ const DraggableWindow = props => {
             const nextY = movePoint.clientY - parentRect.top - offset.y;
             const nextPosition = {
                 x: nextX,
-                y: Math.max(6, nextY)
+                y: nextY
             };
             latestPositionRef.current = nextPosition;
             setPosition(nextPosition);

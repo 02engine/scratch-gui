@@ -10,6 +10,16 @@
     "defaultMessage": "{sprite}: {error}"
   },
   {
+    "id": "tw.menuBar.collapseMenuBar",
+    "description": "Tooltip for the button that collapses the menu bar",
+    "defaultMessage": "Collapse menu bar"
+  },
+  {
+    "id": "tw.menuBar.expandMenuBar",
+    "description": "Tooltip for the button that expands the menu bar",
+    "defaultMessage": "Expand menu bar"
+  },
+  {
     "id": "gui.menuBar.restoreSprite",
     "description": "Menu bar item for restoring the last deleted sprite.",
     "defaultMessage": "Restore Sprite"

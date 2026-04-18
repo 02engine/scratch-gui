@@ -107,7 +107,11 @@ const STAGE_WINDOW_Z_INDEX = 475;
 const EDITOR_WINDOW_DEFAULT_SIZE = {width: 760, height: 560};
 const EDITOR_WINDOW_MIN_SIZE = {width: 0, height: 0};
 const EDITOR_WINDOW_MAX_SIZE = {width: Number.MAX_SAFE_INTEGER, height: Number.MAX_SAFE_INTEGER};
-
+const EDITOR_WINDOW_INITIAL_MARGIN_X = 12;
+const EDITOR_WINDOW_INITIAL_MARGIN_BOTTOM = 12;
+const EDITOR_WINDOW_INITIAL_TOP_OFFSET = 40;
+const EDITOR_WINDOW_INITIAL_CASCADE_X = 24;
+const EDITOR_WINDOW_INITIAL_CASCADE_Y = 18;
 const clampIndex = (value, length) => {
     if (!length) {
         return 0;
@@ -340,6 +344,7 @@ const GUIComponent = props => {
     const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({x: 400, y: 275}); //也没什么含义
     const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({width: 485, height: 447});
     const [targetPaneWindowMinimized, setTargetPaneWindowMinimized] = React.useState(false);
+    const [menuBarCollapsed, setMenuBarCollapsed] = React.useState(false);
     const [editorWindowSessions, setEditorWindowSessions] = React.useState([]);
     const [activeEditorWindowId, setActiveEditorWindowId] = React.useState(null);
     const editorWindowSessionsRef = React.useRef(editorWindowSessions);
@@ -349,6 +354,8 @@ const GUIComponent = props => {
     const lastRequestedEditingTargetIdRef = React.useRef(null);
     const pendingEditorWindowSyncRef = React.useRef(null);
     const previousCustomUIRef = React.useRef(customUI);
+    const editorDesktopRef = React.useRef(null);
+    const menuBarCollapsedRef = React.useRef(menuBarCollapsed);
     const activeEditorContentRef = React.useRef(null);
     const editorLayoutRefreshFrameRef = React.useRef(null);
     const addonEditorDomRefreshFrameRef = React.useRef(null);
@@ -381,6 +388,15 @@ const GUIComponent = props => {
     const handleToggleStageWindowAutoFit = React.useCallback(() => {
         setStageWindowAutoFit(value => !value);
     }, []);
+
+    const handleMenuBarCollapseChange = React.useCallback(collapsed => {
+        menuBarCollapsedRef.current = collapsed;
+        setMenuBarCollapsed(collapsed);
+    }, []);
+
+    React.useEffect(() => {
+        menuBarCollapsedRef.current = menuBarCollapsed;
+    }, [menuBarCollapsed]);
 
     const scheduleAddonEditorDomRefresh = React.useCallback(() => {
         if (addonEditorDomRefreshFrameRef.current !== null) {
@@ -519,38 +535,74 @@ const GUIComponent = props => {
         setActiveEditorWindowId(nextActiveId);
     }, []);
 
+    const getEditorFullScreenGeometry = React.useCallback(() => {
+        const desktopRect = editorDesktopRef.current ?
+            editorDesktopRef.current.getBoundingClientRect() :
+            null;
+        const width = desktopRect ? desktopRect.width : window.innerWidth;
+        const height = desktopRect ? desktopRect.height : window.innerHeight;
+        return {
+            position: {
+                x: 0,
+                y: 0
+            },
+            size: {
+                width: Math.max(0, Math.round(width)),
+                height: Math.max(0, Math.round(height))
+            }
+        };
+    }, []);
+
+    const getInitialEditorWindowGeometry = React.useCallback(cascadeIndex => {
+        const desktopRect = editorDesktopRef.current ?
+            editorDesktopRef.current.getBoundingClientRect() :
+            null;
+        const desktopWidth = desktopRect ? desktopRect.width : window.innerWidth;
+        const desktopHeight = desktopRect ? desktopRect.height : window.innerHeight;
+        const position = {
+            x: Math.max(0, EDITOR_WINDOW_INITIAL_MARGIN_X + (cascadeIndex * EDITOR_WINDOW_INITIAL_CASCADE_X)),
+            y: Math.max(0, EDITOR_WINDOW_INITIAL_TOP_OFFSET + (cascadeIndex * EDITOR_WINDOW_INITIAL_CASCADE_Y))
+        };
+        const size = {
+            width: Math.max(
+                Math.min(EDITOR_WINDOW_DEFAULT_SIZE.width, Math.round(desktopWidth)),
+                Math.round(desktopWidth - position.x - EDITOR_WINDOW_INITIAL_MARGIN_X)
+            ),
+            height: Math.max(
+                Math.min(EDITOR_WINDOW_DEFAULT_SIZE.height, Math.round(desktopHeight)),
+                Math.round(desktopHeight - position.y - EDITOR_WINDOW_INITIAL_MARGIN_BOTTOM)
+            )
+        };
+        return {
+            position,
+            size
+        };
+    }, []);
+
     const createEditorWindowSession = React.useCallback((targetId, overrides = {}) => {
         const cascadeIndex = editorWindowSessionsRef.current.length % 6;
         const nextZIndex = ++editorWindowZIndexRef.current;
+        const initialGeometry = getInitialEditorWindowGeometry(cascadeIndex);
         editorWindowIdCounterRef.current += 1;
         return {
             id: `editor-${editorWindowIdCounterRef.current}`,
             targetId,
             locked: false,
             activeTabIndex: BLOCKS_TAB_INDEX,
-            isFullScreen: true,
+            isFullScreen: false,
             isMinimized: false,
             snapshotMarkup: null,
             snapshotSize: null,
             snapshotThemeId: null,
-            position: {
-                x: 12,
-                y: 12
-            },
-            size: {
-                width: Math.max(0, window.innerWidth - 24),
-                height: Math.max(0, window.innerHeight - 92)
-            },
-            normalPosition: {
-                x: 96 + (cascadeIndex * 34),
-                y: 96 + (cascadeIndex * 28)
-            },
-            normalSize: EDITOR_WINDOW_DEFAULT_SIZE,
+            position: initialGeometry.position,
+            size: initialGeometry.size,
+            normalPosition: initialGeometry.position,
+            normalSize: initialGeometry.size,
             zIndex: nextZIndex,
             lastFocusedAt: nextZIndex,
             ...overrides
         };
-    }, []);
+    }, [getInitialEditorWindowGeometry]);
 
     const createEditorWindowSnapshot = React.useCallback(() => {
         const sourceNode = activeEditorContentRef.current;
@@ -628,12 +680,89 @@ const GUIComponent = props => {
         });
     }, [createEditorWindowSnapshot]);
 
+    const syncFullScreenEditorWindowGeometry = React.useCallback(() => {
+        const fullScreenGeometry = getEditorFullScreenGeometry();
+        let hasChanges = false;
+        const nextSessions = editorWindowSessionsRef.current.map(session => {
+            if (!session.isFullScreen) {
+                return session;
+            }
+            const needsPositionUpdate =
+                session.position.x !== fullScreenGeometry.position.x ||
+                session.position.y !== fullScreenGeometry.position.y;
+            const needsSizeUpdate =
+                session.size.width !== fullScreenGeometry.size.width ||
+                session.size.height !== fullScreenGeometry.size.height;
+            if (!needsPositionUpdate && !needsSizeUpdate) {
+                return session;
+            }
+            hasChanges = true;
+            return {
+                ...session,
+                position: fullScreenGeometry.position,
+                size: fullScreenGeometry.size
+            };
+        });
+
+        if (!hasChanges) {
+            return;
+        }
+
+        commitEditorWindowState(nextSessions);
+        if (nextSessions.some(session => session.id === activeEditorWindowIdRef.current && session.isFullScreen)) {
+            scheduleEditorLayoutRefresh();
+        }
+    }, [commitEditorWindowState, getEditorFullScreenGeometry, scheduleEditorLayoutRefresh]);
+
     React.useEffect(() => {
         if (!customUI || !activeEditorWindowId) {
             return;
         }
         scheduleEditorLayoutRefresh();
     }, [activeEditorWindowId, customUI, scheduleEditorLayoutRefresh, theme.id]);
+
+    React.useLayoutEffect(() => {
+        if (!customUI) {
+            return;
+        }
+        menuBarCollapsedRef.current = menuBarCollapsed;
+        syncFullScreenEditorWindowGeometry();
+    }, [customUI, menuBarCollapsed, syncFullScreenEditorWindowGeometry]);
+
+    React.useEffect(() => {
+        if (!customUI) {
+            return undefined;
+        }
+
+        let resizeFrame = null;
+        const scheduleSync = () => {
+            if (resizeFrame !== null) {
+                cancelAnimationFrame(resizeFrame);
+            }
+            resizeFrame = requestAnimationFrame(() => {
+                resizeFrame = null;
+                syncFullScreenEditorWindowGeometry();
+            });
+        };
+
+        let resizeObserver = null;
+        if (typeof ResizeObserver !== 'undefined' && editorDesktopRef.current) {
+            resizeObserver = new ResizeObserver(scheduleSync);
+            resizeObserver.observe(editorDesktopRef.current);
+        }
+        window.addEventListener('resize', scheduleSync);
+        scheduleSync();
+
+        return () => {
+            if (resizeFrame !== null) {
+                cancelAnimationFrame(resizeFrame);
+            }
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            }
+            window.removeEventListener('resize', scheduleSync);
+        };
+    }, [customUI, syncFullScreenEditorWindowGeometry]);
 
     const findEditorWindowFallback = React.useCallback((sessions, excludedId = null) => {
         const candidates = sessions.filter(session => session.id !== excludedId);
@@ -852,24 +981,19 @@ const GUIComponent = props => {
                     size: session.normalSize || session.size
                 };
             }
+            const fullScreenGeometry = getEditorFullScreenGeometry();
             return {
                 isFullScreen: true,
                 normalPosition: currentPosition,
                 normalSize: currentSize,
-                position: {
-                    x: 12,
-                    y: 12
-                },
-                size: {
-                    width: Math.max(0, window.innerWidth - 24),
-                    height: Math.max(0, window.innerHeight - 92)
-                }
+                position: fullScreenGeometry.position,
+                size: fullScreenGeometry.size
             };
         });
         if (windowId === activeEditorWindowIdRef.current) {
             scheduleEditorLayoutRefresh();
         }
-    }, [scheduleEditorLayoutRefresh, updateEditorWindowSession]);
+    }, [getEditorFullScreenGeometry, scheduleEditorLayoutRefresh, updateEditorWindowSession]);
 
     const handleEditorWindowLockToggle = React.useCallback(windowId => {
         updateEditorWindowSession(windowId, session => ({
@@ -1863,6 +1987,10 @@ const GUIComponent = props => {
         editorBackground,
         EDITOR_BACKGROUND_TARGETS.WINDOW
     );
+    const effectiveMenuBarCollapsed = customUI && menuBarCollapsed;
+    const editorAlertsClassName = classNames(styles.alertsContainer, {
+        [styles.alertsContainerHidden]: effectiveMenuBarCollapsed
+    });
 
     const unconstrainedWidth = (
         UNCONSTRAINED_NON_STAGE_WIDTH +
@@ -1957,7 +2085,7 @@ const GUIComponent = props => {
                     <Cards />
                 ) : null}
                 {alertsVisible ? (
-                    <Alerts className={styles.alertsContainer} />
+                    <Alerts className={editorAlertsClassName} />
                 ) : null}
                 {connectionModalVisible ? (
                     <ConnectionModal
@@ -1983,6 +2111,7 @@ const GUIComponent = props => {
                     authorUsername={authorUsername}
                     canChangeLanguage={canChangeLanguage}
                     canChangeTheme={canChangeTheme}
+                    canCollapseMenuBar={customUI}
                     canCreateCopy={canCreateCopy}
                     canCreateNew={canCreateNew}
                     canEditTitle={canEditTitle}
@@ -1991,7 +2120,8 @@ const GUIComponent = props => {
                     canSave={canSave}
                     canShare={canShare}
                     className={classNames(styles.menuBarPosition, {
-                        [styles.fullscreenMenuBar]: isFullScreen
+                        [styles.fullscreenMenuBar]: isFullScreen,
+                        [styles['menu-bar-position-custom-ui']]: customUI
                     })}
                     enableCommunity={enableCommunity}
                     isShared={isShared}
@@ -2010,6 +2140,7 @@ const GUIComponent = props => {
                     onClickLogo={onClickLogo}
                     onCloseAccountNav={onCloseAccountNav}
                     onLogOut={onLogOut}
+                    onMenuBarCollapseChange={handleMenuBarCollapseChange}
                     onOpenRegistration={onOpenRegistration}
                     onProjectTelemetryEvent={onProjectTelemetryEvent}
                     onSeeCommunity={onSeeCommunity}
@@ -2022,7 +2153,12 @@ const GUIComponent = props => {
                 />
 
 
-                <Box className={styles.bodyWrapper}>
+                <Box
+                    className={classNames(styles.bodyWrapper, {
+                        [styles['body-wrapper-custom-ui']]: customUI,
+                        [styles.bodyWrapperMenuCollapsed]: effectiveMenuBarCollapsed
+                    })}
+                >
                     <Box className={styles.flexWrapper}>
                         {windowBackgroundActive ? (
                             <div
@@ -2034,7 +2170,12 @@ const GUIComponent = props => {
 
                         {props.customUI ? (
                         <>
-                            <Box className={styles.editorDesktop}>
+                            <Box
+                                className={classNames(styles.editorDesktop, {
+                                    [styles['editor-desktop-custom-ui']]: customUI
+                                })}
+                                componentRef={editorDesktopRef}
+                            >
                                 {!hideFloatingWindows && (
                                     editorWindowSessions.length ? renderEditorWindows(stageSize) : null
                                 )}
@@ -2108,7 +2249,7 @@ const GUIComponent = props => {
                                 vm={vm}
                             >
                                 {alertsVisible ? (
-                                    <Alerts className={styles.alertsContainer} />
+                                    <Alerts className={editorAlertsClassName} />
                                 ) : null}
                             </StageWrapper>
                             <Box className={styles.targetWrapper}>
