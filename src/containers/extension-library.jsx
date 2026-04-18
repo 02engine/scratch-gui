@@ -731,9 +731,6 @@ class ExtensionLibrary extends React.PureComponent {
     handleEnableProcedureReturns () {
         if (this.props.onEnableProcedureReturns) {
             this.props.onEnableProcedureReturns();
-            if (this.props.onCategorySelected) {
-                this.props.onCategorySelected('myBlocks');
-            }
             return;
         }
         if (window.__twEnableProcedureReturns) {

@@ -138,6 +138,8 @@ class Blocks extends React.Component {
             'flushMonitorUpdate',
             'scheduleWorkspaceChromeRefresh',
             'flushWorkspaceChromeRefresh',
+            'scheduleProcedureReturnsToolboxRefresh',
+            'flushProcedureReturnsToolboxRefresh',
             'requestToolboxStateSync',
             'flushToolboxStateSync',
             'syncWorkspaceCullingState',
@@ -168,8 +170,11 @@ class Blocks extends React.Component {
         this.monitorUpdateFrame = null;
         this.workspaceChromeRefreshFrame = null;
         this.toolboxStateSyncFrame = null;
+        this.procedureReturnsRefreshFrame = null;
         this.pendingToolboxStateSyncForce = false;
         this.toolboxUpdateScheduled = false;
+        this.pendingProcedureReturnsToolboxRefresh = false;
+        this.pendingProcedureReturnsToolboxXML = null;
         this.monitorCheckboxStates = new Map();
         this.isLargeWorkspace = false;
     }
@@ -310,6 +315,10 @@ class Blocks extends React.Component {
             this.requestToolboxUpdate();
         }
 
+        if (this.pendingProcedureReturnsToolboxRefresh && this.props.isVisible) {
+            this.scheduleProcedureReturnsToolboxRefresh();
+        }
+
         if (
             this.props.isVisible &&
             (
@@ -378,6 +387,10 @@ class Blocks extends React.Component {
         if (this.toolboxStateSyncFrame) {
             cancelAnimationFrame(this.toolboxStateSyncFrame);
             this.toolboxStateSyncFrame = null;
+        }
+        if (this.procedureReturnsRefreshFrame) {
+            cancelAnimationFrame(this.procedureReturnsRefreshFrame);
+            this.procedureReturnsRefreshFrame = null;
         }
         if (window.__twEnableProcedureReturns) {
             delete window.__twEnableProcedureReturns;
@@ -507,6 +520,61 @@ class Blocks extends React.Component {
                     // Ignore transient flyout scrollbar resize errors.
                 }
             }
+        }
+    }
+    scheduleProcedureReturnsToolboxRefresh() {
+        if (!this.pendingProcedureReturnsToolboxRefresh || !this.props.isVisible) {
+            return;
+        }
+        if (this.procedureReturnsRefreshFrame) {
+            cancelAnimationFrame(this.procedureReturnsRefreshFrame);
+        }
+        this.procedureReturnsRefreshFrame = requestAnimationFrame(() => {
+            this.procedureReturnsRefreshFrame = null;
+            this.flushProcedureReturnsToolboxRefresh();
+        });
+    }
+    flushProcedureReturnsToolboxRefresh() {
+        if (!this.pendingProcedureReturnsToolboxRefresh || !this.workspace || !this.workspace.toolbox_) {
+            return;
+        }
+
+        const expectedToolboxXML = this.pendingProcedureReturnsToolboxXML;
+        const renderedMatches = !expectedToolboxXML || this._renderedToolboxXML === expectedToolboxXML;
+        const propsMatch = !expectedToolboxXML || this.props.toolboxXML === expectedToolboxXML;
+
+        if (this.toolboxUpdateScheduled || !renderedMatches || !propsMatch) {
+            this.requestToolboxUpdate();
+            this.scheduleProcedureReturnsToolboxRefresh();
+            return;
+        }
+
+        const workspace = this.workspace;
+        const toolbox = workspace.getToolbox ? workspace.getToolbox() : workspace.toolbox_;
+        const flyout = workspace.getFlyout ? workspace.getFlyout() : workspace.flyout_;
+
+        try {
+            if (toolbox && toolbox.setSelectedCategoryById) {
+                toolbox.setSelectedCategoryById('myBlocks');
+            }
+            if (workspace.refreshToolboxSelection_) {
+                workspace.refreshToolboxSelection_();
+            }
+            if (toolbox && toolbox.refreshSelection) {
+                toolbox.refreshSelection();
+            }
+            if (toolbox && toolbox.scrollToCategoryById) {
+                toolbox.scrollToCategoryById('myBlocks');
+            }
+            if (flyout && flyout.reflow) {
+                flyout.reflow();
+            }
+            if (flyout && flyout.scrollbar_ && flyout.scrollbar_.resize) {
+                flyout.scrollbar_.resize();
+            }
+        } finally {
+            this.pendingProcedureReturnsToolboxRefresh = false;
+            this.pendingProcedureReturnsToolboxXML = null;
         }
     }
     syncWorkspaceCullingState() {
@@ -1297,8 +1365,15 @@ class Blocks extends React.Component {
     handleEnableProcedureReturns() {
         this.toolboxDirty = true;
         this.workspace.enableProcedureReturns();
+        const toolboxXML = this.getToolboxXML();
+        this.pendingProcedureReturnsToolboxRefresh = true;
+        this.pendingProcedureReturnsToolboxXML = toolboxXML;
+        if (toolboxXML) {
+            this.updateToolboxStateIfNeeded(toolboxXML, true);
+        }
         this.requestToolboxStateSync(true);
         this.requestToolboxUpdate();
+        this.scheduleProcedureReturnsToolboxRefresh();
     }
     render() {
         /* eslint-disable no-unused-vars */
