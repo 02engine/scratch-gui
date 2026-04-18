@@ -2,6 +2,12 @@ import {
     defaultEditorBackground,
     normalizeEditorBackground
 } from '../lib/editor-background';
+import {
+    getPersistentCustomUI,
+    setPersistentCustomUI,
+    getPersistentEditorBackground,
+    setPersistentEditorBackground
+} from '../lib/tw-persistent-settings';
 
 const SET_FRAMERATE = 'tw/SET_FRAMERATE';
 const SET_OPSPERFRAME = 'tw/SET_OPSPERFRAME';
@@ -30,8 +36,8 @@ export const initialState = {
     framerate: 30,
     opsPerFrame: 1,
     interpolation: false,
-    customUI: true,
-    editorBackground: defaultEditorBackground,
+    customUI: getPersistentCustomUI(true),
+    editorBackground: getPersistentEditorBackground(defaultEditorBackground),
     cloud: true,
     username: '',
     highQualityPen: false,
@@ -183,6 +189,7 @@ const setOpsPerFrameState = function (opsPerFrame) {
 };
 
 const setCustomUIState = function (customUI) {
+    setPersistentCustomUI(customUI);
     return {
         type: SET_CUSTOM_UI,
         customUI: customUI
@@ -190,6 +197,7 @@ const setCustomUIState = function (customUI) {
 };
 
 const setEditorBackgroundState = function (editorBackground) {
+    setPersistentEditorBackground(editorBackground);
     return {
         type: SET_EDITOR_BACKGROUND,
         editorBackground
