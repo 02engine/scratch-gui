@@ -351,6 +351,7 @@ const GUIComponent = props => {
     const previousCustomUIRef = React.useRef(customUI);
     const activeEditorContentRef = React.useRef(null);
     const editorLayoutRefreshFrameRef = React.useRef(null);
+    const addonEditorDomRefreshFrameRef = React.useRef(null);
     const snapshotNamespaceCounterRef = React.useRef(0);
 
     // Git 状态跟踪
@@ -381,6 +382,23 @@ const GUIComponent = props => {
         setStageWindowAutoFit(value => !value);
     }, []);
 
+    const scheduleAddonEditorDomRefresh = React.useCallback(() => {
+        if (addonEditorDomRefreshFrameRef.current !== null) {
+            cancelAnimationFrame(addonEditorDomRefreshFrameRef.current);
+        }
+        const refreshAddons = () => {
+            addonEditorDomRefreshFrameRef.current = null;
+            if (window.addonAPI && typeof window.addonAPI.refreshAfterDomRemount === 'function') {
+                window.addonAPI.refreshAfterDomRemount();
+            }
+        };
+        if (typeof window.requestAnimationFrame === 'function') {
+            addonEditorDomRefreshFrameRef.current = requestAnimationFrame(refreshAddons);
+        } else {
+            queueMicrotask(refreshAddons);
+        }
+    }, []);
+
     const setActiveEditorContentNode = React.useCallback(node => {
         const previousNode = activeEditorContentRef.current;
         if (previousNode && previousNode !== node) {
@@ -395,8 +413,11 @@ const GUIComponent = props => {
         if (node) {
             node.setAttribute('data-sa-active-editor-root', 'true');
             window.__scratchGuiActiveEditorRoot = node;
+            if (previousNode !== node) {
+                scheduleAddonEditorDomRefresh();
+            }
         }
-    }, []);
+    }, [scheduleAddonEditorDomRefresh]);
 
     const syncWorkspaceGrid = React.useCallback(() => {
         const ScratchBlocks = window.ScratchBlocks;
@@ -463,6 +484,10 @@ const GUIComponent = props => {
         if (editorLayoutRefreshFrameRef.current !== null) {
             cancelAnimationFrame(editorLayoutRefreshFrameRef.current);
             editorLayoutRefreshFrameRef.current = null;
+        }
+        if (addonEditorDomRefreshFrameRef.current !== null) {
+            cancelAnimationFrame(addonEditorDomRefreshFrameRef.current);
+            addonEditorDomRefreshFrameRef.current = null;
         }
     }, []);
 
@@ -661,12 +686,14 @@ const GUIComponent = props => {
         requestAnimationFrame(() => {
             if (activeEditorWindowIdRef.current === activeSession.id) {
                 scheduleEditorLayoutRefresh();
+                scheduleAddonEditorDomRefresh();
             }
         });
     }, [
         activeEditorWindowId,
         customUI,
         editorWindowSessions,
+        scheduleAddonEditorDomRefresh,
         scheduleEditorLayoutRefresh,
         syncEditorWindowContext
     ]);
@@ -918,6 +945,21 @@ const GUIComponent = props => {
             scheduleEditorLayoutRefresh();
         }
     }, [scheduleEditorLayoutRefresh]);
+
+    React.useEffect(() => {
+        if (!customUI || !activeEditorWindowId) {
+            return;
+        }
+        const activeSession = editorWindowSessionsRef.current.find(
+            session => session.id === activeEditorWindowId
+        );
+        if (!activeSession || activeSession.activeTabIndex === activeTabIndex) {
+            return;
+        }
+        updateEditorWindowSession(activeEditorWindowId, () => ({
+            activeTabIndex
+        }));
+    }, [activeEditorWindowId, activeTabIndex, customUI, updateEditorWindowSession]);
 
     React.useEffect(() => {
         const wasCustomUI = previousCustomUIRef.current;
@@ -1486,10 +1528,7 @@ const GUIComponent = props => {
         (editorWindowSessions.find(session => session.id === activeEditorWindowId) || null) :
         null;
     const activeEditorSessionReady = !customUI || !activeEditorSession ||
-        (
-            activeEditorSession.targetId === editingTargetId &&
-            activeEditorSession.activeTabIndex === activeTabIndex
-        );
+        activeEditorSession.targetId === editingTargetId;
     const blocksLayoutToken = customUI && activeEditorSession ?
         [
             activeEditorSession.id,
