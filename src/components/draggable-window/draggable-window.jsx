@@ -128,6 +128,8 @@ const DraggableWindow = props => {
     const contentResizeFrameRef = React.useRef(null);
     const latestPositionRef = React.useRef(position);
     const latestSizeRef = React.useRef(size);
+    const dragCleanupRef = React.useRef(null);
+    const resizeCleanupRef = React.useRef(null);
 
     React.useEffect(() => {
         latestPositionRef.current = position;
@@ -246,6 +248,17 @@ const DraggableWindow = props => {
         }
     }, [isMinimized]);
 
+    React.useEffect(() => () => {
+        if (dragCleanupRef.current) {
+            dragCleanupRef.current();
+            dragCleanupRef.current = null;
+        }
+        if (resizeCleanupRef.current) {
+            resizeCleanupRef.current();
+            resizeCleanupRef.current = null;
+        }
+    }, []);
+
     const emitActivate = React.useCallback(() => {
         if (onActivate) {
             onActivate(windowId);
@@ -281,6 +294,10 @@ const DraggableWindow = props => {
             onDragStart(windowId, latestPositionRef.current);
         }
 
+        if (dragCleanupRef.current) {
+            dragCleanupRef.current();
+        }
+
         const handleGlobalMove = moveEvent => {
             moveEvent.preventDefault();
             const movePoint = moveEvent.touches ? moveEvent.touches[0] : moveEvent;
@@ -297,19 +314,26 @@ const DraggableWindow = props => {
             }
         };
 
-        const handleGlobalEnd = endEvent => {
-            endEvent.preventDefault();
-            setIsDragging(false);
-            setIsDraggingMinimized(false);
+        const cleanupDragListeners = () => {
             document.removeEventListener('mousemove', handleGlobalMove);
             document.removeEventListener('mouseup', handleGlobalEnd);
             document.removeEventListener('touchmove', handleGlobalMove);
             document.removeEventListener('touchend', handleGlobalEnd);
             document.removeEventListener('touchcancel', handleGlobalEnd);
+        };
+
+        const handleGlobalEnd = endEvent => {
+            endEvent.preventDefault();
+            setIsDragging(false);
+            setIsDraggingMinimized(false);
+            cleanupDragListeners();
+            dragCleanupRef.current = null;
             if (onDragStop) {
                 onDragStop(windowId, latestPositionRef.current);
             }
         };
+
+        dragCleanupRef.current = cleanupDragListeners;
 
         if (event.touches) {
             document.addEventListener('touchmove', handleGlobalMove, {passive: false});
@@ -338,6 +362,10 @@ const DraggableWindow = props => {
             onResizeStart(windowId, startSize);
         }
 
+        if (resizeCleanupRef.current) {
+            resizeCleanupRef.current();
+        }
+
         const handleResizeMove = moveEvent => {
             moveEvent.preventDefault();
             const movePoint = moveEvent.touches ? moveEvent.touches[0] : moveEvent;
@@ -363,18 +391,25 @@ const DraggableWindow = props => {
             }
         };
 
-        const handleResizeEnd = endEvent => {
-            endEvent.preventDefault();
-            setIsResizing(false);
+        const cleanupResizeListeners = () => {
             document.removeEventListener('mousemove', handleResizeMove);
             document.removeEventListener('mouseup', handleResizeEnd);
             document.removeEventListener('touchmove', handleResizeMove);
             document.removeEventListener('touchend', handleResizeEnd);
             document.removeEventListener('touchcancel', handleResizeEnd);
+        };
+
+        const handleResizeEnd = endEvent => {
+            endEvent.preventDefault();
+            setIsResizing(false);
+            cleanupResizeListeners();
+            resizeCleanupRef.current = null;
             if (onResizeStop) {
                 onResizeStop(windowId, latestSizeRef.current);
             }
         };
+
+        resizeCleanupRef.current = cleanupResizeListeners;
 
         if (event.touches) {
             document.addEventListener('touchmove', handleResizeMove, {passive: false});
