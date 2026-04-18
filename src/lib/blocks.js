@@ -8,13 +8,9 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
 
     const workspaceProto = ScratchBlocks.WorkspaceSvg && ScratchBlocks.WorkspaceSvg.prototype;
     const draggerProto = ScratchBlocks.WorkspaceDragger && ScratchBlocks.WorkspaceDragger.prototype;
-    const intersectionProto = ScratchBlocks.IntersectionObserver && ScratchBlocks.IntersectionObserver.prototype;
     const blockProto = ScratchBlocks.BlockSvg && ScratchBlocks.BlockSvg.prototype;
 
     if (workspaceProto) {
-        workspaceProto.offscreenTopBlockCullingEnabled_ = false;
-        workspaceProto.deferBlockRendering_ = false;
-        workspaceProto.intersectionCheckPendingAfterDrag_ = false;
         workspaceProto.pendingWheelFrame_ = null;
         workspaceProto.pendingWheelScrollDelta_ = null;
         workspaceProto.pendingWheelZoomDelta_ = 0;
@@ -22,26 +18,15 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         workspaceProto.pendingGridUpdateTimer_ = null;
         workspaceProto.deferGridUpdate_ = false;
 
-        workspaceProto.setOffscreenTopBlockCullingEnabled = function () {
-            // Experimental top-block culling caused large projects to become
-            // much slower than upstream TurboWarp/Scratch. Keep the original
-            // full-render path by forcing this feature off.
-            this.offscreenTopBlockCullingEnabled_ = false;
-            this.deferBlockRendering_ = false;
-            this.intersectionCheckPendingAfterDrag_ = false;
-        };
-
         const originalTranslate = workspaceProto.translate;
+        const originalOnMouseWheel = workspaceProto.onMouseWheel_;
+        const originalSetScale = workspaceProto.setScale;
         workspaceProto.translate = function (x, y) {
             originalTranslate.call(this, x, y);
-            if (this.grid_) {
+            if (!this.isFlyout && this.grid_) {
                 this.grid_.moveTo(x, y);
             }
         };
-
-        workspaceProto.ensureTopBlockRendered_ = function () {};
-        workspaceProto.renderVisibleTopBlocks = function () {};
-        workspaceProto.queueIntersectionCheck = function () {};
 
         workspaceProto.scheduleWheelScroll_ = function (deltaX, deltaY) {
             if (!this.pendingWheelScrollDelta_) {
@@ -104,6 +89,9 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         };
 
         workspaceProto.onMouseWheel_ = function (e) {
+            if (this.isFlyout && typeof originalOnMouseWheel === 'function') {
+                return originalOnMouseWheel.call(this, e);
+            }
             if (this.currentGesture_) {
                 this.currentGesture_.cancel();
             }
@@ -133,6 +121,9 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         };
 
         workspaceProto.setScale = function (newScale) {
+            if (this.isFlyout && typeof originalSetScale === 'function') {
+                return originalSetScale.call(this, newScale);
+            }
             if (this.options.zoomOptions.maxScale && newScale > this.options.zoomOptions.maxScale) {
                 newScale = this.options.zoomOptions.maxScale;
             } else if (this.options.zoomOptions.minScale && newScale < this.options.zoomOptions.minScale) {
@@ -155,7 +146,6 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             if (this.flyout_) {
                 this.flyout_.reflow();
             }
-            // Disabled experimental intersection/culling refresh.
         };
 
         const originalWorkspaceDispose = workspaceProto.dispose;
@@ -171,21 +161,6 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             originalWorkspaceDispose.call(this);
         };
 
-        const originalResetDragSurface = workspaceProto.resetDragSurface;
-        workspaceProto.resetDragSurface = function () {
-            originalResetDragSurface.call(this);
-            this.intersectionCheckPendingAfterDrag_ = false;
-        };
-    }
-
-    if (intersectionProto) {
-        intersectionProto.observe = function () {};
-        intersectionProto.unobserve = function () {};
-        intersectionProto.queueIntersectionCheck = function () {};
-        intersectionProto.checkForIntersections = function () {
-            this.intersectionCheckQueued = false;
-            this.intersectionCheckFrame_ = null;
-        };
     }
 
     if (draggerProto) {
@@ -239,14 +214,6 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                 workspace.scrollbar.hScroll.setHandlePosition(update.x * workspace.scrollbar.hScroll.ratio_);
                 workspace.scrollbar.vScroll.setHandlePosition(update.y * workspace.scrollbar.vScroll.ratio_);
             }
-        };
-    }
-
-    if (blockProto) {
-        blockProto.updateIntersectionObserver = function () {};
-        const originalInitSvg = blockProto.initSvg;
-        blockProto.initSvg = function () {
-            originalInitSvg.call(this);
         };
     }
 
@@ -325,6 +292,13 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         }
         return topBlock;
     };
+
+    if (blockProto) {
+        const originalInitSvg = blockProto.initSvg;
+        blockProto.initSvg = function () {
+            originalInitSvg.call(this);
+        };
+    }
 };
 
 /**
