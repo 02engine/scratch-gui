@@ -2395,20 +2395,15 @@ window.addonAPI = {
   },
   refreshAfterDomRemount() {
     this.pruneDisconnectedSeenElements();
-    notifyAddonWaitersForDomRemount();
     const triggerCallbacks = () => {
+      this.pruneDisconnectedSeenElements();
       notifyAddonWaitersForDomRemount();
       runMutationObserverCallbacks();
     };
     if (window.requestAnimationFrame) {
-      window.requestAnimationFrame(() => {
-        this.pruneDisconnectedSeenElements();
-        triggerCallbacks();
-        window.requestAnimationFrame(triggerCallbacks);
-      });
+      window.requestAnimationFrame(triggerCallbacks);
     } else {
       queueMicrotask(triggerCallbacks);
-      setTimeout(triggerCallbacks, 0);
     }
   },
   // Addons that should NOT be re-run / cleaned by the global DOM cleanup
