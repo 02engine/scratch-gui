@@ -371,6 +371,7 @@ class LibraryComponent extends React.Component {
 
         return (
             <Modal
+                className={styles.libraryModal}
                 fullScreen
                 contentLabel={this.props.title}
                 id={this.props.id}
