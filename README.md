@@ -4,7 +4,83 @@ scratch-gui modified for use in 02engine
 
 See https://docs.02engine.org/development/getting-started to setup the complete TurboWarp environment.
 
-If you just want to play with the GUI then it's the same process as upstream scratch-gui.
+This fork uses **Bun** as the package/script runner. Do not use `npm install`, `npm run ...`, or `npm test` for normal development in this repository.
+
+Install Bun first: https://bun.sh/
+
+Then install dependencies:
+
+```powershell
+bun install
+```
+
+## Development Commands
+
+Start the local development server:
+
+```powershell
+bun run start
+```
+
+Build the GUI:
+
+```powershell
+bun run build
+```
+
+Run the default test pipeline:
+
+```powershell
+bun run test
+```
+
+Run lint only:
+
+```powershell
+bun run test:lint
+```
+
+Run unit tests only:
+
+```powershell
+bun run test:unit
+```
+
+Run integration tests only:
+
+```powershell
+bun run test:integration
+```
+
+Run smoke tests only:
+
+```powershell
+bun run test:smoke
+```
+
+Watch and rebuild:
+
+```powershell
+bun run watch
+```
+
+Sync credits:
+
+```powershell
+bun run sync:credits
+```
+
+Sync PenguinMod extension metadata:
+
+```powershell
+bun run sync:penguinmod
+```
+
+## Notes
+
+- The project scripts in `package.json` are written to work with Bun.
+- Some old upstream `scratch-gui` documentation is kept below inside an HTML comment for license/history reference. Any old `npm` commands in that commented section are not the recommended workflow for 02engine.
+- If dependencies become corrupted, remove `node_modules` and run `bun install` again.
 
 ## License
 
