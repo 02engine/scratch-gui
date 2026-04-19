@@ -86,6 +86,7 @@ class UsernameModal extends React.Component {
             'handleInfiniteClonesChange',
             'handleRemoveFencingChange',
             'handleRemoveLimitsChange',
+            'handleOffscreenDrawableCullingChange',
             'handleWarpTimerChange',
             'handleStageWidthChange',
             'handleStageHeightChange',
@@ -150,6 +151,11 @@ class UsernameModal extends React.Component {
     handleRemoveLimitsChange (e) {
         this.props.vm.setRuntimeOptions({
             miscLimits: !e.target.checked
+        });
+    }
+    handleOffscreenDrawableCullingChange (e) {
+        this.props.vm.setRuntimeOptions({
+            offscreenDrawableCulling: e.target.checked
         });
     }
     handleWarpTimerChange (e) {
@@ -266,6 +272,7 @@ class UsernameModal extends React.Component {
                 onInfiniteClonesChange={this.handleInfiniteClonesChange}
                 onRemoveFencingChange={this.handleRemoveFencingChange}
                 onRemoveLimitsChange={this.handleRemoveLimitsChange}
+                onOffscreenDrawableCullingChange={this.handleOffscreenDrawableCullingChange}
                 onWarpTimerChange={this.handleWarpTimerChange}
                 onStageWidthChange={this.handleStageWidthChange}
                 onStageHeightChange={this.handleStageHeightChange}
@@ -317,6 +324,7 @@ UsernameModal.propTypes = {
     infiniteClones: PropTypes.bool,
     removeFencing: PropTypes.bool,
     removeLimits: PropTypes.bool,
+    offscreenDrawableCulling: PropTypes.bool,
     warpTimer: PropTypes.bool,
     customStageSize: PropTypes.shape({
         width: PropTypes.number,
@@ -338,6 +346,7 @@ const mapStateToProps = state => ({
     infiniteClones: state.scratchGui.tw.runtimeOptions.maxClones === Infinity,
     removeFencing: !state.scratchGui.tw.runtimeOptions.fencing,
     removeLimits: !state.scratchGui.tw.runtimeOptions.miscLimits,
+    offscreenDrawableCulling: !!state.scratchGui.tw.runtimeOptions.offscreenDrawableCulling,
     warpTimer: state.scratchGui.tw.compilerOptions.warpTimer,
     customStageSize: state.scratchGui.customStageSize,
     disableCompiler: !state.scratchGui.tw.compilerOptions.enabled

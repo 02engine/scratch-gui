@@ -603,7 +603,8 @@ const TWStateManager = function (WrappedComponent) {
         runtimeOptions: PropTypes.shape({
             miscLimits: PropTypes.bool,
             fencing: PropTypes.bool,
-            maxClones: PropTypes.number
+            maxClones: PropTypes.number,
+            offscreenDrawableCulling: PropTypes.bool
         }),
         highQualityPen: PropTypes.bool,
         framerate: PropTypes.number,

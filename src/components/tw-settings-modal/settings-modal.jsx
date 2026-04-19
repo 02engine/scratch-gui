@@ -496,6 +496,28 @@ const RemoveMiscLimits = props => (
     />
 );
 
+const OffscreenDrawableCulling = props => (
+    <BooleanSetting
+        {...props}
+        label={
+            <FormattedMessage
+                defaultMessage="Skip Offscreen Sprite Rendering"
+                description="Offscreen drawable culling setting"
+                id="tw.settingsModal.offscreenDrawableCulling"
+            />
+        }
+        help={
+            <FormattedMessage
+                // eslint-disable-next-line max-len
+                defaultMessage="Skips drawing sprites and clones that are fully outside the stage during the normal stage render pass. Touching blocks, color picking, stamping, screenshots, and other renderer queries still use the original behavior."
+                description="Offscreen drawable culling setting help"
+                id="tw.settingsModal.offscreenDrawableCullingHelp"
+            />
+        }
+        slug="offscreen-drawable-culling"
+    />
+);
+
 const WarpTimer = props => (
     <BooleanSetting
         {...props}
@@ -764,6 +786,10 @@ const SettingsModalComponent = props => (
                 value={props.highQualityPen}
                 onChange={props.onHighQualityPenChange}
             />
+            <OffscreenDrawableCulling
+                value={props.offscreenDrawableCulling}
+                onChange={props.onOffscreenDrawableCullingChange}
+            />
             <WarpTimer
                 value={props.warpTimer}
                 onChange={props.onWarpTimerChange}
@@ -864,6 +890,8 @@ SettingsModalComponent.propTypes = {
     onRemoveFencingChange: PropTypes.func,
     removeLimits: PropTypes.bool,
     onRemoveLimitsChange: PropTypes.func,
+    offscreenDrawableCulling: PropTypes.bool,
+    onOffscreenDrawableCullingChange: PropTypes.func,
     warpTimer: PropTypes.bool,
     onWarpTimerChange: PropTypes.func,
     disableCompiler: PropTypes.bool,

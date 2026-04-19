@@ -139,6 +139,16 @@
     "defaultMessage": "Removes sound effect limits and pen size limits."
   },
   {
+    "id": "tw.settingsModal.offscreenDrawableCulling",
+    "description": "Offscreen drawable culling setting",
+    "defaultMessage": "Skip Offscreen Sprite Rendering"
+  },
+  {
+    "id": "tw.settingsModal.offscreenDrawableCullingHelp",
+    "description": "Offscreen drawable culling setting help",
+    "defaultMessage": "Skips drawing sprites and clones that are fully outside the stage during the normal stage render pass. Touching blocks, color picking, stamping, screenshots, and other renderer queries still use the original behavior."
+  },
+  {
     "id": "tw.settingsModal.warpTimer",
     "description": "Warp Timer setting",
     "defaultMessage": "Warp Timer"

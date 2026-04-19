@@ -48,7 +48,8 @@ export const initialState = {
     runtimeOptions: {
         maxClones: 300,
         miscLimits: true,
-        fencing: true
+        fencing: true,
+        offscreenDrawableCulling: false
     },
     isWindowFullScreen: false,
     dimensions: [0, 0],
