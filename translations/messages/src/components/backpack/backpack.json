@@ -20,6 +20,16 @@
     "defaultMessage": "sprite"
   },
   {
+    "id": "tw.spriteSelectorItem.rename",
+    "description": "Menu item to rename an item",
+    "defaultMessage": "rename"
+  },
+  {
+    "id": "gui.spriteSelectorItem.contextMenuDelete",
+    "description": "Menu item to delete in the right click menu",
+    "defaultMessage": "delete"
+  },
+  {
     "id": "gui.backpack.header",
     "description": "Button to open the backpack",
     "defaultMessage": "Backpack"

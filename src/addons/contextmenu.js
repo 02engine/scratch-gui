@@ -22,6 +22,14 @@ const getContextMenuRegistrationKey = (callback, opts) => {
   return `${optsKey}::${callback.toString()}`;
 };
 
+const findBodyContextMenuById = (tab, menuId) => {
+  if (!menuId) return null;
+  return Array.prototype.find.call(
+    document.querySelectorAll("body > nav.react-contextmenu"),
+    (candidate) => candidate[tab.traps.getInternalKey(candidate)]?.return?.stateNode?.props?.id === menuId
+  ) || null;
+};
+
 const onReactContextMenu = function (e) {
   if (!e.target) return;
   const ctxTarget = e.target.closest(".react-contextmenu-wrapper");
@@ -54,9 +62,13 @@ const onReactContextMenu = function (e) {
     extra.name = props.name;
     extra.itemId = props.id;
     extra.index = props.index;
+    if (!ctxMenu) {
+      ctxMenu = findBodyContextMenuById(this, ctxTarget.dataset.saContextMenuId);
+    }
   } else {
     return;
   }
+  if (!ctxMenu) return;
   const ctx = {
     menuItem: ctxMenu,
     target: ctxTarget,

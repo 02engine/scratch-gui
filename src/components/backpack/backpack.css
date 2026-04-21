@@ -87,6 +87,20 @@
     background: $ui-primary;
 }
 
+.backpack-context-menu-button {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    outline: none;
+}
+
+.backpack-context-menu {
+    pointer-events: auto !important;
+}
+
 .more {
     background: $looks-secondary;
     color: $ui-white;

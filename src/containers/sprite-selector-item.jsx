@@ -91,19 +91,27 @@ class SpriteSelectorItem extends React.PureComponent {
         }
     }
     handleDelete (e) {
-        e.stopPropagation(); // To prevent from bubbling back to handleClick
+        if (e && e.stopPropagation) {
+            e.stopPropagation(); // To prevent from bubbling back to handleClick
+        }
         this.props.onDeleteButtonClick(this.props.id);
     }
     handleDuplicate (e) {
-        e.stopPropagation(); // To prevent from bubbling back to handleClick
+        if (e && e.stopPropagation) {
+            e.stopPropagation(); // To prevent from bubbling back to handleClick
+        }
         this.props.onDuplicateButtonClick(this.props.id);
     }
     handleExport (e) {
-        e.stopPropagation();
+        if (e && e.stopPropagation) {
+            e.stopPropagation();
+        }
         this.props.onExportButtonClick(this.props.id);
     }
     handleRename (e) {
-        e.stopPropagation();
+        if (e && e.stopPropagation) {
+            e.stopPropagation();
+        }
         this.props.onRenameButtonClick(this.props.id);
     }
     handleMouseLeave () {
@@ -127,6 +135,7 @@ class SpriteSelectorItem extends React.PureComponent {
             onDuplicateButtonClick,
             onExportButtonClick,
             onRenameButtonClick,
+            onContextMenu,
             dragPayload,
             receivedBlocks,
             costumeURL,
@@ -138,6 +147,7 @@ class SpriteSelectorItem extends React.PureComponent {
             <SpriteSelectorItemComponent
                 componentRef={this.setRef}
                 costumeURL={this.getCostumeData()}
+                onContextMenu={onContextMenu}
                 preventContextMenu={this.dragRecognizer.gestureInProgress()}
                 onClick={this.handleClick}
                 onDeleteButtonClick={onDeleteButtonClick ? this.handleDelete : null}
@@ -168,6 +178,7 @@ SpriteSelectorItem.propTypes = {
     // eslint-disable-next-line react/forbid-prop-types
     name: PropTypes.any,
     onClick: PropTypes.func,
+    onContextMenu: PropTypes.func,
     onDeleteButtonClick: PropTypes.func,
     onRenameButtonClick: PropTypes.func,
     onDrag: PropTypes.func.isRequired,
