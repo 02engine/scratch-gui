@@ -8,21 +8,6 @@ import {connect} from 'react-redux';
  * Higher Order Component to give components the ability to react to drag overs
  * and drops of objects stored in the assetDrag redux state.
  *
- * Example: You want to enable MyComponent to receive drops from a drag type
- *    Wrapped = DropAreaHOC([...dragTypes])(
- *      <MyComponent />
- *    )
- *
- * MyComponent now receives 2 new props
- *      containerRef: a ref that must be set on the container element
- *      dragOver: boolean if an asset is being dragged above the component
- *
- * Use the wrapped component:
- *    <Wrapped onDrop={yourDropHandler} />
- *
- * NB: This HOC _only_ works with objects that drag using the assetDrag reducer.
- *     This _does not_ handle drags for blocks coming from the workspace.
- *
  * @param {Array.<string>} dragTypes Types to respond to, from DragConstants
  * @returns {function} The HOC, specialized for those drag types
  */
@@ -48,35 +33,38 @@ const DropAreaHOC = function (dragTypes) {
                 this.containerBox = null;
             }
 
-            componentDidUpdate (prevProps) {
+            // 反向应用：将 componentDidUpdate 改回 componentWillReceiveProps
+            componentWillReceiveProps (newProps) {
                 // If `dragging` becomes true, record the drop area rectangle
-                if (this.props.dragInfo.dragging && !prevProps.dragInfo.dragging) {
+                if (newProps.dragInfo.dragging && !this.props.dragInfo.dragging) {
                     this.dropAreaRect = this.ref && this.ref.getBoundingClientRect();
                 // If `dragging` becomes false, call the drop handler
-                } else if (!this.props.dragInfo.dragging && prevProps.dragInfo.dragging && this.state.dragOver) {
-                    this.props.onDrop(prevProps.dragInfo);
+                } else if (!newProps.dragInfo.dragging && this.props.dragInfo.dragging && this.state.dragOver) {
+                    this.props.onDrop(this.props.dragInfo);
                     this.setState({dragOver: false});
                 }
 
                 // If a drag is in progress (currentOffset) and it matches the relevant drag types,
                 // test if the drag is within the drop area rect and set the state accordingly.
-                if (this.dropAreaRect && this.props.dragInfo.currentOffset &&
-                    dragTypes.includes(this.props.dragInfo.dragType)) {
-                    const {x, y} = this.props.dragInfo.currentOffset;
+                if (this.dropAreaRect && newProps.dragInfo.currentOffset &&
+                    dragTypes.includes(newProps.dragInfo.dragType)) {
+                    const {x, y} = newProps.dragInfo.currentOffset;
                     const {top, right, bottom, left} = this.dropAreaRect;
-                    const isOver = x > left && x < right && y > top && y < bottom;
-                    // 只在状态真正改变时才调用 setState，避免无限循环
-                    if (isOver !== this.state.dragOver) {
-                        this.setState({dragOver: isOver});
+                    if (x > left && x < right && y > top && y < bottom) {
+                        this.setState({dragOver: true});
+                    } else {
+                        this.setState({dragOver: false});
                     }
                 }
             }
+
             setRef (el) {
                 this.ref = el;
                 if (this.props.componentRef) {
                     this.props.componentRef(this.ref);
                 }
             }
+
             render () {
                 const componentProps = omit(this.props, ['onDrop', 'dragInfo', 'componentRef']);
                 return (

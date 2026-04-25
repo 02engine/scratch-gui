@@ -262,7 +262,8 @@ export default async function ({ addon, console, msg }) {
       (typeof sortableHOCInstance.props.selectedId === "string" ||
         typeof sortableHOCInstance.props.selectedItemIndex === "number") &&
       typeof sortableHOCInstance.containerBox !== "undefined" &&
-      typeof SortableHOC.prototype.componentDidUpdate === "function" &&
+      typeof SortableHOC.prototype.componentDidMount === "undefined" &&
+      typeof SortableHOC.prototype.componentDidUpdate === "undefined" &&
       typeof SortableHOC.prototype.handleAddSortable === "function" &&
       typeof SortableHOC.prototype.handleRemoveSortable === "function" &&
       typeof SortableHOC.prototype.setRef === "function"

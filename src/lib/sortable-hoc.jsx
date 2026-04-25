@@ -20,21 +20,23 @@ const SortableHOC = function (WrappedComponent) {
             this.containerBox = null;
         }
 
-        componentDidUpdate (prevProps) {
-            if (this.props.dragInfo.dragging && !prevProps.dragInfo.dragging) {
+        // 反向应用：将 componentDidUpdate 改回 componentWillReceiveProps
+        componentWillReceiveProps (newProps) {
+            if (newProps.dragInfo.dragging && !this.props.dragInfo.dragging) {
                 // Drag just started, snapshot the sorted bounding boxes for sortables.
                 this.boxes = this.sortableRefs.map(el => el && el.getBoundingClientRect());
                 this.boxes.sort((a, b) => { // Sort top-to-bottom, left-to-right (in LTR) / right-to-left (in RTL).
-                    if (a.top === b.top) return (a.left - b.left) * (this.props.isRtl ? -1 : 1);
+                    if (a.top === b.top) return (a.left - b.left) * (newProps.isRtl ? -1 : 1);
                     return a.top - b.top;
                 });
                 if (!this.ref) {
                     throw new Error('The containerRef must be assigned to the sortable area');
                 }
                 this.containerBox = this.ref.getBoundingClientRect();
-            } else if (!this.props.dragInfo.dragging && prevProps.dragInfo.dragging) {
+            } else if (!newProps.dragInfo.dragging && this.props.dragInfo.dragging) {
                 const newIndex = this.getMouseOverIndex();
                 if (newIndex !== null) {
+                    // 注意：这里需要使用 this.props.dragInfo 获取旧的 drag 数据进行合并
                     this.props.onDrop(Object.assign({}, this.props.dragInfo, {newIndex}));
                 }
             }
@@ -51,14 +53,6 @@ const SortableHOC = function (WrappedComponent) {
         }
 
         getOrdering (items, draggingIndex, newIndex) {
-            // An "Ordering" is an array of indices, where the position array value corresponds
-            // to the position of the item in props.items, and the index of the value
-            // is the index at which the item should appear.
-            // That is, if props.items is ['a', 'b', 'c', 'd'], and we want the GUI to display
-            // ['b', 'c', 'a, 'd'], the value of "ordering" would be [1, 2, 0, 3].
-            // This mapping is used because it is easy to translate to flexbox ordering,
-            // the `order` property for item N is ordering.indexOf(N).
-            // If the user-facing order matches props.items, the ordering is just [0, 1, 2, ...]
             let ordering = Array(this.props.items.length).fill(0)
                 .map((_, i) => i);
             const isNumber = v => typeof v === 'number' && !isNaN(v);
@@ -70,11 +64,8 @@ const SortableHOC = function (WrappedComponent) {
         }
 
         getMouseOverIndex () {
-            // MouseOverIndex is the index that the current drag wants to place the
-            // the dragging object. Obviously only exists if there is a drag (i.e. currentOffset).
-            // Return null if outside the container, zero if there are no boxes.
             let mouseOverIndex = null;
-            if (this.props.dragInfo.currentOffset && this.containerBox) {
+            if (this.props.dragInfo.currentOffset) {
                 const {x, y} = this.props.dragInfo.currentOffset;
                 const {top, left, bottom, right} = this.containerBox;
                 if (x >= left && x <= right && y >= top && y <= bottom) {
