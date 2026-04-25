@@ -229,10 +229,6 @@ module.exports = [
                     {
                         from: 'static',
                         to: ''
-                    },
-                    {
-                        from: 'flarum.config.json',
-                        to: ''
                     }
                 ]
             }),

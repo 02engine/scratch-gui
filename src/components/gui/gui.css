@@ -277,7 +277,7 @@
     height: $stage-menu-height;
     width: 250px; /* Match width of the toolbox */
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     flex-shrink: 0;
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -439,8 +439,9 @@
     /* this will only ever be as wide as the stage */
     flex-basis: 0;
     
-    /* Center the stage and target wrapper */
-    align-items: center;
+    /* Align stage and target wrapper to fill the width */
+    align-items: stretch;
+    margin-top: -10px;
 }
 
 .target-wrapper {
@@ -450,13 +451,6 @@
 
     padding-top: $space;
     min-height: 0; /* this makes it work in Firefox */
-
-    /*
-        For making the sprite-selector a scrollable pane
-        @todo: Not working in Safari
-    */
-    /* TODO this also breaks the thermometer menu */
-    /* overflow: hidden; */
 }
 
 .extension-button-container {

@@ -78,9 +78,7 @@ import {
     closeSettingsMenu,
     errorsMenuOpen,
     openErrorsMenu,
-    closeErrorsMenu,
-    openGitMenu,
-    closeGitMenu
+    closeErrorsMenu
 } from '../../reducers/menus';
 import {setFileHandle} from '../../reducers/tw.js';
 
@@ -104,17 +102,12 @@ import ninetiesLogo from './nineties_logo.svg';
 import catLogo from './cat_logo.svg';
 import prehistoricLogo from './prehistoric-logo.svg';
 import oldtimeyLogo from './oldtimey-logo.svg';
-import gitIcon from './icon--git.svg';
-
 
 import sharedMessages from '../../lib/shared-messages';
 
 import SeeInsideButton from './tw-see-inside.jsx';
 import {notScratchDesktop} from '../../lib/isScratchDesktop.js';
 import {APP_NAME} from '../../lib/brand.js';
-
-import FlarumLogin from '../flarum-login/flarum-login.jsx';
-import FlarumComposer from '../flarum-composer/flarum-composer.jsx';
 
 const ariaMessages = defineMessages({
     tutorials: {
@@ -241,7 +234,6 @@ class MenuBar extends React.Component {
             'handleClickRestorePoints',
             'handleClickSeeCommunity',
             'handleClickShare',
-            'handleClickGitCommit',
             'handleSetMode',
             'handleKeyPress',
             'handleRestoreOption',
@@ -249,13 +241,9 @@ class MenuBar extends React.Component {
             'restoreOptionMessage',
             'handleSetDefaultProject',
             'handleRestoreDefaultProject',
-            'handleOpenFlarumComposer',
-            'handleCloseFlarumComposer',
             'handleToggleMenuBarCollapsed'
         ]);
         this.state = {
-            showComposer: false,
-            flarumToken: null,
             menuBarCollapsed: false
         };
     }
@@ -431,9 +419,6 @@ class MenuBar extends React.Component {
     handleClickSeeInside () {
         this.props.onClickSeeInside();
     }
-    handleClickGitCommit () {
-        this.props.onClickGitCommit && this.props.onClickGitCommit();
-    }
     async handleSetDefaultProject () {
         // Save current project as default
         if (!this.props.vm) {
@@ -526,12 +511,6 @@ class MenuBar extends React.Component {
         if (this.props.onRestoreDefaultProject) {
             this.props.onRestoreDefaultProject();
         }
-    }
-    handleOpenFlarumComposer () {
-        this.setState({showComposer: true});
-    }
-    handleCloseFlarumComposer () {
-        this.setState({showComposer: false});
     }
     handleToggleMenuBarCollapsed () {
         if (!this.props.canCollapseMenuBar) {
@@ -1254,52 +1233,6 @@ class MenuBar extends React.Component {
                             </Button>
                         </a>
                     </div>}
-                    <div
-                        className={classNames(styles.menuBarItem, styles.hoverable, styles.withShadow)}
-                        onClick={this.props.onClickGitCommit}
-                    >
-                        <img
-                            src={gitIcon}
-                            draggable={false}
-                            width={20}
-                            height={20}
-                        />
-                        <span className={styles.collapsibleLabel}>
-                            <FormattedMessage
-                                defaultMessage="Git"
-                                description="Button to open Git menu"
-                                id="gui.menuBar.git"
-                            />
-                        </span>
-                    </div>
-                    {/* Git 快捷按钮 */}
-                    {this.props.vm && this.props.vm.runtime && this.props.vm.runtime.platform &&
-                     this.props.vm.runtime.platform.git && this.props.vm.runtime.platform.git.repository &&
-                     this.props.vm.runtime.platform.git.repository.trim().length > 0 && this.props.showGitQuickButtons && (
-                        <div className={styles.gitQuickButtonsGroup}>
-                            <button
-                                className={styles.gitQuickButton}
-                                onClick={() => this.props.onGitQuickAction && this.props.onGitQuickAction('commit')}
-                                title="Quick Commit"
-                            >
-                                Commit
-                            </button>
-                            <button
-                                className={styles.gitQuickButton}
-                                onClick={() => this.props.onGitQuickAction && this.props.onGitQuickAction('fetch')}
-                                title="Fetch from GitHub"
-                            >
-                                Fetch
-                            </button>
-                            <button
-                                className={styles.gitQuickButton}
-                                onClick={() => this.props.onGitQuickAction && this.props.onGitQuickAction('pullrequest')}
-                                title="Create Pull Request"
-                            >
-                                PR
-                            </button>
-                        </div>
-                    )}
                 </div>
 
                 <div className={styles.accountInfoGroup}>
@@ -1308,30 +1241,9 @@ class MenuBar extends React.Component {
                     />
                 </div>
 
-                {/* Flarum 登录按钮放在右上角，关于按钮左边 - 已隐藏 */}
-                {/* <div
-                    className={classNames(styles.menuBarItem, !this.state.flarumToken && styles.hoverable, styles.withShadow)}
-                    style={!this.props.onClickAbout ? {marginRight: '8px'} : {}}
-                >
-                    <FlarumLogin
-                        isRtl={this.props.isRtl}
-                        onTokenUpdate={(token) => this.setState({flarumToken: token})}
-                        onOpenComposer={this.handleOpenFlarumComposer}
-                    />
-                </div> */}
-
                 {aboutButton}
                 </div>
                 {collapseButton}
-                {/* {this.state.showComposer && (
-                    <FlarumComposer
-                        vm={this.props.vm}
-                        projectName={this.props.projectTitle}
-                        token={this.state.flarumToken}
-                        onRequestClose={this.handleCloseFlarumComposer}
-                        onDone={this.handleCloseFlarumComposer}
-                    />
-                )} */}
             </Box>
         );
     }
@@ -1404,9 +1316,6 @@ MenuBar.propTypes = {
     onClickRestorePoints: PropTypes.func,
     onClickEdit: PropTypes.func,
     onClickFile: PropTypes.func,
-    onClickGitCommit: PropTypes.func,
-    onGitQuickAction: PropTypes.func,
-    showGitQuickButtons: PropTypes.bool,
     onClickLogin: PropTypes.func,
     onClickMode: PropTypes.func,
     onClickNew: PropTypes.func,

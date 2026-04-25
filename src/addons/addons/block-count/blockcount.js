@@ -113,7 +113,6 @@ export default async function ({ addon, console, msg }) {
         container.style.display = "flex";
         container.style.alignItems = "center";
         container.style.gap = "8px";
-        container.style.marginLeft = "8px";
         container.style.marginRight = "8px";
 
         // Create main display (total count + arrow)
