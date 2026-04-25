@@ -1,6 +1,7 @@
 const defaultsDeep = require('lodash.defaultsdeep');
 const path = require('path');
 const webpack = require('webpack');
+const fs = require('fs'); // 引入文件系统模块
 
 // Plugins
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -19,13 +20,16 @@ if (root.length > 0 && !root.endsWith('/')) {
     throw new Error('If ROOT is defined, it must have a trailing slash.');
 }
 
+// --- 打印文件的配置 ---
+// 请在这里修改你想要打印的文件路径
+const FILE_TO_PRINT = path.resolve(__dirname, 'static/02engine-asciilogo.txt'); 
+
 const htmlWebpackPluginCommon = {
     root: root,
     meta: JSON.parse(process.env.EXTRA_META || '{}'),
     APP_NAME
 };
 
-// When this changes, the path for all JS files will change, bypassing any HTTP caches
 const CACHE_EPOCH = 'pentapod';
 
 const base = {
@@ -37,7 +41,6 @@ const base = {
         disableHostCheck: true,
         compress: true,
         port: process.env.PORT || 8601,
-        // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
             rewrites: [
                 {from: /^\/\d+\/?$/, to: '/indexold.html'},
@@ -76,8 +79,6 @@ const base = {
                 /node_modules[\\/]@vernier[\\/]godirect/
             ],
             options: {
-                // Explicitly disable babelrc so we don't catch various config
-                // in much lower dependencies.
                 babelrc: false,
                 plugins: [
                     ['react-intl', {
@@ -114,6 +115,24 @@ const base = {
         }]
     },
     plugins: [
+        // 自定义打印插件
+        {
+            apply: (compiler) => {
+                const printFileContent = (comp, callback) => {
+                    if (fs.existsSync(FILE_TO_PRINT)) {
+                        const content = fs.readFileSync(FILE_TO_PRINT, 'utf8');
+                        console.log(content);
+                        console.log('\x1b[32m%s\x1b[0m', '02Engine Preview Server Is Starting\n');
+                    } else {
+                    }
+                    if (callback) callback();
+                };
+                // 监听普通构建
+                compiler.hooks.beforeRun.tapAsync('LogFilePlugin', printFileContent);
+                // 监听开发预览模式（Watch 模式）
+                compiler.hooks.watchRun.tapAsync('LogFilePlugin', printFileContent);
+            }
+        },
         new CopyWebpackPlugin({
             patterns: [
                 {
@@ -139,7 +158,7 @@ if (!process.env.CI) {
 }
 
 module.exports = [
-    // to run editor examples
+    // 1. Playground 配置
     defaultsDeep({}, base, {
         entry: {
             'editor': './src/playground/editor.jsx',
@@ -245,7 +264,7 @@ module.exports = [
     })
 ].concat(
     process.env.NODE_ENV === 'production' || process.env.BUILD_MODE === 'dist' ? (
-        // export as library
+        // 2. Library (dist) 配置
         defaultsDeep({}, base, {
             target: 'web',
             entry: {
@@ -286,7 +305,6 @@ module.exports = [
                         }
                     ]
                 }),
-                // Include library JSON files for scratch-desktop to use for downloading
                 new CopyWebpackPlugin({
                     patterns: [
                         {
