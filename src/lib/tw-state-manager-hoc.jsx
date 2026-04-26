@@ -22,6 +22,11 @@ import {generateRandomUsername} from './tw-username';
 import {setSearchParams} from './tw-navigation-utils';
 import {defaultStageSize} from '../reducers/custom-stage-size';
 import {normalizeEditorBackground} from './editor-background';
+import {
+    getPersistentEditorBackground,
+    hydratePersistentEditorBackground,
+    setPersistentEditorBackground
+} from './tw-persistent-settings';
 
 /* eslint-disable no-alert */
 
@@ -40,7 +45,6 @@ const messages = defineMessages({
 
 const USERNAME_KEY = 'tw:username';
 const CUSTOM_UI_KEY = 'tw:customUI';
-const EDITOR_BACKGROUND_KEY = 'tw:editorBackground';
 
 /**
  * The State Manager is responsible for managing persistent state and the URL.
@@ -278,6 +282,7 @@ const TWStateManager = function (WrappedComponent) {
     class StateManagerComponent extends React.Component {
         constructor (props) {
             super(props);
+            this._isMounted = false;
             bindAll(this, [
                 'handleHashChange',
                 'handlePopState',
@@ -287,6 +292,7 @@ const TWStateManager = function (WrappedComponent) {
             ]);
         }
         componentDidMount () {
+            this._isMounted = true;
             const urlParams = new URLSearchParams(location.search);
 
             if (urlParams.has('fps')) {
@@ -352,13 +358,16 @@ const TWStateManager = function (WrappedComponent) {
                     // ignore
                 }
 
-                try {
-                    const persistedEditorBackground = getLocalStorage(EDITOR_BACKGROUND_KEY);
-                    if (persistedEditorBackground !== null && this.props.setEditorBackground) {
-                        this.props.setEditorBackground(normalizeEditorBackground(JSON.parse(persistedEditorBackground)));
-                    }
-                } catch (e) {
-                    // ignore
+                if (this.props.setEditorBackground) {
+                    hydratePersistentEditorBackground(
+                        getPersistentEditorBackground(this.props.editorBackground)
+                    ).then(background => {
+                        if (this._isMounted) {
+                            this.props.setEditorBackground(background);
+                        }
+                    }).catch(() => {
+                        // ignore
+                    });
                 }
 
             if (urlParams.has('clones')) {
@@ -514,13 +523,14 @@ const TWStateManager = function (WrappedComponent) {
 
             if (this.props.editorBackground !== prevProps.editorBackground) {
                 try {
-                    setLocalStorage(EDITOR_BACKGROUND_KEY, JSON.stringify(normalizeEditorBackground(this.props.editorBackground)));
+                    setPersistentEditorBackground(this.props.editorBackground);
                 } catch (e) {
                     // ignore
                 }
             }
         }
         componentWillUnmount () {
+            this._isMounted = false;
             window.removeEventListener('hashchange', this.handleHashChange);
             window.removeEventListener('popstate', this.handlePopState);
         }

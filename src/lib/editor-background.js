@@ -4,8 +4,14 @@ const EDITOR_BACKGROUND_TARGETS = {
     BOTH: 'both'
 };
 
+const EDITOR_BACKGROUND_IMAGE_STORAGE = {
+    INLINE: 'inline',
+    INDEXED_DB: 'indexeddb'
+};
+
 const defaultEditorBackground = {
     image: null,
+    imageStorage: null,
     blur: 0,
     target: EDITOR_BACKGROUND_TARGETS.BLOCKS
 };
@@ -19,6 +25,17 @@ const normalizeEditorBackground = background => {
         }
     }
     normalized.image = typeof normalized.image === 'string' && normalized.image ? normalized.image : null;
+    const validStorage = Object.values(EDITOR_BACKGROUND_IMAGE_STORAGE);
+    if (!validStorage.includes(normalized.imageStorage)) {
+        normalized.imageStorage = null;
+    }
+    if (normalized.image) {
+        if (!normalized.imageStorage) {
+            normalized.imageStorage = EDITOR_BACKGROUND_IMAGE_STORAGE.INLINE;
+        }
+    } else if (normalized.imageStorage !== EDITOR_BACKGROUND_IMAGE_STORAGE.INDEXED_DB) {
+        normalized.imageStorage = null;
+    }
     const blur = Number(normalized.blur);
     normalized.blur = Number.isFinite(blur) ? Math.min(Math.max(blur, 0), 40) : 0;
     return normalized;
@@ -45,6 +62,7 @@ const getEditorBackgroundStyle = background => {
 };
 
 export {
+    EDITOR_BACKGROUND_IMAGE_STORAGE,
     EDITOR_BACKGROUND_TARGETS,
     defaultEditorBackground,
     normalizeEditorBackground,

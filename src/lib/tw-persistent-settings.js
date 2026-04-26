@@ -1,7 +1,12 @@
 import {
+    EDITOR_BACKGROUND_IMAGE_STORAGE,
     defaultEditorBackground,
     normalizeEditorBackground
 } from './editor-background';
+import {
+    createPersistentEditorBackgroundURL,
+    loadPersistentEditorBackgroundBlob
+} from './editor-background-storage';
 
 const CUSTOM_UI_KEY = 'tw:customUI';
 const EDITOR_BACKGROUND_KEY = 'tw:editorBackground';
@@ -41,6 +46,16 @@ const setPersistentCustomUI = customUI => (
     setLocalStorageItem(CUSTOM_UI_KEY, customUI === true ? 'true' : 'false')
 );
 
+const serializePersistentEditorBackground = editorBackground => {
+    const normalized = normalizeEditorBackground(editorBackground);
+    if (normalized.imageStorage === EDITOR_BACKGROUND_IMAGE_STORAGE.INDEXED_DB) {
+        return Object.assign({}, normalized, {
+            image: null
+        });
+    }
+    return normalized;
+};
+
 const getPersistentEditorBackground = (fallback = defaultEditorBackground) => {
     const stored = getLocalStorageItem(EDITOR_BACKGROUND_KEY);
     if (stored === null) {
@@ -56,9 +71,33 @@ const getPersistentEditorBackground = (fallback = defaultEditorBackground) => {
 const setPersistentEditorBackground = editorBackground => (
     setLocalStorageItem(
         EDITOR_BACKGROUND_KEY,
-        JSON.stringify(normalizeEditorBackground(editorBackground))
+        JSON.stringify(serializePersistentEditorBackground(editorBackground))
     )
 );
+
+const hydratePersistentEditorBackground = async background => {
+    const normalized = normalizeEditorBackground(background);
+    if (normalized.imageStorage !== EDITOR_BACKGROUND_IMAGE_STORAGE.INDEXED_DB) {
+        return normalized;
+    }
+    try {
+        const blob = await loadPersistentEditorBackgroundBlob();
+        if (!blob) {
+            return normalizeEditorBackground(Object.assign({}, normalized, {
+                image: null,
+                imageStorage: null
+            }));
+        }
+        return normalizeEditorBackground(Object.assign({}, normalized, {
+            image: createPersistentEditorBackgroundURL(blob)
+        }));
+    } catch (e) {
+        return normalizeEditorBackground(Object.assign({}, normalized, {
+            image: null,
+            imageStorage: null
+        }));
+    }
+};
 
 export {
     CUSTOM_UI_KEY,
@@ -66,5 +105,6 @@ export {
     getPersistentCustomUI,
     setPersistentCustomUI,
     getPersistentEditorBackground,
+    hydratePersistentEditorBackground,
     setPersistentEditorBackground
 };
