@@ -1,0 +1,267 @@
+[
+  {
+    "version": "1.2.6",
+    "date": "2026-04-18",
+    "notes": [
+      "### New Features",
+      "- Added a new **Background Settings** section in Advanced Settings.",
+      "- Users can now upload a custom background image and adjust its blur level.",
+      "- Backgrounds can be applied either to the **blocks workspace** or to the **New UI desktop area**.",
+      "- Added localization support for the new background settings.",
+      "- Added a collapsible menu bar button for New UI mode, allowing the top menu bar to be hidden or restored.",
+      "### New UI Improvements",
+      "- Improved editor window behavior in New UI mode.",
+      "- Fixed editor windows not updating correctly when switching light/dark themes.",
+      "- Fixed cases where newly created editor windows could temporarily show content from the previous target.",
+      "- Fixed multi-window editor toolbox sizing issues where the blocks palette could inherit the wrong height from another editor window.",
+      "- Improved editor window layout refresh so the blocks area and related UI resize more reliably.",
+      "- Removed unnecessary placeholder text when all editor windows are closed.",
+      "- Improved window layering so stage, sprite, editor, dialogs, and extension windows appear in the correct order.",
+      "- Fixed minimized stage/sprite window restore buttons being partially hidden by the top bar.",
+      "- Adjusted default editor window size so it no longer starts fully covering the top menu area.",
+      "### Addon Compatibility Fixes",
+      "- Fixed several addon UI elements disappearing or duplicating after switching New UI windows or creating new editor windows.",
+      "- Improved addon DOM refresh behavior to reduce unnecessary reloads while keeping UI-based addons working.",
+      "- Fixed addon toolbar items such as variable/search-related UI disappearing when opening new editor windows.",
+      "- Reduced risk of duplicate addon-injected menu items or controls after UI remounts.",
+      "### Blocks Workspace Improvements",
+      "- Fixed custom background rendering in the blocks workspace so the original grid overlay can remain visible.",
+      "- Fixed incorrect background layering where workspace backgrounds could appear under the wrong UI layer.",
+      "- Improved New UI workspace background handling so stage and sprite windows are no longer covered incorrectly.",
+      "- Fixed cases where the blocks palette did not refresh after adding certain extensions, such as the custom return value extension.",
+      "### Stability and Build Fixes",
+      "- Fixed build/compile issues in the Bun-based workflow.",
+      "- Updated package scripts to use local Node entry points for webpack, Jest, and ESLint, improving compatibility with Bun.",
+      "- Restored broken local `scratch-vm` and `scratch-render` dependencies.",
+      "- Added missing Jest setup and mock files required by the current test configuration.",
+      "- Cleaned up unnecessary repeated addon DOM refresh logic.",
+      "- Added safer cleanup for draggable window document event listeners to avoid leaked drag/resize handlers.",
+      "### 新功能",
+      "- 在高级设置中新增 **背景设置** 独立分区。",
+      "- 支持用户上传自定义背景图片，并设置图片模糊程度。",
+      "- 背景可以应用到 **积木编辑区域**，也可以应用到 **新 UI 窗口桌面区域**。",
+      "- 为新的背景设置补充了多语言支持。",
+      "- 新 UI 模式下新增菜单栏收起按钮，可以隐藏或恢复顶部菜单栏。",
+      "### 新 UI 改进",
+      "- 优化了新 UI 编辑窗口的行为。",
+      "- 修复切换亮暗主题后，编辑窗口样式不能立即刷新的问题。",
+      "- 修复新建角色并创建新编辑窗口时，窗口内容可能暂时显示上一个角色内容的问题。",
+      "- 修复多编辑窗口下，左侧积木栏高度可能继承错误窗口尺寸，导致积木显示不完整的问题。",
+      "- 改进编辑窗口尺寸刷新逻辑，让积木区和相关 UI 更稳定地适配窗口大小。",
+      "- 删除关闭所有编辑窗口后出现的无用提示文字。",
+      "- 调整窗口层级关系，使舞台窗口、角色窗口、编辑窗口、弹窗、扩展库等显示顺序更加正确。",
+      "- 修复舞台/角色窗口最小化后的展开按钮被顶部栏遮挡的问题。",
+      "- 调整编辑窗口默认大小，避免初始状态完全覆盖顶部菜单区域。",
+      "### Addon 兼容性修复",
+      "- 修复切换新 UI 窗口、创建新编辑窗口后，部分 addon UI 消失或重复的问题。",
+      "- 改进 addon DOM 刷新逻辑，减少不必要的重复加载，同时保留依赖 DOM 的 addon 正常显示。",
+      "- 修复变量、搜索框等 addon 工具栏内容在新建编辑窗口后消失的问题。",
+      "- 降低 UI 重新挂载后 addon 菜单项或按钮重复注入的风险。",
+      "### 积木编辑区改进",
+      "- 修复自定义积木区背景的显示层级，使原本的网格图层可以继续保留。",
+      "- 修复积木区背景被设置到错误图层的问题。",
+      "- 修复新 UI 背景可能覆盖舞台窗口、角色窗口的问题。",
+      "- 修复添加部分扩展后，积木栏偶尔不刷新的问题，例如自定义返回值扩展。",
+      "### 稳定性与构建修复",
+      "- 修复 Bun 工作流下的构建/编译问题。",
+      "- 将 package 脚本改为直接调用本地 webpack、Jest、ESLint 入口，提高 Bun 环境兼容性。",
+      "- 修复本地 `scratch-vm` 和 `scratch-render` 依赖损坏导致无法编译的问题。",
+      "- 补齐当前 Jest 配置需要的 setup 和 mock 文件。",
+      "- 清理不必要的重复 addon DOM 刷新逻辑。",
+      "- 为可拖拽窗口增加更安全的 document 事件清理，避免拖拽/缩放监听残留。"
+    ]
+  },
+  {
+    "version": "1.2.5",
+    "date": "2026-04-04",
+    "notes": [
+      "本次更新带来了 `NewUI` 下的多编辑窗口支持，并同步完成了一批界面与稳定性优化。",
+      "主要更新：",
+      "- `NewUI` 现已支持多编辑窗口。",
+      "- 编辑窗口支持拖动、缩放、关闭、全屏，以及锁定当前窗口。",
+      "- 锁定窗口后，切换到其他角色会新建一个新的编辑窗口；未锁定时则会复用当前窗口。",
+      "- 当前激活的编辑窗口会显示完整编辑器，其他窗口会保留对应角色的信息与预览，方便同时管理多个角色。",
+      "- 舞台窗口支持自动适应窗口大小，并新增了对应的顶部按钮。",
+      "- 扩展选择界面进行了重新整理，搜索、筛选、来源分类和批量导入更清晰易用。",
+      "- 批量导入扩展现已支持更合理的导入逻辑，原生扩展会自动使用普通导入方式。",
+      "- 修复了 `NewUI` / 旧 UI 切换时部分 addon 重复加载、消失或显示异常的问题。",
+      "- 修复了多个窗口层级、最小化按钮遮挡、窗口拖动偏移、窗口缩放同步等问题。",
+      "- 优化了部分编辑器和 addon 的性能问题，减少了不必要的实时刷新和重复更新。",
+      "This update introduces multi-editor window support in `NewUI`, along with a series of UI, stability, and workflow improvements.",
+      "Highlights:",
+      "- `NewUI` now supports multiple editor windows.",
+      "- Editor windows can be dragged, resized, closed, fullscreened, and locked.",
+      "- When a window is locked, selecting another sprite opens a new editor window; when unlocked, the current window is reused.",
+      "- The active editor window shows the full editor, while inactive windows keep sprite info and preview content for easier multi-sprite management.",
+      "- The stage window now supports auto-fit resizing, with a dedicated top-bar button.",
+      "- The extension library UI has been redesigned for a cleaner workflow, with improved search, filtering, source grouping, and batch import.",
+      "- Batch extension import now follows better import rules, and built-in extensions automatically use normal import mode.",
+      "- Fixed issues where some addons were duplicated, disappeared, or rendered incorrectly when switching between `NewUI` and the classic UI.",
+      "- Fixed multiple window-related issues, including z-index conflicts, minimized button overlap, drag offset problems, and resize syncing issues.",
+      "- Improved performance in several editor/addon update paths by reducing unnecessary live refreshes and repeated updates."
+    ]
+  },
+  {
+    "version": "1.2.4",
+    "date": "2026-03-28",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.2.3",
+    "date": "2026-03-15",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.2.2",
+    "date": "2026-02-21",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.2.1",
+    "date": "2026-02-15",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.2.0",
+    "date": "2026-02-08",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.10",
+    "date": "2025-12-20",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.9",
+    "date": "2025-11-30",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.8",
+    "date": "2025-11-09",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.7",
+    "date": "2025-11-09",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.6",
+    "date": "2025-11-02",
+    "notes": [
+      "1.fixed compiler",
+      "2.add git to 02engine"
+    ]
+  },
+  {
+    "version": "1.1.5",
+    "date": "2025-11-01",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.4",
+    "date": "2025-10-25",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.3",
+    "date": "2025-10-25",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.2",
+    "date": "2025-10-25",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.1",
+    "date": "2025-10-06",
+    "notes": [
+      "No release notes provided"
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "date": "2025-09-18",
+    "notes": [
+      "大改UI，分离作品和舞台区，更加实用。彻底修复所有语言包bug"
+    ]
+  },
+  {
+    "version": "1.0.7",
+    "date": "2025-08-31",
+    "notes": [
+      "修复使用打包器跳回官方打包器的问题"
+    ]
+  },
+  {
+    "version": "1.0.6",
+    "date": "2025-08-27",
+    "notes": [
+      "采纳群内建议，修复了亿点点小bug"
+    ]
+  },
+  {
+    "version": "1.0.4",
+    "date": "2025-08-16",
+    "notes": [
+      "修复关于绘制新角色的小bug"
+    ]
+  },
+  {
+    "version": "1.0.3",
+    "date": "2025-08-14",
+    "notes": [
+      "fixed all \"paint\" button bugs"
+    ]
+  },
+  {
+    "version": "1.0.2",
+    "date": "2025-08-11",
+    "notes": [
+      "fixed may small bugs.like the \"paint\" button bug,some ui bugs and many other bugs.also changed vm.runtime.plateform to 02engine."
+    ]
+  },
+  {
+    "version": "1.0.1",
+    "date": "2025-08-10",
+    "notes": [
+      "添加了OPF(OpsPerFrame)，可以使项目运行得更快。",
+      "如果使用OPF，请记住在使用02engine packager打包时将设置存储在project中。"
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "2025-08-09",
+    "notes": [
+      "02engine out"
+    ]
+  }
+]
