@@ -11,8 +11,58 @@ class Controls extends React.Component {
         super(props);
         bindAll(this, [
             'handleGreenFlagClick',
-            'handleStopAllClick'
+            'handleStopAllClick',
+            'handleCrashTrigger'
         ]);
+        this.state = {
+            shouldCrash: false
+        };
+        
+        // Track pressed keys for the secret crash trigger
+        this.pressedKeys = new Set();
+        
+        // Add keyboard listeners for crash trigger
+        this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.handleKeyUp = this.handleKeyUp.bind(this);
+    }
+    
+    handleKeyDown (event) {
+        this.pressedKeys.add(event.key);
+        
+        // Trigger crash on Ctrl+Shift+Alt+Z+0 simultaneously
+        // Requires pressing 5 keys at once with both hands in extremely awkward positions:
+        // - Left hand: Ctrl + Shift + Alt + Z (middle-left area of keyboard)
+        // - Right hand: 0 (rightmost key on number row)
+        // The hand positions required make this almost impossible to trigger accidentally
+        const hasCtrl = event.ctrlKey || event.metaKey;
+        const hasShift = event.shiftKey;
+        const hasAlt = event.altKey;
+        const hasZ = this.pressedKeys.has('z') || this.pressedKeys.has('Z');
+        const has0 = this.pressedKeys.has('0');
+        
+        if (hasCtrl && hasShift && hasAlt && hasZ && has0) {
+            event.preventDefault();
+            this.handleCrashTrigger();
+        }
+    }
+    
+    handleKeyUp (event) {
+        this.pressedKeys.delete(event.key);
+    }
+    
+    componentDidMount () {
+        document.addEventListener('keydown', this.handleKeyDown);
+        document.addEventListener('keyup', this.handleKeyUp);
+    }
+    
+    componentWillUnmount () {
+        document.removeEventListener('keydown', this.handleKeyDown);
+        document.removeEventListener('keyup', this.handleKeyUp);
+    }
+    
+    handleCrashTrigger () {
+        // Set state to trigger crash on next render
+        this.setState({shouldCrash: true});
     }
     handleGreenFlagClick (e) {
         e.preventDefault();
@@ -47,6 +97,13 @@ class Controls extends React.Component {
             turbo,
             ...props
         } = this.props;
+        
+        // Trigger crash when state is set
+        if (this.state.shouldCrash) {
+            // This will cause a TypeError during render
+            return undefined.crashNow;
+        }
+        
         return (
             <ControlsComponent
                 {...props}
