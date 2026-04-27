@@ -24,7 +24,8 @@ import {
     closeTelemetryModal,
     openExtensionLibrary,
     openExtensionImportMethodModal,
-    setSelectedExtension
+    setSelectedExtension,
+    closeGitModal
 } from '../reducers/modals';
 
 import FontLoaderHOC from '../lib/font-loader-hoc.jsx';
@@ -185,6 +186,7 @@ const mapStateToProps = state => {
             extensionImportMethodModalVisible: state.scratchGui.modals.extensionImportMethodModal,
             fontsModalVisible: state.scratchGui.modals.fontsModal,        unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,
         invalidProjectModalVisible: state.scratchGui.modals.invalidProjectModal,
+        gitModalVisible: state.scratchGui.modals.gitModal,
         vm: state.scratchGui.vm
     };
 };
@@ -198,7 +200,8 @@ const mapDispatchToProps = dispatch => ({
     onRequestCloseCostumeLibrary: () => dispatch(closeCostumeLibrary()),
     onRequestCloseTelemetryModal: () => dispatch(closeTelemetryModal()),
     onOpenExtensionImportMethodModal: () => dispatch(openExtensionImportMethodModal()),
-    onSetSelectedExtension: extension => dispatch(setSelectedExtension(extension))
+    onSetSelectedExtension: extension => dispatch(setSelectedExtension(extension)),
+    onRequestCloseGitModal: () => dispatch(closeGitModal())
 });
 
 const ConnectedGUI = injectIntl(connect(

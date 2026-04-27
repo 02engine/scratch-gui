@@ -155,6 +155,11 @@
     "defaultMessage": "Cloud Variables are not Available"
   },
   {
+    "id": "tw.menuBar.git",
+    "description": "Menu bar item for Git version control",
+    "defaultMessage": "Git"
+  },
+  {
     "id": "tw.menuBar.moreSettings",
     "description": "Menu bar item for advanced settings",
     "defaultMessage": "Advanced Settings"

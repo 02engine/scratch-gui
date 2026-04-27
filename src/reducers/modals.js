@@ -21,6 +21,7 @@ const MODAL_RESTORE_POINTS = 'restorePointModal';
 const MODAL_FONTS = 'fontsModal';
 const MODAL_UNKNOWN_PLATFORM = 'unknownPlatformModal';
 const MODAL_INVALID_PROJECT = 'invalidProjectModal';
+const MODAL_GIT = 'gitModal';
 
 const initialState = {
     [MODAL_BACKDROP_LIBRARY]: false,
@@ -41,6 +42,7 @@ const initialState = {
     [MODAL_FONTS]: false,
     [MODAL_UNKNOWN_PLATFORM]: false,
     [MODAL_INVALID_PROJECT]: false,
+    [MODAL_GIT]: false,
     selectedExtension: null,
     selectedExtensions: []
 };
@@ -200,6 +202,12 @@ const closeUnknownPlatformModal = function () {
 const closeInvalidProjectModal = function () {
     return closeModal(MODAL_INVALID_PROJECT);
 };
+const openGitModal = function () {
+    return openModal(MODAL_GIT);
+};
+const closeGitModal = function () {
+    return closeModal(MODAL_GIT);
+};
 export {
     reducer as default,
     initialState as modalsInitialState,
@@ -223,6 +231,7 @@ export {
     openFontsModal,
     openUnknownPlatformModal,
     openInvalidProjectModal,
+    openGitModal,
     closeBackdropLibrary,
     closeCostumeLibrary,
     closeExtensionLibrary,
@@ -240,5 +249,6 @@ export {
     closeRestorePointModal,
     closeFontsModal,
     closeUnknownPlatformModal,
-    closeInvalidProjectModal
+    closeInvalidProjectModal,
+    closeGitModal
 };

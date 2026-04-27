@@ -1,0 +1,139 @@
+[
+  {
+    "id": "tw.gitModal.title",
+    "description": "Title of the git window",
+    "defaultMessage": "Git"
+  },
+  {
+    "id": "tw.gitModal.branchesLabel",
+    "description": "Label for branch list",
+    "defaultMessage": "Branches"
+  },
+  {
+    "id": "tw.gitModal.merge",
+    "description": "Merge section label",
+    "defaultMessage": "Merge"
+  },
+  {
+    "id": "tw.gitModal.show",
+    "description": "Show button",
+    "defaultMessage": "Show"
+  },
+  {
+    "id": "tw.gitModal.hide",
+    "description": "Hide button",
+    "defaultMessage": "Hide"
+  },
+  {
+    "id": "tw.gitModal.merge.into",
+    "description": "Merge into branch label",
+    "defaultMessage": "Into"
+  },
+  {
+    "id": "tw.gitModal.merge.from",
+    "description": "Merge from branch label",
+    "defaultMessage": "From"
+  },
+  {
+    "id": "tw.gitModal.merge.selectBranch",
+    "description": "Select branch placeholder",
+    "defaultMessage": "Select branch"
+  },
+  {
+    "id": "tw.gitModal.merge.preview",
+    "description": "Preview merge button",
+    "defaultMessage": "Preview merge"
+  },
+  {
+    "id": "tw.gitModal.merge.conflicts",
+    "description": "Conflicts section label",
+    "defaultMessage": "Conflicts"
+  },
+  {
+    "id": "tw.gitModal.merge.keepOurs",
+    "description": "Keep ours version button",
+    "defaultMessage": "Keep ours"
+  },
+  {
+    "id": "tw.gitModal.merge.keepTheirs",
+    "description": "Keep theirs version button",
+    "defaultMessage": "Keep theirs"
+  },
+  {
+    "id": "tw.gitModal.merge.apply",
+    "description": "Apply merge button",
+    "defaultMessage": "Merge"
+  },
+  {
+    "id": "tw.gitModal.branch",
+    "defaultMessage": "Branch"
+  },
+  {
+    "id": "tw.gitModal.refresh",
+    "defaultMessage": "Refresh"
+  },
+  {
+    "id": "tw.gitModal.deleteRepo",
+    "defaultMessage": "Delete repo"
+  },
+  {
+    "id": "tw.gitModal.createBranch",
+    "defaultMessage": "Create branch"
+  },
+  {
+    "id": "tw.gitModal.deleteBranch",
+    "defaultMessage": "Delete branch"
+  },
+  {
+    "id": "tw.gitModal.author",
+    "defaultMessage": "Author"
+  },
+  {
+    "id": "tw.gitModal.commit",
+    "defaultMessage": "Commit"
+  },
+  {
+    "id": "tw.gitModal.commitButton",
+    "defaultMessage": "Commit"
+  },
+  {
+    "id": "tw.gitModal.undoCommit",
+    "defaultMessage": "Undo"
+  },
+  {
+    "id": "tw.gitModal.recent",
+    "defaultMessage": "Recent commits"
+  },
+  {
+    "id": "tw.gitModal.restoreCommit",
+    "defaultMessage": "Restore"
+  },
+  {
+    "id": "tw.gitModal.downloadCommit",
+    "defaultMessage": "Download"
+  },
+  {
+    "id": "tw.gitModal.noCommits",
+    "defaultMessage": "No commits yet."
+  },
+  {
+    "id": "tw.gitModal.repo",
+    "defaultMessage": "Repository"
+  },
+  {
+    "id": "tw.gitModal.repo.notInitialized",
+    "defaultMessage": "Not initialized"
+  },
+  {
+    "id": "tw.gitModal.init",
+    "defaultMessage": "Initialize"
+  },
+  {
+    "id": "gui.prompt.cancelDelete",
+    "defaultMessage": "Cancel"
+  },
+  {
+    "id": "tw.gitModal.confirmDelete",
+    "defaultMessage": "Delete"
+  }
+]
