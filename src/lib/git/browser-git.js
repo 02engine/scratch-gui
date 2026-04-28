@@ -9,7 +9,42 @@ import {
     writeProjectToWorkingTree
 } from './project-working-tree.js';
 
-const FS_NAME = 'mistwarp-git';
+const FS_NAME = 'bilup-git';
+
+// Global formatter function and intl object (can be set by calling code)
+let globalFormatMessage = null;
+let globalIntl = null;
+
+const getFormattedMessage = (messageKey, defaultText) => {
+    // First, try to use the intl object's messages directly
+    if (globalIntl && globalIntl.messages && typeof globalIntl.messages === 'object') {
+        const translated = globalIntl.messages[messageKey];
+        if (translated && typeof translated === 'string') {
+            return translated;
+        }
+    }
+    
+    // Fallback: try using formatMessage function
+    if (globalFormatMessage && typeof globalFormatMessage === 'function') {
+        try {
+            const result = globalFormatMessage({id: messageKey, defaultMessage: defaultText});
+            if (result && result !== messageKey) {
+                return result;
+            }
+        } catch (e) {
+            console.warn('Failed to format message:', messageKey, e);
+        }
+    }
+    return defaultText;
+};
+
+const setFormatMessage = (formatter) => {
+    globalFormatMessage = formatter;
+};
+
+const setIntl = (intlObject) => {
+    globalIntl = intlObject;
+};
 const REPO_DIR = '/repo';
 const SNAPSHOT_FILE = 'project.sb3';
 const EXPORT_VERSION = 1;
@@ -76,7 +111,6 @@ const exists = async (pfs, filePath) => {
         return false;
     }
 };
-
 const ensureDir = async (pfs, dirPath) => {
     if (!pfs || typeof pfs.mkdir !== 'function') {
         throw new Error('Invalid filesystem object');
@@ -143,7 +177,7 @@ const stageAll = async (fs, dir, {onProgress} = {}) => {
     }
     
     if (typeof onProgress === 'function') {
-        onProgress({phase: 'status', message: 'Computing file status…', completed: 0, total: 1});
+        onProgress({phase: 'status', message: getFormattedMessage('tw.git.computing', 'Computing file status…'), completed: 0, total: 1});
     }
 
     const matrix = await git.statusMatrix({fs, dir});
@@ -159,7 +193,7 @@ const stageAll = async (fs, dir, {onProgress} = {}) => {
         lastReport = now;
         onProgress({
             phase: 'stage',
-            message: 'Staging files…',
+            message: getFormattedMessage('tw.git.staging', 'Staging files…'),
             completed,
             total
         });
@@ -284,7 +318,7 @@ const exportRepoToGitJsonString = async () => {
 
 const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) => {
     if (!defaultBranch || typeof defaultBranch !== 'string') {
-        throw new Error('Invalid default branch name');
+        throw new Error('Invalid branch name');
     }
     
     const fs = getFs();
@@ -294,7 +328,7 @@ const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) =>
     const already = await repoExists();
     if (!already) {
         if (typeof onProgress === 'function') {
-            onProgress({phase: 'init', message: 'Initializing repository…', completed: 0, total: 1});
+            onProgress({phase: 'init', message: getFormattedMessage('tw.git.initializing', 'Initializing repository…'), completed: 0, total: 1});
         }
         
         try {
@@ -304,7 +338,7 @@ const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) =>
 
             if (vm) {
                 if (typeof onProgress === 'function') {
-                    onProgress({phase: 'snapshot', message: 'Saving project snapshot…', completed: 0, total: 1});
+                    onProgress({phase: 'snapshot', message: getFormattedMessage('tw.git.savingSnapshot', 'Saving project snapshot…'), completed: 0, total: 1});
                 }
                 
                 if (typeof vm.saveProjectSb3 !== 'function') {
@@ -324,7 +358,7 @@ const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) =>
             await git.commit({
                 fs,
                 dir: REPO_DIR,
-                message: 'Initialize repository',
+                message: getFormattedMessage('tw.git.initialCommit', 'Initial commit'),
                 author: getDefaultAuthor()
             });
             tempGitJsonString = await exportRepoToGitJsonString();
@@ -379,7 +413,7 @@ const readSnapshotAtCommit = async oid => {
 };
 
 const restoreProjectFromCurrentRef = async vm => {
-    if (!vm) throw new Error('VM not provided');
+    if (!vm) throw new Error('VM is required');
     if (!(await repoExists())) throw new Error('Repository not initialized');
     
     try {
@@ -571,12 +605,12 @@ const getRemotes = async vm => {
     const remotes = await git.listRemotes({fs, dir: REPO_DIR});
 
     return remotes.map(remote => ({
-        name: remote.name,
+        name: remote.remote || remote.name,
         url: remote.url
     }));
 };
 
-const push = async ({vm, remote, branch, ...options}) => {
+const push = async ({vm, remote, branch, onAuth, onAuthFailure, disableCorsProxy, ...options}) => {
     if (!vm) {
         throw new Error('VM is required');
     }
@@ -587,7 +621,31 @@ const push = async ({vm, remote, branch, ...options}) => {
         await initRepo({defaultBranch: 'main', vm: vm});
     }
 
-    await git.push({fs, http, corsProxy: 'https://cors.isomorphic-git.org', dir: REPO_DIR, remote, branch, ...options});
+    const pushOptions = {
+        fs, 
+        http, 
+        dir: REPO_DIR, 
+        remote, 
+        branch,
+        ...options
+    };
+    
+    // Use CORS proxy for public repos, but it may not work with authentication
+    // For authenticated pushes, we rely on the server having proper CORS headers
+    // User can disable CORS proxy if needed
+    if (!disableCorsProxy) {
+        pushOptions.corsProxy = 'https://cors.isomorphic-git.org';
+    }
+    
+    if (onAuth) {
+        pushOptions.onAuth = onAuth;
+    }
+    
+    if (onAuthFailure) {
+        pushOptions.onAuthFailure = onAuthFailure;
+    }
+
+    await git.push(pushOptions);
 };
 
 const commitProject = async ({vm, message, author, onProgress} = {}) => {
@@ -622,7 +680,7 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
     }
 
     if (typeof onProgress === 'function') {
-        onProgress({phase: 'snapshot', message: 'Saving project snapshot…', completed: 0, total: 1});
+        onProgress({phase: 'snapshot', message: getFormattedMessage('tw.git.savingSnapshot', 'Saving project snapshot…'), completed: 0, total: 1});
     }
 
     try {
@@ -657,7 +715,7 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
         if (author) setDefaultAuthor(author);
 
         if (typeof onProgress === 'function') {
-            onProgress({phase: 'commit', message: 'Creating commit…', completed: 1, total: 1});
+            onProgress({phase: 'commit', message: getFormattedMessage('tw.git.commit', 'Creating commit…'), completed: 1, total: 1});
         }
 
         
@@ -711,7 +769,7 @@ const listBranches = async () => {
 
 const mergeBranchesPreview = async ({ours, theirs} = {}) => {
     if (!ours || !theirs || typeof ours !== 'string' || typeof theirs !== 'string') {
-        throw new Error('Invalid branches for merge preview');
+        throw new Error('Invalid branches for merge');
     }
     const fs = getFs();
     try {
@@ -940,7 +998,7 @@ const commitSb3 = async ({
     }
 
     if (typeof onProgress === 'function') {
-        onProgress({phase: 'snapshot', message: 'Writing SB3 snapshot…'});
+        onProgress({phase: 'snapshot', message: getFormattedMessage('tw.git.writingSnapshot', 'Writing SB3 snapshot…')});
     }
 
     await clearWorkingTree({pfs, dir: REPO_DIR});
@@ -981,7 +1039,7 @@ const pickSb3File = () => new Promise((resolve, reject) => {
 
     input.onchange = () => {
         const file = input.files && input.files[0];
-        if (!file) return reject(new Error('No file selected'));
+        if (!file) return reject(new Error(getFormattedMessage('tw.git.noFileSelected', 'No file selected')));
         resolve(file);
     };
 
@@ -1009,6 +1067,8 @@ const pickAndCommitSb3 = async ({
 export {
     getDefaultAuthor,
     setDefaultAuthor,
+    setFormatMessage,
+    setIntl,
     ensureParentDir,
     getRepoStatus,
     getRepoChanges,

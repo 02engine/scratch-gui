@@ -10,59 +10,40 @@
     "defaultMessage": "Branches"
   },
   {
-    "id": "tw.gitModal.merge",
-    "description": "Merge section label",
-    "defaultMessage": "Merge"
+    "id": "tw.gitModal.newBranchPlaceholder",
+    "defaultMessage": "new-branch"
   },
   {
-    "id": "tw.gitModal.show",
-    "description": "Show button",
-    "defaultMessage": "Show"
+    "id": "tw.gitModal.authorNamePlaceholder",
+    "defaultMessage": "Name"
   },
   {
-    "id": "tw.gitModal.hide",
-    "description": "Hide button",
-    "defaultMessage": "Hide"
+    "id": "tw.gitModal.authorEmailPlaceholder",
+    "defaultMessage": "email@example.com"
   },
   {
-    "id": "tw.gitModal.merge.into",
-    "description": "Merge into branch label",
-    "defaultMessage": "Into"
+    "id": "tw.gitModal.remoteNamePlaceholder",
+    "defaultMessage": "Remote name (e.g., origin)"
   },
   {
-    "id": "tw.gitModal.merge.from",
-    "description": "Merge from branch label",
-    "defaultMessage": "From"
+    "id": "tw.gitModal.remoteUrlPlaceholder",
+    "defaultMessage": "https://github.com/user/repo.git"
   },
   {
-    "id": "tw.gitModal.merge.selectBranch",
-    "description": "Select branch placeholder",
+    "id": "tw.gitModal.usernamePlaceholder",
+    "defaultMessage": "Username"
+  },
+  {
+    "id": "tw.gitModal.tokenPlaceholder",
+    "defaultMessage": "Personal Access Token / Password"
+  },
+  {
+    "id": "tw.gitModal.selectRemotePlaceholder",
+    "defaultMessage": "Select remote"
+  },
+  {
+    "id": "tw.gitModal.selectBranchPlaceholder",
     "defaultMessage": "Select branch"
-  },
-  {
-    "id": "tw.gitModal.merge.preview",
-    "description": "Preview merge button",
-    "defaultMessage": "Preview merge"
-  },
-  {
-    "id": "tw.gitModal.merge.conflicts",
-    "description": "Conflicts section label",
-    "defaultMessage": "Conflicts"
-  },
-  {
-    "id": "tw.gitModal.merge.keepOurs",
-    "description": "Keep ours version button",
-    "defaultMessage": "Keep ours"
-  },
-  {
-    "id": "tw.gitModal.merge.keepTheirs",
-    "description": "Keep theirs version button",
-    "defaultMessage": "Keep theirs"
-  },
-  {
-    "id": "tw.gitModal.merge.apply",
-    "description": "Apply merge button",
-    "defaultMessage": "Merge"
   },
   {
     "id": "tw.gitModal.branch",
@@ -98,7 +79,7 @@
   },
   {
     "id": "tw.gitModal.undoCommit",
-    "defaultMessage": "Undo"
+    "defaultMessage": "Undo commit"
   },
   {
     "id": "tw.gitModal.recent",
@@ -117,6 +98,34 @@
     "defaultMessage": "No commits yet."
   },
   {
+    "id": "tw.gitModal.remotes",
+    "defaultMessage": "Remotes"
+  },
+  {
+    "id": "tw.gitModal.addRemote",
+    "defaultMessage": "Add"
+  },
+  {
+    "id": "tw.gitModal.deleteRemote",
+    "defaultMessage": "Delete"
+  },
+  {
+    "id": "tw.gitModal.push",
+    "defaultMessage": "Push"
+  },
+  {
+    "id": "tw.gitModal.authHelp",
+    "defaultMessage": "Note: GitHub requires a Personal Access Token."
+  },
+  {
+    "id": "tw.gitModal.disableCorsProxy",
+    "defaultMessage": "Disable CORS proxy"
+  },
+  {
+    "id": "tw.gitModal.pushButton",
+    "defaultMessage": "Push"
+  },
+  {
     "id": "tw.gitModal.repo",
     "defaultMessage": "Repository"
   },
@@ -129,7 +138,7 @@
     "defaultMessage": "Initialize"
   },
   {
-    "id": "gui.prompt.cancelDelete",
+    "id": "gui.prompt.cancel",
     "defaultMessage": "Cancel"
   },
   {

@@ -578,7 +578,7 @@ export const reconstructSb3FromWorkingTree = async ({fs, dir, onProgress}) => {
             meta: {
                 semver: '3.0.0',
                 vm: '0.2.0-prerelease',
-                agent: 'MistWarp-GUI'
+                agent: '02Engine-GUI'
             }
         };
 
