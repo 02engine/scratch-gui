@@ -27,6 +27,9 @@ import {
     setSelectedExtension,
     closeGitModal
 } from '../reducers/modals';
+import {
+    closeCollaborationModal
+} from '../reducers/collaboration';
 
 import FontLoaderHOC from '../lib/font-loader-hoc.jsx';
 import LocalizationHOC from '../lib/localization-hoc.jsx';
@@ -187,6 +190,7 @@ const mapStateToProps = state => {
             fontsModalVisible: state.scratchGui.modals.fontsModal,        unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,
         invalidProjectModalVisible: state.scratchGui.modals.invalidProjectModal,
         gitModalVisible: state.scratchGui.modals.gitModal,
+        collaborationModalVisible: state.scratchGui.collaboration.modalVisible,
         vm: state.scratchGui.vm
     };
 };
@@ -201,7 +205,8 @@ const mapDispatchToProps = dispatch => ({
     onRequestCloseTelemetryModal: () => dispatch(closeTelemetryModal()),
     onOpenExtensionImportMethodModal: () => dispatch(openExtensionImportMethodModal()),
     onSetSelectedExtension: extension => dispatch(setSelectedExtension(extension)),
-    onRequestCloseGitModal: () => dispatch(closeGitModal())
+    onRequestCloseGitModal: () => dispatch(closeGitModal()),
+    onRequestCloseCollaborationModal: () => dispatch(closeCollaborationModal())
 });
 
 const ConnectedGUI = injectIntl(connect(

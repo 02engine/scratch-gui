@@ -36,6 +36,7 @@ import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 
 import {openTipsLibrary, openSettingsModal, openRestorePointModal, openGitModal} from '../../reducers/modals';
+import {openCollaborationModal} from '../../reducers/collaboration';
 import {setPlayer} from '../../reducers/mode';
 import {
     isTimeTravel220022BC,
@@ -1017,6 +1018,13 @@ class MenuBar extends React.Component {
                                             id="tw.menuBar.git"
                                         />
                                     </MenuItem>
+                                    <MenuItem onClick={this.props.onClickCollaborationModal}>
+                                        <FormattedMessage
+                                            defaultMessage="Collaboration"
+                                            description="Menu bar item for real-time collaboration"
+                                            id="tw.menuBar.collaboration"
+                                        />
+                                    </MenuItem>
                                 </MenuSection>
                                 <MenuSection>
                                     <MenuItem onClick={this.props.onClickSettingsModal}>
@@ -1438,7 +1446,8 @@ const mapDispatchToProps = dispatch => ({
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy()),
     onSeeCommunity: () => dispatch(setPlayer(true)),
     onSetTimeTravelMode: mode => dispatch(setTimeTravel(mode)),
-    onClickGitModal: () => dispatch(openGitModal())
+    onClickGitModal: () => dispatch(openGitModal()),
+    onClickCollaborationModal: () => dispatch(openCollaborationModal())
 });
 
 export default compose(

@@ -3,6 +3,7 @@ import alertsReducer, {alertsInitialState} from './alerts';
 import assetDragReducer, {assetDragInitialState} from './asset-drag';
 import cardsReducer, {cardsInitialState} from './cards';
 import colorPickerReducer, {colorPickerInitialState} from './color-picker';
+import collaborationReducer, {collaborationInitialState} from './collaboration';
 import connectionModalReducer, {connectionModalInitialState} from './connection-modal';
 import customProceduresReducer, {customProceduresInitialState} from './custom-procedures';
 import blockDragReducer, {blockDragInitialState} from './block-drag';
@@ -42,6 +43,7 @@ const guiInitialState = {
     blockDrag: blockDragInitialState,
     cards: cardsInitialState,
     colorPicker: colorPickerInitialState,
+    collaboration: collaborationInitialState,
     connectionModal: connectionModalInitialState,
     customStageSize: customStageSizeInitialState,
     customProcedures: customProceduresInitialState,
@@ -148,6 +150,7 @@ const guiReducer = combineReducers({
     blockDrag: blockDragReducer,
     cards: cardsReducer,
     colorPicker: colorPickerReducer,
+    collaboration: collaborationReducer,
     connectionModal: connectionModalReducer,
     customStageSize: customStageSizeReducer,
     customProcedures: customProceduresReducer,

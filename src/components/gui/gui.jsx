@@ -45,6 +45,7 @@ import TWFontsModal from '../../containers/tw-fonts-modal.jsx';
 import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.jsx';
 import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx';
 import TWGitModal from '../../containers/tw-git-modal.jsx';
+import CollaborationContainer from '../../containers/collaboration-container.jsx';
 
 import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/layout-constants';
 import {resolveStageSize} from '../../lib/screen-utils';
@@ -321,9 +322,11 @@ const GUIComponent = props => {
         fontsModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
-        gitModalVisible,
-        onRequestCloseGitModal,
-        vm,
+    gitModalVisible,
+    onRequestCloseGitModal,
+    collaborationModalVisible,
+    onRequestCloseCollaborationModal,
+    vm,
         customUI,
         editorBackground,
         editingTargetId,
@@ -1545,6 +1548,11 @@ const GUIComponent = props => {
                             {fontsModalVisible && <TWFontsModal />}                {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
                 {invalidProjectModalVisible && <TWInvalidProjectModal />}
                 {gitModalVisible && <TWGitModal onClose={onRequestCloseGitModal} />}
+                <CollaborationContainer
+                    vm={vm}
+                    visible={collaborationModalVisible}
+                    onRequestClose={onRequestCloseCollaborationModal}
+                />
             </React.Fragment>
         );
 

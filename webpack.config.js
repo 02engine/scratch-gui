@@ -20,8 +20,6 @@ if (root.length > 0 && !root.endsWith('/')) {
     throw new Error('If ROOT is defined, it must have a trailing slash.');
 }
 
-// --- 打印文件的配置 ---
-// 请在这里修改你想要打印的文件路径
 const FILE_TO_PRINT = path.resolve(__dirname, 'static/02engine-asciilogo.txt'); 
 
 const htmlWebpackPluginCommon = {
@@ -112,7 +110,7 @@ const base = {
                     }
                 }
             }]
-        }]
+        }],
     },
     plugins: [
         // 自定义打印插件

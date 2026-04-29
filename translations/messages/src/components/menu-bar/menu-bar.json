@@ -160,6 +160,11 @@
     "defaultMessage": "Git"
   },
   {
+    "id": "tw.menuBar.collaboration",
+    "description": "Menu bar item for real-time collaboration",
+    "defaultMessage": "Collaboration"
+  },
+  {
     "id": "tw.menuBar.moreSettings",
     "description": "Menu bar item for advanced settings",
     "defaultMessage": "Advanced Settings"
