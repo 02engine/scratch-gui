@@ -4,6 +4,9 @@ const wrapVMAssetMethods = service => {
     const self = service;
 
     const wrap = (obj, methodName, handler) => {
+        if (!obj || typeof obj[methodName] !== 'function') {
+            return false;
+        }
         const original = obj[methodName].bind(obj);
         obj[methodName] = function (...args) {
             const result = original(...args);
@@ -16,6 +19,7 @@ const wrapVMAssetMethods = service => {
             }
             return result;
         };
+        return true;
     };
 
     const getTargetInfo = optTargetId => {
@@ -78,26 +82,28 @@ const wrapVMAssetMethods = service => {
         });
     });
 
-    const originalDeleteSprite = vm.deleteSprite.bind(vm);
-    vm.deleteSprite = function (targetId) {
-        let targetName = null;
-        if (vm.runtime) {
-            const target = vm.runtime.getTargetById(targetId);
-            if (target) targetName = target.getName();
-        }
+    if (typeof vm.deleteSprite === 'function') {
+        const originalDeleteSprite = vm.deleteSprite.bind(vm);
+        vm.deleteSprite = function (targetId) {
+            let targetName = null;
+            if (vm.runtime) {
+                const target = vm.runtime.getTargetById(targetId);
+                if (target) targetName = target.getName();
+            }
 
-        const result = originalDeleteSprite(targetId);
+            const result = originalDeleteSprite(targetId);
 
-        if (self.isConnected && !self.isApplyingRemoteChange &&
-            !self.isSyncOperation && !self.isLoadingProject) {
-            self.sendMessage('asset-event', {
-                kind: 'sprite-delete',
-                targetId,
-                targetName
-            });
-        }
-        return result;
-    };
+            if (self.isConnected && !self.isApplyingRemoteChange &&
+                !self.isSyncOperation && !self.isLoadingProject) {
+                self.sendMessage('asset-event', {
+                    kind: 'sprite-delete',
+                    targetId,
+                    targetName
+                });
+            }
+            return result;
+        };
+    }
 
     wrap(vm, 'duplicateSprite', (args, result) => {
         Promise.resolve(result).then(() => {
@@ -149,27 +155,29 @@ const wrapVMAssetMethods = service => {
         });
     });
 
-    const originalRenameSprite = vm.renameSprite.bind(vm);
-    vm.renameSprite = function (targetId, newName) {
-        let oldName = null;
-        if (vm.runtime) {
-            const target = vm.runtime.getTargetById(targetId);
-            if (target) oldName = target.getName();
-        }
+    if (typeof vm.renameSprite === 'function') {
+        const originalRenameSprite = vm.renameSprite.bind(vm);
+        vm.renameSprite = function (targetId, newName) {
+            let oldName = null;
+            if (vm.runtime) {
+                const target = vm.runtime.getTargetById(targetId);
+                if (target) oldName = target.getName();
+            }
 
-        const result = originalRenameSprite(targetId, newName);
+            const result = originalRenameSprite(targetId, newName);
 
-        if (self.isConnected && !self.isApplyingRemoteChange &&
-            !self.isSyncOperation && !self.isLoadingProject) {
-            self.sendMessage('asset-event', {
-                kind: 'sprite-rename',
-                targetId,
-                targetName: oldName,
-                newName
-            });
-        }
-        return result;
-    };
+            if (self.isConnected && !self.isApplyingRemoteChange &&
+                !self.isSyncOperation && !self.isLoadingProject) {
+                self.sendMessage('asset-event', {
+                    kind: 'sprite-rename',
+                    targetId,
+                    targetName: oldName,
+                    newName
+                });
+            }
+            return result;
+        };
+    }
 
     wrap(vm, 'reorderTarget', args => {
         const [targetIndex, newIndex] = args;

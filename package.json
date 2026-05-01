@@ -100,6 +100,7 @@
     "scratch-audio": "github:02engine/scratch-audio#main",
     "scratch-blocks": "github:02engine/scratch-blocks#main",
     "scratch-paint": "github:02engine/scratch-paint#main",
+    "scratch-render-fonts": "github:02engine/scratch-render-fonts#main",
     "scratch-render": "github:02engine/scratch-render#main",
     "scratch-vm": "github:02engine/scratch-vm#main",
     "style-loader": "^0.23.0",
