@@ -1979,14 +1979,10 @@ class SharedDispatch {
         if (isRemote) {
           return this._remoteTransferCall(provider, service, method, transfer, ...args);
         }
-        const fn = provider[method];
-        if (typeof fn !== 'function') {
-          return Promise.reject(new Error("Method not found on service '".concat(service, "': ").concat(String(method))));
-        }
 
         // TODO: verify correct `this` after switching from apply to spread
         // eslint-disable-next-line prefer-spread
-        const result = fn.apply(provider, args);
+        const result = provider[method].apply(provider, args);
         return Promise.resolve(result);
       }
       return Promise.reject(new Error("Service not found: ".concat(service)));
@@ -2371,38 +2367,6 @@ module.exports = ArgumentType;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/block-shape.js":
-/*!**********************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/block-shape.js ***!
-  \**********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-// Use the constants instead of manually redefining them again
-const ScratchBlocksConstants = __webpack_require__(/*! ../engine/scratch-blocks-constants */ "./node_modules/scratch-vm/src/engine/scratch-blocks-constants.js");
-
-/**
- * Types of block shapes
- * @enum {number}
- */
-const BlockShape = {
-  /**
-   * Output shape: hexagonal (booleans/predicates).
-   */
-  HEXAGONAL: ScratchBlocksConstants.OUTPUT_SHAPE_HEXAGONAL,
-  /**
-   * Output shape: rounded (numbers).
-   */
-  ROUND: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
-  /**
-   * Output shape: squared (any/all values; strings).
-   */
-  SQUARE: ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE
-};
-module.exports = BlockShape;
-
-/***/ }),
-
 /***/ "./node_modules/scratch-vm/src/extension-support/block-type.js":
 /*!*********************************************************************!*\
   !*** ./node_modules/scratch-vm/src/extension-support/block-type.js ***!
@@ -2552,7 +2516,6 @@ Object.assign(global.Scratch, ScratchCommon, {
     };
     return fetch;
   }((url, options) => fetch(url, options)),
-  download: () => Promise.reject(new Error('Scratch.download not supported in sandboxed extensions')),
   canOpenWindow: () => Promise.resolve(false),
   openWindow: () => Promise.reject(new Error('Scratch.openWindow not supported in sandboxed extensions')),
   canRedirect: () => Promise.resolve(false),
@@ -2564,6 +2527,7 @@ Object.assign(global.Scratch, ScratchCommon, {
   canGeolocate: () => Promise.resolve(false),
   canEmbed: () => Promise.resolve(false),
   canDownload: () => Promise.resolve(false),
+  download: () => Promise.reject(new Error('Scratch.download not supported in sandboxed extensions')),
   translate
 });
 
@@ -2604,6 +2568,38 @@ module.exports = TargetType;
 
 /***/ }),
 
+/***/ "./node_modules/scratch-vm/src/extension-support/tw-block-shape.js":
+/*!*************************************************************************!*\
+  !*** ./node_modules/scratch-vm/src/extension-support/tw-block-shape.js ***!
+  \*************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// Use the constants instead of manually redefining them again
+const ScratchBlocksConstants = __webpack_require__(/*! ../engine/scratch-blocks-constants */ "./node_modules/scratch-vm/src/engine/scratch-blocks-constants.js");
+
+/**
+ * Types of block shapes
+ * @enum {number}
+ */
+const BlockShape = {
+  /**
+   * Output shape: hexagonal (booleans/predicates).
+   */
+  HEXAGONAL: ScratchBlocksConstants.OUTPUT_SHAPE_HEXAGONAL,
+  /**
+   * Output shape: rounded (numbers).
+   */
+  ROUND: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
+  /**
+   * Output shape: squared (any/all values; strings).
+   */
+  SQUARE: ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE
+};
+module.exports = BlockShape;
+
+/***/ }),
+
 /***/ "./node_modules/scratch-vm/src/extension-support/tw-extension-api-common.js":
 /*!**********************************************************************************!*\
   !*** ./node_modules/scratch-vm/src/extension-support/tw-extension-api-common.js ***!
@@ -2613,7 +2609,7 @@ module.exports = TargetType;
 
 const ArgumentType = __webpack_require__(/*! ./argument-type */ "./node_modules/scratch-vm/src/extension-support/argument-type.js");
 const BlockType = __webpack_require__(/*! ./block-type */ "./node_modules/scratch-vm/src/extension-support/block-type.js");
-const BlockShape = __webpack_require__(/*! ./block-shape */ "./node_modules/scratch-vm/src/extension-support/block-shape.js");
+const BlockShape = __webpack_require__(/*! ./tw-block-shape */ "./node_modules/scratch-vm/src/extension-support/tw-block-shape.js");
 const TargetType = __webpack_require__(/*! ./target-type */ "./node_modules/scratch-vm/src/extension-support/target-type.js");
 const Cast = __webpack_require__(/*! ../util/cast */ "./node_modules/scratch-vm/src/util/cast.js");
 const Scratch = {
