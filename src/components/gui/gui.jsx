@@ -1176,6 +1176,14 @@ const GUIComponent = props => {
                 event.stopPropagation();
                 handleEditorWindowLockToggle(session.id);
             }}
+            onMouseDown={event => {
+                event.preventDefault();
+                event.stopPropagation();
+            }}
+            onTouchStart={event => {
+                event.preventDefault();
+                event.stopPropagation();
+            }}
             title={intl.formatMessage(
                 session.locked ? messages.editorWindowUnlock : messages.editorWindowLock
             )}
