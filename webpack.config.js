@@ -120,7 +120,7 @@ const base = {
                     if (fs.existsSync(FILE_TO_PRINT)) {
                         const content = fs.readFileSync(FILE_TO_PRINT, 'utf8');
                         console.log(content);
-                        console.log('\x1b[32m%s\x1b[0m', 'Welcome to 02Engine Development...\n');
+                        console.log('\x1b[32m%s\x1b[0m', 'Welcome to 02Engine Development......Good Luck!\n');
                     } else {
                     }
                     if (callback) callback();
