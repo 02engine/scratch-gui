@@ -29,15 +29,11 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console;
   addon.tab.redux.initialize();
   addon.tab.redux.addEventListener("statechanged", _ref2 => {
-    let {
-      detail
-    } = _ref2;
+    let detail = _ref2.detail;
     if (addon.self.disabled) return;
     if (detail.action.type === "scratch-paint/clipboard/SET" || detail.action.type === "scratch-paint/clipboard/INCREMENT_PASTE_OFFSET") {
       addon.tab.redux.dispatch({

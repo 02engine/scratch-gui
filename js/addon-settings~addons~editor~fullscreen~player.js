@@ -4491,6 +4491,12 @@ async function reloadCustomAddon(addonId) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 /**
  * Custom Addon Storage Manager
  * Manages persistent storage of custom addons using LocalStorage and IndexedDB
@@ -4539,7 +4545,9 @@ class CustomAddonStorage {
     const transaction = this.db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const filePromises = Object.entries(files).map(_ref => {
-      let [filename, content] = _ref;
+      let _ref2 = _slicedToArray(_ref, 2),
+        filename = _ref2[0],
+        content = _ref2[1];
       const key = "".concat(id, "/").concat(filename);
       return new Promise((resolve, reject) => {
         const request = store.put(content, key);
@@ -4645,7 +4653,10 @@ class CustomAddonStorage {
   getAllManifests() {
     const metadata = this.getMetadata();
     const manifests = {};
-    for (const [id, data] of Object.entries(metadata)) {
+    for (const _ref3 of Object.entries(metadata)) {
+      var _ref4 = _slicedToArray(_ref3, 2);
+      const id = _ref4[0];
+      const data = _ref4[1];
       manifests[id] = data.manifest;
     }
     return manifests;
@@ -4699,7 +4710,10 @@ class CustomAddonStorage {
     const addon = await this.getAddon(id);
     if (!addon) return null;
     const blobURLs = {};
-    for (const [filename, content] of Object.entries(addon.files)) {
+    for (const _ref5 of Object.entries(addon.files)) {
+      var _ref6 = _slicedToArray(_ref5, 2);
+      const filename = _ref6[0];
+      const content = _ref6[1];
       let mimeType = 'text/plain';
       if (filename.endsWith('.js')) {
         mimeType = 'application/javascript';
@@ -5094,6 +5108,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./generated/upstream-meta.json */ "./src/addons/generated/upstream-meta.json");
 var _generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_2___namespace = /*#__PURE__*/__webpack_require__.t(/*! ./generated/upstream-meta.json */ "./src/addons/generated/upstream-meta.json", 1);
 /* harmony import */ var _event_target__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./event-target */ "./src/addons/event-target.js");
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
@@ -5340,10 +5360,9 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"
   getDefaultSettings(addonId) {
     const manifest = this.getAddonManifest(addonId);
     const result = {};
-    for (const {
-      id,
-      default: value
-    } of manifest.settings) {
+    for (const _ref of manifest.settings) {
+      const id = _ref.id;
+      const value = _ref.default;
       result[id] = value;
     }
     return result;
@@ -5430,10 +5449,9 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"
   }
   applyAddonPreset(addonId, presetId) {
     const manifest = this.getAddonManifest(addonId);
-    for (const {
-      id,
-      values
-    } of manifest.presets) {
+    for (const _ref2 of manifest.presets) {
+      const id = _ref2.id;
+      const values = _ref2.values;
       if (id !== presetId) {
         continue;
       }
@@ -5476,10 +5494,8 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"
       this.setAddonEnabled(id, enabled.includes(id));
     }
   }
-  export(_ref) {
-    let {
-      theme
-    } = _ref;
+  export(_ref3) {
+    let theme = _ref3.theme;
     const result = {
       core: {
         // Upstream property. We don't use this.
@@ -5489,13 +5505,15 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"
       },
       addons: {}
     };
-    for (const [addonId, manifest] of Object.entries(allAddons)) {
+    for (const _ref4 of Object.entries(allAddons)) {
+      var _ref5 = _slicedToArray(_ref4, 2);
+      const addonId = _ref5[0];
+      const manifest = _ref5[1];
       const enabled = this.getAddonEnabled(addonId);
       const settings = {};
       if (manifest.settings) {
-        for (const {
-          id
-        } of manifest.settings) {
+        for (const _ref6 of manifest.settings) {
+          const id = _ref6.id;
           settings[id] = this.getAddonSetting(addonId, id);
         }
       }
@@ -5507,18 +5525,22 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"
     return result;
   }
   import(data) {
-    for (const [addonId, value] of Object.entries(data.addons)) {
+    for (const _ref7 of Object.entries(data.addons)) {
+      var _ref8 = _slicedToArray(_ref7, 2);
+      const addonId = _ref8[0];
+      const value = _ref8[1];
       if (!Object.prototype.hasOwnProperty.call(allAddons, addonId)) {
         continue;
       }
-      const {
-        enabled,
-        settings
-      } = value;
+      const enabled = value.enabled,
+        settings = value.settings;
       if (typeof enabled === 'boolean') {
         this.setAddonEnabled(addonId, enabled);
       }
-      for (const [settingId, settingValue] of Object.entries(settings)) {
+      for (const _ref9 of Object.entries(settings)) {
+        var _ref0 = _slicedToArray(_ref9, 2);
+        const settingId = _ref0[0];
+        const settingValue = _ref0[1];
         try {
           this.setAddonSetting(addonId, settingId, settingValue);
         } catch (e) {
@@ -5527,11 +5549,9 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"
       }
     }
   }
-  setStoreWithVersionCheck(_ref2) {
-    let {
-      version,
-      store
-    } = _ref2;
+  setStoreWithVersionCheck(_ref1) {
+    let version = _ref1.version,
+      store = _ref1.store;
     if (version !== _generated_upstream_meta_json__WEBPACK_IMPORTED_MODULE_2__.commit) {
       return;
     }
@@ -5584,7 +5604,10 @@ class SettingsStore extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"
     }
     if (condition.settings) {
       // settings is an AND
-      for (const [settingName, expectedValue] of Object.entries(condition.settings)) {
+      for (const _ref10 of Object.entries(condition.settings)) {
+        var _ref11 = _slicedToArray(_ref10, 2);
+        const settingName = _ref11[0];
+        const expectedValue = _ref11[1];
         // expectedValue can be a string or an array of possible options
         const expectedValues = Array.isArray(expectedValue) ? expectedValue : [expectedValue];
         if (!expectedValues.includes(this.getAddonSetting(addonId, settingName))) {

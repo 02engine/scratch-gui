@@ -29,10 +29,8 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console;
   const ScratchBlocks = await addon.tab.traps.getBlockly();
   const injectCurrent = () => {
     const workspace = Blockly.getMainWorkspace();

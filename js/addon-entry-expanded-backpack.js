@@ -52,11 +52,9 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    global,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    global = _ref.global,
+    console = _ref.console;
   // fix area above the backpack displaying at the wrong height when addon settings are changed
   addon.settings.addEventListener("change", heightFix);
   addon.self.addEventListener("disabled", heightFix);

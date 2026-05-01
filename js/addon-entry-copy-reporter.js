@@ -68,11 +68,9 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   addon.tab.createEditorContextMenu(ctx => {
     const className = ctx.type === "monitor_large" ? "monitor_large-value" : "monitor_value";
     const element = ctx.target.querySelector("[class*='".concat(className, "_']"));

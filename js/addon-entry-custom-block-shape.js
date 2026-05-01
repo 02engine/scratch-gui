@@ -65,18 +65,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _update_all_blocks_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./update-all-blocks.js */ "./src/addons/addons/custom-block-shape/update-all-blocks.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console;
   var BlocklyInstance = await addon.tab.traps.getBlockly();
   (function (Blockly) {
     const BlockSvg = BlocklyInstance.BlockSvg;
     var originalDropdownObject = BlocklyInstance.FieldDropdown.prototype.positionArrow;
     var vm = addon.tab.traps.vm;
-    const {
-      GRID_UNIT
-    } = BlockSvg;
+    const GRID_UNIT = BlockSvg.GRID_UNIT;
     function applyChanges() {
       let paddingSize = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : addon.settings.get("paddingSize");
       let cornerSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : addon.settings.get("cornerSize");

@@ -29,11 +29,9 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async _ref => {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   if (!addon.tab.redux.state) return console.warn("Redux is not available!");
   const vm = addon.tab.traps.vm;
   if (!vm) return;

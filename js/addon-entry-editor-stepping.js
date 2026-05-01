@@ -168,10 +168,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console;
   const vm = addon.tab.traps.vm;
   const highlighter = new _highlighter_js__WEBPACK_IMPORTED_MODULE_1__["default"](0, addon.settings.get("highlight-color"));
   addon.settings.addEventListener("change", () => {

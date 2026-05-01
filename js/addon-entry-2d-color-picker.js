@@ -70,6 +70,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _libraries_common_cs_normalize_color_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../libraries/common/cs/normalize-color.js */ "./src/addons/libraries/common/cs/normalize-color.js");
 /* harmony import */ var _libraries_common_cs_rate_limiter_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../libraries/common/cs/rate-limiter.js */ "./src/addons/libraries/common/cs/rate-limiter.js");
 /* harmony import */ var _libraries_thirdparty_cs_tinycolor_min_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../libraries/thirdparty/cs/tinycolor-min.js */ "./src/addons/libraries/thirdparty/cs/tinycolor-min.js");
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 // this script was happily stolen from the color-picker addon, developed by Richie Bendall and apple502j
 
 // import required libraries
@@ -77,11 +83,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /* harmony default export */ __webpack_exports__["default"] = (async _ref => {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   let prevEventHandler;
   // 250-ms rate limit
   const rateLimiter = new _libraries_common_cs_rate_limiter_js__WEBPACK_IMPORTED_MODULE_1__["default"](250);
@@ -113,9 +117,7 @@ __webpack_require__.r(__webpack_exports__);
     // The only way to reliably set color is to invoke eye dropper via click()
     // then faking that the eye dropper reported the value.
     const onEyeDropperOpened = _ref2 => {
-      let {
-        detail
-      } = _ref2;
+      let detail = _ref2.detail;
       if (detail.action.type !== "scratch-paint/eye-dropper/ACTIVATE_COLOR_PICKER") return;
       addon.tab.redux.removeEventListener("statechanged", onEyeDropperOpened);
       setTimeout(() => {
@@ -294,9 +296,7 @@ __webpack_require__.r(__webpack_exports__);
       window.addEventListener("pointerup", mouseupfunc);
     });
     prevEventHandler = _ref3 => {
-      let {
-        detail
-      } = _ref3;
+      let detail = _ref3.detail;
       if (detail.action.type === "scratch-paint/color-index/CHANGE_COLOR_INDEX") {
         setTimeout(() => {
           updateColor();
@@ -306,7 +306,11 @@ __webpack_require__.r(__webpack_exports__);
     addon.tab.redux.addEventListener("statechanged", prevEventHandler);
     saColorPicker.appendChild(saColorPickerImage);
     saColorPicker.appendChild(saColorPickerHandle);
-    const [colorSlider, saturationSlider, brightnessSlider] = [...element.parentElement.querySelectorAll('[class^="color-picker_row-header"]')].map(i => i.parentElement);
+    const _map = [...element.parentElement.querySelectorAll('[class^="color-picker_row-header"]')].map(i => i.parentElement),
+      _map2 = _slicedToArray(_map, 3),
+      colorSlider = _map2[0],
+      saturationSlider = _map2[1],
+      brightnessSlider = _map2[2];
     saturationSlider.style.display = "none";
     brightnessSlider.style.display = "none";
     colorSlider.insertAdjacentElement("afterend", saColorPicker);
@@ -344,13 +348,24 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getHexRegex", function() { return getHexRegex; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "normalizeHex", function() { return normalizeHex; });
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 const getHexRegex = () => /^#?[0-9a-fA-F]{3,8}$/;
 const normalizeHex = input => {
   let hex = String(input);
   if (!getHexRegex().test(hex)) return "#000000";
   if (!hex.startsWith("#")) hex = "#".concat(hex);
   if (hex.length === 4) {
-    const [_, r, g, b] = hex;
+    const _hex = hex,
+      _hex2 = _slicedToArray(_hex, 4),
+      _ = _hex2[0],
+      r = _hex2[1],
+      g = _hex2[2],
+      b = _hex2[3];
     hex = "#".concat(r).concat(r).concat(g).concat(g).concat(b).concat(b);
   }
   return hex.toLowerCase();
