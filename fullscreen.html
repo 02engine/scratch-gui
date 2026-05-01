@@ -2,7 +2,8 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 核心适配：保留 id="viewport" 并加入 viewport-fit=cover 适配刘海屏 -->
+    <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="google" value="notranslate">
     <meta name="description" content="02Engine is a Scratch mod with a compiler to run projects faster, dark mode for your eyes, a bunch of addons to improve the editor, and more." />
     <title>02Engine - Run Scratch projects faster</title>
@@ -11,6 +12,26 @@
       <link rel="manifest" href="manifest.webmanifest">
     
     <style>
+      /* 核心适配：锁定容器确保比例计算生效 */
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden !important;
+        background-color: #333;
+        position: fixed;
+      }
+
+      #app {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        visibility: hidden; /* 计算完成前保持隐藏 */
+      }
+
       .splash-screen {
         position: absolute;
         width: 100%;
@@ -97,6 +118,31 @@
       (function () {
         'use strict';
 
+        // 核心适配：1.2.7 的比例适配函数
+        function initViewportScaling() {
+          const vp = document.getElementById('viewport');
+          const app = document.getElementById('app');
+          if (!vp || !app) return;
+          const screenW = Math.max(window.screen.width, window.screen.height);
+          const screenH = Math.min(window.screen.width, window.screen.height);
+          const designHeight = 720;
+          const scale = screenH / designHeight;
+          const logicalWidth = screenW / scale;
+          const content = [
+            `width=${logicalWidth}`,
+            `initial-scale=${scale}`,
+            `minimum-scale=${scale}`,
+            `maximum-scale=${scale}`,
+            'user-scalable=no',
+            'viewport-fit=cover'
+          ].join(', ');
+          vp.setAttribute('content', content);
+          app.style.visibility = 'visible';
+        }
+
+        // 启动时立即适配比例
+        initViewportScaling();
+
         var theme = '';
         var accent = '#00baad';
 
@@ -175,6 +221,8 @@
         window.SplashEnd = () => {
           splash.hidden = true;
           window.onerror = null;
+          // 引擎准备就绪后，再次校准比例以防尺寸获取异常
+          initViewportScaling();
         };
       })();
     </script>
