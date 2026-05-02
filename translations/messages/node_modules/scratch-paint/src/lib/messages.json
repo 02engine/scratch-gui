@@ -30,14 +30,14 @@
     "defaultMessage": "Rectangle"
   },
   {
-    "id": "paint.reshapeMode.reshape",
-    "description": "Label for the reshape tool, which allows changing the points in the lines of the vectors",
-    "defaultMessage": "Reshape"
-  },
-  {
     "id": "paint.roundedRectMode.roundedRect",
     "description": "Label for the rounded rectangle tool",
     "defaultMessage": "Rounded Rectangle"
+  },
+  {
+    "id": "paint.reshapeMode.reshape",
+    "description": "Label for the reshape tool, which allows changing the points in the lines of the vectors",
+    "defaultMessage": "Reshape"
   },
   {
     "id": "paint.selectMode.select",
