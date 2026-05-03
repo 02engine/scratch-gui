@@ -17,7 +17,7 @@ jobs:
         node-version: 22
 
     - name: Install dependencies
-      run: npm install --loglevel=info --package-lock-only
+      run: npm install --loglevel=info --package-lock-only --ignore-scripts
 
     - name: Upload package-lock.json
       uses: actions/upload-artifact@v7.0.1
