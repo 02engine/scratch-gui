@@ -1,5 +1,7 @@
 scratch-gui modified for use in 02engine
 
+![Build and Deploy to cf-page Branch](https://github.com/02engine/scratch-gui/actions/workflows/build.yml/badge.svg)
+
 ## Setup
 
 See https://docs.02engine.org/development/getting-started to setup the complete TurboWarp environment.
