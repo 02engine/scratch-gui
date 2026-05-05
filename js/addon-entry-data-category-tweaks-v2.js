@@ -29,10 +29,12 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg,
-    safeMsg = _ref.safeMsg;
+  let {
+    addon,
+    console,
+    msg,
+    safeMsg
+  } = _ref;
   const ScratchBlocks = await addon.tab.traps.getBlockly();
   const SMALL_GAP = 8;
   const BIG_GAP = 24;
@@ -49,9 +51,10 @@ __webpack_require__.r(__webpack_exports__);
     };
   };
   const separateLocalVariables = (workspace, toolboxXML) => {
-    const _separateVariablesByT = separateVariablesByType(toolboxXML),
-      variables = _separateVariablesByT.variables,
-      lists = _separateVariablesByT.lists;
+    const {
+      variables,
+      lists
+    } = separateVariablesByType(toolboxXML);
     const makeLabel = l10n => {
       const label = document.createElement("label");
       label.setAttribute("text", msg(l10n));
@@ -101,9 +104,10 @@ __webpack_require__.r(__webpack_exports__);
     return separateVariablesByScope(variables).concat(separateVariablesByScope(lists));
   };
   const moveReportersDown = toolboxXML => {
-    const _separateVariablesByT2 = separateVariablesByType(toolboxXML),
-      variables = _separateVariablesByT2.variables,
-      lists = _separateVariablesByT2.lists;
+    const {
+      variables,
+      lists
+    } = separateVariablesByType(toolboxXML);
     const moveReportersToEnd = xml => {
       const reporters = [];
       const everythingElse = [];
@@ -137,9 +141,10 @@ __webpack_require__.r(__webpack_exports__);
     if (addon.self.disabled || !hasSeparateListCategory) {
       return result;
     }
-    const _separateVariablesByT3 = separateVariablesByType(result),
-      variables = _separateVariablesByT3.variables,
-      lists = _separateVariablesByT3.lists;
+    const {
+      variables,
+      lists
+    } = separateVariablesByType(result);
     variableCategory = variables;
     listCategory = lists;
     return variableCategory;

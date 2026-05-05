@@ -28,16 +28,12 @@ const resources = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg;
+  let {
+    addon,
+    console,
+    msg
+  } = _ref;
   // We don"t *need* to wait for the costume editor to be opened, but redux updates take a non-zero
   // amount of CPU time so let's delay that for as long as possible.
   await addon.tab.traps.getPaper();
@@ -54,22 +50,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       // Sometimes paper gives us rgb() colors which have to be converted to hex
       const rgbMatch = color.match(/^rgb\((\d+)\s*,(\d+)\s*,(\d+)\)$/);
       if (rgbMatch) {
-        const _rgbMatch = _slicedToArray(rgbMatch, 4),
-          _ = _rgbMatch[0],
-          r = _rgbMatch[1],
-          g = _rgbMatch[2],
-          b = _rgbMatch[3];
+        const [_, r, g, b] = rgbMatch;
         return "#".concat(hexComponent(r)).concat(hexComponent(g)).concat(hexComponent(b));
       }
       // It can also give us rgba() colors
       const rgbaMatch = color.match(/^rgba\((\d+)\s*,(\d+)\s*,(\d+),([\d.]+)\)$/);
       if (rgbaMatch) {
-        const _rgbaMatch = _slicedToArray(rgbaMatch, 5),
-          _ = _rgbaMatch[0],
-          r = _rgbaMatch[1],
-          g = _rgbaMatch[2],
-          b = _rgbaMatch[3],
-          a = _rgbaMatch[4];
+        const [_, r, g, b, a] = rgbaMatch;
         return "#".concat(hexComponent(r)).concat(hexComponent(g)).concat(hexComponent(b)).concat(hexComponent(a * 255));
       }
     }
@@ -240,7 +227,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   let activatingTool = false;
   addon.tab.redux.initialize();
   addon.tab.redux.addEventListener("statechanged", _ref2 => {
-    let detail = _ref2.detail;
+    let {
+      detail
+    } = _ref2;
     if (addon.self.disabled) {
       return;
     }

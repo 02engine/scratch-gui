@@ -31,8 +31,10 @@ __webpack_require__.r(__webpack_exports__);
 // Initial code was written by Norbiros
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console;
+  let {
+    addon,
+    console
+  } = _ref;
   const vm = addon.tab.traps.vm;
   document.body.addEventListener("click", e => {
     if (e.shiftKey && !addon.self.disabled) {

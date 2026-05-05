@@ -29,9 +29,11 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    global = _ref.global,
-    console = _ref.console;
+  let {
+    addon,
+    global,
+    console
+  } = _ref;
   // see fix-editor-comments
   const Blockly = await addon.tab.traps.getBlockly();
   const originalCommentEndDrag = Blockly.BubbleDragger.prototype.endBubbleDrag;

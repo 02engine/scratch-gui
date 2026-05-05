@@ -550,8 +550,10 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console;
+  let {
+    addon,
+    console
+  } = _ref;
   /** @type {HTMLElement|null} */
   let currentDraggingElement = null;
 
@@ -1045,9 +1047,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _find_bar_blockly_Utils_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../find-bar/blockly/Utils.js */ "./src/addons/addons/find-bar/blockly/Utils.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    msg = _ref.msg,
-    console = _ref.console;
+  let {
+    addon,
+    msg,
+    console
+  } = _ref;
   const utils = new _find_bar_blockly_Utils_js__WEBPACK_IMPORTED_MODULE_0__["default"](addon);
   const Blockly = await addon.tab.traps.getBlockly();
   Object.defineProperty(Blockly.Gesture.prototype, "jumpToDef", {
@@ -1119,8 +1123,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vol_slider_module_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vol-slider/module.js */ "./src/addons/addons/vol-slider/module.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console;
+  let {
+    addon,
+    console
+  } = _ref;
   const vm = addon.tab.traps.vm;
   Object(_vol_slider_module_js__WEBPACK_IMPORTED_MODULE_0__["setup"])(vm);
   const icon = document.createElement("img");
@@ -1204,9 +1210,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _debugger_module_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../debugger/module.js */ "./src/addons/addons/debugger/module.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg;
+  let {
+    addon,
+    console,
+    msg
+  } = _ref;
   Object(_debugger_module_js__WEBPACK_IMPORTED_MODULE_0__["setup"])(addon);
   const img = document.createElement("img");
   img.className = "pause-btn";
@@ -1356,12 +1364,6 @@ var _addons_l10n_en_json__WEBPACK_IMPORTED_MODULE_6___namespace = /*#__PURE__*/_
 /* harmony import */ var _conditional_style__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./conditional-style */ "./src/addons/conditional-style.js");
 /* harmony import */ var _addon_precedence__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./addon-precedence */ "./src/addons/addon-precedence.js");
 /* harmony import */ var _redux__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./redux */ "./src/addons/redux.js");
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 /**
  * Copyright (C) 2021 Thomas Weber
  *
@@ -1614,9 +1616,9 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
     this._seenElements = new Set();
   }
   pruneSeenElements() {
-    let _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-      _ref$disconnectedOnly = _ref.disconnectedOnly,
-      disconnectedOnly = _ref$disconnectedOnly === void 0 ? true : _ref$disconnectedOnly;
+    let {
+      disconnectedOnly = true
+    } = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     for (const element of this._seenElements) {
       if (!element) {
         this._seenElements.delete(element);
@@ -1628,12 +1630,12 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
     }
   }
   waitForElement(selector) {
-    let _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      _ref2$markAsSeen = _ref2.markAsSeen,
-      markAsSeen = _ref2$markAsSeen === void 0 ? false : _ref2$markAsSeen,
-      condition = _ref2.condition,
-      reduxCondition = _ref2.reduxCondition,
-      reduxEvents = _ref2.reduxEvents;
+    let {
+      markAsSeen = false,
+      condition,
+      reduxCondition,
+      reduxEvents
+    } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     let externalEventSatisfied = true;
     const evaluateCondition = () => {
       if (!externalEventSatisfied) return false;
@@ -1653,8 +1655,10 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
     let reduxListener;
     if (reduxEvents) {
       externalEventSatisfied = false;
-      reduxListener = _ref3 => {
-        let detail = _ref3.detail;
+      reduxListener = _ref => {
+        let {
+          detail
+        } = _ref;
         const type = detail.action.type;
         // As addons can't run before DOM exists here, ignore fontsLoaded/SET_FONTS_LOADED
         // Otherwise, as our font loading is very async, we could activate more often than required.
@@ -1686,11 +1690,13 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
       addMutationObserverCallback(callback);
     });
   }
-  appendToSharedSpace(_ref4) {
-    let space = _ref4.space,
-      element = _ref4.element,
-      order = _ref4.order,
-      scope = _ref4.scope;
+  appendToSharedSpace(_ref2) {
+    let {
+      space,
+      element,
+      order,
+      scope
+    } = _ref2;
     const q = document.querySelector.bind(document);
 
     // If element has a data-sa-id, remove any existing element with same id
@@ -1837,10 +1843,12 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
     }
     return true;
   }
-  addBlock(procedureCode, _ref5) {
-    let args = _ref5.args,
-      displayName = _ref5.displayName,
-      callback = _ref5.callback;
+  addBlock(procedureCode, _ref3) {
+    let {
+      args,
+      displayName,
+      callback
+    } = _ref3;
     const procCodeArguments = parseArguments(procedureCode);
     if (args.length !== procCodeArguments.length) {
       throw new Error('Procedure code and argument list do not match');
@@ -1916,15 +1924,12 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
     return vm.getAddonBlock(procedureCode);
   }
   createBlockContextMenu(callback) {
-    let _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      _ref6$workspace = _ref6.workspace,
-      workspace = _ref6$workspace === void 0 ? false : _ref6$workspace,
-      _ref6$blocks = _ref6.blocks,
-      blocks = _ref6$blocks === void 0 ? false : _ref6$blocks,
-      _ref6$flyout = _ref6.flyout,
-      flyout = _ref6$flyout === void 0 ? false : _ref6$flyout,
-      _ref6$comments = _ref6.comments,
-      comments = _ref6$comments === void 0 ? false : _ref6$comments;
+    let {
+      workspace = false,
+      blocks = false,
+      flyout = false,
+      comments = false
+    } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     const registrationKey = getBlockContextMenuRegistrationKey(this._id, callback, {
       workspace,
       blocks,
@@ -1953,12 +1958,13 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
         const block = gesture.targetBlock_;
 
         // eslint-disable-next-line no-shadow
-        for (const _ref7 of contextMenuCallbacks) {
-          const callback = _ref7.callback;
-          const workspace = _ref7.workspace;
-          const blocks = _ref7.blocks;
-          const flyout = _ref7.flyout;
-          const comments = _ref7.comments;
+        for (const {
+          callback,
+          workspace,
+          blocks,
+          flyout,
+          comments
+        } of contextMenuCallbacks) {
           const injectMenu =
           // Workspace
           workspace && !block && !gesture.flyout_ && !gesture.startBubble_ ||
@@ -2048,9 +2054,9 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
     return this.redux.state.locales.isRtl ? 'rtl' : 'ltr';
   }
   createModal(title) {
-    let _ref8 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      _ref8$isOpen = _ref8.isOpen,
-      isOpen = _ref8$isOpen === void 0 ? false : _ref8$isOpen;
+    let {
+      isOpen = false
+    } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     return _modal__WEBPACK_IMPORTED_MODULE_10__["createEditorModal"](this, title, {
       isOpen
     });
@@ -2305,10 +2311,7 @@ class AddonRunner {
         const userstyle = this.manifest.userstyles[i];
         const userstylePrecedence = baseStylePrecedence + i;
         const userstyleCondition = () => !this.publicAPI.addon.self.disabled && _settings_store_singleton__WEBPACK_IMPORTED_MODULE_1__["default"].evaluateCondition(this.id, userstyle.if);
-        for (const _ref9 of this.resources[userstyle.url]) {
-          var _ref0 = _slicedToArray(_ref9, 2);
-          const moduleId = _ref0[0];
-          const cssText = _ref0[1];
+        for (const [moduleId, cssText] of this.resources[userstyle.url]) {
           const sheet = _conditional_style__WEBPACK_IMPORTED_MODULE_12__["create"](moduleId, cssText);
           sheet.addDependent(this.id, userstylePrecedence, userstyleCondition);
         }
@@ -2499,12 +2502,6 @@ window.addonAPI = {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "create", function() { return create; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateAll", function() { return updateAll; });
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 // Stylesheets are added at the end of <body> so that they have higher precedence
 // than those in <head> and above dark mode which is appended at the start of <body>
 const stylesheetContainer = document.createElement('div');
@@ -2587,10 +2584,7 @@ class ConditionalStyle {
   }
   getEnabledDependents() {
     const enabledDependents = [];
-    for (const _ref of this.dependents) {
-      var _ref2 = _slicedToArray(_ref, 2);
-      const addonId = _ref2[0];
-      const condition = _ref2[1];
+    for (const [addonId, condition] of this.dependents) {
       if (condition()) {
         enabledDependents.push(addonId);
       }
@@ -2820,9 +2814,11 @@ function convertToHex(obj) {
   return "#".concat(r).concat(g).concat(b).concat(a);
 }
 function convertFromHsv(_ref) {
-  let h = _ref.h,
-    s = _ref.s,
-    v = _ref.v;
+  let {
+    h,
+    s,
+    v
+  } = _ref;
   if (s === 0) return {
     r: 255 * v,
     g: 255 * v,
@@ -2875,9 +2871,11 @@ function convertFromHsv(_ref) {
   }
 }
 function convertToHsv(_ref2) {
-  let r = _ref2.r,
-    g = _ref2.g,
-    b = _ref2.b;
+  let {
+    r,
+    g,
+    b
+  } = _ref2;
   r /= 255;
   g /= 255;
   b /= 255;
@@ -2902,10 +2900,11 @@ function convertToHsv(_ref2) {
   };
 }
 function brightness(hex) {
-  const _parseHex = parseHex(hex),
-    r = _parseHex.r,
-    g = _parseHex.g,
-    b = _parseHex.b;
+  const {
+    r,
+    g,
+    b
+  } = parseHex(hex);
   return r * 0.299 + g * 0.587 + b * 0.114;
 }
 function textColor(hex, black, white, threshold) {
@@ -2919,11 +2918,12 @@ function textColor(hex, black, white, threshold) {
   }
 }
 function multiply(hex, c) {
-  const _parseHex2 = parseHex(hex),
-    r = _parseHex2.r,
-    g = _parseHex2.g,
-    b = _parseHex2.b,
-    a = _parseHex2.a;
+  const {
+    r,
+    g,
+    b,
+    a
+  } = parseHex(hex);
   if (c.r === undefined) c.r = 1;
   if (c.g === undefined) c.g = 1;
   if (c.b === undefined) c.b = 1;
@@ -2936,11 +2936,12 @@ function multiply(hex, c) {
   });
 }
 function brighten(hex, c) {
-  const _parseHex3 = parseHex(hex),
-    r = _parseHex3.r,
-    g = _parseHex3.g,
-    b = _parseHex3.b,
-    a = _parseHex3.a;
+  const {
+    r,
+    g,
+    b,
+    a
+  } = parseHex(hex);
   if (c.r === undefined) c.r = 1;
   if (c.g === undefined) c.g = 1;
   if (c.b === undefined) c.b = 1;
@@ -2953,15 +2954,17 @@ function brighten(hex, c) {
   });
 }
 function alphaBlend(opaqueHex, transparentHex) {
-  const _parseHex4 = parseHex(opaqueHex),
-    r1 = _parseHex4.r,
-    g1 = _parseHex4.g,
-    b1 = _parseHex4.b;
-  const _parseHex5 = parseHex(transparentHex),
-    r2 = _parseHex5.r,
-    g2 = _parseHex5.g,
-    b2 = _parseHex5.b,
-    a = _parseHex5.a;
+  const {
+    r: r1,
+    g: g1,
+    b: b1
+  } = parseHex(opaqueHex);
+  const {
+    r: r2,
+    g: g2,
+    b: b2,
+    a
+  } = parseHex(transparentHex);
   return convertToHex({
     r: (1 - a) * r1 + a * r2,
     g: (1 - a) * g1 + a * g2,
@@ -2982,10 +2985,11 @@ function makeHsv(hSource, sSource, vSource) {
   }));
 }
 function recolorFilter(hex) {
-  const _parseHex6 = parseHex(hex),
-    r = _parseHex6.r,
-    g = _parseHex6.g,
-    b = _parseHex6.b;
+  const {
+    r,
+    g,
+    b
+  } = parseHex(hex);
   return "url(\"data:image/svg+xml,\n    <svg xmlns='http://www.w3.org/2000/svg'>\n      <filter id='recolor'>\n        <feColorMatrix color-interpolation-filters='sRGB' values='\n          0 0 0 0 ".concat(r / 255, "\n          0 0 0 0 ").concat(g / 255, "\n          0 0 0 0 ").concat(b / 255, "\n          0 0 0 1 0\n        '/>\n      </filter>\n    </svg>#recolor\n  \")").split("\n").join("");
 }
 
@@ -3044,9 +3048,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const createEditorModal = function createEditorModal(tab, title) {
-  let _ref = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-    _ref$isOpen = _ref.isOpen,
-    isOpen = _ref$isOpen === void 0 ? false : _ref$isOpen;
+  let {
+    isOpen = false
+  } = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   const container = Object.assign(document.createElement('div'), {
     className: tab.scratchClass('modal_modal-overlay'),
     dir: tab.direction
@@ -3117,19 +3121,20 @@ const createButtonRow = tab => {
   };
 };
 const confirm = function confirm(tab, title, message) {
-  let _ref2 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {},
-    _ref2$useEditorClasse = _ref2.useEditorClasses,
-    useEditorClasses = _ref2$useEditorClasse === void 0 ? false : _ref2$useEditorClasse;
-  const _tab$createModal = tab.createModal(title, {
-      isOpen: true,
-      useEditorClasses: useEditorClasses,
-      useSizesClass: true
-    }),
-    remove = _tab$createModal.remove,
-    container = _tab$createModal.container,
-    content = _tab$createModal.content,
-    backdrop = _tab$createModal.backdrop,
-    closeButton = _tab$createModal.closeButton;
+  let {
+    useEditorClasses = false
+  } = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+  const {
+    remove,
+    container,
+    content,
+    backdrop,
+    closeButton
+  } = tab.createModal(title, {
+    isOpen: true,
+    useEditorClasses: useEditorClasses,
+    useSizesClass: true
+  });
   const mode = tab.editorMode !== null && useEditorClasses ? 'editor' : tab.clientVersion;
   if (mode === 'editor') {
     container.classList.add(tab.scratchClass('prompt_modal-content'));
@@ -3139,10 +3144,11 @@ const confirm = function confirm(tab, title, message) {
     className: tab.scratchClass('prompt_label'),
     innerText: message
   }));
-  const _createButtonRow = createButtonRow(tab, mode),
-    buttonRow = _createButtonRow.buttonRow,
-    cancelButton = _createButtonRow.cancelButton,
-    okButton = _createButtonRow.okButton;
+  const {
+    buttonRow,
+    cancelButton,
+    okButton
+  } = createButtonRow(tab, mode);
   content.appendChild(buttonRow);
   okButton.focus();
   return new Promise(resolve => {
@@ -3166,19 +3172,20 @@ const confirm = function confirm(tab, title, message) {
 };
 const prompt = function prompt(tab, title, message) {
   let defaultValue = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
-  let _ref3 = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {},
-    _ref3$useEditorClasse = _ref3.useEditorClasses,
-    useEditorClasses = _ref3$useEditorClasse === void 0 ? false : _ref3$useEditorClasse;
-  const _tab$createModal2 = tab.createModal(title, {
-      isOpen: true,
-      useEditorClasses: useEditorClasses,
-      useSizesClass: true
-    }),
-    remove = _tab$createModal2.remove,
-    container = _tab$createModal2.container,
-    content = _tab$createModal2.content,
-    backdrop = _tab$createModal2.backdrop,
-    closeButton = _tab$createModal2.closeButton;
+  let {
+    useEditorClasses = false
+  } = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+  const {
+    remove,
+    container,
+    content,
+    backdrop,
+    closeButton
+  } = tab.createModal(title, {
+    isOpen: true,
+    useEditorClasses: useEditorClasses,
+    useSizesClass: true
+  });
   container.classList.add(tab.scratchClass('prompt_modal-content'));
   content.classList.add(tab.scratchClass('prompt_body'));
   content.appendChild(Object.assign(document.createElement('div'), {
@@ -3192,10 +3199,11 @@ const prompt = function prompt(tab, title, message) {
   content.appendChild(input);
   input.focus();
   input.select();
-  const _createButtonRow2 = createButtonRow(tab),
-    buttonRow = _createButtonRow2.buttonRow,
-    cancelButton = _createButtonRow2.cancelButton,
-    okButton = _createButtonRow2.okButton;
+  const {
+    buttonRow,
+    cancelButton,
+    okButton
+  } = createButtonRow(tab);
   content.appendChild(buttonRow);
   return new Promise(resolve => {
     const cancel = () => {

@@ -96,9 +96,11 @@ module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5v
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg;
+  let {
+    addon,
+    console,
+    msg
+  } = _ref;
   const vm = addon.tab.traps.vm;
   const getActiveEditorRoot = () => window.__scratchGuiActiveEditorRoot || document.querySelector('[data-sa-active-editor-root="true"]');
   const queryActiveEditor = selector => {
@@ -417,7 +419,9 @@ __webpack_require__.r(__webpack_exports__);
   }
   addon.tab.redux.initialize();
   addon.tab.redux.addEventListener("statechanged", _ref2 => {
-    let detail = _ref2.detail;
+    let {
+      detail
+    } = _ref2;
     if (detail.action.type === "scratch-gui/navigation/ACTIVATE_TAB") {
       const varManagerWasSelected = document.body.contains(manager);
       const switchedToVarManager = detail.action.activeTabIndex === 3;

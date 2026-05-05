@@ -29,8 +29,10 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async _ref => {
-  let addon = _ref.addon,
-    console = _ref.console;
+  let {
+    addon,
+    console
+  } = _ref;
   const vm = addon.tab.traps.vm;
   let shiftKeyPressed = false;
   document.addEventListener("mousedown", function (e) {

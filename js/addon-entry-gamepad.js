@@ -167,12 +167,6 @@ module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5v
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _event_target_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../event-target.js */ "./src/addons/event-target.js");
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
  /* inserted by pull.js */
 
 let console = window.console;
@@ -332,9 +326,10 @@ class GamepadData {
     } else {
       const usedKeys = this.hints.usedKeys;
       const alreadyUsedKeys = new Set();
-      const _getMovementConfigura = getMovementConfiguration(usedKeys),
-        usesArrows = _getMovementConfigura.usesArrows,
-        usesWASD = _getMovementConfigura.usesWASD;
+      const {
+        usesArrows,
+        usesWASD
+      } = getMovementConfiguration(usedKeys);
       if (usesWASD) {
         alreadyUsedKeys.add("w");
         alreadyUsedKeys.add("a");
@@ -517,9 +512,10 @@ class GamepadData {
       // Some controllers map the dpad to *both* buttons and axes at the same time, which would cause conflicts.
       if (this.gamepad.axes.length === 4) {
         const usedKeys = this.hints.usedKeys;
-        const _getMovementConfigura2 = getMovementConfiguration(usedKeys),
-          usesArrows = _getMovementConfigura2.usesArrows,
-          usesWASD = _getMovementConfigura2.usesWASD;
+        const {
+          usesArrows,
+          usesWASD
+        } = getMovementConfiguration(usedKeys);
         if (usesWASD) {
           axes.push(defaultAxesMappings.wasd[0]);
           axes.push(defaultAxesMappings.wasd[1]);
@@ -864,10 +860,7 @@ class GamepadEditor extends _event_target_js__WEBPACK_IMPORTED_MODULE_0__["defau
       return;
     }
     this.selector.hidden = false;
-    for (const _ref of gamepads) {
-      var _ref2 = _slicedToArray(_ref, 2);
-      const id = _ref2[0];
-      const _ = _ref2[1];
+    for (const [id, _] of gamepads) {
       const option = document.createElement("option");
       option.textContent = id;
       option.value = id;
@@ -888,11 +881,10 @@ class GamepadEditor extends _event_target_js__WEBPACK_IMPORTED_MODULE_0__["defau
     return key.replace(/[a-z]([A-Z])/, n => "".concat(n[0], " ").concat(n[1]));
   }
   createButtonMapping(mappingList, index) {
-    let _ref3 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-      _ref3$property = _ref3.property,
-      property = _ref3$property === void 0 ? "high" : _ref3$property,
-      _ref3$allowClick = _ref3.allowClick,
-      allowClick = _ref3$allowClick === void 0 ? true : _ref3$allowClick;
+    let {
+      property = "high",
+      allowClick = true
+    } = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     const input = document.createElement("input");
     input.readOnly = true;
     input.className = "gamepadlib-keyinput";
@@ -1159,9 +1151,10 @@ class GamepadEditor extends _event_target_js__WEBPACK_IMPORTED_MODULE_0__["defau
       label.htmlFor = axisHtmlId(i);
       const circle = document.createElement("div");
       circle.className = "gamepadlib-axis-circle";
-      const _this$createAxisMappi = this.createAxisMapping(axesMappings, i),
-        circleOverlay = _this$createAxisMappi.circleOverlay,
-        selector = _this$createAxisMappi.selector;
+      const {
+        circleOverlay,
+        selector
+      } = this.createAxisMapping(axesMappings, i);
       circle.appendChild(circleOverlay);
       const dot = document.createElement("div");
       dot.className = "gamepadlib-axis-dot";
@@ -1259,18 +1252,14 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg;
+  let {
+    addon,
+    console,
+    msg
+  } = _ref;
   const vm = addon.tab.traps.vm;
 
   // Wait for the project to finish loading. Renderer and scripts will not be fully available until this happens.
@@ -1466,15 +1455,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     const editorEl = editor.generateEditor();
     handleEditorControllerChanged();
-    const _addon$tab$createModa = addon.tab.createModal(msg("settings"), {
-        isOpen: true,
-        useEditorClasses: true
-      }),
-      backdrop = _addon$tab$createModa.backdrop,
-      container = _addon$tab$createModa.container,
-      content = _addon$tab$createModa.content,
-      closeButton = _addon$tab$createModa.closeButton,
-      remove = _addon$tab$createModa.remove;
+    const {
+      backdrop,
+      container,
+      content,
+      closeButton,
+      remove
+    } = addon.tab.createModal(msg("settings"), {
+      isOpen: true,
+      useEditorClasses: true
+    });
     const handleKeyDown = e => {
       if (e.key === "Escape" && !e.target.closest("[data-accepting-input]")) {
         remove();
@@ -1602,10 +1592,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   let virtualY = 0;
   const postMouseData = data => {
     if (addon.self.disabled || !vmStarted()) return;
-    const _getCanvasSize = getCanvasSize(),
-      _getCanvasSize2 = _slicedToArray(_getCanvasSize, 2),
-      rectWidth = _getCanvasSize2[0],
-      rectHeight = _getCanvasSize2[1];
+    const [rectWidth, rectHeight] = getCanvasSize();
     vm.postIOData("mouse", _objectSpread(_objectSpread({}, data), {}, {
       canvasWidth: rectWidth,
       canvasHeight: rectHeight,

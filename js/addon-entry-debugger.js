@@ -312,12 +312,6 @@ module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5v
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 const clamp = (i, min, max) => Math.max(min, Math.min(max, i));
 const appendSortedElement = (parent, newChild) => {
   const newChildIndex = +newChild.dataset.index;
@@ -526,10 +520,7 @@ class LogView {
       root.style.transform = "translateY(".concat(i * this.rowHeight, "px)");
       root.dataset.index = i;
     }
-    for (const _ref of this.rowToMetadata.entries()) {
-      var _ref2 = _slicedToArray(_ref, 2);
-      const row = _ref2[0];
-      const metadata = _ref2[1];
+    for (const [row, metadata] of this.rowToMetadata.entries()) {
       if (!allVisibleRows.has(row)) {
         metadata.elements.root.remove();
         this.rowToMetadata.delete(row);
@@ -559,10 +550,12 @@ __webpack_require__.r(__webpack_exports__);
 
 
 async function createLogsTab(_ref) {
-  let debug = _ref.debug,
-    addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg;
+  let {
+    debug,
+    addon,
+    console,
+    msg
+  } = _ref;
   const vm = addon.tab.traps.vm;
   const tab = debug.createHeaderTab({
     text: msg("tab-logs"),
@@ -628,7 +621,9 @@ async function createLogsTab(_ref) {
     };
   };
   logView.renderRow = (elements, row) => {
-    const repeats = elements.repeats;
+    const {
+      repeats
+    } = elements;
     if (row.count > 1) {
       repeats.style.display = "";
       repeats.textContent = row.count;
@@ -651,10 +646,12 @@ async function createLogsTab(_ref) {
     }) : defaultFormat;
     if (!exportFormat) return;
     const file = logView.rows.map(_ref2 => {
-      let text = _ref2.text,
-        targetInfo = _ref2.targetInfo,
-        type = _ref2.type,
-        count = _ref2.count;
+      let {
+        text,
+        targetInfo,
+        type,
+        count
+      } = _ref2;
       return (exportFormat.replace(/\{(sprite|type|content)\}/g, (_, match) => ({
         sprite: targetInfo ? targetInfo.name : msg("unknown-sprite"),
         type,
@@ -743,10 +740,12 @@ __webpack_require__.r(__webpack_exports__);
 
 
 async function createPerformanceTab(_ref) {
-  let debug = _ref.debug,
-    addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg;
+  let {
+    debug,
+    addon,
+    console,
+    msg
+  } = _ref;
   const vm = addon.tab.traps.vm;
 
   // In optimized graphs everything still looks good
@@ -761,7 +760,9 @@ async function createPerformanceTab(_ref) {
     className: "sa-performance-tab-content"
   });
   const createChart = _ref2 => {
-    let title = _ref2.title;
+    let {
+      title
+    } = _ref2;
     const titleElement = Object.assign(document.createElement("h2"), {
       textContent: title
     });
@@ -944,10 +945,12 @@ const concatInPlace = (copyInto, copyFrom) => {
   }
 };
 async function createThreadsTab(_ref) {
-  let debug = _ref.debug,
-    addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg;
+  let {
+    debug,
+    addon,
+    console,
+    msg
+  } = _ref;
   const vm = addon.tab.traps.vm;
   const tab = debug.createHeaderTab({
     text: msg("tab-threads"),
@@ -1004,7 +1007,9 @@ async function createThreadsTab(_ref) {
     };
   };
   logView.renderRow = (elements, row) => {
-    const root = elements.root;
+    const {
+      root
+    } = elements;
     root.classList.toggle("sa-debugger-thread-running", !!row.running);
   };
   let threadInfoCache = new WeakMap();
@@ -1204,9 +1209,11 @@ const removeAllChildren = element => {
   }
 };
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg;
+  let {
+    addon,
+    console,
+    msg
+  } = _ref;
   Object(_module_js__WEBPACK_IMPORTED_MODULE_0__["setup"])(addon);
   let logsTab;
   const messagesLoggedBeforeLogsTabLoaded = [];
@@ -1241,7 +1248,9 @@ const removeAllChildren = element => {
     args: ["content"],
     displayName: msg("block-log"),
     callback: (_ref2, thread) => {
-      let content = _ref2.content;
+      let {
+        content
+      } = _ref2;
       logMessage(content, thread, "log");
     }
   });
@@ -1249,7 +1258,9 @@ const removeAllChildren = element => {
     args: ["content"],
     displayName: msg("block-warn"),
     callback: (_ref3, thread) => {
-      let content = _ref3.content;
+      let {
+        content
+      } = _ref3;
       logMessage(content, thread, "warn");
     }
   });
@@ -1257,7 +1268,9 @@ const removeAllChildren = element => {
     args: ["content"],
     displayName: msg("block-error"),
     callback: (_ref4, thread) => {
-      let content = _ref4.content;
+      let {
+        content
+      } = _ref4;
       logMessage(content, thread, "error");
     }
   });
@@ -1366,9 +1379,11 @@ const removeAllChildren = element => {
   interfaceContainer.append(interfaceHeader, compilerWarning, tabContentContainer);
   document.body.append(interfaceContainer);
   const createHeaderButton = _ref5 => {
-    let text = _ref5.text,
-      icon = _ref5.icon,
-      description = _ref5.description;
+    let {
+      text,
+      icon,
+      description
+    } = _ref5;
     const button = Object.assign(document.createElement("div"), {
       className: addon.tab.scratchClass("card_shrink-expand-button"),
       draggable: false
@@ -1392,8 +1407,10 @@ const removeAllChildren = element => {
     };
   };
   const createHeaderTab = _ref6 => {
-    let text = _ref6.text,
-      icon = _ref6.icon;
+    let {
+      text,
+      icon
+    } = _ref6;
     const tab = document.createElement("li");
     const imageElement = Object.assign(addon.tab.recolorable(), {
       src: icon,
@@ -1470,9 +1487,11 @@ const removeAllChildren = element => {
   const createBlockLink = (targetInfo, blockId) => {
     const link = document.createElement("a");
     link.className = "sa-debugger-log-link";
-    const exists = targetInfo.exists,
-      name = targetInfo.name,
-      originalId = targetInfo.originalId;
+    const {
+      exists,
+      name,
+      originalId
+    } = targetInfo;
     link.textContent = name;
     if (exists) {
       // We use mousedown instead of click so that you can still go to blocks when logs are rapidly scrolling
@@ -1786,16 +1805,12 @@ const removeAllChildren = element => {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return createVariablesTab; });
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 async function createVariablesTab(_ref) {
-  let debug = _ref.debug,
-    addon = _ref.addon,
-    msg = _ref.msg;
+  let {
+    debug,
+    addon,
+    msg
+  } = _ref;
   const vm = addon.tab.traps.vm;
 
   // 存储所有变量包装器
@@ -2002,10 +2017,7 @@ async function createVariablesTab(_ref) {
   const getVariablesForTarget = (target, isGlobal) => {
     const variables = [];
     if (!target) return variables;
-    for (const _ref2 of Object.entries(target.variables)) {
-      var _ref3 = _slicedToArray(_ref2, 2);
-      const id = _ref3[0];
-      const variable = _ref3[1];
+    for (const [id, variable] of Object.entries(target.variables)) {
       variables.push(new WrappedVariable(variable, target, isGlobal));
     }
     return variables;
@@ -2394,12 +2406,6 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 /*!
  * Chart.js v3.9.1
  * https://www.chartjs.org
@@ -2719,14 +2725,17 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     let n = 0,
       o = s;
     if (t._sorted) {
-      const a = t.iScale,
-        r = t._parsed,
+      const {
+          iScale: a,
+          _parsed: r
+        } = t,
         l = a.axis,
-        _a$getUserBounds = a.getUserBounds(),
-        h = _a$getUserBounds.min,
-        c = _a$getUserBounds.max,
-        d = _a$getUserBounds.minDefined,
-        u = _a$getUserBounds.maxDefined;
+        {
+          min: h,
+          max: c,
+          minDefined: d,
+          maxDefined: u
+        } = a.getUserBounds();
       d && (n = Z(Math.min(et(r, a.axis, h).lo, i ? s : et(e, l, a.getPixelForValue(h)).lo), 0, s - 1)), o = u ? Z(Math.max(et(r, a.axis, c, !0).hi + 1, i ? 0 : et(e, l, a.getPixelForValue(c), !0).hi + 1), n, s) - n : s - n;
     }
     return {
@@ -2735,9 +2744,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     };
   }
   function pt(t) {
-    const e = t.xScale,
-      i = t.yScale,
-      s = t._scaleRanges,
+    const {
+        xScale: e,
+        yScale: i,
+        _scaleRanges: s
+      } = t,
       n = {
         xmin: e.min,
         xmax: e.max,
@@ -3419,17 +3430,25 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   }
   function ue(t, e) {
     if ("native" in t) return t;
-    const i = e.canvas,
-      s = e.currentDevicePixelRatio,
+    const {
+        canvas: i,
+        currentDevicePixelRatio: s
+      } = e,
       n = le(i),
       o = "border-box" === n.boxSizing,
       a = de(n, "padding"),
       r = de(n, "border", "width"),
-      _ref = function (t, e) {
+      {
+        x: l,
+        y: h,
+        box: c
+      } = function (t, e) {
         const i = t.touches,
           s = i && i.length ? i[0] : t,
-          n = s.offsetX,
-          o = s.offsetY;
+          {
+            offsetX: n,
+            offsetY: o
+          } = s;
         let a,
           r,
           l = !1;
@@ -3443,13 +3462,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           box: l
         };
       }(t, i),
-      l = _ref.x,
-      h = _ref.y,
-      c = _ref.box,
       d = a.left + (c && r.left),
       u = a.top + (c && r.top);
-    let f = e.width,
-      g = e.height;
+    let {
+      width: f,
+      height: g
+    } = e;
     return o && (f -= a.width + r.width, g -= a.height + r.height), {
       x: Math.round((l - d) / f * i.width / s),
       y: Math.round((h - u) / g * i.height / s)
@@ -3480,8 +3498,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           maxHeight: n || A
         };
       }(t, e, i);
-    let h = l.width,
-      c = l.height;
+    let {
+      width: h,
+      height: c
+    } = l;
     if ("content-box" === n.boxSizing) {
       const t = de(n, "border", "width"),
         e = de(n, "padding");
@@ -3642,11 +3662,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
   }
   function Le(t, e) {
-    const i = e.x,
-      s = e.y,
-      n = e.w,
-      o = e.h,
-      a = e.radius;
+    const {
+      x: i,
+      y: s,
+      w: n,
+      h: o,
+      radius: a
+    } = e;
     t.arc(i + a.topLeft, s + a.topLeft, a.topLeft, -L, D, !0), t.lineTo(i, s + o - a.bottomLeft), t.arc(i + a.bottomLeft, s + o - a.bottomLeft, a.bottomLeft, D, L, !0), t.lineTo(i + n - a.bottomRight, s + o), t.arc(i + n - a.bottomRight, s + o - a.bottomRight, a.bottomRight, L, 0, !0), t.lineTo(i + n, s + a.topRight), t.arc(i + n - a.topRight, s + a.topRight, a.topRight, 0, -L, !0), t.lineTo(i + a.topLeft, s);
   }
   function Ee(t) {
@@ -3694,25 +3716,31 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     return new Proxy(a, {
       deleteProperty: (e, i) => (delete e[i], delete t[i], !0),
       get: (t, e, i) => Ve(t, e, () => function (t, e, i) {
-        const o = t._proxy,
-          a = t._context,
-          r = t._subProxy,
-          l = t._descriptors;
+        const {
+          _proxy: o,
+          _context: a,
+          _subProxy: r,
+          _descriptors: l
+        } = t;
         let h = o[e];
         k(h) && l.isScriptable(e) && (h = function (t, e, i, s) {
-          const n = i._proxy,
-            o = i._context,
-            a = i._subProxy,
-            r = i._stack;
+          const {
+            _proxy: n,
+            _context: o,
+            _subProxy: a,
+            _stack: r
+          } = i;
           if (r.has(t)) throw new Error("Recursion detected: " + Array.from(r).join("->") + "->" + t);
           r.add(t), e = e(o, a || s), r.delete(t), Fe(t, e) && (e = je(n._scopes, n, t, e));
           return e;
         }(e, h, t, i));
         s(h) && h.length && (h = function (t, e, i, s) {
-          const o = i._proxy,
-            a = i._context,
-            r = i._subProxy,
-            l = i._descriptors;
+          const {
+            _proxy: o,
+            _context: a,
+            _subProxy: r,
+            _descriptors: l
+          } = i;
           if (M(a.index) && s(t)) e = e[a.index % e.length];else if (n(e[0])) {
             const i = e,
               s = o._scopes.filter(t => t !== i);
@@ -3742,12 +3770,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       scriptable: !0,
       indexable: !0
     };
-    const _t$_scriptable = t._scriptable,
-      i = _t$_scriptable === void 0 ? e.scriptable : _t$_scriptable,
-      _t$_indexable = t._indexable,
-      s = _t$_indexable === void 0 ? e.indexable : _t$_indexable,
-      _t$_allKeys = t._allKeys,
-      n = _t$_allKeys === void 0 ? e.allKeys : _t$_allKeys;
+    const {
+      _scriptable: i = e.scriptable,
+      _indexable: s = e.indexable,
+      _allKeys: n = e.allKeys
+    } = t;
     return {
       allKeys: n,
       scriptable: i,
@@ -3813,9 +3840,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }(t._scopes)), e;
   }
   function Ue(t, e, i, s) {
-    const n = t.iScale,
-      _this$_parsing$key = this._parsing.key,
-      o = _this$_parsing$key === void 0 ? "r" : _this$_parsing$key,
+    const {
+        iScale: n
+      } = t,
+      {
+        key: o = "r"
+      } = this._parsing,
       a = new Array(s);
     let r, l, h, c;
     for (r = 0, l = s; r < l; ++r) h = r + i, c = e[h], a[r] = {
@@ -4058,8 +4088,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     for (o = 0, a = t.length; o < a; ++o) if (r = t[o], void 0 !== r && (void 0 !== e && "function" == typeof r && (r = r(e), l = !1), void 0 !== i && s(r) && (r = r[i % r.length], l = !1), void 0 !== r)) return n && !l && (n.cacheable = !1), r;
   }
   function xi(t, e, i) {
-    const s = t.min,
-      n = t.max,
+    const {
+        min: s,
+        max: n
+      } = t,
       o = h(e, (n - s) / 2),
       a = (t, e) => i && 0 === t ? 0 : t + e;
     return {
@@ -4107,12 +4139,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       normalize: t => t
     };
   }
-  function ki(_ref2) {
-    let t = _ref2.start,
-      e = _ref2.end,
-      i = _ref2.count,
-      s = _ref2.loop,
-      n = _ref2.style;
+  function ki(_ref) {
+    let {
+      start: t,
+      end: e,
+      count: i,
+      loop: s,
+      style: n
+    } = _ref;
     return {
       start: t % i,
       end: e % i,
@@ -4122,27 +4156,40 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   }
   function Si(t, e, i) {
     if (!i) return [t];
-    const s = i.property,
-      n = i.start,
-      o = i.end,
+    const {
+        property: s,
+        start: n,
+        end: o
+      } = i,
       a = e.length,
-      _Mi = Mi(s),
-      r = _Mi.compare,
-      l = _Mi.between,
-      h = _Mi.normalize,
-      _ref3 = function (t, e, i) {
-        const s = i.property,
-          n = i.start,
-          o = i.end,
-          _Mi2 = Mi(s),
-          a = _Mi2.between,
-          r = _Mi2.normalize,
+      {
+        compare: r,
+        between: l,
+        normalize: h
+      } = Mi(s),
+      {
+        start: c,
+        end: d,
+        loop: u,
+        style: f
+      } = function (t, e, i) {
+        const {
+            property: s,
+            start: n,
+            end: o
+          } = i,
+          {
+            between: a,
+            normalize: r
+          } = Mi(s),
           l = e.length;
         let h,
           c,
-          d = t.start,
-          u = t.end,
-          f = t.loop;
+          {
+            start: d,
+            end: u,
+            loop: f
+          } = t;
         if (f) {
           for (d += l, u += l, h = 0, c = l; h < c && a(r(e[d % l][s]), n, o); ++h) d--, u--;
           d %= l, u %= l;
@@ -4154,10 +4201,6 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           style: t.style
         };
       }(t, e, i),
-      c = _ref3.start,
-      d = _ref3.end,
-      u = _ref3.loop,
-      f = _ref3.style,
       g = [];
     let p,
       m,
@@ -4196,7 +4239,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       n = i.length;
     if (!n) return [];
     const o = !!t._loop,
-      _ref4 = function (t, e, i, s) {
+      {
+        start: a,
+        end: r
+      } = function (t, e, i, s) {
         let n = 0,
           o = e - 1;
         if (i && !s) for (; n < e && !t[n].skip;) n++;
@@ -4206,9 +4252,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           start: n,
           end: o
         };
-      }(i, n, o, s),
-      a = _ref4.start,
-      r = _ref4.end;
+      }(i, n, o, s);
     if (!0 === s) return Oi(t, [{
       start: a,
       end: r,
@@ -4239,8 +4283,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     return s && s.setContext && i ? function (t, e, i, s) {
       const n = t._chart.getContext(),
         o = Ci(t.options),
-        a = t._datasetIndex,
-        r = t.options.spanGaps,
+        {
+          _datasetIndex: a,
+          options: {
+            spanGaps: r
+          }
+        } = t,
         l = i.length,
         h = [];
       let c = o,
@@ -4422,9 +4470,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     _computeSegments: Di
   });
   function Li(t, e, i, s) {
-    const n = t.controller,
-      o = t.data,
-      a = t._sorted,
+    const {
+        controller: n,
+        data: o,
+        _sorted: a
+      } = t,
       r = n._cachedMeta.iScale;
     if (r && e === r.axis && "r" !== e && a && o.length) {
       const t = r._reversePixels ? it : et;
@@ -4451,12 +4501,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     const o = t.getSortedVisibleDatasetMetas(),
       a = i[e];
     for (let t = 0, i = o.length; t < i; ++t) {
-      const _o$t = o[t],
-        i = _o$t.index,
-        r = _o$t.data,
-        _Li = Li(o[t], e, a, n),
-        l = _Li.lo,
-        h = _Li.hi;
+      const {
+          index: i,
+          data: r
+        } = o[t],
+        {
+          lo: l,
+          hi: h
+        } = Li(o[t], e, a, n);
       for (let t = l; t <= h; ++t) {
         const e = r[t];
         e.skip || s(e, i, t);
@@ -4507,14 +4559,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     return o || t.isPointInArea(e) ? "r" !== i || s ? Ii(t, e, i, s, n, o) : function (t, e, i, s) {
       let n = [];
       return Ei(t, i, e, function (t, i, o) {
-        const _t$getProps = t.getProps(["startAngle", "endAngle"], s),
-          a = _t$getProps.startAngle,
-          r = _t$getProps.endAngle,
-          _U = U(t, {
+        const {
+            startAngle: a,
+            endAngle: r
+          } = t.getProps(["startAngle", "endAngle"], s),
+          {
+            angle: l
+          } = U(t, {
             x: e.x,
             y: e.y
-          }),
-          l = _U.angle;
+          });
         G(l, a, r) && n.push({
           element: t,
           datasetIndex: i,
@@ -4600,9 +4654,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     const i = function (t) {
         const e = {};
         for (const i of t) {
-          const t = i.stack,
-            s = i.pos,
-            n = i.stackWeight;
+          const {
+            stack: t,
+            pos: s,
+            stackWeight: n
+          } = i;
           if (!t || !Bi.includes(s)) continue;
           const o = e[t] || (e[t] = {
             count: 0,
@@ -4614,12 +4670,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         }
         return e;
       }(t),
-      s = e.vBoxMaxWidth,
-      n = e.hBoxMaxHeight;
+      {
+        vBoxMaxWidth: s,
+        hBoxMaxHeight: n
+      } = e;
     let o, a, r;
     for (o = 0, a = t.length; o < a; ++o) {
       r = t[o];
-      const a = r.box.fullSize,
+      const {
+          fullSize: a
+        } = r.box,
         l = i[r.stack],
         h = l && r.stackWeight / l.weight;
       r.horizontal ? (r.width = h ? h * s : a && e.availableWidth, r.height = n) : (r.width = s, r.height = h ? h * n : a && e.availableHeight);
@@ -4633,8 +4693,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     t.top = Math.max(t.top, e.top), t.left = Math.max(t.left, e.left), t.bottom = Math.max(t.bottom, e.bottom), t.right = Math.max(t.right, e.right);
   }
   function Ui(t, e, i, s) {
-    const o = i.pos,
-      a = i.box,
+    const {
+        pos: o,
+        box: a
+      } = i,
       r = t.maxPadding;
     if (!n(o)) {
       i.size && (t[o] -= i.size);
@@ -4677,9 +4739,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     let o, a, r, l, h, c;
     for (o = 0, a = t.length, h = 0; o < a; ++o) {
       r = t[o], l = r.box, l.update(r.width || e.w, r.height || e.h, Xi(r.horizontal, e));
-      const _Ui = Ui(e, i, r, s),
-        a = _Ui.same,
-        d = _Ui.other;
+      const {
+        same: a,
+        other: d
+      } = Ui(e, i, r, s);
       h |= a && n.length, c = c || d, l.fullSize || n.push(r);
     }
     return h && qi(n, e, i, s) || c;
@@ -4689,8 +4752,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   }
   function Gi(t, e, i, s) {
     const n = i.padding;
-    let o = e.x,
-      a = e.y;
+    let {
+      x: o,
+      y: a
+    } = e;
     for (const r of t) {
       const t = r.box,
         l = s[r.stack] || {
@@ -4747,18 +4812,21 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           const e = function (t) {
               const e = [];
               let i, s, n, o, a, r;
-              for (i = 0, s = (t || []).length; i < s; ++i) {
-                var _n2, _n2$options, _n2$options$stackWeig;
-                n = t[i], _n2 = n, o = _n2.position, _n2$options = _n2.options, a = _n2$options.stack, _n2$options$stackWeig = _n2$options.stackWeight, r = _n2$options$stackWeig === void 0 ? 1 : _n2$options$stackWeig, e.push({
-                  index: i,
-                  box: n,
-                  pos: o,
-                  horizontal: n.isHorizontal(),
-                  weight: n.weight,
-                  stack: a && o + a,
-                  stackWeight: r
-                });
-              }
+              for (i = 0, s = (t || []).length; i < s; ++i) n = t[i], {
+                position: o,
+                options: {
+                  stack: a,
+                  stackWeight: r = 1
+                }
+              } = n, e.push({
+                index: i,
+                box: n,
+                pos: o,
+                horizontal: n.isHorizontal(),
+                weight: n.weight,
+                stack: a && o + a,
+                stackWeight: r
+              });
               return e;
             }(t),
             i = ji(e.filter(t => t.box.fullSize), !0),
@@ -4937,9 +5005,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       n = ht(e => {
         null !== t.ctx && i(function (t, e) {
           const i = ts[t.type] || t.type,
-            _ue = ue(t, e),
-            s = _ue.x,
-            n = _ue.y;
+            {
+              x: s,
+              y: n
+            } = ue(t, e);
           return {
             type: i,
             chart: e,
@@ -5282,12 +5351,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     return null;
   }
   function Ds(t, e) {
-    const i = t.chart,
-      s = t._cachedMeta,
+    const {
+        chart: i,
+        _cachedMeta: s
+      } = t,
       n = i._stacks || (i._stacks = {}),
-      o = s.iScale,
-      a = s.vScale,
-      r = s.index,
+      {
+        iScale: o,
+        vScale: a,
+        index: r
+      } = s,
       l = o.axis,
       h = a.axis,
       c = function (t, e, i) {
@@ -5297,8 +5370,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     let u;
     for (let t = 0; t < d; ++t) {
       const i = e[t],
-        o = i[l],
-        d = i[h];
+        {
+          [l]: o,
+          [h]: d
+        } = i;
       u = (i._stacks || (i._stacks = {}))[h] = Ss(n, c, o), u[r] = d, u._top = Ps(u, a, !0, s.type), u._bottom = Ps(u, a, !1, s.type);
     }
   }
@@ -5405,10 +5480,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.options = t.createResolver(i, this.getContext()), this._parsing = this.options.parsing, this._cachedDataOpts = {};
     }
     parse(t, e) {
-      const i = this._cachedMeta,
-        o = this._data,
-        a = i.iScale,
-        r = i._stacked,
+      const {
+          _cachedMeta: i,
+          _data: o
+        } = this,
+        {
+          iScale: a,
+          _stacked: r
+        } = i,
         l = a.axis;
       let h,
         c,
@@ -5424,8 +5503,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       r && Ds(this, d);
     }
     parsePrimitiveData(t, e, i, s) {
-      const n = t.iScale,
-        o = t.vScale,
+      const {
+          iScale: n,
+          vScale: o
+        } = t,
         a = n.axis,
         r = o.axis,
         l = n.getLabels(),
@@ -5439,8 +5520,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return c;
     }
     parseArrayData(t, e, i, s) {
-      const n = t.xScale,
-        o = t.yScale,
+      const {
+          xScale: n,
+          yScale: o
+        } = t,
         a = new Array(s);
       let r, l, h, c;
       for (r = 0, l = s; r < l; ++r) h = r + i, c = e[h], a[r] = {
@@ -5450,13 +5533,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return a;
     }
     parseObjectData(t, e, i, s) {
-      const n = t.xScale,
-        o = t.yScale,
-        _this$_parsing = this._parsing,
-        _this$_parsing$xAxisK = _this$_parsing.xAxisKey,
-        a = _this$_parsing$xAxisK === void 0 ? "x" : _this$_parsing$xAxisK,
-        _this$_parsing$yAxisK = _this$_parsing.yAxisKey,
-        r = _this$_parsing$yAxisK === void 0 ? "y" : _this$_parsing$yAxisK,
+      const {
+          xScale: n,
+          yScale: o
+        } = t,
+        {
+          xAxisKey: a = "x",
+          yAxisKey: r = "y"
+        } = this._parsing,
         l = new Array(s);
       let h, c, d, u;
       for (h = 0, c = s; h < c; ++h) d = h + i, u = e[d], l[h] = {
@@ -5502,19 +5586,21 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           min: Number.POSITIVE_INFINITY,
           max: Number.NEGATIVE_INFINITY
         },
-        _ref5 = function (t) {
-          const _t$getUserBounds = t.getUserBounds(),
-            e = _t$getUserBounds.min,
-            i = _t$getUserBounds.max,
-            s = _t$getUserBounds.minDefined,
-            n = _t$getUserBounds.maxDefined;
+        {
+          min: c,
+          max: d
+        } = function (t) {
+          const {
+            min: e,
+            max: i,
+            minDefined: s,
+            maxDefined: n
+          } = t.getUserBounds();
           return {
             min: s ? e : Number.NEGATIVE_INFINITY,
             max: n ? i : Number.POSITIVE_INFINITY
           };
-        }(r),
-        c = _ref5.min,
-        d = _ref5.max;
+        }(r);
       let u, f;
       function g() {
         f = s[u];
@@ -5707,13 +5793,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     _resyncElements(t) {
       const e = this._data,
         i = this._cachedMeta.data;
-      for (const _ref6 of this._syncList) {
-        var _ref7 = _slicedToArray(_ref6, 3);
-        const t = _ref7[0];
-        const e = _ref7[1];
-        const i = _ref7[2];
-        this[t](e, i);
-      }
+      for (const [t, e, i] of this._syncList) this[t](e, i);
       this._syncList = [];
       const s = i.length,
         n = e.length,
@@ -5743,10 +5823,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     _sync(t) {
       if (this._parsing) this._syncList.push(t);else {
-        const _t2 = _slicedToArray(t, 3),
-          e = _t2[0],
-          i = _t2[1],
-          s = _t2[2];
+        const [e, i, s] = t;
         this[e](i, s);
       }
       this.chart._dataChanges.push([this.index, ...t]);
@@ -5776,9 +5853,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.x = void 0, this.y = void 0, this.active = !1, this.options = void 0, this.$animations = void 0;
     }
     tooltipPosition(t) {
-      const _this$getProps = this.getProps(["x", "y"], t),
-        e = _this$getProps.x,
-        i = _this$getProps.y;
+      const {
+        x: e,
+        y: i
+      } = this.getProps(["x", "y"], t);
       return {
         x: e,
         y: i
@@ -5997,10 +6075,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return t;
     }
     getUserBounds() {
-      let t = this._userMin,
-        e = this._userMax,
-        i = this._suggestedMin,
-        s = this._suggestedMax;
+      let {
+        _userMin: t,
+        _userMax: e,
+        _suggestedMin: i,
+        _suggestedMax: s
+      } = this;
       return t = a(t, Number.POSITIVE_INFINITY), e = a(e, Number.NEGATIVE_INFINITY), i = a(i, Number.POSITIVE_INFINITY), s = a(s, Number.NEGATIVE_INFINITY), {
         min: a(t, i),
         max: a(e, s),
@@ -6010,11 +6090,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     getMinMax(t) {
       let e,
-        _this$getUserBounds = this.getUserBounds(),
-        i = _this$getUserBounds.min,
-        s = _this$getUserBounds.max,
-        n = _this$getUserBounds.minDefined,
-        o = _this$getUserBounds.maxDefined;
+        {
+          min: i,
+          max: s,
+          minDefined: n,
+          maxDefined: o
+        } = this.getUserBounds();
       if (n && o) return {
         min: i,
         max: s
@@ -6048,10 +6129,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       c(this.options.beforeUpdate, [this]);
     }
     update(t, e, i) {
-      const _this$options = this.options,
-        s = _this$options.beginAtZero,
-        n = _this$options.grace,
-        o = _this$options.ticks,
+      const {
+          beginAtZero: s,
+          grace: n,
+          ticks: o
+        } = this.options,
         a = o.sampleSize;
       this.beforeUpdate(), this.maxWidth = t, this.maxHeight = e, this._margins = i = Object.assign({
         left: 0,
@@ -6142,21 +6224,25 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           width: 0,
           height: 0
         },
-        e = this.chart,
-        _this$options2 = this.options,
-        i = _this$options2.ticks,
-        s = _this$options2.title,
-        n = _this$options2.grid,
+        {
+          chart: e,
+          options: {
+            ticks: i,
+            title: s,
+            grid: n
+          }
+        } = this,
         o = this._isVisible(),
         a = this.isHorizontal();
       if (o) {
         const o = js(s, e.options.font);
         if (a ? (t.width = this.maxWidth, t.height = Ws(n) + o) : (t.height = this.maxHeight, t.width = Ws(n) + o), i.display && this.ticks.length) {
-          const _this$_getLabelSizes = this._getLabelSizes(),
-            e = _this$_getLabelSizes.first,
-            s = _this$_getLabelSizes.last,
-            n = _this$_getLabelSizes.widest,
-            o = _this$_getLabelSizes.highest,
+          const {
+              first: e,
+              last: s,
+              widest: n,
+              highest: o
+            } = this._getLabelSizes(),
             r = 2 * i.padding,
             l = H(this.labelRotation),
             h = Math.cos(l),
@@ -6174,11 +6260,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this._handleMargins(), a ? (this.width = this._length = e.width - this._margins.left - this._margins.right, this.height = t.height) : (this.width = t.width, this.height = this._length = e.height - this._margins.top - this._margins.bottom);
     }
     _calculatePadding(t, e, i, s) {
-      const _this$options3 = this.options,
-        _this$options3$ticks = _this$options3.ticks,
-        n = _this$options3$ticks.align,
-        o = _this$options3$ticks.padding,
-        a = _this$options3.position,
+      const {
+          ticks: {
+            align: n,
+            padding: o
+          },
+          position: a
+        } = this.options,
         r = 0 !== this.labelRotation,
         l = "top" !== a && "x" === this.axis;
       if (this.isHorizontal()) {
@@ -6200,9 +6288,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       c(this.options.afterFit, [this]);
     }
     isHorizontal() {
-      const _this$options4 = this.options,
-        t = _this$options4.axis,
-        e = _this$options4.position;
+      const {
+        axis: t,
+        position: e
+      } = this.options;
       return "top" === e || "bottom" === e || "x" === t;
     }
     isFullSize() {
@@ -6223,8 +6312,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return t;
     }
     _computeLabelSizes(t, e) {
-      const n = this.ctx,
-        o = this._longestTextCache,
+      const {
+          ctx: n,
+          _longestTextCache: o
+        } = this,
         a = [],
         r = [];
       let l,
@@ -6299,8 +6390,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return this.getPixelForValue(this.getBaseValue());
     }
     getBaseValue() {
-      const t = this.min,
-        e = this.max;
+      const {
+        min: t,
+        max: e
+      } = this;
       return t < 0 && e < 0 ? e : t > 0 && e > 0 ? t : 0;
     }
     getContext(t) {
@@ -6339,8 +6432,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       const e = this.axis,
         i = this.chart,
         s = this.options,
-        o = s.grid,
-        a = s.position,
+        {
+          grid: o,
+          position: a
+        } = s,
         l = o.offset,
         h = this.isHorizontal(),
         c = this.ticks.length + (l ? 1 : 0),
@@ -6404,14 +6499,18 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     _computeLabelItems(t) {
       const e = this.axis,
         i = this.options,
-        o = i.position,
-        a = i.ticks,
+        {
+          position: o,
+          ticks: a
+        } = i,
         r = this.isHorizontal(),
         l = this.ticks,
-        h = a.align,
-        c = a.crossAlign,
-        d = a.padding,
-        u = a.mirror,
+        {
+          align: h,
+          crossAlign: c,
+          padding: d,
+          mirror: u
+        } = a,
         f = Ws(i.grid),
         g = f + d,
         p = u ? -d : g,
@@ -6508,20 +6607,23 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return b;
     }
     _getXAxisLabelAlignment() {
-      const _this$options5 = this.options,
-        t = _this$options5.position,
-        e = _this$options5.ticks;
+      const {
+        position: t,
+        ticks: e
+      } = this.options;
       if (-H(this.labelRotation)) return "top" === t ? "left" : "right";
       let i = "center";
       return "start" === e.align ? i = "left" : "end" === e.align ? i = "right" : "inner" === e.align && (i = "inner"), i;
     }
     _getYAxisLabelAlignment(t) {
-      const _this$options6 = this.options,
-        e = _this$options6.position,
-        _this$options6$ticks = _this$options6.ticks,
-        i = _this$options6$ticks.crossAlign,
-        s = _this$options6$ticks.mirror,
-        n = _this$options6$ticks.padding,
+      const {
+          position: e,
+          ticks: {
+            crossAlign: i,
+            mirror: s,
+            padding: n
+          }
+        } = this.options,
         o = t + n,
         a = this._getLabelSizes().widest.width;
       let r, l;
@@ -6547,12 +6649,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       } : void 0;
     }
     drawBackground() {
-      const t = this.ctx,
-        e = this.options.backgroundColor,
-        i = this.left,
-        s = this.top,
-        n = this.width,
-        o = this.height;
+      const {
+        ctx: t,
+        options: {
+          backgroundColor: e
+        },
+        left: i,
+        top: s,
+        width: n,
+        height: o
+      } = this;
       e && (t.save(), t.fillStyle = e, t.fillRect(i, s, n, o), t.restore());
     }
     getLineWidthForValue(t) {
@@ -6595,9 +6701,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
     }
     drawBorder() {
-      const t = this.chart,
-        e = this.ctx,
-        i = this.options.grid,
+      const {
+          chart: t,
+          ctx: e,
+          options: {
+            grid: i
+          }
+        } = this,
         s = i.setContext(this.getContext()),
         n = i.drawBorder ? s.borderWidth : 0;
       if (!n) return;
@@ -6622,57 +6732,65 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       i && De(e);
     }
     drawTitle() {
-      const t = this.ctx,
-        _this$options7 = this.options,
-        e = _this$options7.position,
-        i = _this$options7.title,
-        o = _this$options7.reverse;
+      const {
+        ctx: t,
+        options: {
+          position: e,
+          title: i,
+          reverse: o
+        }
+      } = this;
       if (!i.display) return;
       const a = mi(i.font),
         r = pi(i.padding),
         l = i.align;
       let h = a.lineHeight / 2;
       "bottom" === e || "center" === e || n(e) ? (h += r.bottom, s(i.text) && (h += a.lineHeight * (i.text.length - 1))) : h += r.top;
-      const _ref8 = function (t, e, i, s) {
-          const o = t.top,
-            a = t.left,
-            r = t.bottom,
-            l = t.right,
-            h = t.chart,
-            c = h.chartArea,
-            d = h.scales;
-          let u,
-            f,
-            g,
-            p = 0;
-          const m = r - o,
-            b = l - a;
-          if (t.isHorizontal()) {
-            if (f = ut(s, a, l), n(i)) {
-              const t = Object.keys(i)[0],
-                s = i[t];
-              g = d[t].getPixelForValue(s) + m - e;
-            } else g = "center" === i ? (c.bottom + c.top) / 2 + m - e : Vs(t, i, e);
-            u = l - a;
-          } else {
-            if (n(i)) {
-              const t = Object.keys(i)[0],
-                s = i[t];
-              f = d[t].getPixelForValue(s) - b + e;
-            } else f = "center" === i ? (c.left + c.right) / 2 - b + e : Vs(t, i, e);
-            g = ut(s, r, o), p = "left" === i ? -L : L;
-          }
-          return {
-            titleX: f,
-            titleY: g,
-            maxWidth: u,
-            rotation: p
-          };
-        }(this, h, e, l),
-        c = _ref8.titleX,
-        d = _ref8.titleY,
-        u = _ref8.maxWidth,
-        f = _ref8.rotation;
+      const {
+        titleX: c,
+        titleY: d,
+        maxWidth: u,
+        rotation: f
+      } = function (t, e, i, s) {
+        const {
+            top: o,
+            left: a,
+            bottom: r,
+            right: l,
+            chart: h
+          } = t,
+          {
+            chartArea: c,
+            scales: d
+          } = h;
+        let u,
+          f,
+          g,
+          p = 0;
+        const m = r - o,
+          b = l - a;
+        if (t.isHorizontal()) {
+          if (f = ut(s, a, l), n(i)) {
+            const t = Object.keys(i)[0],
+              s = i[t];
+            g = d[t].getPixelForValue(s) + m - e;
+          } else g = "center" === i ? (c.bottom + c.top) / 2 + m - e : Vs(t, i, e);
+          u = l - a;
+        } else {
+          if (n(i)) {
+            const t = Object.keys(i)[0],
+              s = i[t];
+            f = d[t].getPixelForValue(s) - b + e;
+          } else f = "center" === i ? (c.left + c.right) / 2 - b + e : Vs(t, i, e);
+          g = ut(s, r, o), p = "left" === i ? -L : L;
+        }
+        return {
+          titleX: f,
+          titleY: g,
+          maxWidth: u,
+          rotation: p
+        };
+      }(this, h, e, l);
       Ae(t, i.text, 0, 0, a, {
         color: i.color,
         maxWidth: u,
@@ -6919,9 +7037,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
             localIds: e
           };
         }(i);
-      return !1 !== s || e ? function (t, _ref9, s, n) {
-        let e = _ref9.plugins,
-          i = _ref9.localIds;
+      return !1 !== s || e ? function (t, _ref2, s, n) {
+        let {
+          plugins: e,
+          localIds: i
+        } = _ref2;
         const o = [],
           a = t.getContext();
         for (const r of e) {
@@ -6948,9 +7068,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   function qs(t, e) {
     return e || !1 !== t ? !0 === t ? {} : t : null;
   }
-  function Ks(t, _ref0, s, n) {
-    let e = _ref0.plugin,
-      i = _ref0.local;
+  function Ks(t, _ref3, s, n) {
+    let {
+      plugin: e,
+      local: i
+    } = _ref3;
     const o = t.pluginScopeKeys(e),
       a = t.getOptionScopes(s, o);
     return i && e.defaults && a.push(e.defaults), t.createResolver(a, n, [""], {
@@ -7078,8 +7200,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return s && !e || (s = new Map(), i.set(t, s)), s;
     }
     getOptionScopes(t, e, i) {
-      const s = this.options,
-        n = this.type,
+      const {
+          options: s,
+          type: n
+        } = this,
         o = this._cachedScopes(t, i),
         a = o.get(e);
       if (a) return a;
@@ -7091,8 +7215,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return 0 === l.length && l.push(Object.create(null)), en.has(e) && o.set(e, l), l;
     }
     chartOptionScopes() {
-      const t = this.options,
-        e = this.type;
+      const {
+        options: t,
+        type: e
+      } = this;
       return [t, te[e] || {}, ne.datasets[e] || {}, {
         type: e
       }, ne, ee];
@@ -7102,14 +7228,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       const o = {
           $shared: !0
         },
-        _an = an(this._resolverCache, t, n),
-        a = _an.resolver,
-        r = _an.subPrefixes;
+        {
+          resolver: a,
+          subPrefixes: r
+        } = an(this._resolverCache, t, n);
       let l = a;
       if (function (t, e) {
-        const _Ie = Ie(t),
-          i = _Ie.isScriptable,
-          n = _Ie.isIndexable;
+        const {
+          isScriptable: i,
+          isIndexable: n
+        } = Ie(t);
         for (const o of e) {
           const e = i(o),
             a = n(o),
@@ -7127,8 +7255,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     createResolver(t, e) {
       let i = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [""];
       let s = arguments.length > 3 ? arguments[3] : undefined;
-      const _an2 = an(this._resolverCache, t, i),
-        o = _an2.resolver;
+      const {
+        resolver: o
+      } = an(this._resolverCache, t, i);
       return n(e) ? Re(o, e, void 0, s) : o;
     }
   }
@@ -7198,12 +7327,15 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.id = e(), this.ctx = r, this.canvas = l, this.width = c, this.height = h, this._options = a, this._aspectRatio = this.aspectRatio, this._layers = [], this._metasets = [], this._stacks = void 0, this.boxes = [], this.currentDevicePixelRatio = void 0, this.chartArea = void 0, this._active = [], this._lastEvent = void 0, this._listeners = {}, this._responsiveListeners = void 0, this._sortedMetasets = [], this.scales = {}, this._plugins = new Xs(), this.$proxies = {}, this._hiddenIndices = {}, this.attached = !1, this._animationsDisabled = void 0, this.$context = void 0, this._doResize = ct(t => this.update(t), a.resizeDelay || 0), this._dataChanges = [], gn[this.id] = this, r && l ? (mt.listen(this, "complete", dn), mt.listen(this, "progress", un), this._initialize(), this.attached && this.update()) : console.error("Failed to create chart: can't acquire context from the given item");
     }
     get aspectRatio() {
-      const _this$options8 = this.options,
-        t = _this$options8.aspectRatio,
-        e = _this$options8.maintainAspectRatio,
-        s = this.width,
-        n = this.height,
-        o = this._aspectRatio;
+      const {
+        options: {
+          aspectRatio: t,
+          maintainAspectRatio: e
+        },
+        width: s,
+        height: n,
+        _aspectRatio: o
+      } = this;
       return i(t) ? e && o ? o : n ? s / n : null : t;
     }
     get data() {
@@ -7298,8 +7430,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this._sortedMetasets = t.slice(0).sort(cn("order", "index"));
     }
     _removeUnreferencedMetasets() {
-      const t = this._metasets,
-        e = this.data.datasets;
+      const {
+        _metasets: t,
+        data: {
+          datasets: e
+        }
+      } = this;
       t.length > e.length && delete this._stacks, t.forEach((t, i) => {
         0 === e.filter(e => e === t._dataset).length && this._destroyDatasetMeta(i);
       });
@@ -7314,9 +7450,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         const o = s.type || this.config.type;
         if (n.type && n.type !== o && (this._destroyDatasetMeta(i), n = this.getDatasetMeta(i)), n.type = o, n.indexAxis = s.indexAxis || Gs(o, this.options), n.order = s.order || 0, n.index = i, n.label = "" + s.label, n.visible = this.isDatasetVisible(i), n.controller) n.controller.updateIndex(i), n.controller.linkScales();else {
           const e = Us.getController(o),
-            _ne$datasets$o = ne.datasets[o],
-            s = _ne$datasets$o.datasetElementType,
-            a = _ne$datasets$o.dataElementType;
+            {
+              datasetElementType: s,
+              dataElementType: a
+            } = ne.datasets[o];
           Object.assign(e.prototype, {
             dataElementType: Us.getElement(a),
             datasetElementType: s && Us.getElement(s)
@@ -7346,8 +7483,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.notifyPlugins("beforeElementsUpdate");
       let o = 0;
       for (let t = 0, e = this.data.datasets.length; t < e; t++) {
-        const _this$getDatasetMeta = this.getDatasetMeta(t),
-          e = _this$getDatasetMeta.controller,
+        const {
+            controller: e
+          } = this.getDatasetMeta(t),
           i = !s && -1 === n.indexOf(e);
         e.buildOrUpdateElements(i), o = Math.max(+e.getMaxOverflow(), o);
       }
@@ -7356,8 +7494,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }), this._updateDatasets(t), this.notifyPlugins("afterUpdate", {
         mode: t
       }), this._layers.sort(cn("z", "_idx"));
-      const a = this._active,
-        r = this._lastEvent;
+      const {
+        _active: a,
+        _lastEvent: r
+      } = this;
       r ? this._eventHandler(r, !0) : a.length && this._updateHoverStyles(a, a, !0), this.render();
     }
     _updateScales() {
@@ -7372,12 +7512,15 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       S(e, i) && !!this._responsiveListeners === t.responsive || (this.unbindEvents(), this.bindEvents());
     }
     _updateHiddenIndices() {
-      const t = this._hiddenIndices,
+      const {
+          _hiddenIndices: t
+        } = this,
         e = this._getUniformDataChanges() || [];
-      for (const _ref1 of e) {
-        const i = _ref1.method;
-        const s = _ref1.start;
-        const n = _ref1.count;
+      for (const {
+        method: i,
+        start: s,
+        count: n
+      } of e) {
         mn(t, s, "_removeElements" === i ? -n : n);
       }
     }
@@ -7442,9 +7585,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     draw() {
       let t;
       if (this._resizeBeforeDraw) {
-        const _this$_resizeBeforeDr = this._resizeBeforeDraw,
-          t = _this$_resizeBeforeDr.width,
-          e = _this$_resizeBeforeDr.height;
+        const {
+          width: t,
+          height: e
+        } = this._resizeBeforeDraw;
         this._resize(t, e), this._resizeBeforeDraw = null;
       }
       if (this.clear(), this.width <= 0 || this.height <= 0) return;
@@ -7568,8 +7712,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     destroy() {
       this.notifyPlugins("beforeDestroy");
-      const t = this.canvas,
-        e = this.ctx;
+      const {
+        canvas: t,
+        ctx: e
+      } = this;
       this._stop(), this.config.clearCache(), t && (this.unbindEvents(), we(t, e), this.platform.releaseContext(e), this.canvas = null, this.ctx = null), this.notifyPlugins("destroy"), delete gn[this.id], this.notifyPlugins("afterDestroy");
     }
     toBase64Image() {
@@ -7631,9 +7777,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     setActiveElements(t) {
       const e = this._active || [],
-        i = t.map(_ref10 => {
-          let t = _ref10.datasetIndex,
-            e = _ref10.index;
+        i = t.map(_ref4 => {
+          let {
+            datasetIndex: t,
+            index: e
+          } = _ref4;
           const i = this.getDatasetMeta(t);
           if (!i) throw new Error("No dataset found at index " + t);
           return {
@@ -7667,9 +7815,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return i.cancelable = !1, this.notifyPlugins("afterEvent", i, s), (n || i.changed) && this.render(), this;
     }
     _handleEvent(t, e, i) {
-      const _this$_active = this._active,
-        s = _this$_active === void 0 ? [] : _this$_active,
-        n = this.options,
+      const {
+          _active: s = [],
+          options: n
+        } = this,
         o = e,
         a = this._getActiveElements(t, s, i, o),
         r = P(t),
@@ -7827,21 +7976,22 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       bottom: !0,
       left: !0
     });
-    const _ref11 = function (t) {
-        let e, i, s, n, o;
-        return t.horizontal ? (e = t.base > t.x, i = "left", s = "right") : (e = t.base < t.y, i = "bottom", s = "top"), e ? (n = "end", o = "start") : (n = "start", o = "end"), {
-          start: i,
-          end: s,
-          reverse: e,
-          top: n,
-          bottom: o
-        };
-      }(t),
-      a = _ref11.start,
-      r = _ref11.end,
-      l = _ref11.reverse,
-      h = _ref11.top,
-      c = _ref11.bottom;
+    const {
+      start: a,
+      end: r,
+      reverse: l,
+      top: h,
+      bottom: c
+    } = function (t) {
+      let e, i, s, n, o;
+      return t.horizontal ? (e = t.base > t.x, i = "left", s = "right") : (e = t.base < t.y, i = "bottom", s = "top"), e ? (n = "end", o = "start") : (n = "start", o = "end"), {
+        start: i,
+        end: s,
+        reverse: e,
+        top: n,
+        bottom: o
+      };
+    }(t);
     "middle" === n && i && (t.enableBorderRadius = !0, (i._top || 0) === s ? n = h : (i._bottom || 0) === s ? n = c : (o[On(c, a, r, l)] = !0, n = h)), o[On(n, a, r, l)] = !0, t.borderSkipped = o;
   }
   function On(t, e, i, s) {
@@ -7851,8 +8001,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   function Cn(t, e, i) {
     return "start" === t ? e : "end" === t ? i : t;
   }
-  function An(t, _ref12, i) {
-    let e = _ref12.inflateAmount;
+  function An(t, _ref5, i) {
+    let {
+      inflateAmount: e
+    } = _ref5;
     t.inflateAmount = "auto" === e ? 1 === i ? .33 : 0 : e;
   }
   class Tn extends Ls {
@@ -7863,13 +8015,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return Sn(t, e, i, s);
     }
     parseObjectData(t, e, i, s) {
-      const n = t.iScale,
-        o = t.vScale,
-        _this$_parsing2 = this._parsing,
-        _this$_parsing2$xAxis = _this$_parsing2.xAxisKey,
-        a = _this$_parsing2$xAxis === void 0 ? "x" : _this$_parsing2$xAxis,
-        _this$_parsing2$yAxis = _this$_parsing2.yAxisKey,
-        r = _this$_parsing2$yAxis === void 0 ? "y" : _this$_parsing2$yAxis,
+      const {
+          iScale: n,
+          vScale: o
+        } = t,
+        {
+          xAxisKey: a = "x",
+          yAxisKey: r = "y"
+        } = this._parsing,
         l = "x" === n.axis ? a : r,
         h = "x" === o.axis ? a : r,
         c = [];
@@ -7887,8 +8040,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     getLabelAndValue(t) {
       const e = this._cachedMeta,
-        i = e.iScale,
-        s = e.vScale,
+        {
+          iScale: i,
+          vScale: s
+        } = e,
         n = this.getParsed(t),
         o = n._custom,
         a = Pn(o) ? "[" + o.start + ", " + o.end + "]" : "" + s.getLabelForValue(n[s.axis]);
@@ -7907,14 +8062,19 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     updateElements(t, e, s, n) {
       const o = "reset" === n,
-        a = this.index,
-        r = this._cachedMeta.vScale,
+        {
+          index: a,
+          _cachedMeta: {
+            vScale: r
+          }
+        } = this,
         l = r.getBasePixel(),
         h = r.isHorizontal(),
         c = this._getRuler(),
-        _this$_getSharedOptio = this._getSharedOptions(e, n),
-        d = _this$_getSharedOptio.sharedOptions,
-        u = _this$_getSharedOptio.includeOptions;
+        {
+          sharedOptions: d,
+          includeOptions: u
+        } = this._getSharedOptions(e, n);
       for (let f = e; f < e + s; f++) {
         const e = this.getParsed(f),
           s = o || i(e[r.axis]) ? {
@@ -7938,7 +8098,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
     }
     _getStacks(t, e) {
-      const s = this._cachedMeta.iScale,
+      const {
+          iScale: s
+        } = this._cachedMeta,
         n = s.getMatchingVisibleMetas(this._type).filter(t => t.controller.options.grouped),
         o = s.options.stacked,
         a = [],
@@ -7978,12 +8140,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       };
     }
     _calculateBarValuePixels(t) {
-      const _this$_cachedMeta = this._cachedMeta,
-        e = _this$_cachedMeta.vScale,
-        s = _this$_cachedMeta._stacked,
-        _this$options9 = this.options,
-        n = _this$options9.base,
-        o = _this$options9.minBarLength,
+      const {
+          _cachedMeta: {
+            vScale: e,
+            _stacked: s
+          },
+          options: {
+            base: n,
+            minBarLength: o
+          }
+        } = this,
         a = n || 0,
         r = this.getParsed(t),
         l = r._custom,
@@ -8126,8 +8292,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     getLabelAndValue(t) {
       const e = this._cachedMeta,
-        i = e.xScale,
-        s = e.yScale,
+        {
+          xScale: i,
+          yScale: s
+        } = e,
         n = this.getParsed(t),
         o = i.getLabelForValue(n.x),
         a = s.getLabelForValue(n.y),
@@ -8143,12 +8311,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     updateElements(t, e, i, s) {
       const n = "reset" === s,
-        _this$_cachedMeta2 = this._cachedMeta,
-        o = _this$_cachedMeta2.iScale,
-        a = _this$_cachedMeta2.vScale,
-        _this$_getSharedOptio2 = this._getSharedOptions(e, s),
-        r = _this$_getSharedOptio2.sharedOptions,
-        l = _this$_getSharedOptio2.includeOptions,
+        {
+          iScale: o,
+          vScale: a
+        } = this._cachedMeta,
+        {
+          sharedOptions: r,
+          includeOptions: l
+        } = this._getSharedOptions(e, s),
         h = o.axis,
         c = a.axis;
       for (let d = e; d < e + i; d++) {
@@ -8209,8 +8379,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           a,
           r = t => +i[t];
         if (n(i[t])) {
-          const _this$_parsing$key2 = this._parsing.key,
-            t = _this$_parsing$key2 === void 0 ? "value" : _this$_parsing$key2;
+          const {
+            key: t = "value"
+          } = this._parsing;
           r = e => +y(i[e], t);
         }
         for (o = t, a = t + e; o < a; ++o) s._parsed[o] = r(o);
@@ -8238,17 +8409,25 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     update(t) {
       const e = this.chart,
-        i = e.chartArea,
+        {
+          chartArea: i
+        } = e,
         s = this._cachedMeta,
         n = s.data,
         o = this.getMaxBorderWidth() + this.getMaxOffset(n) + this.options.spacing,
         a = Math.max((Math.min(i.width, i.height) - o) / 2, 0),
         r = Math.min(l(this.options.cutout, a), 1),
         c = this._getRingWeight(this.index),
-        _this$_getRotationExt = this._getRotationExtents(),
-        d = _this$_getRotationExt.circumference,
-        u = _this$_getRotationExt.rotation,
-        _ref13 = function (t, e, i) {
+        {
+          circumference: d,
+          rotation: u
+        } = this._getRotationExtents(),
+        {
+          ratioX: f,
+          ratioY: g,
+          offsetX: p,
+          offsetY: m
+        } = function (t, e, i) {
           let s = 1,
             n = 1,
             o = 0,
@@ -8275,10 +8454,6 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
             offsetY: a
           };
         }(u, d, r),
-        f = _ref13.ratioX,
-        g = _ref13.ratioY,
-        p = _ref13.offsetX,
-        m = _ref13.offsetY,
         b = (i.width - o) / f,
         x = (i.height - o) / g,
         _ = Math.max(Math.min(b, x) / 2, 0),
@@ -8302,9 +8477,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         c = n && r.animateScale,
         d = c ? 0 : this.innerRadius,
         u = c ? 0 : this.outerRadius,
-        _this$_getSharedOptio3 = this._getSharedOptions(e, s),
-        f = _this$_getSharedOptio3.sharedOptions,
-        g = _this$_getSharedOptio3.includeOptions;
+        {
+          sharedOptions: f,
+          includeOptions: g
+        } = this._getSharedOptions(e, s);
       let p,
         m = this._getRotation();
       for (p = 0; p < e; ++p) m += this._circumference(p, n);
@@ -8410,7 +8586,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           generateLabels(t) {
             const e = t.data;
             if (e.labels.length && e.datasets.length) {
-              const i = t.legend.options.labels.pointStyle;
+              const {
+                labels: {
+                  pointStyle: i
+                }
+              } = t.legend.options;
               return e.labels.map((e, s) => {
                 const n = t.getDatasetMeta(0).controller.getStyle(s);
                 return {
@@ -8449,14 +8629,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     update(t) {
       const e = this._cachedMeta,
-        i = e.dataset,
-        _e$data = e.data,
-        s = _e$data === void 0 ? [] : _e$data,
-        n = e._dataset,
+        {
+          dataset: i,
+          data: s = [],
+          _dataset: n
+        } = e,
         o = this.chart._animationsDisabled;
-      let _gt = gt(e, s, o),
-        a = _gt.start,
-        r = _gt.count;
+      let {
+        start: a,
+        count: r
+      } = gt(e, s, o);
       this._drawStart = a, this._drawCount = r, pt(e) && (a = 0, r = s.length), i._chart = this.chart, i._datasetIndex = this.index, i._decimated = !!n._decimated, i.points = s;
       const l = this.resolveDatasetElementOptions(t);
       this.options.showLine || (l.borderWidth = 0), l.segment = this.options.segment, this.updateElement(i, void 0, {
@@ -8466,19 +8648,22 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     updateElements(t, e, s, n) {
       const o = "reset" === n,
-        _this$_cachedMeta3 = this._cachedMeta,
-        a = _this$_cachedMeta3.iScale,
-        r = _this$_cachedMeta3.vScale,
-        l = _this$_cachedMeta3._stacked,
-        h = _this$_cachedMeta3._dataset,
-        _this$_getSharedOptio4 = this._getSharedOptions(e, n),
-        c = _this$_getSharedOptio4.sharedOptions,
-        d = _this$_getSharedOptio4.includeOptions,
+        {
+          iScale: a,
+          vScale: r,
+          _stacked: l,
+          _dataset: h
+        } = this._cachedMeta,
+        {
+          sharedOptions: c,
+          includeOptions: d
+        } = this._getSharedOptions(e, n),
         u = a.axis,
         f = r.axis,
-        _this$options0 = this.options,
-        g = _this$options0.spanGaps,
-        p = _this$options0.segment,
+        {
+          spanGaps: g,
+          segment: p
+        } = this.options,
         m = B(g) ? g : Number.POSITIVE_INFINITY,
         b = this.chart._animationsDisabled || o || "none" === n;
       let x = e > 0 && this.getParsed(e - 1);
@@ -8626,7 +8811,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           generateLabels(t) {
             const e = t.data;
             if (e.labels.length && e.datasets.length) {
-              const i = t.legend.options.labels.pointStyle;
+              const {
+                labels: {
+                  pointStyle: i
+                }
+              } = t.legend.options;
               return e.labels.map((e, s) => {
                 const n = t.getDatasetMeta(0).controller.getStyle(s);
                 return {
@@ -8748,15 +8937,19 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   class Vn extends Ls {
     update(t) {
       const e = this._cachedMeta,
-        _e$data2 = e.data,
-        i = _e$data2 === void 0 ? [] : _e$data2,
+        {
+          data: i = []
+        } = e,
         s = this.chart._animationsDisabled;
-      let _gt2 = gt(e, i, s),
-        n = _gt2.start,
-        o = _gt2.count;
+      let {
+        start: n,
+        count: o
+      } = gt(e, i, s);
       if (this._drawStart = n, this._drawCount = o, pt(e) && (n = 0, o = i.length), this.options.showLine) {
-        const n = e.dataset,
-          o = e._dataset;
+        const {
+          dataset: n,
+          _dataset: o
+        } = e;
         n._chart = this.chart, n._datasetIndex = this.index, n._decimated = !!o._decimated, n.points = i;
         const a = this.resolveDatasetElementOptions(t);
         a.segment = this.options.segment, this.updateElement(n, void 0, {
@@ -8767,24 +8960,28 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.updateElements(i, n, o, t);
     }
     addElements() {
-      const t = this.options.showLine;
+      const {
+        showLine: t
+      } = this.options;
       !this.datasetElementType && t && (this.datasetElementType = Us.getElement("line")), super.addElements();
     }
     updateElements(t, e, s, n) {
       const o = "reset" === n,
-        _this$_cachedMeta4 = this._cachedMeta,
-        a = _this$_cachedMeta4.iScale,
-        r = _this$_cachedMeta4.vScale,
-        l = _this$_cachedMeta4._stacked,
-        h = _this$_cachedMeta4._dataset,
+        {
+          iScale: a,
+          vScale: r,
+          _stacked: l,
+          _dataset: h
+        } = this._cachedMeta,
         c = this.resolveDataElementOptions(e, n),
         d = this.getSharedOptions(c),
         u = this.includeOptions(n, d),
         f = a.axis,
         g = r.axis,
-        _this$options1 = this.options,
-        p = _this$options1.spanGaps,
-        m = _this$options1.segment,
+        {
+          spanGaps: p,
+          segment: m
+        } = this.options,
         b = B(p) ? p : Number.POSITIVE_INFINITY,
         x = this.chart._animationsDisabled || o || "none" === n;
       let _ = e > 0 && this.getParsed(e - 1);
@@ -8853,12 +9050,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     ScatterController: Vn
   });
   function Nn(t, e, i) {
-    const s = e.startAngle,
-      n = e.pixelMargin,
-      o = e.x,
-      a = e.y,
-      r = e.outerRadius,
-      l = e.innerRadius;
+    const {
+      startAngle: s,
+      pixelMargin: n,
+      x: o,
+      y: a,
+      outerRadius: r,
+      innerRadius: l
+    } = e;
     let h = n / r;
     t.beginPath(), t.arc(o, a, r, s - h, i + h), l > n ? (h = n / l, t.arc(o, a, l, i + h, s - h, !0)) : t.arc(o, a, n, i + L, s - L), t.closePath(), t.clip();
   }
@@ -8884,11 +9083,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     };
   }
   function Hn(t, e, i, s, n, o) {
-    const a = e.x,
-      r = e.y,
-      l = e.startAngle,
-      h = e.pixelMargin,
-      c = e.innerRadius,
+    const {
+        x: a,
+        y: r,
+        startAngle: l,
+        pixelMargin: h,
+        innerRadius: c
+      } = e,
       d = Math.max(e.outerRadius + s + i - h, 0),
       u = c > 0 ? c + s + i + h : 0;
     let f = 0;
@@ -8900,11 +9101,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     const p = (g - Math.max(.001, g * d - i / D) / d) / 2,
       m = l + p + f,
       b = n - p - f,
-      _Wn = Wn(e, u, d, b - m),
-      x = _Wn.outerStart,
-      _ = _Wn.outerEnd,
-      y = _Wn.innerStart,
-      v = _Wn.innerEnd,
+      {
+        outerStart: x,
+        outerEnd: _,
+        innerStart: y,
+        innerEnd: v
+      } = Wn(e, u, d, b - m),
       w = d - x,
       M = d - _,
       k = m + x / w,
@@ -8944,16 +9146,22 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     t.closePath();
   }
   function $n(t, e, i, s, n, o) {
-    const a = e.options,
-      r = a.borderWidth,
-      l = a.borderJoinStyle,
+    const {
+        options: a
+      } = e,
+      {
+        borderWidth: r,
+        borderJoinStyle: l
+      } = a,
       h = "inner" === a.borderAlign;
     r && (h ? (t.lineWidth = 2 * r, t.lineJoin = l || "round") : (t.lineWidth = r, t.lineJoin = l || "bevel"), e.fullCircles && function (t, e, i) {
-      const s = e.x,
-        n = e.y,
-        o = e.startAngle,
-        a = e.pixelMargin,
-        r = e.fullCircles,
+      const {
+          x: s,
+          y: n,
+          startAngle: o,
+          pixelMargin: a,
+          fullCircles: r
+        } = e,
         l = Math.max(e.outerRadius - a, 0),
         h = e.innerRadius + a;
       let c;
@@ -8967,34 +9175,38 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     inRange(t, e, i) {
       const s = this.getProps(["x", "y"], i),
-        _U2 = U(s, {
+        {
+          angle: n,
+          distance: o
+        } = U(s, {
           x: t,
           y: e
         }),
-        n = _U2.angle,
-        o = _U2.distance,
-        _this$getProps2 = this.getProps(["startAngle", "endAngle", "innerRadius", "outerRadius", "circumference"], i),
-        a = _this$getProps2.startAngle,
-        l = _this$getProps2.endAngle,
-        h = _this$getProps2.innerRadius,
-        c = _this$getProps2.outerRadius,
-        d = _this$getProps2.circumference,
+        {
+          startAngle: a,
+          endAngle: l,
+          innerRadius: h,
+          outerRadius: c,
+          circumference: d
+        } = this.getProps(["startAngle", "endAngle", "innerRadius", "outerRadius", "circumference"], i),
         u = this.options.spacing / 2,
         f = r(d, l - a) >= O || G(n, a, l),
         g = Q(o, h + u, c + u);
       return f && g;
     }
     getCenterPoint(t) {
-      const _this$getProps3 = this.getProps(["x", "y", "startAngle", "endAngle", "innerRadius", "outerRadius", "circumference"], t),
-        e = _this$getProps3.x,
-        i = _this$getProps3.y,
-        s = _this$getProps3.startAngle,
-        n = _this$getProps3.endAngle,
-        o = _this$getProps3.innerRadius,
-        a = _this$getProps3.outerRadius,
-        _this$options10 = this.options,
-        r = _this$options10.offset,
-        l = _this$options10.spacing,
+      const {
+          x: e,
+          y: i,
+          startAngle: s,
+          endAngle: n,
+          innerRadius: o,
+          outerRadius: a
+        } = this.getProps(["x", "y", "startAngle", "endAngle", "innerRadius", "outerRadius", "circumference"], t),
+        {
+          offset: r,
+          spacing: l
+        } = this.options,
         h = (s + n) / 2,
         c = (o + a + l + r) / 2;
       return {
@@ -9006,8 +9218,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return this.getCenterPoint(t);
     }
     draw(t) {
-      const e = this.options,
-        i = this.circumference,
+      const {
+          options: e,
+          circumference: i
+        } = this,
         s = (e.offset || 0) / 2,
         n = (e.spacing || 0) / 2,
         o = e.circular;
@@ -9021,9 +9235,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
       t.fillStyle = e.backgroundColor, t.strokeStyle = e.borderColor;
       const r = function (t, e, i, s, n) {
-        const o = e.fullCircles,
-          a = e.startAngle,
-          r = e.circumference;
+        const {
+          fullCircles: o,
+          startAngle: a,
+          circumference: r
+        } = e;
         let l = e.endAngle;
         if (o) {
           Hn(t, e, i, s, a + O, n);
@@ -9045,12 +9261,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   function qn(t, e) {
     let i = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     const s = t.length,
-      _i$start = i.start,
-      n = _i$start === void 0 ? 0 : _i$start,
-      _i$end = i.end,
-      o = _i$end === void 0 ? s - 1 : _i$end,
-      a = e.start,
-      r = e.end,
+      {
+        start: n = 0,
+        end: o = s - 1
+      } = i,
+      {
+        start: a,
+        end: r
+      } = e,
       l = Math.max(n, a),
       h = Math.min(o, r),
       c = n < a && o < a || n > r && o > r;
@@ -9062,36 +9280,40 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     };
   }
   function Kn(t, e, i, s) {
-    const n = e.points,
-      o = e.options,
-      _qn = qn(n, i, s),
-      a = _qn.count,
-      r = _qn.start,
-      l = _qn.loop,
-      h = _qn.ilen,
+    const {
+        points: n,
+        options: o
+      } = e,
+      {
+        count: a,
+        start: r,
+        loop: l,
+        ilen: h
+      } = qn(n, i, s),
       c = function (t) {
         return t.stepped ? Oe : t.tension || "monotone" === t.cubicInterpolationMode ? Ce : Xn;
       }(o);
     let d,
       u,
       f,
-      _ref14 = s || {},
-      _ref14$move = _ref14.move,
-      g = _ref14$move === void 0 ? !0 : _ref14$move,
-      p = _ref14.reverse;
+      {
+        move: g = !0,
+        reverse: p
+      } = s || {};
     for (d = 0; d <= h; ++d) u = n[(r + (p ? h - d : d)) % a], u.skip || (g ? (t.moveTo(u.x, u.y), g = !1) : c(t, f, u, p, o.stepped), f = u);
     return l && (u = n[(r + (p ? h : 0)) % a], c(t, f, u, p, o.stepped)), !!l;
   }
   function Gn(t, e, i, s) {
     const n = e.points,
-      _qn2 = qn(n, i, s),
-      o = _qn2.count,
-      a = _qn2.start,
-      r = _qn2.ilen,
-      _ref15 = s || {},
-      _ref15$move = _ref15.move,
-      l = _ref15$move === void 0 ? !0 : _ref15$move,
-      h = _ref15.reverse;
+      {
+        count: o,
+        start: a,
+        ilen: r
+      } = qn(n, i, s),
+      {
+        move: l = !0,
+        reverse: h
+      } = s || {};
     let c,
       d,
       u,
@@ -9137,8 +9359,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       let n = e._path;
       n || (n = e._path = new Path2D(), e.path(n, i, s) && n.closePath()), Un(t, e.options), t.stroke(n);
     }(t, e, i, s) : function (t, e, i, s) {
-      const n = e.segments,
-        o = e.options,
+      const {
+          segments: n,
+          options: o
+        } = e,
         a = Zn(e);
       for (const r of n) Un(t, o, r.style), t.beginPath(), a(t, e, r, {
         start: i,
@@ -9193,9 +9417,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         }(i);
       let l, h;
       for (l = 0, h = o.length; l < h; ++l) {
-        const _o$l = o[l],
-          h = _o$l.start,
-          c = _o$l.end,
+        const {
+            start: h,
+            end: c
+          } = o[l],
           d = n[h],
           u = n[c];
         if (d === u) {
@@ -9228,8 +9453,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   }
   function eo(t, e, i, s) {
     const n = t.options,
-      _t$getProps2 = t.getProps([i], s),
-      o = _t$getProps2[i];
+      {
+        [i]: o
+      } = t.getProps([i], s);
     return Math.abs(e - o) < n.radius + n.hitRadius;
   }
   to.id = "line", to.defaults = {
@@ -9257,9 +9483,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     inRange(t, e, i) {
       const s = this.options,
-        _this$getProps4 = this.getProps(["x", "y"], i),
-        n = _this$getProps4.x,
-        o = _this$getProps4.y;
+        {
+          x: n,
+          y: o
+        } = this.getProps(["x", "y"], i);
       return Math.pow(t - n, 2) + Math.pow(e - o, 2) < Math.pow(s.hitRadius + s.radius, 2);
     }
     inXRange(t, e) {
@@ -9269,9 +9496,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return eo(this, t, "y", e);
     }
     getCenterPoint(t) {
-      const _this$getProps5 = this.getProps(["x", "y"], t),
-        e = _this$getProps5.x,
-        i = _this$getProps5.y;
+      const {
+        x: e,
+        y: i
+      } = this.getProps(["x", "y"], t);
       return {
         x: e,
         y: i
@@ -9292,12 +9520,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
   }
   function so(t, e) {
-    const _t$getProps3 = t.getProps(["x", "y", "base", "width", "height"], e),
-      i = _t$getProps3.x,
-      s = _t$getProps3.y,
-      n = _t$getProps3.base,
-      o = _t$getProps3.width,
-      a = _t$getProps3.height;
+    const {
+      x: i,
+      y: s,
+      base: n,
+      width: o,
+      height: a
+    } = t.getProps(["x", "y", "base", "width", "height"], e);
     let r, l, h, c, d;
     return t.horizontal ? (d = a / 2, r = Math.min(i, n), l = Math.max(i, n), h = s - d, c = s + d) : (d = o / 2, r = i - d, l = i + d, h = Math.min(s, n), c = Math.max(s, n)), {
       left: r,
@@ -9325,8 +9554,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         };
       }(t, i / 2, s / 2),
       a = function (t, e, i) {
-        const _t$getProps4 = t.getProps(["enableBorderRadius"]),
-          s = _t$getProps4.enableBorderRadius,
+        const {
+            enableBorderRadius: s
+          } = t.getProps(["enableBorderRadius"]),
           o = t.options.borderRadius,
           a = gi(o),
           r = Math.min(e, i),
@@ -9401,13 +9631,17 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       super(), this.options = void 0, this.horizontal = void 0, this.base = void 0, this.width = void 0, this.height = void 0, this.inflateAmount = void 0, t && Object.assign(this, t);
     }
     draw(t) {
-      const e = this.inflateAmount,
-        _this$options11 = this.options,
-        i = _this$options11.borderColor,
-        s = _this$options11.backgroundColor,
-        _oo = oo(this),
-        n = _oo.inner,
-        o = _oo.outer,
+      const {
+          inflateAmount: e,
+          options: {
+            borderColor: i,
+            backgroundColor: s
+          }
+        } = this,
+        {
+          inner: n,
+          outer: o
+        } = oo(this),
         a = (r = o.radius).topLeft || r.topRight || r.bottomLeft || r.bottomRight ? Le : ro;
       var r;
       t.save(), o.w === n.w && o.h === n.h || (t.beginPath(), a(t, lo(o, e, n)), t.clip(), a(t, lo(n, -e, o)), t.fillStyle = i, t.fill("evenodd")), t.beginPath(), a(t, lo(n, e)), t.fillStyle = s, t.fill(), t.restore();
@@ -9422,11 +9656,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return ao(this, null, t, e);
     }
     getCenterPoint(t) {
-      const _this$getProps6 = this.getProps(["x", "y", "base", "horizontal"], t),
-        e = _this$getProps6.x,
-        i = _this$getProps6.y,
-        s = _this$getProps6.base,
-        n = _this$getProps6.horizontal;
+      const {
+        x: e,
+        y: i,
+        base: s,
+        horizontal: n
+      } = this.getProps(["x", "y", "base", "horizontal"], t);
       return {
         x: n ? (e + s) / 2 : e,
         y: n ? i : (i + s) / 2
@@ -9476,8 +9711,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       if (!s.enabled) return void fo(t);
       const n = t.width;
       t.data.datasets.forEach((e, o) => {
-        const a = e._data,
-          r = e.indexAxis,
+        const {
+            _data: a,
+            indexAxis: r
+          } = e,
           l = t.getDatasetMeta(o),
           h = a || e.data;
         if ("y" === bi([r, t.options.indexAxis])) return;
@@ -9485,23 +9722,27 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         const c = t.scales[l.xAxisID];
         if ("linear" !== c.type && "time" !== c.type) return;
         if (t.options.parsing) return;
-        let _ref16 = function (t, e) {
-            const i = e.length;
-            let s,
-              n = 0;
-            const o = t.iScale,
-              _o$getUserBounds = o.getUserBounds(),
-              a = _o$getUserBounds.min,
-              r = _o$getUserBounds.max,
-              l = _o$getUserBounds.minDefined,
-              h = _o$getUserBounds.maxDefined;
-            return l && (n = Z(et(e, o.axis, a).lo, 0, i - 1)), s = h ? Z(et(e, o.axis, r).hi + 1, n, i) - n : i - n, {
-              start: n,
-              count: s
-            };
-          }(l, h),
-          d = _ref16.start,
-          u = _ref16.count;
+        let {
+          start: d,
+          count: u
+        } = function (t, e) {
+          const i = e.length;
+          let s,
+            n = 0;
+          const {
+              iScale: o
+            } = t,
+            {
+              min: a,
+              max: r,
+              minDefined: l,
+              maxDefined: h
+            } = o.getUserBounds();
+          return l && (n = Z(et(e, o.axis, a).lo, 0, i - 1)), s = h ? Z(et(e, o.axis, r).hi + 1, n, i) - n : i - n, {
+            start: n,
+            count: s
+          };
+        }(l, h);
         if (u <= (s.threshold || 4 * n)) return void uo(e);
         let f;
         switch (i(a) && (e._data = h, delete e.data, Object.defineProperty(e, "data", {
@@ -9539,9 +9780,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                 n /= b, o /= b;
                 const x = Math.floor(c * r) + 1 + e,
                   _ = Math.min(Math.floor((c + 1) * r) + 1, i) + e,
-                  _t$p = t[p],
-                  y = _t$p.x,
-                  v = _t$p.y;
+                  {
+                    x: y,
+                    y: v
+                  } = t[p];
                 for (u = f = -1, s = x; s < _; s++) f = .5 * Math.abs((y - n) * (t[s].y - v) - (y - t[s].x) * (o - v)), f > u && (u = f, d = t[s], g = s);
                 a[l++] = d, p = g;
               }
@@ -9620,16 +9862,17 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     let i = [],
       n = !1;
     return s(t) ? (n = !0, i = t) : i = function (t, e) {
-      const _ref17 = t || {},
-        _ref17$x = _ref17.x,
-        i = _ref17$x === void 0 ? null : _ref17$x,
-        _ref17$y = _ref17.y,
-        s = _ref17$y === void 0 ? null : _ref17$y,
+      const {
+          x: i = null,
+          y: s = null
+        } = t || {},
         n = e.points,
         o = [];
-      return e.segments.forEach(_ref18 => {
-        let t = _ref18.start,
-          e = _ref18.end;
+      return e.segments.forEach(_ref6 => {
+        let {
+          start: t,
+          end: e
+        } = _ref6;
         e = mo(t, e, n);
         const a = n[t],
           r = n[e];
@@ -9694,10 +9937,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     const s = [];
     for (let n = 0; n < i.length; n++) {
       const o = i[n],
-        _Mo = Mo(o, e, "x"),
-        a = _Mo.first,
-        r = _Mo.last,
-        l = _Mo.point;
+        {
+          first: a,
+          last: r,
+          point: l
+        } = Mo(o, e, "x");
       if (!(!l || a && r)) if (a) s.unshift(l);else if (t.push(l), !r) break;
     }
     t.push(...s);
@@ -9730,18 +9974,22 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.x = t.x, this.y = t.y, this.radius = t.radius;
     }
     pathSegment(t, e, i) {
-      const s = this.x,
-        n = this.y,
-        o = this.radius;
+      const {
+        x: s,
+        y: n,
+        radius: o
+      } = this;
       return e = e || {
         start: 0,
         end: O
       }, t.arc(s, n, o, e.end, e.start, !0), !i.bounds;
     }
     interpolate(t) {
-      const e = this.x,
-        i = this.y,
-        s = this.radius,
+      const {
+          x: e,
+          y: i,
+          radius: s
+        } = this,
         n = t.angle;
       return {
         x: e + Math.cos(n) * s,
@@ -9751,17 +9999,21 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
   }
   function So(t) {
-    const e = t.chart,
-      i = t.fill,
-      s = t.line;
+    const {
+      chart: e,
+      fill: i,
+      line: s
+    } = t;
     if (o(i)) return function (t, e) {
       const i = t.getDatasetMeta(e);
       return i && t.isDatasetVisible(e) ? i.dataset : null;
     }(e, i);
     if ("stack" === i) return function (t) {
-      const e = t.scale,
-        i = t.index,
-        s = t.line,
+      const {
+          scale: e,
+          index: i,
+          line: s
+        } = t,
         n = [],
         o = s.segments,
         a = s.points,
@@ -9791,8 +10043,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     if ("shape" === i) return !0;
     const a = function (t) {
       if ((t.scale || {}).getPointPositionForValue) return function (t) {
-        const e = t.scale,
-          i = t.fill,
+        const {
+            scale: e,
+            fill: i
+          } = t,
           s = e.options,
           o = e.getLabels().length,
           a = s.reverse ? e.max : e.min,
@@ -9813,9 +10067,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         return l;
       }(t);
       return function (t) {
-        const _t$scale = t.scale,
-          e = _t$scale === void 0 ? {} : _t$scale,
-          i = t.fill,
+        const {
+            scale: e = {},
+            fill: i
+          } = t,
           s = function (t, e) {
             let i = null;
             return "start" === t ? i = e.bottom : "end" === t ? i = e.top : n(t) ? i = e.getPixelForValue(t.value) : e.getBasePixel && (i = e.getBasePixel()), i;
@@ -9834,24 +10089,27 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   }
   function Po(t, e, i) {
     const s = So(e),
-      n = e.line,
-      o = e.scale,
-      a = e.axis,
+      {
+        line: n,
+        scale: o,
+        axis: a
+      } = e,
       r = n.options,
       l = r.fill,
       h = r.backgroundColor,
-      _ref19 = l || {},
-      _ref19$above = _ref19.above,
-      c = _ref19$above === void 0 ? h : _ref19$above,
-      _ref19$below = _ref19.below,
-      d = _ref19$below === void 0 ? h : _ref19$below;
+      {
+        above: c = h,
+        below: d = h
+      } = l || {};
     s && n.points.length && (Pe(t, i), function (t, e) {
-      const i = e.line,
-        s = e.target,
-        n = e.above,
-        o = e.below,
-        a = e.area,
-        r = e.scale,
+      const {
+          line: i,
+          target: s,
+          above: n,
+          below: o,
+          area: a,
+          scale: r
+        } = e,
         l = i._loop ? "angle" : e.axis;
       t.save(), "x" === l && o !== n && (Do(t, s, a.top), Oo(t, {
         line: i,
@@ -9878,14 +10136,18 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }), De(t));
   }
   function Do(t, e, i) {
-    const s = e.segments,
-      n = e.points;
+    const {
+      segments: s,
+      points: n
+    } = e;
     let o = !0,
       a = !1;
     t.beginPath();
     for (const r of s) {
-      const s = r.start,
-        l = r.end,
+      const {
+          start: s,
+          end: l
+        } = r,
         h = n[s],
         c = n[mo(s, l, n)];
       o ? (t.moveTo(h.x, h.y), o = !1) : (t.lineTo(h.x, i), t.lineTo(h.x, h.y)), a = !!e.pathSegment(t, r, {
@@ -9895,19 +10157,23 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     t.lineTo(e.first().x, i), t.closePath(), t.clip();
   }
   function Oo(t, e) {
-    const i = e.line,
-      s = e.target,
-      n = e.property,
-      o = e.color,
-      a = e.scale,
+    const {
+        line: i,
+        target: s,
+        property: n,
+        color: o,
+        scale: a
+      } = e,
       r = function (t, e, i) {
         const s = t.segments,
           n = t.points,
           o = e.points,
           a = [];
         for (const t of s) {
-          let s = t.start,
-            r = t.end;
+          let {
+            start: s,
+            end: r
+          } = t;
           r = mo(s, r, n);
           const l = po(i, n[s], n[r], t.loop);
           if (!e.segments) {
@@ -9937,40 +10203,42 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         }
         return a;
       }(i, s, n);
-    for (const _ref20 of r) {
-      const e = _ref20.source;
-      const l = _ref20.target;
-      const h = _ref20.start;
-      const c = _ref20.end;
-      {
-        const _e$style = e.style,
-          _e$style2 = _e$style === void 0 ? {} : _e$style,
-          _e$style2$backgroundC = _e$style2.backgroundColor,
-          r = _e$style2$backgroundC === void 0 ? o : _e$style2$backgroundC,
-          d = !0 !== s;
-        t.save(), t.fillStyle = r, Co(t, a, d && po(n, h, c)), t.beginPath();
-        const u = !!i.pathSegment(t, e);
-        let f;
-        if (d) {
-          u ? t.closePath() : Ao(t, s, c, n);
-          const e = !!s.pathSegment(t, l, {
-            move: u,
-            reverse: !0
-          });
-          f = u && e, f || Ao(t, s, h, n);
-        }
-        t.closePath(), t.fill(f ? "evenodd" : "nonzero"), t.restore();
+    for (const {
+      source: e,
+      target: l,
+      start: h,
+      end: c
+    } of r) {
+      const {
+          style: {
+            backgroundColor: r = o
+          } = {}
+        } = e,
+        d = !0 !== s;
+      t.save(), t.fillStyle = r, Co(t, a, d && po(n, h, c)), t.beginPath();
+      const u = !!i.pathSegment(t, e);
+      let f;
+      if (d) {
+        u ? t.closePath() : Ao(t, s, c, n);
+        const e = !!s.pathSegment(t, l, {
+          move: u,
+          reverse: !0
+        });
+        f = u && e, f || Ao(t, s, h, n);
       }
+      t.closePath(), t.fill(f ? "evenodd" : "nonzero"), t.restore();
     }
   }
   function Co(t, e, i) {
-    const _e$chart$chartArea = e.chart.chartArea,
-      s = _e$chart$chartArea.top,
-      n = _e$chart$chartArea.bottom,
-      _ref21 = i || {},
-      o = _ref21.property,
-      a = _ref21.start,
-      r = _ref21.end;
+    const {
+        top: s,
+        bottom: n
+      } = e.chart.chartArea,
+      {
+        property: o,
+        start: a,
+        end: r
+      } = i || {};
     "x" === o && (t.beginPath(), t.rect(a, s, r - a, n - s), t.clip());
   }
   function Ao(t, e, i, s) {
@@ -10021,10 +10289,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
   };
   const Lo = (t, e) => {
-    let _t$boxHeight = t.boxHeight,
-      i = _t$boxHeight === void 0 ? e : _t$boxHeight,
-      _t$boxWidth = t.boxWidth,
-      s = _t$boxWidth === void 0 ? e : _t$boxWidth;
+    let {
+      boxHeight: i = e,
+      boxWidth: s = e
+    } = t;
     return t.usePointStyle && (i = Math.min(i, e), s = t.pointStyleWidth || Math.min(s, e)), {
       boxWidth: s,
       boxHeight: i,
@@ -10047,23 +10315,32 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       t.filter && (e = e.filter(e => t.filter(e, this.chart.data))), t.sort && (e = e.sort((e, i) => t.sort(e, i, this.chart.data))), this.options.reverse && e.reverse(), this.legendItems = e;
     }
     fit() {
-      const t = this.options,
-        e = this.ctx;
+      const {
+        options: t,
+        ctx: e
+      } = this;
       if (!t.display) return void (this.width = this.height = 0);
       const i = t.labels,
         s = mi(i.font),
         n = s.size,
         o = this._computeTitleHeight(),
-        _Lo = Lo(i, n),
-        a = _Lo.boxWidth,
-        r = _Lo.itemHeight;
+        {
+          boxWidth: a,
+          itemHeight: r
+        } = Lo(i, n);
       let l, h;
       e.font = s.string, this.isHorizontal() ? (l = this.maxWidth, h = this._fitRows(o, n, a, r) + 10) : (h = this.maxHeight, l = this._fitCols(o, n, a, r) + 10), this.width = Math.min(l, t.maxWidth || this.maxWidth), this.height = Math.min(h, t.maxHeight || this.maxHeight);
     }
     _fitRows(t, e, i, s) {
-      const n = this.ctx,
-        o = this.maxWidth,
-        a = this.options.labels.padding,
+      const {
+          ctx: n,
+          maxWidth: o,
+          options: {
+            labels: {
+              padding: a
+            }
+          }
+        } = this,
         r = this.legendHitBoxes = [],
         l = this.lineWidths = [0],
         h = s + a;
@@ -10083,9 +10360,15 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }), c;
     }
     _fitCols(t, e, i, s) {
-      const n = this.ctx,
-        o = this.maxHeight,
-        a = this.options.labels.padding,
+      const {
+          ctx: n,
+          maxHeight: o,
+          options: {
+            labels: {
+              padding: a
+            }
+          }
+        } = this,
         r = this.legendHitBoxes = [],
         l = this.columnSizes = [],
         h = o - t;
@@ -10114,11 +10397,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     adjustHitBoxes() {
       if (!this.options.display) return;
       const t = this._computeTitleHeight(),
-        e = this.legendHitBoxes,
-        _this$options12 = this.options,
-        i = _this$options12.align,
-        s = _this$options12.labels.padding,
-        n = _this$options12.rtl,
+        {
+          legendHitBoxes: e,
+          options: {
+            align: i,
+            labels: {
+              padding: s
+            },
+            rtl: n
+          }
+        } = this,
         o = yi(n, this.left, this.width);
       if (this.isHorizontal()) {
         let n = 0,
@@ -10140,25 +10428,32 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
     }
     _draw() {
-      const t = this.options,
-        e = this.columnSizes,
-        i = this.lineWidths,
-        s = this.ctx,
-        n = t.align,
-        o = t.labels,
+      const {
+          options: t,
+          columnSizes: e,
+          lineWidths: i,
+          ctx: s
+        } = this,
+        {
+          align: n,
+          labels: o
+        } = t,
         a = ne.color,
         l = yi(t.rtl, this.left, this.width),
         h = mi(o.font),
-        c = o.color,
-        d = o.padding,
+        {
+          color: c,
+          padding: d
+        } = o,
         u = h.size,
         f = u / 2;
       let g;
       this.drawTitle(), s.textAlign = l.textAlign("left"), s.textBaseline = "middle", s.lineWidth = .5, s.font = h.string;
-      const _Lo2 = Lo(o, u),
-        p = _Lo2.boxWidth,
-        m = _Lo2.boxHeight,
-        b = _Lo2.itemHeight,
+      const {
+          boxWidth: p,
+          boxHeight: m,
+          itemHeight: b
+        } = Lo(o, u),
         x = this.isHorizontal(),
         _ = this._computeTitleHeight();
       g = x ? {
@@ -10306,11 +10601,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         padding: 10,
         generateLabels(t) {
           const e = t.data.datasets,
-            _t$legend$options$lab = t.legend.options.labels,
-            i = _t$legend$options$lab.usePointStyle,
-            s = _t$legend$options$lab.pointStyle,
-            n = _t$legend$options$lab.textAlign,
-            o = _t$legend$options$lab.color;
+            {
+              labels: {
+                usePointStyle: i,
+                pointStyle: s,
+                textAlign: n,
+                color: o
+              }
+            } = t.legend.options;
           return t._getSortedDatasetMetas().map(t => {
             const a = t.controller.getStyle(i ? 0 : void 0),
               r = pi(a.borderWidth);
@@ -10366,11 +10664,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return "top" === t || "bottom" === t;
     }
     _drawArgs(t) {
-      const e = this.top,
-        i = this.left,
-        s = this.bottom,
-        n = this.right,
-        o = this.options,
+      const {
+          top: e,
+          left: i,
+          bottom: s,
+          right: n,
+          options: o
+        } = this,
         a = o.align;
       let r,
         l,
@@ -10389,11 +10689,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       if (!e.display) return;
       const i = mi(e.font),
         s = i.lineHeight / 2 + this._padding.top,
-        _this$_drawArgs = this._drawArgs(s),
-        n = _this$_drawArgs.titleX,
-        o = _this$_drawArgs.titleY,
-        a = _this$_drawArgs.maxWidth,
-        r = _this$_drawArgs.rotation;
+        {
+          titleX: n,
+          titleY: o,
+          maxWidth: a,
+          rotation: r
+        } = this._drawArgs(s);
       Ae(t, e.text, 0, 0, i, {
         color: e.color,
         maxWidth: a,
@@ -10535,13 +10836,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     return ("string" == typeof t || t instanceof String) && t.indexOf("\n") > -1 ? t.split("\n") : t;
   }
   function jo(t, e) {
-    const i = e.element,
-      s = e.datasetIndex,
-      n = e.index,
+    const {
+        element: i,
+        datasetIndex: s,
+        index: n
+      } = e,
       o = t.getDatasetMeta(s).controller,
-      _o$getLabelAndValue = o.getLabelAndValue(n),
-      a = _o$getLabelAndValue.label,
-      r = _o$getLabelAndValue.value;
+      {
+        label: a,
+        value: r
+      } = o.getLabelAndValue(n);
     return {
       chart: t,
       label: a,
@@ -10556,11 +10860,15 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   }
   function Ho(t, e) {
     const i = t.chart.ctx,
-      s = t.body,
-      n = t.footer,
-      o = t.title,
-      a = e.boxWidth,
-      r = e.boxHeight,
+      {
+        body: s,
+        footer: n,
+        title: o
+      } = t,
+      {
+        boxWidth: a,
+        boxHeight: r
+      } = e,
       l = mi(e.bodyFont),
       h = mi(e.titleFont),
       c = mi(e.footerFont),
@@ -10587,24 +10895,33 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     };
   }
   function $o(t, e, i, s) {
-    const n = i.x,
-      o = i.width,
-      a = t.width,
-      _t$chartArea = t.chartArea,
-      r = _t$chartArea.left,
-      l = _t$chartArea.right;
+    const {
+        x: n,
+        width: o
+      } = i,
+      {
+        width: a,
+        chartArea: {
+          left: r,
+          right: l
+        }
+      } = t;
     let h = "center";
     return "center" === s ? h = n <= (r + l) / 2 ? "left" : "right" : n <= o / 2 ? h = "left" : n >= a - o / 2 && (h = "right"), function (t, e, i, s) {
-      const n = s.x,
-        o = s.width,
+      const {
+          x: n,
+          width: o
+        } = s,
         a = i.caretSize + i.caretPadding;
       return "left" === t && n + o + a > e.width || "right" === t && n - o - a < 0 || void 0;
     }(h, t, e, i) && (h = "center"), h;
   }
   function Yo(t, e, i) {
     const s = i.yAlign || e.yAlign || function (t, e) {
-      const i = e.y,
-        s = e.height;
+      const {
+        y: i,
+        height: s
+      } = e;
       return i < s / 2 ? "top" : i > t.height - s / 2 ? "bottom" : "center";
     }(t, i);
     return {
@@ -10613,25 +10930,34 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     };
   }
   function Uo(t, e, i, s) {
-    const n = t.caretSize,
-      o = t.caretPadding,
-      a = t.cornerRadius,
-      r = i.xAlign,
-      l = i.yAlign,
+    const {
+        caretSize: n,
+        caretPadding: o,
+        cornerRadius: a
+      } = t,
+      {
+        xAlign: r,
+        yAlign: l
+      } = i,
       h = n + o,
-      _gi = gi(a),
-      c = _gi.topLeft,
-      d = _gi.topRight,
-      u = _gi.bottomLeft,
-      f = _gi.bottomRight;
+      {
+        topLeft: c,
+        topRight: d,
+        bottomLeft: u,
+        bottomRight: f
+      } = gi(a);
     let g = function (t, e) {
-      let i = t.x,
-        s = t.width;
+      let {
+        x: i,
+        width: s
+      } = t;
       return "right" === e ? i -= s : "center" === e && (i -= s / 2), i;
     }(e, r);
     const p = function (t, e, i) {
-      let s = t.y,
-        n = t.height;
+      let {
+        y: s,
+        height: n
+      } = t;
       return "top" === e ? s += i : s -= "bottom" === e ? n + i : n / 2, s;
     }(e, l, h);
     return "center" === l ? "left" === r ? g += h : "right" === r && (g -= h) : "left" === r ? g -= Math.max(c, u) + n : "right" === r && (g += Math.max(d, f) + n), {
@@ -10675,7 +11001,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var t, e, i;
     }
     getTitle(t, e) {
-      const i = e.callbacks,
+      const {
+          callbacks: i
+        } = e,
         s = i.beforeTitle.apply(this, [t]),
         n = i.title.apply(this, [t]),
         o = i.afterTitle.apply(this, [t]);
@@ -10686,7 +11014,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return qo(e.callbacks.beforeBody.apply(this, [t]));
     }
     getBody(t, e) {
-      const i = e.callbacks,
+      const {
+          callbacks: i
+        } = e,
         s = [];
       return d(t, t => {
         const e = {
@@ -10702,7 +11032,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return qo(e.callbacks.afterBody.apply(this, [t]));
     }
     getFooter(t, e) {
-      const i = e.callbacks,
+      const {
+          callbacks: i
+        } = e,
         s = i.beforeFooter.apply(this, [t]),
         n = i.footer.apply(this, [t]),
         o = i.afterFooter.apply(this, [t]);
@@ -10759,19 +11091,28 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       e.lineTo(n.x1, n.y1), e.lineTo(n.x2, n.y2), e.lineTo(n.x3, n.y3);
     }
     getCaretPosition(t, e, i) {
-      const s = this.xAlign,
-        n = this.yAlign,
-        o = i.caretSize,
-        a = i.cornerRadius,
-        _gi2 = gi(a),
-        r = _gi2.topLeft,
-        l = _gi2.topRight,
-        h = _gi2.bottomLeft,
-        c = _gi2.bottomRight,
-        d = t.x,
-        u = t.y,
-        f = e.width,
-        g = e.height;
+      const {
+          xAlign: s,
+          yAlign: n
+        } = this,
+        {
+          caretSize: o,
+          cornerRadius: a
+        } = i,
+        {
+          topLeft: r,
+          topRight: l,
+          bottomLeft: h,
+          bottomRight: c
+        } = gi(a),
+        {
+          x: d,
+          y: u
+        } = t,
+        {
+          width: f,
+          height: g
+        } = e;
       let p, m, b, x, _, y;
       return "center" === n ? (_ = u + g / 2, "left" === s ? (p = d, m = p - o, x = _ + o, y = _ - o) : (p = d + f, m = p + o, x = _ - o, y = _ + o), b = p) : (m = "left" === s ? d + Math.max(r, h) + o : "right" === s ? d + f - Math.max(l, c) - o : this.caretX, "top" === n ? (x = u, _ = x - o, p = m - o, b = m + o) : (x = u + g, _ = x + o, p = m + o, b = m - o), y = x), {
         x1: p,
@@ -10794,9 +11135,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     _drawColorBox(t, e, i, s, o) {
       const a = this.labelColors[i],
         r = this.labelPointStyles[i],
-        l = o.boxHeight,
-        h = o.boxWidth,
-        c = o.boxPadding,
+        {
+          boxHeight: l,
+          boxWidth: h,
+          boxPadding: c
+        } = o,
         d = mi(o.bodyFont),
         u = Xo(this, "left", o),
         f = s.x(u),
@@ -10834,13 +11177,17 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       t.fillStyle = this.labelTextColors[i];
     }
     drawBody(t, e, i) {
-      const s = this.body,
-        n = i.bodySpacing,
-        o = i.bodyAlign,
-        a = i.displayColors,
-        r = i.boxHeight,
-        l = i.boxWidth,
-        h = i.boxPadding,
+      const {
+          body: s
+        } = this,
+        {
+          bodySpacing: n,
+          bodyAlign: o,
+          displayColors: a,
+          boxHeight: r,
+          boxWidth: l,
+          boxPadding: h
+        } = i,
         c = mi(i.bodyFont);
       let u = c.lineHeight,
         f = 0;
@@ -10866,17 +11213,24 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
     }
     drawBackground(t, e, i, s) {
-      const n = this.xAlign,
-        o = this.yAlign,
-        a = t.x,
-        r = t.y,
-        l = i.width,
-        h = i.height,
-        _gi3 = gi(s.cornerRadius),
-        c = _gi3.topLeft,
-        d = _gi3.topRight,
-        u = _gi3.bottomLeft,
-        f = _gi3.bottomRight;
+      const {
+          xAlign: n,
+          yAlign: o
+        } = this,
+        {
+          x: a,
+          y: r
+        } = t,
+        {
+          width: l,
+          height: h
+        } = i,
+        {
+          topLeft: c,
+          topRight: d,
+          bottomLeft: u,
+          bottomRight: f
+        } = gi(s.cornerRadius);
       e.fillStyle = s.backgroundColor, e.strokeStyle = s.borderColor, e.lineWidth = s.borderWidth, e.beginPath(), e.moveTo(a + c, r), "top" === o && this.drawCaret(t, e, i, s), e.lineTo(a + l - d, r), e.quadraticCurveTo(a + l, r, a + l, r + d), "center" === o && "right" === n && this.drawCaret(t, e, i, s), e.lineTo(a + l, r + h - f), e.quadraticCurveTo(a + l, r + h, a + l - f, r + h), "bottom" === o && this.drawCaret(t, e, i, s), e.lineTo(a + u, r + h), e.quadraticCurveTo(a, r + h, a, r + h - u), "center" === o && "left" === n && this.drawCaret(t, e, i, s), e.lineTo(a, r + c), e.quadraticCurveTo(a, r, a + c, r), e.closePath(), e.fill(), s.borderWidth > 0 && e.stroke();
     }
     _updateAnimationTarget(t) {
@@ -10920,9 +11274,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
     setActiveElements(t, e) {
       const i = this._active,
-        s = t.map(_ref22 => {
-          let t = _ref22.datasetIndex,
-            e = _ref22.index;
+        s = t.map(_ref7 => {
+          let {
+            datasetIndex: t,
+            index: e
+          } = _ref7;
           const i = this.chart.getDatasetMeta(t);
           if (!i) throw new Error("Cannot find a dataset at index " + t);
           return {
@@ -10957,9 +11313,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return n.reverse && o.reverse(), o;
     }
     _positionChanged(t, e) {
-      const i = this.caretX,
-        s = this.caretY,
-        n = this.options,
+      const {
+          caretX: i,
+          caretY: s,
+          options: n
+        } = this,
         o = Bo[n.position].call(this, t, e);
       return !1 !== o && (i !== o.x || s !== o.y);
     }
@@ -11142,11 +11500,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       const e = this._addedLabels;
       if (e.length) {
         const t = this.getLabels();
-        for (const _ref23 of e) {
-          const i = _ref23.index;
-          const s = _ref23.label;
-          t[i] === s && t.splice(i, 1);
-        }
+        for (const {
+          index: i,
+          label: s
+        } of e) t[i] === s && t.splice(i, 1);
         this._addedLabels = [];
       }
       super.init(t);
@@ -11157,12 +11514,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return ((t, e) => null === t ? null : Z(Math.round(t), 0, e))(e = isFinite(e) && s[e] === t ? e : Qo(s, t, r(e, t), this._addedLabels), s.length - 1);
     }
     determineDataLimits() {
-      const _this$getUserBounds2 = this.getUserBounds(),
-        t = _this$getUserBounds2.minDefined,
-        e = _this$getUserBounds2.maxDefined;
-      let _this$getMinMax = this.getMinMax(!0),
-        i = _this$getMinMax.min,
-        s = _this$getMinMax.max;
+      const {
+        minDefined: t,
+        maxDefined: e
+      } = this.getUserBounds();
+      let {
+        min: i,
+        max: s
+      } = this.getMinMax(!0);
       "ticks" === this.options.bounds && (t || (i = 0), e || (s = this.getLabels().length - 1)), this.min = i, this.max = s;
     }
     buildTicks() {
@@ -11198,9 +11557,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return this.bottom;
     }
   }
-  function ea(t, e, _ref24) {
-    let i = _ref24.horizontal,
-      s = _ref24.minRotation;
+  function ea(t, e, _ref8) {
+    let {
+      horizontal: i,
+      minRotation: s
+    } = _ref8;
     const n = H(s),
       o = (i ? Math.sin(n) : Math.cos(n)) || .001,
       a = .75 * e * ("" + t).length;
@@ -11219,12 +11580,17 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return i(t) || ("number" == typeof t || t instanceof Number) && !isFinite(+t) ? null : +t;
     }
     handleTickRangeOptions() {
-      const t = this.options.beginAtZero,
-        _this$getUserBounds3 = this.getUserBounds(),
-        e = _this$getUserBounds3.minDefined,
-        i = _this$getUserBounds3.maxDefined;
-      let s = this.min,
-        n = this.max;
+      const {
+          beginAtZero: t
+        } = this.options,
+        {
+          minDefined: e,
+          maxDefined: i
+        } = this.getUserBounds();
+      let {
+        min: s,
+        max: n
+      } = this;
       const o = t => s = e ? s : t,
         a = t => n = i ? n : t;
       if (t) {
@@ -11241,8 +11607,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     getTickLimit() {
       const t = this.options.ticks;
       let e,
-        i = t.maxTicksLimit,
-        s = t.stepSize;
+        {
+          maxTicksLimit: i,
+          stepSize: s
+        } = t;
       return s ? (e = Math.ceil(this.max / s) - Math.floor(this.min / s) + 1, e > 1e3 && (console.warn("scales.".concat(this.id, ".ticks.stepSize: ").concat(s, " would result generating up to ").concat(e, " ticks. Limiting to 1000.")), e = 1e3)) : (e = this.computeTickLimit(), i = i || 11), i && (e = Math.min(i, e)), e;
     }
     computeTickLimit() {
@@ -11255,19 +11623,23 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       s = Math.max(2, s);
       const n = function (t, e) {
         const s = [],
-          n = t.bounds,
-          o = t.step,
-          a = t.min,
-          r = t.max,
-          l = t.precision,
-          h = t.count,
-          c = t.maxTicks,
-          d = t.maxDigits,
-          u = t.includeBounds,
+          {
+            bounds: n,
+            step: o,
+            min: a,
+            max: r,
+            precision: l,
+            count: h,
+            maxTicks: c,
+            maxDigits: d,
+            includeBounds: u
+          } = t,
           f = o || 1,
           g = c - 1,
-          p = e.min,
-          m = e.max,
+          {
+            min: p,
+            max: m
+          } = e,
           b = !i(a),
           x = !i(r),
           _ = !i(h),
@@ -11327,9 +11699,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   }
   class sa extends ia {
     determineDataLimits() {
-      const _this$getMinMax2 = this.getMinMax(!0),
-        t = _this$getMinMax2.min,
-        e = _this$getMinMax2.max;
+      const {
+        min: t,
+        max: e
+      } = this.getMinMax(!0);
       this.min = o(t) ? t : 0, this.max = o(e) ? e : 1, this.handleTickRangeOptions();
     }
     computeTickLimit() {
@@ -11365,15 +11738,17 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this._zero = !0;
     }
     determineDataLimits() {
-      const _this$getMinMax3 = this.getMinMax(!0),
-        t = _this$getMinMax3.min,
-        e = _this$getMinMax3.max;
+      const {
+        min: t,
+        max: e
+      } = this.getMinMax(!0);
       this.min = o(t) ? Math.max(0, t) : null, this.max = o(e) ? Math.max(0, e) : null, this.options.beginAtZero && (this._zero = !0), this.handleTickRangeOptions();
     }
     handleTickRangeOptions() {
-      const _this$getUserBounds4 = this.getUserBounds(),
-        t = _this$getUserBounds4.minDefined,
-        e = _this$getUserBounds4.maxDefined;
+      const {
+        minDefined: t,
+        maxDefined: e
+      } = this.getUserBounds();
       let i = this.min,
         s = this.max;
       const n = e => i = t ? i : e,
@@ -11515,7 +11890,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     return 90 === i || 270 === i ? t -= e / 2 : (i > 270 || i < 90) && (t -= e), t;
   }
   function fa(t, e, i, s) {
-    const n = t.ctx;
+    const {
+      ctx: n
+    } = t;
     if (i) n.arc(t.xCenter, t.yCenter, e, 0, O);else {
       let i = t.getPointPosition(0, e);
       n.moveTo(i.x, i.y);
@@ -11541,9 +11918,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.xCenter = Math.floor(this.left + e / 2 + t.left), this.yCenter = Math.floor(this.top + i / 2 + t.top), this.drawingArea = Math.floor(Math.min(e, i) / 2);
     }
     determineDataLimits() {
-      const _this$getMinMax4 = this.getMinMax(!1),
-        t = _this$getMinMax4.min,
-        e = _this$getMinMax4.max;
+      const {
+        min: t,
+        max: e
+      } = this.getMinMax(!1);
       this.min = o(t) && !isNaN(t) ? t : 0, this.max = o(e) && !isNaN(e) ? e : 0, this.handleTickRangeOptions();
     }
     computeTickLimit() {
@@ -11604,11 +11982,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return this.getPointPositionForValue(t || 0, this.getBaseValue());
     }
     getPointLabelPosition(t) {
-      const _this$_pointLabelItem = this._pointLabelItems[t],
-        e = _this$_pointLabelItem.left,
-        i = _this$_pointLabelItem.top,
-        s = _this$_pointLabelItem.right,
-        n = _this$_pointLabelItem.bottom;
+      const {
+        left: e,
+        top: i,
+        right: s,
+        bottom: n
+      } = this._pointLabelItems[t];
       return {
         left: e,
         top: i,
@@ -11617,9 +11996,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       };
     }
     drawBackground() {
-      const _this$options13 = this.options,
-        t = _this$options13.backgroundColor,
-        e = _this$options13.grid.circular;
+      const {
+        backgroundColor: t,
+        grid: {
+          circular: e
+        }
+      } = this.options;
       if (t) {
         const i = this.ctx;
         i.save(), i.beginPath(), fa(this, this.getDistanceFromCenterForValue(this._endValue), e, this._pointLabels.length), i.closePath(), i.fillStyle = t, i.fill(), i.restore();
@@ -11628,25 +12010,34 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     drawGrid() {
       const t = this.ctx,
         e = this.options,
-        s = e.angleLines,
-        n = e.grid,
+        {
+          angleLines: s,
+          grid: n
+        } = e,
         o = this._pointLabels.length;
       let a, r, l;
       if (e.pointLabels.display && function (t, e) {
-        const s = t.ctx,
-          n = t.options.pointLabels;
+        const {
+          ctx: s,
+          options: {
+            pointLabels: n
+          }
+        } = t;
         for (let o = e - 1; o >= 0; o--) {
           const e = n.setContext(t.getPointLabelContext(o)),
             a = mi(e.font),
-            _t$_pointLabelItems$o = t._pointLabelItems[o],
-            r = _t$_pointLabelItems$o.x,
-            l = _t$_pointLabelItems$o.y,
-            h = _t$_pointLabelItems$o.textAlign,
-            c = _t$_pointLabelItems$o.left,
-            d = _t$_pointLabelItems$o.top,
-            u = _t$_pointLabelItems$o.right,
-            f = _t$_pointLabelItems$o.bottom,
-            g = e.backdropColor;
+            {
+              x: r,
+              y: l,
+              textAlign: h,
+              left: c,
+              top: d,
+              right: u,
+              bottom: f
+            } = t._pointLabelItems[o],
+            {
+              backdropColor: g
+            } = e;
           if (!i(g)) {
             const t = gi(e.borderRadius),
               i = pi(e.backdropPadding);
@@ -11675,16 +12066,20 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           !function (t, e, i, s) {
             const n = t.ctx,
               o = e.circular,
-              a = e.color,
-              r = e.lineWidth;
+              {
+                color: a,
+                lineWidth: r
+              } = e;
             !o && !s || !a || !r || i < 0 || (n.save(), n.strokeStyle = a, n.lineWidth = r, n.setLineDash(e.borderDash), n.lineDashOffset = e.borderDashOffset, n.beginPath(), fa(t, i, o, s), n.closePath(), n.stroke(), n.restore());
           }(this, n.setContext(this.getContext(e - 1)), r, o);
         }
       }), s.display) {
         for (t.save(), a = o - 1; a >= 0; a--) {
           const i = s.setContext(this.getPointLabelContext(a)),
-            n = i.color,
-            o = i.lineWidth;
+            {
+              color: n,
+              lineWidth: o
+            } = i;
           o && n && (t.lineWidth = o, t.strokeStyle = n, t.setLineDash(i.borderDash), t.lineDashOffset = i.borderDashOffset, r = this.getDistanceFromCenterForValue(e.ticks.reverse ? this.min : this.max), l = this.getPointPosition(a, r), t.beginPath(), t.moveTo(this.xCenter, this.yCenter), t.lineTo(l.x, l.y), t.stroke());
         }
         t.restore();
@@ -11805,10 +12200,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   function xa(t, e) {
     if (i(e)) return null;
     const s = t._adapter,
-      _t$_parseOpts = t._parseOpts,
-      n = _t$_parseOpts.parser,
-      a = _t$_parseOpts.round,
-      r = _t$_parseOpts.isoWeekday;
+      {
+        parser: n,
+        round: a,
+        isoWeekday: r
+      } = t._parseOpts;
     let l = e;
     return "function" == typeof n && (l = n(l)), o(l) || (l = "string" == typeof n ? s.parse(l, n) : s.parse(l)), null === l ? null : (a && (l = "week" !== a || !B(r) && !0 !== r ? s.startOf(l, a) : s.startOf(l, "isoWeek", r)), +l);
   }
@@ -11824,9 +12220,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   function ya(t, e, i) {
     if (i) {
       if (i.length) {
-        const _tt = tt(i, e),
-          s = _tt.lo,
-          n = _tt.hi;
+        const {
+          lo: s,
+          hi: n
+        } = tt(i, e);
         t[i[s] >= e ? i[s] : i[n]] = !0;
       }
     } else t[e] = !0;
@@ -11880,11 +12277,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       const t = this.options,
         e = this._adapter,
         i = t.time.unit || "day";
-      let _this$getUserBounds5 = this.getUserBounds(),
-        s = _this$getUserBounds5.min,
-        n = _this$getUserBounds5.max,
-        a = _this$getUserBounds5.minDefined,
-        r = _this$getUserBounds5.maxDefined;
+      let {
+        min: s,
+        max: n,
+        minDefined: a,
+        maxDefined: r
+      } = this.getUserBounds();
       function l(t) {
         a || isNaN(t.min) || (s = Math.min(s, t.min)), r || isNaN(t.max) || (n = Math.max(n, t.max));
       }
@@ -12031,14 +12429,31 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
   }
   function Ma(t, e, i) {
-    var _et, _t$r, _t$l, _et2, _t$r2, _t$l2;
     let s,
       n,
       o,
       a,
       r = 0,
       l = t.length - 1;
-    i ? (e >= t[r].pos && e <= t[l].pos && (_et = et(t, "pos", e), r = _et.lo, l = _et.hi, _et), _t$r = t[r], s = _t$r.pos, o = _t$r.time, _t$l = t[l], n = _t$l.pos, a = _t$l.time) : (e >= t[r].time && e <= t[l].time && (_et2 = et(t, "time", e), r = _et2.lo, l = _et2.hi, _et2), _t$r2 = t[r], s = _t$r2.time, o = _t$r2.pos, _t$l2 = t[l], n = _t$l2.time, a = _t$l2.pos);
+    i ? (e >= t[r].pos && e <= t[l].pos && ({
+      lo: r,
+      hi: l
+    } = et(t, "pos", e)), {
+      pos: s,
+      time: o
+    } = t[r], {
+      pos: n,
+      time: a
+    } = t[l]) : (e >= t[r].time && e <= t[l].time && ({
+      lo: r,
+      hi: l
+    } = et(t, "time", e)), {
+      time: s,
+      pos: o
+    } = t[r], {
+      time: n,
+      pos: a
+    } = t[l]);
     const h = n - s;
     return h ? o + (a - o) * (e - s) / h : o;
   }
@@ -12070,8 +12485,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this._minPos = Ma(e, this.min), this._tableRange = Ma(e, this.max) - this._minPos, super.initOffsets(t);
     }
     buildLookupTable(t) {
-      const e = this.min,
-        i = this.max,
+      const {
+          min: e,
+          max: i
+        } = this,
         s = [],
         n = [];
       let o, a, r, l, h;

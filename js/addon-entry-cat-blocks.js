@@ -34,8 +34,10 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console;
+  let {
+    addon,
+    console
+  } = _ref;
   const Blockly = await addon.tab.traps.getBlockly();
   const shouldWatchMouseCursor = addon.settings.get("watch");
   Blockly.BlockSvg.prototype.CAT_BLOCKS = true;

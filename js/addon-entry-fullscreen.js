@@ -148,8 +148,10 @@ __webpack_require__.r(__webpack_exports__);
  * and for hiding the scrollbar in full screen.
  */
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console;
+  let {
+    addon,
+    console
+  } = _ref;
   const vm = addon.tab.traps.vm;
   const updateStageSize = () => {
     document.documentElement.style.setProperty('--sa-fullscreen-width', vm.runtime.stageWidth);

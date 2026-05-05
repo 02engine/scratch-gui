@@ -66,16 +66,12 @@ const resources = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg;
+  let {
+    addon,
+    console,
+    msg
+  } = _ref;
   const vm = addon.tab.traps.vm;
 
   // 等待 Blockly 加载
@@ -144,10 +140,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     const content = getCommentContent(commentEl);
 
     // 遍历 VM 中的所有注释，通过内容匹配
-    for (const _ref2 of Object.entries(target.comments)) {
-      var _ref3 = _slicedToArray(_ref2, 2);
-      const id = _ref3[0];
-      const comment = _ref3[1];
+    for (const [id, comment] of Object.entries(target.comments)) {
       if (comment.text === content) {
         return id;
       }
@@ -360,14 +353,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     if (!detail || detail.type !== 'comment' || detail.action !== 'update') {
       return;
     }
-    const commentId = detail.commentId,
-      content = detail.content;
+    const {
+      commentId,
+      content
+    } = detail;
 
     // 查找对应的注释元素
-    for (const _ref4 of processedComments.entries()) {
-      var _ref5 = _slicedToArray(_ref4, 2);
-      const commentEl = _ref5[0];
-      const data = _ref5[1];
+    for (const [commentEl, data] of processedComments.entries()) {
       if (data.commentId === commentId) {
         // 更新注释内容
         setCommentContent(commentEl, content);
@@ -383,9 +375,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   function cleanupRemovedComments() {
     const commentElements = document.querySelectorAll('.blocklyBubbleCanvas > g');
     const currentElements = new Set(commentElements);
-    for (const _ref6 of processedComments) {
-      var _ref7 = _slicedToArray(_ref6, 1);
-      const commentEl = _ref7[0];
+    for (const [commentEl] of processedComments) {
       if (!currentElements.has(commentEl) || !document.contains(commentEl)) {
         processedComments.delete(commentEl);
       }
@@ -397,10 +387,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
    */
   function updateButtonStates() {
     checkConnection();
-    for (const _ref8 of processedComments) {
-      var _ref9 = _slicedToArray(_ref8, 2);
-      const commentEl = _ref9[0];
-      const data = _ref9[1];
+    for (const [commentEl, data] of processedComments) {
       const button = data.button;
       if (!button) continue;
       if (isConnected) {
@@ -464,10 +451,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   // 插件禁用时清理
   addon.self.addEventListener('disabled', () => {
     observer.disconnect();
-    for (const _ref0 of processedComments) {
-      var _ref1 = _slicedToArray(_ref0, 2);
-      const commentEl = _ref1[0];
-      const data = _ref1[1];
+    for (const [commentEl, data] of processedComments) {
       if (data.button) {
         data.button.remove();
       }

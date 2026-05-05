@@ -54,9 +54,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _libraries_common_cs_download_blob_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../libraries/common/cs/download-blob.js */ "./src/addons/libraries/common/cs/download-blob.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async _ref => {
-  let addon = _ref.addon,
-    console = _ref.console,
-    msg = _ref.msg;
+  let {
+    addon,
+    console,
+    msg
+  } = _ref;
   let recordElem;
   let isRecording = false;
   let isWaitingForFlag = false;
@@ -81,15 +83,16 @@ __webpack_require__.r(__webpack_exports__);
       reduxEvents: ["scratch-gui/mode/SET_PLAYER", "fontsLoaded/SET_FONTS_LOADED", "scratch-gui/locales/SELECT_LOCALE"]
     });
     const getOptions = () => {
-      const _addon$tab$createModa = addon.tab.createModal(msg("option-title"), {
-          isOpen: true,
-          useEditorClasses: true
-        }),
-        backdrop = _addon$tab$createModa.backdrop,
-        container = _addon$tab$createModa.container,
-        content = _addon$tab$createModa.content,
-        closeButton = _addon$tab$createModa.closeButton,
-        remove = _addon$tab$createModa.remove;
+      const {
+        backdrop,
+        container,
+        content,
+        closeButton,
+        remove
+      } = addon.tab.createModal(msg("option-title"), {
+        isOpen: true,
+        useEditorClasses: true
+      });
       container.classList.add("mediaRecorderPopup");
       content.classList.add("mediaRecorderPopupContent");
       content.appendChild(Object.assign(document.createElement("p"), {

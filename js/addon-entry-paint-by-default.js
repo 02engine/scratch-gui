@@ -29,8 +29,10 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let addon = _ref.addon,
-    console = _ref.console;
+  let {
+    addon,
+    console
+  } = _ref;
   const spriteMeta = Object.assign(Object.create(null), {
     upload: {
       index: 0,
@@ -134,8 +136,9 @@ __webpack_require__.r(__webpack_exports__);
     e.stopPropagation();
     const moreButtonsElement = mainButton.parentElement.querySelector('[class*="action-menu_more-buttons_"]');
     const moreButtons = moreButtonsElement.children;
-    const _getButtonToClick = getButtonToClick(mainButton),
-      index = _getButtonToClick.index;
+    const {
+      index
+    } = getButtonToClick(mainButton);
     // better-img-uploads can add a button at the start, so search "from the end" for compatibility
     const buttonToClick = moreButtons[moreButtons.length - (4 - index)];
     const elementToClick = buttonToClick.querySelector("button");
@@ -149,8 +152,9 @@ __webpack_require__.r(__webpack_exports__);
       return;
     }
     const tooltipElement = mainButton.parentElement.querySelector(".__react_component_tooltip");
-    const _getButtonToClick2 = getButtonToClick(mainButton),
-      tooltip = _getButtonToClick2.tooltip;
+    const {
+      tooltip
+    } = getButtonToClick(mainButton);
     const translatedTooltip = addon.tab.redux.state.locales.messages[tooltip];
     const needToFixTooltipText = translatedTooltip && tooltipElement.textContent !== translatedTooltip;
     if (needToFixTooltipText) {
