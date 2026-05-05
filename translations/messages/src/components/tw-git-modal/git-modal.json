@@ -111,7 +111,7 @@
   },
   {
     "id": "tw.gitModal.push",
-    "defaultMessage": "Push"
+    "defaultMessage": "Pull / Push"
   },
   {
     "id": "tw.gitModal.authHelp",
@@ -120,6 +120,10 @@
   {
     "id": "tw.gitModal.disableCorsProxy",
     "defaultMessage": "Disable CORS proxy"
+  },
+  {
+    "id": "tw.gitModal.pullButton",
+    "defaultMessage": "Pull"
   },
   {
     "id": "tw.gitModal.pushButton",

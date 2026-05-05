@@ -14,6 +14,7 @@ import {
     projectError
 } from '../reducers/project-state';
 import log from './log';
+import {restoreGitDataFromSb3} from './git/sb3-git-data.js';
 
 /**
  * List of fonts that could be used by security prompts.
@@ -79,6 +80,7 @@ const vmManagerHOC = function (WrappedComponent) {
             // 这里不需要手动清理，避免干扰SB3的自动恢复机制
 
             return this.props.vm.loadProject(this.props.projectData)
+                .then(() => restoreGitDataFromSb3(this.props.projectData))
                 .then(() => {
                     this.props.onLoadedProject(this.props.loadingState, this.props.canSave);
                     // Wrap in a setTimeout because skin loading in

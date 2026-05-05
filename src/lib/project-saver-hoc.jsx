@@ -9,6 +9,7 @@ import log from '../lib/log';
 import storage from '../lib/storage';
 import dataURItoBlob from '../lib/data-uri-to-blob';
 import saveProjectToServer from '../lib/save-project-to-server';
+import {exportRepoToGitJsonString} from './git/browser-git.js';
 
 import {
     showAlertWithTimeout,
@@ -227,29 +228,19 @@ const ProjectSaverHOC = function (WrappedComponent) {
             // we just finished saving).
             const savedVMState = this.props.vm.toJSON();
 
-            // 确保Git数据被保存到项目元数据中
-            if (this.props.vm && this.props.vm.runtime && this.props.vm.runtime.platform && this.props.vm.runtime.platform.git) {
-                const gitData = this.props.vm.runtime.platform.git;
-                console.log('💾 [Git] Saving Git data to project metadata:', gitData);
+            const attachGitData = () => exportRepoToGitJsonString()
+                .then(gitJsonString => {
+                    if (!gitJsonString) return;
+                    savedVMState.meta = savedVMState.meta || {};
+                    savedVMState.meta.platform = savedVMState.meta.platform || {};
+                    savedVMState.meta.platform.git = JSON.parse(gitJsonString);
+                    delete savedVMState.meta.platform.mwGit;
+                })
+                .catch(() => {
+                    // Git metadata is optional for normal project saving.
+                });
 
-                // 如果VM状态中已经有meta.platform.git，确保它是最新的
-                if (savedVMState.meta) {
-                    if (!savedVMState.meta.platform) {
-                        savedVMState.meta.platform = {};
-                    }
-                    savedVMState.meta.platform.git = {
-                        repository: gitData.repository || null,
-                        lastCommit: gitData.lastCommit || null,
-                        lastFetch: gitData.lastFetch || null
-                    };
-                    console.log('✅ [Git] Git data embedded in project metadata:', savedVMState.meta.platform.git);
-                } else {
-                    console.warn('⚠️ [Git] VM state has no meta field, cannot embed Git data');
-                }
-            } else {
-                console.log('ℹ️ [Git] No Git data to save in project metadata');
-            }
-            return Promise.all(this.props.vm.assets
+            return attachGitData().then(() => Promise.all(this.props.vm.assets
                 .filter(asset => !asset.clean)
                 .map(
                     asset => storage.store(
@@ -266,7 +257,7 @@ const ProjectSaverHOC = function (WrappedComponent) {
                         asset.clean = true;
                     })
                 )
-            )
+            ))
                 .then(() => this.props.onUpdateProjectData(projectId, savedVMState, requestParams))
                 .then(response => {
                     this.props.onSetProjectUnchanged();

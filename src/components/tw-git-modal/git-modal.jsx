@@ -270,11 +270,10 @@ const GitModalComponent = props => {
                                 </Box>
                             )}
 
-                            {/* 推送部分 (新功能融合) */}
-                            {props.remotes && props.remotes.length > 0 && (
-                                <Box className={styles.subSection}>
+                            {/* 推送/拉取部分 (新功能融合) */}
+                            <Box className={styles.subSection}>
                                     <Box className={styles.subSectionHeader}>
-                                        <span className={styles.subSectionTitle}><FormattedMessage defaultMessage="Push" id="tw.gitModal.push" /></span>
+                                        <span className={styles.subSectionTitle}><FormattedMessage defaultMessage="Pull / Push" id="tw.gitModal.push" /></span>
                                     </Box>
                                     <Box className={styles.authHelp}>
                                         <FormattedMessage defaultMessage="Note: GitHub requires a Personal Access Token." id="tw.gitModal.authHelp" />
@@ -298,14 +297,17 @@ const GitModalComponent = props => {
                                         </select>
                                         <select className={styles.select} value={props.pushBranch || ''} onChange={props.onChangePushBranch} disabled={props.busy}>
                                             <option value="">{props.intl.formatMessage(messages.selectBranchPlaceholder)}</option>
+                                            {props.pushBranch && props.branches.indexOf(props.pushBranch) === -1 ? <option value={props.pushBranch}>{props.pushBranch}</option> : null}
                                             {props.branches.map(b => <option key={b} value={b}>{b}</option>)}
                                         </select>
+                                        <button className={styles.button} onClick={props.onPull} disabled={props.busy || !(props.pushRemote || props.remoteUrl) || !props.pushBranch}>
+                                            <FormattedMessage defaultMessage="Pull" id="tw.gitModal.pullButton" />
+                                        </button>
                                         <button className={styles.primaryButton} onClick={props.onPush} disabled={props.busy || !props.pushRemote || !props.pushBranch}>
                                             <FormattedMessage defaultMessage="Push" id="tw.gitModal.pushButton" />
                                         </button>
                                     </Box>
                                 </Box>
-                            )}
                         </Box>
                     </React.Fragment>
                 ) : (
@@ -318,6 +320,27 @@ const GitModalComponent = props => {
                         <Box className={styles.buttonRow}>
                             <button className={styles.primaryButton} onClick={props.onInit} disabled={props.busy}>
                                 <FormattedMessage defaultMessage="Initialize" id="tw.gitModal.init" />
+                            </button>
+                        </Box>
+                        <Box className={`${styles.row} ${styles.rowWrap}`}>
+                            <input className={styles.textInput} value={props.remoteUrl || ''} onChange={props.onChangeRemoteUrl} placeholder={props.intl.formatMessage(messages.remoteUrlPlaceholder)} disabled={props.busy} />
+                            <input className={styles.textInput} value={props.pushBranch || ''} onChange={props.onChangePushBranch} placeholder="main" disabled={props.busy} />
+                        </Box>
+                        <Box className={`${styles.row} ${styles.rowWrap}`}>
+                            <input className={styles.textInput} value={props.authUsername || ''} onChange={props.onChangeAuthUsername} placeholder={props.intl.formatMessage(messages.usernamePlaceholder)} disabled={props.busy} />
+                            <input className={styles.textInput} type="password" value={props.authToken || ''} onChange={props.onChangeAuthToken} placeholder={props.intl.formatMessage(messages.tokenPlaceholder)} disabled={props.busy} />
+                        </Box>
+                        <Box className={`${styles.row} ${styles.rowWrap}`}>
+                            <div className={styles.checkboxWrapper}>
+                                <input type="checkbox" checked={props.disableCorsProxy} onChange={props.onChangeDisableCorsProxy} disabled={props.busy} id="disableCorsProxyInit" className={styles.checkboxInput} />
+                                <label htmlFor="disableCorsProxyInit" className={styles.checkboxLabel}>
+                                    <FormattedMessage defaultMessage="Disable CORS proxy" id="tw.gitModal.disableCorsProxy" />
+                                </label>
+                            </div>
+                        </Box>
+                        <Box className={styles.buttonRow}>
+                            <button className={styles.primaryButton} onClick={props.onPull} disabled={props.busy || !props.remoteUrl || !props.pushBranch}>
+                                <FormattedMessage defaultMessage="Pull" id="tw.gitModal.pullButton" />
                             </button>
                         </Box>
                     </Box>
@@ -397,6 +420,7 @@ GitModalComponent.propTypes = {
     disableCorsProxy: PropTypes.bool.isRequired,
     onAddRemote: PropTypes.func.isRequired,
     onRemoveRemote: PropTypes.func.isRequired,
+    onPull: PropTypes.func.isRequired,
     onPush: PropTypes.func.isRequired,
     onChangeRemoteName: PropTypes.func.isRequired,
     onChangeRemoteUrl: PropTypes.func.isRequired,

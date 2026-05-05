@@ -12,7 +12,6 @@ import downloadBlob from '../lib/utils/download-blob.js';
 import {
     getDefaultAuthor,
     getRepoStatus,
-    getRepoChanges,
     initRepo,
     createBranch,
     checkoutBranchAndRestore,
@@ -24,8 +23,32 @@ import {
     mergeBranchesPreview,
     mergeBranchesApply,
     restoreProjectFromCurrentRef,
-    computeCommitGraph
+    computeCommitGraph,
+    addRemote,
+    removeRemote,
+    getRemotes,
+    push,
+    pull
 } from '../lib/git/browser-git.js';
+
+const AUTH_STORAGE_KEY = 'mw:git-auth';
+
+const readSavedAuth = () => {
+    try {
+        const saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || '{}');
+        return saved && typeof saved === 'object' ? saved : {};
+    } catch (e) {
+        return {};
+    }
+};
+
+const writeSavedAuth = auth => {
+    try {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
+    } catch (e) {
+        // ignore storage failures
+    }
+};
 
 class TWGitModal extends React.Component {
     constructor (props) {
@@ -51,6 +74,14 @@ class TWGitModal extends React.Component {
             mergeSourceBranch: '',
             mergeConflicts: [],
             mergeResolutions: {},
+            remotes: [],
+            remoteName: 'origin',
+            remoteUrl: '',
+            pushRemote: '',
+            pushBranch: 'main',
+            authUsername: '',
+            authToken: '',
+            disableCorsProxy: false,
             changes: []
         };
 
@@ -77,8 +108,55 @@ class TWGitModal extends React.Component {
             'handleChangeMergeSourceBranch',
             'handlePreviewMerge',
             'handleSetMergeResolution',
-            'handleApplyMerge'
+            'handleApplyMerge',
+            'handleChangeRemoteName',
+            'handleChangeRemoteUrl',
+            'handleChangePushRemote',
+            'handleChangePushBranch',
+            'handleChangeAuthUsername',
+            'handleChangeAuthToken',
+            'handleChangeDisableCorsProxy',
+            'handleAddRemote',
+            'handleRemoveRemote',
+            'handlePull',
+            'handlePush'
         ]);
+    }
+
+    getRemoteUrl (remoteName = this.state.pushRemote, remotes = this.state.remotes) {
+        const remote = remotes.find(item => item.name === remoteName);
+        return remote ? remote.url : (remoteName || this.state.remoteUrl);
+    }
+
+    loadSavedAuthForRemote (remoteName, remotes = this.state.remotes) {
+        const remoteUrl = this.getRemoteUrl(remoteName, remotes);
+        if (!remoteUrl) return;
+
+        const saved = readSavedAuth()[remoteUrl];
+        if (!saved) return;
+
+        this.setState({
+            authUsername: typeof saved.username === 'string' ? saved.username : '',
+            authToken: typeof saved.token === 'string' ? saved.token : '',
+            disableCorsProxy: typeof saved.disableCorsProxy === 'boolean' ? saved.disableCorsProxy : this.state.disableCorsProxy
+        });
+    }
+
+    saveAuthForCurrentRemote () {
+        const remoteUrl = this.getRemoteUrl();
+        if (!remoteUrl) return;
+
+        const username = this.state.authUsername.trim();
+        const token = this.state.authToken;
+        if (!username && !token) return;
+
+        const saved = readSavedAuth();
+        saved[remoteUrl] = {
+            username,
+            token,
+            disableCorsProxy: this.state.disableCorsProxy
+        };
+        writeSavedAuth(saved);
     }
 
     componentDidMount () {
@@ -113,7 +191,17 @@ class TWGitModal extends React.Component {
             const graph = status.initialized ?
                 (await computeCommitGraph({depth: 50})) :
                 {branches: [], nodes: [], branchLogs: []};
-            
+            const remotes = status.initialized ? await getRemotes(this.props.vm) : [];
+            const remoteNames = remotes.map(remote => remote.name);
+            const nextPushRemote = remoteNames.indexOf(this.state.pushRemote) > -1 ?
+                this.state.pushRemote :
+                (remoteNames.indexOf('origin') > -1 ? 'origin' : (remoteNames[0] || ''));
+            const nextPushBranch = status.branches.indexOf(this.state.pushBranch) > -1 ?
+                this.state.pushBranch :
+                (status.currentBranch || status.branches[0] || this.state.pushBranch || 'main');
+            const remoteUrl = this.getRemoteUrl(nextPushRemote, remotes);
+            const savedAuth = remoteUrl ? readSavedAuth()[remoteUrl] : null;
+
             const palette = [
                 '#4db6ac', '#9575cd', '#64b5f6',
                 '#f06292', '#ba68c8', '#4fc3f7',
@@ -132,6 +220,15 @@ class TWGitModal extends React.Component {
                 graphNodes: graph.nodes,
                 graphBranchLogs: graph.branchLogs,
                 branchColors,
+                remotes,
+                pushRemote: nextPushRemote,
+                pushBranch: nextPushBranch,
+                authUsername: savedAuth && typeof savedAuth.username === 'string' && !this.state.authUsername ?
+                    savedAuth.username : this.state.authUsername,
+                authToken: savedAuth && typeof savedAuth.token === 'string' && !this.state.authToken ?
+                    savedAuth.token : this.state.authToken,
+                disableCorsProxy: savedAuth && typeof savedAuth.disableCorsProxy === 'boolean' ?
+                    savedAuth.disableCorsProxy : this.state.disableCorsProxy,
                 changes: status.changes
             });
         } catch (err) {
@@ -355,6 +452,168 @@ class TWGitModal extends React.Component {
         this.setState({mergeSourceBranch: e.target.value});
     }
 
+    handleChangeRemoteName (e) {
+        this.setState({remoteName: e.target.value});
+    }
+
+    handleChangeRemoteUrl (e) {
+        const remoteUrl = e.target.value;
+        this.setState({remoteUrl}, () => this.loadSavedAuthForRemote(''));
+    }
+
+    handleChangePushRemote (e) {
+        const pushRemote = e.target.value;
+        this.setState({pushRemote}, () => this.loadSavedAuthForRemote(pushRemote));
+    }
+
+    handleChangePushBranch (e) {
+        this.setState({pushBranch: e.target.value});
+    }
+
+    handleChangeAuthUsername (e) {
+        this.setState({authUsername: e.target.value}, () => this.saveAuthForCurrentRemote());
+    }
+
+    handleChangeAuthToken (e) {
+        this.setState({authToken: e.target.value}, () => this.saveAuthForCurrentRemote());
+    }
+
+    handleChangeDisableCorsProxy (e) {
+        this.setState({disableCorsProxy: e.target.checked}, () => this.saveAuthForCurrentRemote());
+    }
+
+    async handleAddRemote () {
+        const name = this.state.remoteName.trim();
+        const url = this.state.remoteUrl.trim();
+        if (!name || !url) {
+            this.setState({error: 'Remote name and URL are required'});
+            return;
+        }
+
+        if (this.state.remotes.some(remote => remote.name === name)) {
+            this.setState({error: `Remote "${name}" already exists. Delete it first or choose another name.`});
+            return;
+        }
+
+        this.setState({busy: true, busyMessage: 'Adding remote…', busyProgress: null, error: null});
+        try {
+            await addRemote({vm: this.props.vm, name, url});
+            this.setState({remoteUrl: '', pushRemote: name});
+            await this.refresh();
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    async handleRemoveRemote (name) {
+        if (!name) return;
+
+        this.setState({busy: true, busyMessage: 'Removing remote…', busyProgress: null, error: null});
+        try {
+            await removeRemote({vm: this.props.vm, name});
+            if (this.state.pushRemote === name) {
+                this.setState({pushRemote: ''});
+            }
+            await this.refresh();
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    async handlePull () {
+        let remote = (this.state.pushRemote || this.state.remoteUrl).trim();
+        const branch = this.state.pushBranch.trim();
+        if (!remote || !branch) {
+            this.setState({error: 'Remote URL/name and branch are required'});
+            return;
+        }
+
+        this.saveAuthForCurrentRemote();
+        this.setState({busy: true, busyMessage: 'Pulling…', busyProgress: null, error: null});
+        try {
+            if (this.state.initialized && !this.state.pushRemote && this.state.remoteUrl.trim()) {
+                const remoteName = this.state.remoteName.trim() || 'origin';
+                if (!this.state.remotes.some(item => item.name === remoteName)) {
+                    await addRemote({vm: this.props.vm, name: remoteName, url: this.state.remoteUrl.trim()});
+                }
+                remote = remoteName;
+            }
+
+            await pull({
+                vm: this.props.vm,
+                remote,
+                branch,
+                author: {
+                    name: this.state.authorName || 'User',
+                    email: this.state.authorEmail || 'user@example.com'
+                },
+                disableCorsProxy: this.state.disableCorsProxy,
+                onProgress: this.handleGitProgress,
+                onAuth: () => {
+                    const username = this.state.authUsername.trim();
+                    const token = this.state.authToken;
+                    if (!username && !token) return {};
+                    return {
+                        username: username || 'oauth2',
+                        password: token
+                    };
+                },
+                onAuthFailure: () => {
+                    throw new Error('Authentication failed. Check your username and personal access token.');
+                }
+            });
+            await this.refresh();
+        } catch (err) {
+            const message = err && err.message ? err.message : String(err);
+            this.setState({error: `Pull failed: ${message}`});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    async handlePush () {
+        const remote = this.state.pushRemote.trim();
+        const branch = this.state.pushBranch.trim();
+        if (!remote || !branch) {
+            this.setState({error: 'Remote and branch are required'});
+            return;
+        }
+
+        this.saveAuthForCurrentRemote();
+        this.setState({busy: true, busyMessage: 'Pushing…', busyProgress: null, error: null});
+        try {
+            await push({
+                vm: this.props.vm,
+                remote,
+                branch,
+                disableCorsProxy: this.state.disableCorsProxy,
+                onProgress: this.handleGitProgress,
+                onAuth: () => {
+                    const username = this.state.authUsername.trim();
+                    const token = this.state.authToken;
+                    if (!username && !token) return {};
+                    return {
+                        username: username || 'oauth2',
+                        password: token
+                    };
+                },
+                onAuthFailure: () => {
+                    throw new Error('Authentication failed. Check your username and personal access token.');
+                }
+            });
+            await this.refresh();
+        } catch (err) {
+            const message = err && err.message ? err.message : String(err);
+            this.setState({error: `Push failed: ${message}`});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
     async handlePreviewMerge () {
         const ours = this.state.currentBranch;
         const theirs = this.state.mergeSourceBranch;
@@ -458,6 +717,25 @@ class TWGitModal extends React.Component {
                 onPreviewMerge={this.handlePreviewMerge}
                 onSetMergeResolution={this.handleSetMergeResolution}
                 onApplyMerge={this.handleApplyMerge}
+                remotes={this.state.remotes}
+                remoteName={this.state.remoteName}
+                remoteUrl={this.state.remoteUrl}
+                pushRemote={this.state.pushRemote}
+                pushBranch={this.state.pushBranch}
+                authUsername={this.state.authUsername}
+                authToken={this.state.authToken}
+                disableCorsProxy={this.state.disableCorsProxy}
+                onChangeRemoteName={this.handleChangeRemoteName}
+                onChangeRemoteUrl={this.handleChangeRemoteUrl}
+                onChangePushRemote={this.handleChangePushRemote}
+                onChangePushBranch={this.handleChangePushBranch}
+                onChangeAuthUsername={this.handleChangeAuthUsername}
+                onChangeAuthToken={this.handleChangeAuthToken}
+                onChangeDisableCorsProxy={this.handleChangeDisableCorsProxy}
+                onAddRemote={this.handleAddRemote}
+                onRemoveRemote={this.handleRemoveRemote}
+                onPull={this.handlePull}
+                onPush={this.handlePush}
                 onClose={this.handleClose}
                 changes={this.state.changes}
             />

@@ -648,6 +648,89 @@ const push = async ({vm, remote, branch, onAuth, onAuthFailure, disableCorsProxy
     await git.push(pushOptions);
 };
 
+const hasUncommittedChanges = async fs => {
+    const matrix = await git.statusMatrix({fs, dir: REPO_DIR});
+    return matrix.some(row => {
+        if (!row || row[0] === '.gitignore') return false;
+        const head = row[1];
+        const workdir = row[2];
+        const stage = row.length >= 4 ? row[3] : workdir;
+        return head !== workdir || head !== stage;
+    });
+};
+
+const looksLikeRemoteUrl = remote => /^https?:\/\//i.test(remote);
+
+const pull = async ({vm, remote, branch, author, onAuth, onAuthFailure, disableCorsProxy, ...options}) => {
+    if (!vm) {
+        throw new Error('VM is required');
+    }
+
+    if (!remote || typeof remote !== 'string') {
+        throw new Error('Remote is required');
+    }
+
+    if (!branch || typeof branch !== 'string') {
+        throw new Error('Branch is required');
+    }
+
+    const fs = getFs();
+
+    const authOptions = {
+        fs,
+        http,
+        ...options
+    };
+
+    if (!disableCorsProxy) {
+        authOptions.corsProxy = 'https://cors.isomorphic-git.org';
+    }
+
+    if (onAuth) {
+        authOptions.onAuth = onAuth;
+    }
+
+    if (onAuthFailure) {
+        authOptions.onAuthFailure = onAuthFailure;
+    }
+
+    if (!(await repoExists())) {
+        if (!looksLikeRemoteUrl(remote)) {
+            throw new Error('Remote URL is required to pull into a new project');
+        }
+
+        await deleteRepo();
+        await ensureDir(fs.promises, REPO_DIR);
+        await git.clone({
+            ...authOptions,
+            dir: REPO_DIR,
+            url: remote,
+            ref: branch,
+            singleBranch: true,
+            noCheckout: false
+        });
+        await restoreProjectFromCurrentRef(vm);
+        tempGitJsonString = await exportRepoToGitJsonString();
+        return;
+    }
+
+    if (await hasUncommittedChanges(fs)) {
+        throw new Error('Commit or discard local changes before pulling');
+    }
+
+    await git.pull({
+        ...authOptions,
+        dir: REPO_DIR,
+        remote,
+        ref: branch,
+        singleBranch: true,
+        author: author || getDefaultAuthor()
+    });
+
+    await restoreProjectFromCurrentRef(vm);
+    tempGitJsonString = await exportRepoToGitJsonString();
+};
+
 const commitProject = async ({vm, message, author, onProgress} = {}) => {
     if (!message || typeof message !== 'string' || !message.trim()) {
         throw new Error('Commit message is required');
@@ -917,6 +1000,8 @@ const importRepoFromGitJsonString = async gitJsonString => {
         if (ref) {
             await git.checkout({fs, dir: REPO_DIR, ref, force: true});
         }
+
+        tempGitJsonString = await exportRepoToGitJsonString();
     } catch (e) {
         // Clean up on import failure
         try {
@@ -1096,6 +1181,7 @@ export {
     removeRemote,
     getRemotes,
     push,
+    pull,
     exportRepoToZip,
     downloadRepoZip,
     commitSb3,
