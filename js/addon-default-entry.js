@@ -297,16 +297,12 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async _ref => {
-  let {
-    addon,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console;
   if (!addon.tab.redux.state) return console.warn("Redux is not available!");
   addon.tab.redux.initialize();
   addon.tab.redux.addEventListener("statechanged", _ref2 => {
-    let {
-      detail
-    } = _ref2;
+    let detail = _ref2.detail;
     if (addon.self.disabled) return;
     const e = detail;
     if (!e.action || e.action.type !== "scratch-paint/clipboard/SET") return;
@@ -353,10 +349,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _block_duplicate_module_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../block-duplicate/module.js */ "./src/addons/addons/block-duplicate/module.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console;
   const update = () => {
     _block_duplicate_module_js__WEBPACK_IMPORTED_MODULE_0__["setCherryPicking"](!addon.self.disabled, addon.settings.get("invertDrag"));
   };
@@ -501,10 +495,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _module_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./module.js */ "./src/addons/addons/block-duplicate/module.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console;
   const update = () => {
     _module_js__WEBPACK_IMPORTED_MODULE_0__["setDuplication"](!addon.self.disabled);
   };
@@ -544,12 +536,16 @@ const resources = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   const ScratchBlocks = await addon.tab.traps.getBlockly();
   const vm = addon.tab.traps.vm;
   let blockSwitches = {};
@@ -1180,12 +1176,18 @@ __webpack_require__.r(__webpack_exports__);
       }
       if (opcodeData.mutate) {
         const mutation = xml.querySelector("mutation");
-        for (const [key, value] of Object.entries(opcodeData.mutate)) {
+        for (const _ref2 of Object.entries(opcodeData.mutate)) {
+          var _ref3 = _slicedToArray(_ref2, 2);
+          const key = _ref3[0];
+          const value = _ref3[1];
           mutation.setAttribute(key, value);
         }
       }
       if (opcodeData.createInputs) {
-        for (const [inputName, inputData] of Object.entries(opcodeData.createInputs)) {
+        for (const _ref4 of Object.entries(opcodeData.createInputs)) {
+          var _ref5 = _slicedToArray(_ref4, 2);
+          const inputName = _ref5[0];
+          const inputData = _ref5[1];
           const valueElement = document.createElement("value");
           valueElement.setAttribute("name", inputName);
           const shadowElement = document.createElement("shadow");
@@ -1363,11 +1365,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /* harmony default export */ __webpack_exports__["default"] = (async _ref => {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   // 250-ms rate limit
   const rateLimiter = new _libraries_common_cs_rate_limiter_js__WEBPACK_IMPORTED_MODULE_1__["default"](250);
   const setColor = (hex, element) => {
@@ -1376,9 +1376,7 @@ __webpack_require__.r(__webpack_exports__);
     // The only way to reliably set color is to invoke eye dropper via click()
     // then faking that the eye dropper reported the value.
     const onEyeDropperClosed = _ref2 => {
-      let {
-        detail
-      } = _ref2;
+      let detail = _ref2.detail;
       if (detail.action.type !== "scratch-gui/color-picker/DEACTIVATE_COLOR_PICKER") return;
       addon.tab.redux.removeEventListener("statechanged", onEyeDropperClosed);
       setTimeout(() => {
@@ -1386,9 +1384,7 @@ __webpack_require__.r(__webpack_exports__);
       }, 50);
     };
     const onEyeDropperOpened = _ref3 => {
-      let {
-        detail
-      } = _ref3;
+      let detail = _ref3.detail;
       if (detail.action.type !== "scratch-gui/color-picker/ACTIVATE_COLOR_PICKER") return;
       addon.tab.redux.removeEventListener("statechanged", onEyeDropperOpened);
       addon.tab.redux.addEventListener("statechanged", onEyeDropperClosed);
@@ -1430,9 +1426,7 @@ __webpack_require__.r(__webpack_exports__);
     });
     saColorPickerColor.addEventListener("input", () => rateLimiter.limit(() => setColor(saColorPickerText.value = saColorPickerColor.value, element)));
     saColorPickerText.addEventListener("change", () => {
-      const {
-        value
-      } = saColorPickerText;
+      const value = saColorPickerText.value;
       if (!Object(_libraries_common_cs_normalize_color_js__WEBPACK_IMPORTED_MODULE_0__["getHexRegex"])().test(value)) return;
       setColor(saColorPickerColor.value = Object(_libraries_common_cs_normalize_color_js__WEBPACK_IMPORTED_MODULE_0__["normalizeHex"])(value), element);
     });
@@ -1524,10 +1518,8 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console;
   const vm = addon.tab.traps.vm;
   const updateStyles = () => {
     previewInner.classList.toggle("sa-comment-preview-delay", addon.settings.get("delay") !== "none");
@@ -2585,12 +2577,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _DevTools_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DevTools.js */ "./src/addons/addons/editor-devtools/DevTools.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console,
-    msg,
-    safeMsg: m
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg,
+    m = _ref.safeMsg;
   const devTools = new _DevTools_js__WEBPACK_IMPORTED_MODULE_0__["default"](addon, msg, m);
   devTools.init();
 });
@@ -2630,11 +2620,9 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   const Blockly = await addon.tab.traps.getBlockly();
   const vm = addon.tab.traps.vm;
   const SCRATCH_ITEMS_TO_HIDE = ["RENAME_VARIABLE_ID", "DELETE_VARIABLE_ID", "NEW_BROADCAST_MESSAGE_ID",
@@ -2825,12 +2813,8 @@ __webpack_require__.r(__webpack_exports__);
       item,
       score: rank(item, index)
     })).sort((_ref2, _ref3) => {
-      let {
-        score: scoreA
-      } = _ref2;
-      let {
-        score: scoreB
-      } = _ref3;
+      let scoreA = _ref2.score;
+      let scoreB = _ref3.score;
       return Math.max(0, scoreB) - Math.max(0, scoreA);
     });
   }
@@ -2847,21 +2831,18 @@ __webpack_require__.r(__webpack_exports__);
       }
     }
     if (needToUpdateDOM && previousSearchedItems.length > 0) {
-      for (const {
-        item
-      } of previousSearchedItems) {
+      for (const _ref4 of previousSearchedItems) {
+        const item = _ref4.item;
         item.element.remove();
       }
-      for (const {
-        item
-      } of searchedItems) {
+      for (const _ref5 of searchedItems) {
+        const item = _ref5.item;
         blocklyDropdownMenu.appendChild(item.element);
       }
     }
-    for (const {
-      item,
-      score
-    } of searchedItems) {
+    for (const _ref6 of searchedItems) {
+      const item = _ref6.item;
+      const score = _ref6.score;
       item.element.hidden = score < 0;
     }
   }
@@ -2884,9 +2865,8 @@ __webpack_require__.r(__webpack_exports__);
           return;
         }
       }
-      for (const {
-        item
-      } of searchedItems) {
+      for (const _ref7 of searchedItems) {
+        const item = _ref7.item;
         if (!item.element.hidden) {
           selectItem(item.element, true);
           break;
@@ -3028,11 +3008,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    msg,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    msg = _ref.msg,
+    console = _ref.console;
   const Blockly = await addon.tab.traps.getBlockly();
   class FindBar {
     constructor() {
@@ -4324,6 +4302,12 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 const DIVIDER = "//";
 
 /**
@@ -4390,11 +4374,9 @@ const addDefaultAssetFolderIfMissing = asset => {
   }
 };
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   // The basic premise of how this addon works is relative simple.
   // scratch-gui renders the sprite selectors and asset selectors in a hierarchy like this:
   // <SelectorHOC>
@@ -4547,10 +4529,9 @@ const addDefaultAssetFolderIfMissing = asset => {
     };
   };
   const fixTargetOrder = () => {
-    const {
-      items,
-      changed
-    } = fixOrderOfItemsInFolders(vm.runtime.targets);
+    const _fixOrderOfItemsInFol = fixOrderOfItemsInFolders(vm.runtime.targets),
+      items = _fixOrderOfItemsInFol.items,
+      changed = _fixOrderOfItemsInFol.changed;
     if (changed) {
       vm.runtime.targets = items;
       vm.emitTargetsUpdate();
@@ -4558,10 +4539,9 @@ const addDefaultAssetFolderIfMissing = asset => {
   };
   const fixCostumeOrder = function fixCostumeOrder() {
     let target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : vm.editingTarget;
-    const {
-      items,
-      changed
-    } = fixOrderOfItemsInFolders(target.sprite.costumes);
+    const _fixOrderOfItemsInFol2 = fixOrderOfItemsInFolders(target.sprite.costumes),
+      items = _fixOrderOfItemsInFol2.items,
+      changed = _fixOrderOfItemsInFol2.changed;
     if (changed) {
       target.sprite.costumes = items;
       vm.emitTargetsUpdate();
@@ -4569,10 +4549,9 @@ const addDefaultAssetFolderIfMissing = asset => {
   };
   const fixSoundOrder = function fixSoundOrder() {
     let target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : vm.editingTarget;
-    const {
-      items,
-      changed
-    } = fixOrderOfItemsInFolders(target.sprite.sounds);
+    const _fixOrderOfItemsInFol3 = fixOrderOfItemsInFolders(target.sprite.sounds),
+      items = _fixOrderOfItemsInFol3.items,
+      changed = _fixOrderOfItemsInFol3.changed;
     if (changed) {
       target.sprite.sounds = items;
       vm.emitTargetsUpdate();
@@ -4649,7 +4628,9 @@ const addDefaultAssetFolderIfMissing = asset => {
         const item = items[i];
         const width = PREVIEW_SIZE / 2;
         const height = PREVIEW_SIZE / 2;
-        const [x, y] = PREVIEW_POSITIONS[i];
+        const _PREVIEW_POSITIONS$i = _slicedToArray(PREVIEW_POSITIONS[i], 2),
+          x = _PREVIEW_POSITIONS$i[0],
+          y = _PREVIEW_POSITIONS$i[1];
         let src;
         if (item.asset) {
           // TW: We can be 100% certain that escaping here is unnecessary
@@ -5250,15 +5231,13 @@ const addDefaultAssetFolderIfMissing = asset => {
       return r;
     };
     const abstractReorder = (_ref2, itemIndex, newIndex) => {
-      let {
-        guiItems,
-        getAll,
-        set,
-        rename,
-        getVMItemFromGUIItem,
-        zeroIndexed,
-        onFolderChanged
-      } = _ref2;
+      let guiItems = _ref2.guiItems,
+        getAll = _ref2.getAll,
+        set = _ref2.set,
+        rename = _ref2.rename,
+        getVMItemFromGUIItem = _ref2.getVMItemFromGUIItem,
+        zeroIndexed = _ref2.zeroIndexed,
+        onFolderChanged = _ref2.onFolderChanged;
       // First index depends on zeroIndexed
       itemIndex = clamp(itemIndex, zeroIndexed ? 0 : 1, zeroIndexed ? guiItems.length - 1 : guiItems.length);
       newIndex = clamp(newIndex, zeroIndexed ? 0 : 1, zeroIndexed ? guiItems.length - 1 : guiItems.length);
@@ -6439,13 +6418,17 @@ class Token {
    * @param {boolean} isLegal
    */
   constructor(start, end, type, value) {
-    let {
-      precedence = -1,
-      isProper = true,
-      isTruncated = false,
-      isLegal = true,
-      isDefiningFeature = false
-    } = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+    let _ref = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {},
+      _ref$precedence = _ref.precedence,
+      precedence = _ref$precedence === void 0 ? -1 : _ref$precedence,
+      _ref$isProper = _ref.isProper,
+      isProper = _ref$isProper === void 0 ? true : _ref$isProper,
+      _ref$isTruncated = _ref.isTruncated,
+      isTruncated = _ref$isTruncated === void 0 ? false : _ref$isTruncated,
+      _ref$isLegal = _ref.isLegal,
+      isLegal = _ref$isLegal === void 0 ? true : _ref$isLegal,
+      _ref$isDefiningFeatur = _ref.isDefiningFeature,
+      isDefiningFeature = _ref$isDefiningFeatur === void 0 ? false : _ref$isDefiningFeatur;
     /** @type {number} The index of the first letter of this token in the query */
     this.start = start;
     /** @type {number} The index of the last letter of this token in the query */
@@ -7826,11 +7809,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    msg,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    msg = _ref.msg,
+    console = _ref.console;
   const Blockly = await addon.tab.traps.getBlockly();
   const vm = addon.tab.traps.vm;
   const PREVIEW_LIMIT = 50;
@@ -8246,11 +8227,9 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async _ref => {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   const types = ["sound", "costume"];
   addon.tab.createEditorContextMenu(ctx => {
     const target = addon.tab.traps.vm.editingTarget;
@@ -8340,13 +8319,17 @@ const resources = {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _turbowarp_scratch_svg_renderer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @turbowarp/scratch-svg-renderer */ "./node_modules/@turbowarp/scratch-svg-renderer/src/index.js");
 /* harmony import */ var _turbowarp_scratch_svg_renderer__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_turbowarp_scratch_svg_renderer__WEBPACK_IMPORTED_MODULE_0__);
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   const paper = await addon.tab.traps.getPaper();
   const paintEditorCanvasContainer = await addon.tab.waitForElement("[class^='paint-editor_canvas-container']");
   try {
@@ -8532,7 +8515,10 @@ __webpack_require__.r(__webpack_exports__);
     return [referenceColor[0] * weighted, referenceColor[1] * weighted, referenceColor[2] * weighted];
   };
   const toHexColor = _ref2 => {
-    let [red, green, blue] = _ref2;
+    let _ref3 = _slicedToArray(_ref2, 3),
+      red = _ref3[0],
+      green = _ref3[1],
+      blue = _ref3[2];
     const r = Math.round(red).toString(16).padStart(2, "0");
     const g = Math.round(green).toString(16).padStart(2, "0");
     const b = Math.round(blue).toString(16).padStart(2, "0");
@@ -8540,10 +8526,9 @@ __webpack_require__.r(__webpack_exports__);
   };
   const getPaperColorTint = (color, isBefore) => toHexColor(getTint(color.red * 255, color.green * 255, color.blue * 255, isBefore));
   const tintRaster = (raster, isBefore) => {
-    const {
-      width,
-      height
-    } = raster.canvas;
+    const _raster$canvas = raster.canvas,
+      width = _raster$canvas.width,
+      height = _raster$canvas.height;
     const context = raster.context;
     // TODO: check to see if this is a performance issue
     const imageData = context.getImageData(0, 0, width, height);
@@ -8577,10 +8562,8 @@ __webpack_require__.r(__webpack_exports__);
   };
   const rasterizeVector = root => {
     const bounds = root.strokeBounds;
-    const {
-      width,
-      height
-    } = bounds;
+    const width = bounds.width,
+      height = bounds.height;
 
     // Some browsers experience extremely poor performance when this value exceeds 3840.
     const MAX_SIZE = 3000;
@@ -8628,10 +8611,8 @@ __webpack_require__.r(__webpack_exports__);
   };
   const makeVectorOnion = (opacity, costume, asset, isBefore) => new Promise((resolve, reject) => {
     asset = _turbowarp_scratch_svg_renderer__WEBPACK_IMPORTED_MODULE_0__["sanitizeSvg"].sanitizeSvgText(asset);
-    const {
-      rotationCenterX,
-      rotationCenterY
-    } = costume;
+    const rotationCenterX = costume.rotationCenterX,
+      rotationCenterY = costume.rotationCenterY;
     // https://github.com/scratchfoundation/scratch-paint/blob/cdf0afc217633e6cfb8ba90ea4ae38b79882cf6c/src/containers/paper-canvas.jsx#L196-L218
     asset = asset.split(/<\s*svg:/).join("<");
     asset = asset.split(/<\/\s*svg:/).join("</");
@@ -8713,10 +8694,8 @@ __webpack_require__.r(__webpack_exports__);
     });
   });
   const makeRasterOnion = (opacity, costume, asset, isBefore) => new Promise((resolve, reject) => {
-    let {
-      rotationCenterX,
-      rotationCenterY
-    } = costume;
+    let rotationCenterX = costume.rotationCenterX,
+      rotationCenterY = costume.rotationCenterY;
     const image = new Image();
     image.onload = () => {
       const paperCenter = getPaperCenter();
@@ -8792,12 +8771,10 @@ __webpack_require__.r(__webpack_exports__);
           opacity
         });
       }
-      const onions = await Promise.all(layersToCreate.map(_ref3 => {
-        let {
-          index,
-          isBefore,
-          opacity
-        } = _ref3;
+      const onions = await Promise.all(layersToCreate.map(_ref4 => {
+        let index = _ref4.index,
+          isBefore = _ref4.isBefore,
+          opacity = _ref4.opacity;
         const onionCostume = costumes[index];
         const onionAsset = vm.getCostume(index);
         if (onionCostume.dataFormat === "svg") {
@@ -8870,9 +8847,8 @@ __webpack_require__.r(__webpack_exports__);
     return el;
   };
   const createButton = function createButton() {
-    let {
-      useButtonTag
-    } = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    let _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+      useButtonTag = _ref5.useButtonTag;
     const el = document.createElement(useButtonTag ? "button" : "span");
     el.className = "sa-onion-button";
     el.setAttribute("role", "button");
@@ -9143,9 +9119,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _paint_snap_compatibility_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../paint-snap/compatibility.js */ "./src/addons/addons/paint-snap/compatibility.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon
-  } = _ref;
+  let addon = _ref.addon;
   const paper = await addon.tab.traps.getPaper();
   const addSkew = function addSkew() {
     var _paper$tool$boundingB, _paper$tool$boundingB2;
@@ -9332,11 +9306,9 @@ function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    msg,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    msg = _ref.msg,
+    console = _ref.console;
   const brand = Symbol();
   const setIsPicking = picking => document.body.classList.toggle("sa-stage-color-picker-picking", picking);
 
@@ -9434,11 +9406,9 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    msg,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    msg = _ref.msg,
+    console = _ref.console;
   const vm = addon.tab.traps.vm;
   const Blockly = await addon.tab.traps.getBlockly();
 
@@ -9724,12 +9694,16 @@ function modifiedUpdateDeclarationProcCode() {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _modified_funcs_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./modified-funcs.js */ "./src/addons/addons/reorder-custom-inputs/modified-funcs.js");
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console;
   function createArrow(direction, callback) {
     const path = direction === "left" ? "M 17 13 L 9 21 L 17 30" : "M 9 13 L 17 21 L 9 30";
     Blockly.WidgetDiv.DIV.insertAdjacentHTML("beforeend", "\n            <svg width=\"20px\" height=\"40px\" \n                 style=\"left: ".concat(direction === "left" ? "calc(50% - 20px)" : "calc(50% + 20px)", "\" \n                 class=\"blocklyTextShiftArrow\">\n                <path d=\"").concat(path, "\" fill=\"none\" stroke=\"#FF661A\" stroke-width=\"2\"></path>\n            </svg>"));
@@ -9788,8 +9762,11 @@ __webpack_require__.r(__webpack_exports__);
     };
   }
   function getFieldInputNameAndIndex(field, inputList) {
-    for (const [i, input] of inputList.entries()) {
+    for (const _ref2 of inputList.entries()) {
       var _input$connection$tar;
+      var _ref3 = _slicedToArray(_ref2, 2);
+      const i = _ref3[0];
+      const input = _ref3[1];
       const isTargetField = input.connection ? ((_input$connection$tar = input.connection.targetBlock()) === null || _input$connection$tar === void 0 ? void 0 : _input$connection$tar.getField(field.name)) === field : input.fieldRow.includes(field);
       if (isTargetField) {
         return {
@@ -9832,10 +9809,9 @@ __webpack_require__.r(__webpack_exports__);
 
     // if inputList length is 1 there's nowhere to shift the input so we can simply return
     if (proc.inputList.length <= 1) return;
-    const {
-      name,
-      index
-    } = getFieldInputNameAndIndex(field, proc.inputList);
+    const _getFieldInputNameAnd = getFieldInputNameAndIndex(field, proc.inputList),
+      name = _getFieldInputNameAnd.name,
+      index = _getFieldInputNameAnd.index;
     const newPosition = direction === "left" ? index - 1 : index + 1;
     shiftInput(proc, name, newPosition);
   }
@@ -9855,7 +9831,10 @@ __webpack_require__.r(__webpack_exports__);
     procedureDeclaration.createAllInputs_ = originalCreateAllInputs;
     procedureDeclaration.onChangeFn = originalUpdateDeclarationProcCode;
     procedureDeclaration.removeFieldCallback = originalRemoveFieldCallback;
-    for (const [inputFnName, originalFn] of Object.entries(originalAddFns)) {
+    for (const _ref4 of Object.entries(originalAddFns)) {
+      var _ref5 = _slicedToArray(_ref4, 2);
+      const inputFnName = _ref5[0];
+      const originalFn = _ref5[1];
       procedureDeclaration[inputFnName] = originalFn;
     }
   }
@@ -9915,13 +9894,24 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getHexRegex", function() { return getHexRegex; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "normalizeHex", function() { return normalizeHex; });
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 const getHexRegex = () => /^#?[0-9a-fA-F]{3,8}$/;
 const normalizeHex = input => {
   let hex = String(input);
   if (!getHexRegex().test(hex)) return "#000000";
   if (!hex.startsWith("#")) hex = "#".concat(hex);
   if (hex.length === 4) {
-    const [_, r, g, b] = hex;
+    const _hex = hex,
+      _hex2 = _slicedToArray(_hex, 4),
+      _ = _hex2[0],
+      r = _hex2[1],
+      g = _hex2[2],
+      b = _hex2[3];
     hex = "#".concat(r).concat(r).concat(g).concat(g).concat(b).concat(b);
   }
   return hex.toLowerCase();

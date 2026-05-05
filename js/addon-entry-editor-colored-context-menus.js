@@ -54,10 +54,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _libraries_common_cs_text_color_esm_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../libraries/common/cs/text-color.esm.js */ "./src/addons/libraries/common/cs/text-color.esm.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console;
   const ScratchBlocks = await addon.tab.traps.getBlockly();
   const applyContextMenuColor = block => {
     const widgetDiv = ScratchBlocks.WidgetDiv.DIV;

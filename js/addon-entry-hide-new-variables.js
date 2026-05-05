@@ -29,11 +29,9 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    msg,
-    console
-  } = _ref;
+  let addon = _ref.addon,
+    msg = _ref.msg,
+    console = _ref.console;
   const ScratchBlocks = await addon.tab.traps.getBlockly();
   const originalCreateVariable = ScratchBlocks.Variables.createVariable;
   // https://github.com/scratchfoundation/scratch-blocks/blob/893c7e7ad5bfb416eaed75d9a1c93bdce84e36ab/core/variables.js#L277

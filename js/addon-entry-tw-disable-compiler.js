@@ -29,9 +29,7 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon
-  } = _ref;
+  let addon = _ref.addon;
   addon.tab.traps.vm.setCompilerOptions({
     enabled: false
   });

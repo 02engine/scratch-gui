@@ -29,11 +29,9 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   const Blockly = await addon.tab.traps.getBlockly();
   function makeStyle() {
     let style = document.createElement("style");
@@ -203,10 +201,9 @@ __webpack_require__.r(__webpack_exports__);
     // iframe.style.display = "none"
     document.body.append(iframe);
     iframe.contentDocument.write(serializer.serializeToString(svg));
-    let {
-      width,
-      height
-    } = iframe.contentDocument.body.querySelector("svg g").getBoundingClientRect();
+    let _iframe$contentDocume = iframe.contentDocument.body.querySelector("svg g").getBoundingClientRect(),
+      width = _iframe$contentDocume.width,
+      height = _iframe$contentDocume.height;
     svg.setAttribute("width", width + "px");
     svg.setAttribute("height", height + "px");
     let canvas = document.createElement("canvas");

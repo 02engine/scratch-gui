@@ -191,12 +191,9 @@ function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" 
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 function createScalePoints(paper, lib, objects, sx, sy) {
-  const {
-    view: {
-      CENTER,
-      ART_BOARD_BOUNDS
-    }
-  } = lib;
+  const _lib$view = lib.view,
+    CENTER = _lib$view.CENTER,
+    ART_BOARD_BOUNDS = _lib$view.ART_BOARD_BOUNDS;
   const toPoints = _objectSpread(_objectSpread(_objectSpread(_objectSpread({}, _state_js__WEBPACK_IMPORTED_MODULE_0__["snapTo"].pageAxes ? _objectSpread(_objectSpread({}, sx ? {
     bounds_cx: {
       type: "xcoord",
@@ -315,12 +312,9 @@ function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" 
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 function createSnapPoints(paper, selectionBounds, lib, objects) {
-  const {
-    view: {
-      CENTER,
-      ART_BOARD_BOUNDS
-    }
-  } = lib;
+  const _lib$view = lib.view,
+    CENTER = _lib$view.CENTER,
+    ART_BOARD_BOUNDS = _lib$view.ART_BOARD_BOUNDS;
   const fromPoints = _objectSpread(_objectSpread(_objectSpread({}, _state_js__WEBPACK_IMPORTED_MODULE_0__["snapFrom"].boxCenter ? {
     center: selectionBounds.center
   } : {}), _state_js__WEBPACK_IMPORTED_MODULE_0__["snapFrom"].boxCorners ? {
@@ -491,6 +485,12 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function loadModules(paper, vm) {
   // https://github.com/scratchfoundation/scratch-paint/blob/2a9fb2356d961200dc849b5b0a090d33f473c0b5/src/helper/math.js
 
@@ -615,7 +615,8 @@ function loadModules(paper, vm) {
   };
 }
 const keyMirror = obj => Object.fromEntries(Object.entries(obj).map(_ref => {
-  let [k] = _ref;
+  let _ref2 = _slicedToArray(_ref, 1),
+    k = _ref2[0];
   return [k, k];
 }));
 
@@ -711,9 +712,7 @@ let guideColor;
  * @param {import("../../addon-api/content-script/typedef").UserscriptAddon} addon
  */
 function loadSettings(_ref) {
-  let {
-    settings
-  } = _ref;
+  let settings = _ref.settings;
   for (const point in snapTo) {
     if (Object.prototype.hasOwnProperty.call(snapTo, point)) setSnapTo(point, settings.get(point));
   }
@@ -782,10 +781,8 @@ __webpack_require__.r(__webpack_exports__);
 
 /** @type {import("../../addon-api/content-script/typedef").UserscriptUtilities} */
 function initUI(_ref) {
-  let {
-    addon,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    msg = _ref.msg;
   const createGroup = () => {
     const el = document.createElement("div");
     el.className = "sa-paint-snap-group";
@@ -797,9 +794,8 @@ function initUI(_ref) {
     return el;
   };
   const createButton = function createButton() {
-    let {
-      useButtonTag
-    } = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    let _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+      useButtonTag = _ref2.useButtonTag;
     const el = document.createElement(useButtonTag ? "button" : "span");
     el.className = "sa-paint-snap-button";
     el.setAttribute("role", "button");
@@ -1051,6 +1047,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _helpers_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./helpers.js */ "./src/addons/addons/paint-snap/helpers.js");
 /* harmony import */ var _compatibility_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./compatibility.js */ "./src/addons/addons/paint-snap/compatibility.js");
 /* harmony import */ var _state_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./state.js */ "./src/addons/addons/paint-snap/state.js");
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 
 
@@ -1060,14 +1062,8 @@ const getScaleTool = tool => {
 };
 const updateScaleTool = (paper, tool, vm) => {
   const lib = Object(_helpers_js__WEBPACK_IMPORTED_MODULE_1__["loadModules"])(paper, vm);
-  const {
-    view: {
-      getActionBounds
-    },
-    layer: {
-      getLayer
-    }
-  } = lib;
+  const getActionBounds = lib.view.getActionBounds,
+    getLayer = lib.layer.getLayer;
   const scaleTool = getScaleTool(tool);
 
   // https://github.com/scratchfoundation/scratch-paint/blob/develop/src/helper/selection-tools/scale-tool.js
@@ -1292,7 +1288,9 @@ const updateScaleTool = (paper, tool, vm) => {
     const scaledThreshold = _state_js__WEBPACK_IMPORTED_MODULE_3__["threshold"] / paper.view.zoom;
     const canSnap = coord => coord.distance < scaledThreshold;
     const format = _ref => {
-      let [coordName, coord] = _ref;
+      let _ref2 = _slicedToArray(_ref, 2),
+        coordName = _ref2[0],
+        coord = _ref2[1];
       return {
         type: coord.type,
         distance: (() => {
@@ -1488,6 +1486,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _genSnapPoints_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./genSnapPoints.js */ "./src/addons/addons/paint-snap/genSnapPoints.js");
 /* harmony import */ var _helpers_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./helpers.js */ "./src/addons/addons/paint-snap/helpers.js");
 /* harmony import */ var _state_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./state.js */ "./src/addons/addons/paint-snap/state.js");
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 
 
@@ -1496,24 +1500,17 @@ const getMoveTool = tool => {
 };
 const updateSelectTool = (paper, tool, vm) => {
   const lib = Object(_helpers_js__WEBPACK_IMPORTED_MODULE_1__["loadModules"])(paper, vm);
-  const {
-    math: {
-      checkPointsClose,
-      snapDeltaToAngle
-    },
-    view: {
-      getActionBounds,
-      CENTER
-    },
-    layer: {
-      getDragCrosshairLayer,
-      CROSSHAIR_FULL_OPACITY,
-      getLayer
-    },
-    guide: {
-      hoverBounds
-    }
-  } = lib;
+  const _lib$math = lib.math,
+    checkPointsClose = _lib$math.checkPointsClose,
+    snapDeltaToAngle = _lib$math.snapDeltaToAngle,
+    _lib$view = lib.view,
+    getActionBounds = _lib$view.getActionBounds,
+    CENTER = _lib$view.CENTER,
+    _lib$layer = lib.layer,
+    getDragCrosshairLayer = _lib$layer.getDragCrosshairLayer,
+    CROSSHAIR_FULL_OPACITY = _lib$layer.CROSSHAIR_FULL_OPACITY,
+    getLayer = _lib$layer.getLayer,
+    hoverBounds = lib.guide.hoverBounds;
   const moveTool = getMoveTool(tool);
 
   // https://github.com/scratchfoundation/scratch-paint/blob/2a9fb2356d961200dc849b5b0a090d33f473c0b5/src/helper/selection-tools/move-tool.js
@@ -1633,14 +1630,18 @@ const updateSelectTool = (paper, tool, vm) => {
         if (pointDef.type === "generator") return pointDef.value;
       };
       const generateSnapPointsFor = point => Object.fromEntries(Object.entries(toPoints).map(_ref => {
-        let [k, v] = _ref;
+        let _ref2 = _slicedToArray(_ref, 2),
+          k = _ref2[0],
+          v = _ref2[1];
         return [k, {
           type: v.type,
           point: configDefFn(v)(point)
         }];
       }));
-      const generatedSnapPoints = Object.entries(fromPoints).map(_ref2 => {
-        let [pointPos, point] = _ref2;
+      const generatedSnapPoints = Object.entries(fromPoints).map(_ref3 => {
+        let _ref4 = _slicedToArray(_ref3, 2),
+          pointPos = _ref4[0],
+          point = _ref4[1];
         return {
           pointPos,
           origPoint: point,
@@ -1654,18 +1655,20 @@ const updateSelectTool = (paper, tool, vm) => {
         if (prioDiff) return prioDiff;
         return a.distance - b.distance;
       };
-      const closestSnapForEachPoint = generatedSnapPoints.map(_ref3 => {
+      const closestSnapForEachPoint = generatedSnapPoints.map(_ref5 => {
         var _snapPoints$closestSn, _snapPoints$closestSn2;
-        let {
-          point,
-          origPoint,
-          snapPoints
-        } = _ref3;
-        const snappablePoints = Object.entries(snapPoints).filter(_ref4 => {
-          let [pos, snapPoint] = _ref4;
+        let point = _ref5.point,
+          origPoint = _ref5.origPoint,
+          snapPoints = _ref5.snapPoints;
+        const snappablePoints = Object.entries(snapPoints).filter(_ref6 => {
+          let _ref7 = _slicedToArray(_ref6, 2),
+            pos = _ref7[0],
+            snapPoint = _ref7[1];
           return checkPointsClose(point, snapPoint.point, scaledThreshold);
-        }).map(_ref5 => {
-          let [pos, snapPoint] = _ref5;
+        }).map(_ref8 => {
+          let _ref9 = _slicedToArray(_ref8, 2),
+            pos = _ref9[0],
+            snapPoint = _ref9[1];
           return {
             pos,
             distance: getDist(snapPoint.point, point),
@@ -1816,6 +1819,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _state_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./state.js */ "./src/addons/addons/paint-snap/state.js");
 /* harmony import */ var _ui_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ui.js */ "./src/addons/addons/paint-snap/ui.js");
 /* harmony import */ var _updateScaleTool_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./updateScaleTool.js */ "./src/addons/addons/paint-snap/updateScaleTool.js");
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 
 
@@ -1823,14 +1832,13 @@ __webpack_require__.r(__webpack_exports__);
 
 /** @type {(api: import("../../addon-api/content-script/typedef").UserscriptUtilities) => Promise<void>} */
 /* harmony default export */ __webpack_exports__["default"] = (async function (api) {
-  const {
-    addon
-  } = api;
+  const addon = api.addon;
   addon.self.addEventListener("disabled", _state_js__WEBPACK_IMPORTED_MODULE_1__["disable"]);
   addon.self.addEventListener("reenabled", _state_js__WEBPACK_IMPORTED_MODULE_1__["enable"]);
   Object(_state_js__WEBPACK_IMPORTED_MODULE_1__["loadSettings"])(addon);
   const paper = await addon.tab.traps.getPaper();
-  const [tool] = paper.tools;
+  const _paper$tools = _slicedToArray(paper.tools, 1),
+    tool = _paper$tools[0];
   Object(_state_js__WEBPACK_IMPORTED_MODULE_1__["toggle"])(addon.settings.get("enable-default"));
   Object(_state_js__WEBPACK_IMPORTED_MODULE_1__["setGuideColor"])(addon.settings.get("guide-color"));
   addon.settings.addEventListener("change", () => Object(_state_js__WEBPACK_IMPORTED_MODULE_1__["setGuideColor"])(addon.settings.get("guide-color")));
