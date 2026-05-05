@@ -1,0 +1,2058 @@
+.aiAssistantRoot {
+  pointer-events: auto;
+
+  .icon {
+    width: 40px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    border: 1px solid #7ecfca !important;
+    border-radius: 10px;
+    background: #dff7f5 !important;
+    color: #047c76;
+    cursor: grab;
+    box-shadow: 0 8px 18px rgba(4, 124, 118, 0.16);
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+
+    img {
+      width: 18px !important;
+      height: 18px !important;
+      max-width: 18px;
+      max-height: 18px;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      object-fit: contain;
+    }
+
+    span {
+      display: none;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 10px 22px rgba(4, 124, 118, 0.2),
+        0 0 0 3px rgba(126, 207, 202, 0.22);
+    }
+
+    &:active {
+      cursor: grabbing;
+      transform: translateY(0);
+    }
+  }
+
+  .iconLight {
+    border-color: #7ecfca !important;
+    background: #dff7f5 !important;
+    color: #047c76;
+    box-shadow: 0 8px 18px rgba(4, 124, 118, 0.16);
+  }
+
+  .iconDark {
+    border-color: #314749 !important;
+    background: #203436 !important;
+    color: #e7fffb;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+  }
+}
+
+.container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--ai-bg-app);
+  color: var(--ai-text-primary);
+  font-family: Inter, "Segoe UI", sans-serif;
+
+  .leftPanel {
+    width: 268px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border-right: 1px solid rgba(128, 141, 171, 0.18);
+    background: rgba(248, 250, 255, 0.72);
+    backdrop-filter: blur(14px);
+  }
+
+  .historyHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 14px 12px;
+    border: 1px solid rgba(138, 151, 180, 0.18);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 18px 42px rgba(43, 54, 83, 0.1);
+    font-weight: 700;
+  }
+
+  .historySubtitle {
+    margin-top: 4px;
+    color: #66718a;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+
+  .newChatBtn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(88, 104, 184, 0.18);
+    border-radius: 10px;
+    background: linear-gradient(180deg, #ffffff 0%, #eef3ff 100%);
+    color: #4252d1;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover {
+      border-color: rgba(79, 107, 255, 0.34);
+      background: #edf2ff;
+      transform: translateY(-1px);
+    }
+  }
+
+  .historyList {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .historyEmpty,
+  .emptyTip {
+    padding: 18px 14px;
+    border: 1px dashed rgba(128, 141, 171, 0.32);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #71809b;
+    font-size: 13px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .historyItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 12px 12px 14px;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.72);
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover {
+      border-color: rgba(119, 132, 214, 0.16);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 10px 22px rgba(38, 46, 73, 0.08);
+      transform: translateX(2px);
+    }
+
+    &.active {
+      border-color: rgba(78, 99, 237, 0.28);
+      background: linear-gradient(180deg, rgba(240, 244, 255, 0.98), rgba(233, 239, 255, 0.92));
+      box-shadow:
+        inset 3px 0 0 rgba(79, 107, 255, 0.72),
+        inset 0 0 0 1px rgba(96, 116, 242, 0.12);
+    }
+  }
+
+  .historyTitle {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    color: #202a3d;
+  }
+
+  .deleteSessionBtn {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #8c97ab;
+    cursor: pointer;
+    opacity: 0;
+    transition:
+      opacity 0.2s ease,
+      background-color 0.2s ease,
+      color 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 92, 122, 0.12);
+      color: #cf425f;
+    }
+  }
+
+  .historyItem:hover .deleteSessionBtn,
+  .historyItem.active .deleteSessionBtn {
+    opacity: 1;
+  }
+
+  .rightPanel {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.44);
+    backdrop-filter: blur(14px);
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 58px;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(138, 151, 180, 0.16);
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(16px);
+  }
+
+  .headerMain {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .headerActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex-shrink: 0;
+  }
+
+  .togglePanelBtn,
+  .secondaryButton,
+  .toolButton,
+  .closeBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid rgba(123, 136, 178, 0.24);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.88);
+    color: #33415c;
+    cursor: pointer;
+    font: inherit;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover {
+      border-color: rgba(89, 107, 219, 0.34);
+      background: #fff;
+      color: #24304d;
+      transform: translateY(-1px);
+    }
+  }
+
+  .togglePanelBtn,
+  .secondaryButton {
+    min-height: 34px;
+    padding: 0 12px;
+    white-space: nowrap;
+  }
+
+  .agentSelector {
+    position: relative;
+    min-width: 0;
+    width: min(260px, 42vw);
+  }
+
+  .agentSelectorTrigger {
+    width: 100%;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 12px;
+    border: 1px solid rgba(123, 136, 178, 0.22);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.94);
+    color: #1e2a44;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    box-shadow: 0 10px 24px rgba(39, 49, 79, 0.06);
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover {
+      border-color: rgba(89, 107, 219, 0.34);
+      transform: translateY(-1px);
+    }
+  }
+
+  .agentSelectorTriggerActive {
+    border-color: rgba(79, 107, 255, 0.42);
+    box-shadow: 0 0 0 3px rgba(79, 107, 255, 0.1);
+  }
+
+  .agentSelectorText {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .agentSelectorPrimary {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #1d2942;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .agentSelectorChevron {
+    flex-shrink: 0;
+    color: #6a7894;
+    font-size: 11px;
+  }
+
+  .agentMenu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 12;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid rgba(123, 136, 178, 0.18);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 18px 44px rgba(30, 40, 68, 0.16);
+  }
+
+  .agentMenuItem {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    color: #1e2a44;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+
+    &:hover {
+      border-color: rgba(96, 116, 242, 0.12);
+      background: rgba(240, 244, 255, 0.9);
+    }
+  }
+
+  .agentMenuItemActive {
+    border-color: rgba(96, 116, 242, 0.18);
+    background: linear-gradient(180deg, rgba(241, 244, 255, 0.98), rgba(234, 239, 255, 0.94));
+  }
+
+  .agentMenuPrimary {
+    color: #1d2942;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .agentMenuMeta {
+    color: #6a7894;
+    font-size: 11px;
+  }
+
+  .chatArea {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 18px 18px 14px;
+    scroll-behavior: smooth;
+  }
+
+  .emptyState {
+    align-self: center;
+    width: min(460px, 100%);
+    margin: auto 0;
+    padding: 22px;
+    border: 1px solid rgba(121, 138, 190, 0.18);
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at top right, rgba(122, 103, 255, 0.12), transparent 34%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 249, 255, 0.94));
+    box-shadow: 0 26px 60px rgba(41, 52, 87, 0.1);
+    text-align: left;
+  }
+
+  .emptyStateBadge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(79, 107, 255, 0.1);
+    color: #5064dc;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .emptyStateTitle {
+    margin: 12px 0 8px;
+    color: #1a2238;
+    font-size: 20px;
+    line-height: 1.3;
+  }
+
+  .emptyStateText {
+    margin: 0;
+    color: #5f6f8d;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .messageRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    max-width: 100%;
+    animation: messageEnter 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .userMessage {
+    align-self: flex-end;
+    justify-content: flex-end;
+  }
+
+  .assistantMessage {
+    align-self: flex-start;
+  }
+
+  .messageActionRail {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .messageRow:hover .messageActionRail {
+    opacity: 1;
+  }
+
+  .messageActionRailHorizontal {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .messageActionButton {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(123, 136, 178, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #5f6f8d;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover {
+      border-color: rgba(89, 107, 219, 0.34);
+      background: #fff;
+      color: #34425e;
+      transform: translateY(-1px);
+    }
+  }
+
+  .messageAvatar {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #202944 0%, #2c3b64 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    box-shadow: 0 10px 22px rgba(26, 34, 57, 0.16);
+  }
+
+  .userMessage .messageAvatar {
+    order: 3;
+    background: linear-gradient(180deg, #6c84ff 0%, #5974ff 100%);
+  }
+
+  .userMessage .messageBubble {
+    order: 2;
+  }
+
+  .userMessage .messageActionRail {
+    order: 1;
+  }
+
+  .messageBubble {
+    max-width: min(84%, 720px);
+    min-width: 0;
+    padding: 13px 15px;
+    border-radius: 20px;
+    box-shadow: 0 18px 42px rgba(36, 45, 72, 0.1);
+    overflow-wrap: anywhere;
+  }
+
+  .messageBubbleAssistant {
+    border: 1px solid var(--ai-border);
+    background: var(--ai-bg-elevated);
+  }
+
+  .messageBubbleUser {
+    border: 1px solid color-mix(in srgb, var(--ai-accent-strong) 28%, transparent);
+    background: var(--ai-accent-bg);
+  }
+
+  .assistantSegments {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .messageText {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    color: var(--ai-text-primary);
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.58;
+  }
+
+  .messageMarkdown {
+    min-width: 0;
+    color: var(--ai-text-primary);
+    overflow-wrap: anywhere;
+
+    :global(*) {
+      max-width: 100%;
+    }
+
+    :global(p) {
+      margin: 0 0 8px;
+      font-size: 13px;
+      line-height: 1.62;
+    }
+
+    :global(p:last-child) {
+      margin-bottom: 0;
+    }
+
+    :global(pre) {
+      margin: 8px 0;
+      padding: 10px 12px;
+      border: 1px solid rgba(121, 136, 173, 0.18);
+      border-radius: 12px;
+      background: #192133;
+      color: #eef3ff;
+      overflow: auto;
+      max-width: 100%;
+    }
+
+    :global(code) {
+      font-family: Consolas, Monaco, monospace;
+    }
+
+    :global(:not(pre) > code) {
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: rgba(66, 82, 209, 0.08);
+      color: #38489f;
+      overflow-wrap: anywhere;
+    }
+
+    :global(ul),
+    :global(ol) {
+      margin: 8px 0 8px 18px;
+    }
+
+    :global(blockquote) {
+      margin: 10px 0;
+      padding-left: 12px;
+      border-left: 3px solid rgba(103, 119, 184, 0.4);
+      color: #5a6884;
+    }
+
+    :global(table) {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 8px 0;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-x: auto;
+      display: block;
+    }
+
+    :global(th),
+    :global(td) {
+      border: 1px solid var(--ai-border);
+      padding: 6px 12px;
+      text-align: left;
+    }
+
+    :global(th) {
+      background: var(--ai-bg-surface-hover);
+      font-weight: 600;
+      color: var(--ai-accent);
+    }
+
+    :global(tr:nth-child(even)) {
+      background: var(--ai-bg-surface-active);
+    }
+  }
+
+  .reasoningInline {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .reasoningInlineButton {
+    width: fit-content;
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #6a7591;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+
+    &:hover {
+      color: #4f5b79;
+    }
+  }
+
+  .reasoningInlineLabel {
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .reasoningInlineArrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: currentColor;
+  }
+
+  .reasoningInlineBody {
+    padding-left: 4px;
+  }
+
+  .reasoningText {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    color: #4c5a78;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  .toolCallSummary {
+    overflow: hidden;
+    border: 1px solid rgba(105, 119, 160, 0.18);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 247, 255, 0.88));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  }
+
+  .toolCallSummaryHeader,
+  .toolCallItemHeader {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+  }
+
+  .toolCallSummaryHeader {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &:hover {
+      background: rgba(236, 241, 255, 0.72);
+    }
+  }
+
+  .toolCallBody {
+    border-top: 1px solid rgba(129, 141, 175, 0.16);
+    padding: 10px;
+  }
+
+  .toolCallSummaryTitle {
+    color: #1d2942;
+    font-weight: 800;
+  }
+
+  .toolCallSummaryMeta,
+  .toolCallSummaryLine,
+  .toolCallMuted {
+    min-width: 0;
+    color: #697794;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .toolCallSummaryLine {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .toolCallChevron {
+    margin-left: auto;
+    color: #76839f;
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .toolCallPulse {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: #46c485;
+    box-shadow: 0 0 0 4px rgba(70, 196, 133, 0.12);
+  }
+
+  .toolCallPulseActive {
+    background: #f5ad35;
+    box-shadow: 0 0 0 0 rgba(245, 173, 53, 0.34);
+    animation: toolPulse 1.2s ease-out infinite;
+  }
+
+  .toolRunSummary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .changedFilesPanel {
+    overflow: hidden;
+    border: 1px solid rgba(124, 139, 176, 0.16);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  .changedFilesHeader,
+  .changedFileItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .changedFilesHeader {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(124, 139, 176, 0.12);
+    color: #23304b;
+    font-size: 12px;
+  }
+
+  .changedFilesHeader span {
+    color: #697794;
+    font-family: Consolas, Monaco, monospace;
+    font-weight: 700;
+  }
+
+  .changedFileList {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .changedFileItem {
+    padding: 9px 12px;
+    color: #2a3652;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+
+    & + .changedFileItem {
+      border-top: 1px solid rgba(124, 139, 176, 0.1);
+    }
+  }
+
+  .diagnosticPills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .diagnosticPillError,
+  .diagnosticPillWarn,
+  .diagnosticPillOk {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .diagnosticPillError {
+    background: rgba(242, 91, 121, 0.14);
+    color: #b13655;
+  }
+
+  .diagnosticPillWarn {
+    background: rgba(245, 173, 53, 0.16);
+    color: #8b6100;
+  }
+
+  .diagnosticPillOk {
+    background: rgba(70, 196, 133, 0.14);
+    color: #1d724c;
+  }
+
+  .toolCallList {
+    overflow: hidden;
+    border: 1px solid rgba(124, 139, 176, 0.14);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.52);
+  }
+
+  .toolCallItem {
+    & + .toolCallItem {
+      border-top: 1px solid rgba(129, 141, 175, 0.12);
+    }
+  }
+
+  .toolCallItemHeader {
+    min-height: 42px;
+    padding: 9px 10px;
+    transition:
+      background-color 0.18s ease,
+      transform 0.18s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.82);
+    }
+  }
+
+  .toolCallGlyph {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .toolCallGlyphrunning {
+    border: 2px solid rgba(245, 173, 53, 0.3);
+    border-top-color: #f5ad35;
+    animation: spin 0.9s linear infinite;
+  }
+
+  .toolCallGlyphsuccess {
+    background: rgba(70, 196, 133, 0.15);
+    color: #1d724c;
+  }
+
+  .toolCallGlypherror {
+    background: rgba(242, 91, 121, 0.16);
+    color: #b13655;
+  }
+
+  .toolCallStatus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .toolCallStatusrunning {
+    background: rgba(255, 223, 93, 0.2);
+    color: #8b6100;
+  }
+
+  .toolCallStatussuccess {
+    background: rgba(76, 175, 124, 0.16);
+    color: #1d6b46;
+  }
+
+  .toolCallStatuserror {
+    background: rgba(242, 91, 121, 0.16);
+    color: #ad2d4a;
+  }
+
+  .toolCallName {
+    min-width: 64px;
+    font-weight: 700;
+    color: #22304d;
+  }
+
+  .toolCallDetail {
+    padding: 12px;
+    background: rgba(247, 249, 255, 0.72);
+    animation: detailEnter 0.22s ease both;
+  }
+
+  .toolCallSection + .toolCallSection {
+    margin-top: 12px;
+  }
+
+  .toolCallSectionTitle {
+    margin-bottom: 6px;
+    color: #607090;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .toolCallDetail pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #293653;
+  }
+
+  .toolCallRawGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .rawToolDetails {
+    margin-top: 12px;
+    color: #63718d;
+    font-size: 12px;
+
+    summary {
+      cursor: pointer;
+      user-select: none;
+    }
+  }
+
+  .toolCompactJson {
+    max-height: 260px;
+    overflow: auto;
+    padding: 10px 12px;
+    border: 1px solid rgba(124, 139, 176, 0.14);
+    border-radius: 12px;
+    background: #121827;
+    color: #d9e2ff !important;
+  }
+
+  .toolErrorBox {
+    padding: 10px 12px;
+    border: 1px solid rgba(242, 91, 121, 0.22);
+    border-radius: 12px;
+    background: rgba(242, 91, 121, 0.1);
+    color: #a7304e;
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .toolResultGrid {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 7px 12px;
+    padding: 10px 12px;
+    border: 1px solid rgba(124, 139, 176, 0.14);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.76);
+    color: #687693;
+    font-size: 12px;
+
+    strong {
+      min-width: 0;
+      color: #24304b;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .diffStack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .diffFile {
+    overflow: hidden;
+    border: 1px solid rgba(124, 139, 176, 0.16);
+    border-radius: 14px;
+    background: #111827;
+    color: #dbe6ff;
+  }
+
+  .diffFileHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    color: #eef3ff;
+    font-size: 12px;
+    font-weight: 800;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  .diffFilePath {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: Consolas, Monaco, monospace;
+  }
+
+  .diffStats {
+    flex-shrink: 0;
+    display: inline-flex;
+    gap: 8px;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+  }
+
+  .diffAdded {
+    color: #34d399;
+  }
+
+  .diffDeleted {
+    color: #fb7185;
+  }
+
+  .diffBody {
+    max-height: 360px;
+    overflow: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0c1220;
+  }
+
+  .diffLine {
+    display: grid;
+    grid-template-columns: 42px 42px 20px minmax(0, 1fr);
+    min-height: 22px;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+    line-height: 1.65;
+
+    code {
+      padding-right: 12px;
+      white-space: pre;
+      overflow: visible;
+    }
+  }
+
+  .diffLineNumber {
+    padding: 0 8px;
+    color: #64748b;
+    text-align: right;
+    user-select: none;
+  }
+
+  .diffMarker {
+    color: #94a3b8;
+    text-align: center;
+    user-select: none;
+  }
+
+  .diffLineadd {
+    background: rgba(16, 185, 129, 0.14);
+
+    .diffMarker {
+      color: #34d399;
+    }
+  }
+
+  .diffLinedelete {
+    background: rgba(244, 63, 94, 0.14);
+
+    .diffMarker {
+      color: #fb7185;
+    }
+  }
+
+  .diffLinemeta {
+    background: rgba(99, 102, 241, 0.14);
+    color: #b7c2ff;
+  }
+
+  .diffLinecontext {
+    color: #d8e2f8;
+  }
+
+  .diffTruncated {
+    padding: 9px 12px;
+    color: #94a3b8;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .toggleIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    color: #7b86a1;
+    font-size: 11px;
+  }
+
+  .generatingTip {
+    align-self: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(43, 54, 83, 0.88);
+    color: #f6f8ff;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  .scrollToBottomButton {
+    position: sticky;
+    bottom: 8px;
+    align-self: flex-end;
+    width: 38px;
+    height: 38px;
+    margin-top: auto;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #667fff 0%, #4964ff 100%);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 16px 32px rgba(63, 84, 202, 0.26);
+
+    &:hover {
+      background: linear-gradient(180deg, #5d77ff 0%, #3f58ea 100%);
+    }
+  }
+
+  .selectionHint {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(24, 32, 52, 0.92);
+    color: #f8faff;
+    font-size: 12px;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 12px 30px rgba(18, 24, 40, 0.24);
+  }
+
+  .messageAttachments {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: min(520px, 100%);
+    margin-top: 8px;
+  }
+
+  .messageAttachment {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    padding: 9px 10px;
+    border: 1px solid rgba(125, 138, 175, 0.18);
+    border-radius: 14px;
+    background: var(--ai-bg-elevated);
+    color: var(--ai-text-primary);
+    text-align: left;
+  }
+
+  .attachmentMainButton,
+  .inlineTextButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+  }
+
+  .attachmentExpandButton,
+  .attachmentRemoveButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--ai-border);
+    border-radius: 999px;
+    background: var(--ai-bg-surface);
+    color: var(--ai-text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+
+    &:hover {
+      border-color: var(--ai-border-strong);
+      background: var(--ai-bg-surface-hover);
+      color: var(--ai-text-primary);
+    }
+  }
+
+  .attachmentRemoveButton {
+    padding: 0 9px;
+    color: #a24b60;
+
+    &:hover {
+      border-color: rgba(215, 73, 108, 0.22);
+      color: #c4385d;
+    }
+  }
+
+  .attachmentPreviewBlock,
+  .previewContent {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #1c2336;
+    color: #eef2ff;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: auto;
+  }
+
+  .attachmentPreviewBlock {
+    width: 100%;
+    max-width: 100%;
+    max-height: 180px;
+  }
+
+  .blockAttachment {
+    border-color: var(--ai-warning-border, rgba(230, 184, 61, 0.3));
+    background: var(--ai-warning-bg, linear-gradient(180deg, #fff7da 0%, #ffefb9 100%));
+  }
+
+  .fileAttachment {
+    background: var(--ai-bg-elevated);
+  }
+
+  .attachmentBadge,
+  .attachmentKind {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: var(--ai-badge-bg, rgba(255, 255, 255, 0.78));
+    color: var(--ai-badge-text, #7b5c12);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .attachmentName {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inputArea {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 10px 18px 16px;
+    border-top: 1px solid rgba(138, 151, 180, 0.16);
+    background: rgba(250, 252, 255, 0.78);
+    backdrop-filter: blur(16px);
+  }
+
+  .attachments {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .inputAreaExpanded {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 255, 0.98));
+  }
+
+  .inputAreaExpanded .attachments {
+    flex: 0 0 auto;
+    max-height: 160px;
+  }
+
+  .attachmentItem {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 260px;
+    padding: 8px 10px;
+    border: 1px solid rgba(130, 142, 174, 0.18);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    white-space: nowrap;
+
+    .attachmentName {
+      display: inline-block;
+      max-width: 150px;
+      vertical-align: bottom;
+    }
+
+    .attachmentPreviewBlock {
+      width: 100%;
+      max-width: 100%;
+      max-height: 180px;
+    }
+  }
+
+  .inputBox {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid rgba(116, 130, 166, 0.18);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 18px 46px rgba(39, 49, 79, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+
+    &:focus-within {
+      border-color: rgba(79, 107, 255, 0.36);
+      box-shadow:
+        0 22px 54px rgba(39, 49, 79, 0.14),
+        0 0 0 4px rgba(79, 107, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.76);
+      transform: translateY(-1px);
+    }
+  }
+
+  .inputAreaExpanded .inputBox {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .inputTopRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .inputToolsScroller {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+  }
+
+  .inputHint {
+    flex-shrink: 0;
+    color: #7a88a4;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .inputComposerRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+  }
+
+  .inputAreaExpanded .inputComposerRow {
+    display: block;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .inputTools {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    width: max-content;
+  }
+
+  .toolButton {
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .toolButtonActive {
+    border-color: rgba(78, 102, 236, 0.36);
+    background: linear-gradient(180deg, rgba(239, 243, 255, 0.98), rgba(230, 237, 255, 0.94));
+    color: #3f54c7;
+    box-shadow: inset 0 0 0 1px rgba(104, 122, 236, 0.1);
+  }
+
+  .inputHintChevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: currentColor;
+  }
+
+  .composerTextareaWrap {
+    position: relative;
+    min-width: 0;
+  }
+
+  .inputAreaExpanded .composerTextareaWrap {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .composerTextarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    height: 42px;
+    max-height: 42px;
+    padding: 10px 42px 10px 12px;
+    border: none;
+    border-radius: 16px;
+    background: rgba(244, 247, 255, 0.72);
+    color: #172033;
+    resize: none;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.55;
+    outline: none;
+    overflow-y: auto;
+
+    &::placeholder {
+      color: #8693af;
+    }
+  }
+
+  .composerTextareaExpanded {
+    min-height: 100%;
+    height: 100%;
+    max-height: none;
+    padding: 40px 16px 56px 16px;
+  }
+
+  .composerExpandButton {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: rgba(234, 239, 255, 0.9);
+    color: #5364ab;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(224, 232, 255, 1);
+      color: #4354a0;
+    }
+  }
+
+  .composerTextareaExpanded + .composerExpandButton {
+    top: 10px;
+    right: 10px;
+    transform: none;
+  }
+
+  .expandedComposerSendButton {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    border-radius: 12px;
+  }
+
+  .primaryButton {
+    min-width: 74px;
+    min-height: 40px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #5f78ff 0%, #4961f2 100%);
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    box-shadow: 0 12px 24px rgba(76, 100, 226, 0.24);
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      filter 0.2s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(76, 100, 226, 0.28);
+      filter: saturate(1.04);
+    }
+
+    &:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      filter: grayscale(0.1);
+      opacity: 0.7;
+      box-shadow: none;
+    }
+  }
+
+  .iconButton {
+    width: 40px;
+    min-width: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+
+    svg {
+      display: block;
+    }
+  }
+
+  .stopButton {
+    background: linear-gradient(180deg, #ff7c96 0%, #f45a7c 100%);
+    box-shadow: 0 16px 34px rgba(219, 78, 116, 0.24);
+  }
+
+  .fileInput {
+    display: none;
+  }
+
+  .settingsModalOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(16, 22, 38, 0.48);
+    backdrop-filter: blur(10px);
+  }
+
+  .drawerOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: flex;
+    justify-content: flex-start;
+    background: rgba(16, 22, 38, 0.22);
+  }
+
+  .historyDrawer {
+    width: min(280px, 88vw);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+    border-right: 1px solid rgba(138, 151, 180, 0.16);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 255, 0.96));
+    box-shadow: 20px 0 44px rgba(22, 31, 54, 0.18);
+  }
+
+  .settingsModal,
+  .previewModal {
+    overflow: scroll;
+    width: min(720px, 100%);
+    max-height: min(70vh, 760px);
+    overflow-y: auto;
+    padding: 22px;
+    border: 1px solid rgba(137, 149, 180, 0.18);
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 255, 0.96));
+    box-shadow: 0 28px 60px rgba(19, 27, 46, 0.2);
+  }
+
+  .settingsModalFullScreen {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .settingsModal {
+    width: min(600px, 100%);
+    display: flex;
+    flex-direction: column;
+
+    h3 {
+      margin: 0 0 8px;
+      color: #1e2942;
+      font-size: 20px;
+    }
+  }
+
+  .settingsModalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  .settingsModalContent {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow: hidden;
+    flex-grow: 1;
+    overflow: scroll;
+  }
+
+  .settingsModalContentHorizontal {
+    flex-direction: row;
+    overflow: scroll;
+
+    .agentForm {
+      flex: 1;
+      margin-bottom: 0;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .agentList {
+      flex: 1;
+      padding-right: 4px;
+    }
+  }
+
+  .previewMeta {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #71809b;
+    font-size: 12px;
+  }
+
+  .agentForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-shrink: 0;
+
+    input,
+    select {
+      height: 42px;
+      padding: 0 12px;
+      border: 1px solid rgba(129, 142, 176, 0.26);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #1d2942;
+      font: inherit;
+      outline: none;
+
+      &:focus {
+        border-color: rgba(79, 107, 255, 0.46);
+        box-shadow: 0 0 0 3px rgba(79, 107, 255, 0.14);
+      }
+    }
+
+    button {
+      min-height: 40px;
+      padding: 0 14px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #667fff 0%, #5068ff 100%);
+      color: #fff;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+
+      &:hover {
+        filter: saturate(1.04);
+      }
+
+      &[type="button"] {
+        background: rgba(233, 237, 248, 0.98);
+        color: #31405e;
+      }
+    }
+  }
+
+  .agentList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    flex-grow: 1;
+    padding-right: 4px;
+    min-height: 120px;
+  }
+
+  .agentItem {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid rgba(129, 142, 176, 0.18);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.86);
+    flex-shrink: 0;
+  }
+
+  .agentItemHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    color: #1e2942;
+  }
+
+  .agentModelsList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(129, 142, 176, 0.2);
+  }
+
+  .agentModelItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #33415c;
+  }
+
+  .actions {
+    display: flex;
+    gap: 6px;
+
+    button {
+      min-height: 32px;
+      padding: 0 10px;
+      border: 1px solid rgba(129, 142, 176, 0.18);
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      color: #33415c;
+      font: inherit;
+
+      &:hover {
+        background: #f7f9ff;
+      }
+    }
+  }
+
+  .closeBtn {
+    width: 100%;
+    min-height: 40px;
+    margin-top: 16px;
+  }
+
+  .modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(138, 151, 180, 0.16);
+
+    h3 {
+      margin: 0;
+      color: #1e2942;
+      font-size: 18px;
+    }
+
+    p {
+      margin: 6px 0 0;
+      color: #6e7d99;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+  }
+
+  .modalHistoryList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .previewModal {
+    width: min(720px, 100%);
+  }
+
+  @keyframes messageEnter {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.995);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes detailEnter {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes toolPulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(245, 173, 53, 0.34);
+    }
+    70% {
+      box-shadow: 0 0 0 8px rgba(245, 173, 53, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(245, 173, 53, 0);
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (max-width: 960px) {
+    .header {
+      align-items: stretch;
+      flex-direction: row;
+    }
+
+    .headerMain,
+    .headerLeft,
+    .headerActions {
+      width: auto;
+    }
+
+    .agentSelector {
+      min-width: 0;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .chatArea {
+      padding: 12px;
+    }
+
+    .inputArea {
+      padding: 10px 12px 12px;
+    }
+
+    .headerActions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .agentSelector {
+      width: 100%;
+    }
+
+    .inputTopRow {
+      align-items: center;
+      flex-direction: row;
+    }
+
+    .inputComposerRow {
+      grid-template-columns: 1fr;
+    }
+
+    .primaryButton {
+      width: 100%;
+      min-height: 38px;
+    }
+
+    .iconButton {
+      width: 38px;
+      min-width: 38px;
+      justify-self: end;
+    }
+
+    .messageBubble {
+      max-width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .icon,
+    .newChatBtn,
+    .historyItem,
+    .togglePanelBtn,
+    .secondaryButton,
+    .toolButton,
+    .primaryButton,
+    .closeBtn,
+    .attachmentExpandButton,
+    .attachmentRemoveButton,
+    .deleteSessionBtn {
+      transition: none;
+    }
+  }
+}

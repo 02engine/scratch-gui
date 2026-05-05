@@ -1,0 +1,398 @@
+.appShell {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--ai-bg-app);
+  color: var(--ai-text-primary);
+  font-family: var(--ai-font-sans);
+}
+
+.sidebar {
+  width: 284px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px 8px 11px;
+  border-right: 1px solid var(--ai-border-subtle);
+  background: var(--ai-bg-sidebar);
+}
+
+.sidebarHeader {
+  padding: 10px;
+}
+
+.sidebarBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sidebarBrandMark {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ai-radius-sm);
+  background: #079a91;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sidebarBrandTitle {
+  display: block;
+  overflow: hidden;
+  color: var(--ai-text-primary);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebarBrandSubtitle,
+.sidebarSectionLabel {
+  color: var(--ai-text-faint);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.sidebarSectionLabel {
+  margin: 8px 8px 2px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sidebarNewChat,
+.historyItem {
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--ai-radius-sm);
+  background: transparent;
+  color: var(--ai-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+  transition: background-color var(--ai-transition-fast), color var(--ai-transition-fast);
+}
+
+.sidebarNewChat:hover,
+.historyItem:hover {
+  background: var(--ai-bg-surface-hover);
+  color: var(--ai-text-primary);
+}
+
+.navIcon {
+  width: 18px;
+  flex-shrink: 0;
+  display: inline-flex;
+  justify-content: center;
+  color: var(--ai-text-muted);
+  font-size: 13px;
+}
+
+.historyList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.historyEmpty {
+  margin: 4px 6px;
+  padding: 12px;
+  border: 1px dashed var(--ai-border);
+  border-radius: var(--ai-radius-sm);
+  color: var(--ai-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.historyItem {
+  min-height: 34px;
+  justify-content: space-between;
+}
+
+.historyItemActive {
+  background: var(--ai-bg-surface-active);
+  box-shadow: none;
+  color: var(--ai-text-primary);
+}
+
+.historyItemMain {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.historyTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deleteSessionButton {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ai-radius-xs);
+  color: var(--ai-text-faint);
+  opacity: 0;
+  transition: background-color var(--ai-transition-fast), color var(--ai-transition-fast), opacity var(--ai-transition-fast);
+}
+
+.historyItem:hover .deleteSessionButton,
+.historyItemActive .deleteSessionButton {
+  opacity: 1;
+}
+
+.deleteSessionButton:hover {
+  background: var(--ai-bg-danger);
+  color: var(--ai-danger);
+}
+
+.mainPanel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: var(--ai-bg-app);
+}
+
+.topBar {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--ai-border-subtle);
+  background: var(--ai-bg-surface-active);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.topBarMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.topBarLeft {
+  flex: 0 1 280px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topBarCenter {
+  flex: 0 1 300px;
+  min-width: 180px;
+  display: flex;
+  justify-content: center;
+}
+
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconButton,
+.secondaryButton {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-md);
+  background: var(--ai-bg-surface);
+  color: var(--ai-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  transition: border-color var(--ai-transition-fast), background-color var(--ai-transition-fast), color var(--ai-transition-fast), transform var(--ai-transition-fast);
+}
+
+.iconButton {
+  min-width: 40px;
+  padding: 0 11px;
+}
+
+.secondaryButton {
+  padding: 0 12px;
+}
+
+.iconButton:hover,
+.secondaryButton:hover {
+  border-color: var(--ai-border-strong);
+  background: var(--ai-bg-surface-hover);
+  color: var(--ai-text-primary);
+}
+
+.workspaceTitle {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.workspaceTitle span {
+  overflow: hidden;
+  color: var(--ai-text-primary);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspaceTitle small {
+  overflow: hidden;
+  color: var(--ai-text-faint);
+  font-size: 11px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modelSelector {
+  position: relative;
+  width: min(280px, 42vw);
+}
+
+.modelSelectorTrigger {
+  width: 100%;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 13px;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-lg);
+  background: var(--ai-bg-surface);
+  color: var(--ai-text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.modelSelectorTrigger:hover,
+.modelSelectorTriggerActive {
+  border-color: var(--ai-border-strong);
+  background: var(--ai-bg-surface-hover);
+}
+
+.modelSelectorText {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ai-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modelSelectorChevron {
+  color: var(--ai-text-muted);
+  font-size: 11px;
+}
+
+.modelMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  overflow: auto;
+  max-height: 300px;
+  padding: 6px;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-lg);
+  background: var(--ai-bg-surface);
+  box-shadow: var(--ai-shadow-menu);
+}
+
+.modelMenuItem {
+  width: 100%;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--ai-radius-md);
+  background: transparent;
+  color: var(--ai-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.modelMenuItem:hover {
+  background: var(--ai-bg-surface-hover);
+  color: var(--ai-text-primary);
+}
+
+.modelMenuItemActive {
+  background: var(--ai-bg-surface-active);
+  color: var(--ai-text-primary);
+}
+
+.drawerOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: var(--ai-overlay);
+}
+
+.historyDrawer {
+  width: min(292px, 88vw);
+  height: 100%;
+  background: var(--ai-bg-sidebar);
+}
+
+@media (max-width: 720px) {
+  .sidebar {
+    width: 268px;
+  }
+
+  .workspaceTitle {
+    display: none;
+  }
+
+  .topBarCenter {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .modelSelector {
+    width: 100%;
+  }
+}

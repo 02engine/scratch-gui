@@ -1,0 +1,682 @@
+.chatArea {
+  --ai-chat-bottom-safe-area: 170px;
+
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 20px 64px var(--ai-chat-bottom-safe-area);
+  background: var(--ai-bg-app);
+  scroll-padding-bottom: var(--ai-chat-bottom-safe-area);
+}
+
+.conversationRail {
+  width: 100%;
+  max-width: var(--ai-chat-rail-width);
+  margin: 0 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 10px;
+}
+
+.bottomAnchor {
+  width: 100%;
+  height: 1px;
+  flex: 0 0 1px;
+}
+
+.emptyState {
+  width: 100%;
+  max-width: var(--ai-chat-rail-width);
+  margin: 12vh auto 0;
+  padding: 28px;
+  border: 1px solid var(--ai-border-subtle);
+  border-radius: var(--ai-radius-xl);
+  background: var(--ai-bg-surface);
+  box-shadow: 0 24px 70px var(--ai-shadow-medium);
+}
+
+.emptyStateBadge {
+  display: inline-flex;
+  margin-bottom: 14px;
+  padding: 4px 9px;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-pill);
+  color: var(--ai-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.emptyStateTitle {
+  margin: 0;
+  color: var(--ai-text-primary);
+  font-size: 20px;
+}
+
+.emptyStateText {
+  margin: 10px 0 0;
+  color: var(--ai-text-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.messageRow {
+  position: relative;
+  width: 100%;
+  transform-origin: 50% 100%;
+  animation: messageEnter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform, filter;
+}
+
+.messageRowLive {
+  animation: messageEnter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.assistantMessage {
+  display: block;
+}
+
+.userMessage {
+  display: block;
+}
+
+.messageTurnBody {
+  min-width: 0;
+  width: 100%;
+}
+
+.assistantMessage .messageTurnBody {
+  display: block;
+}
+
+.assistantMessage .messageActionRail {
+  right: -42px;
+}
+
+.userMessage .messageActionRail {
+  left: -42px;
+}
+
+.userMessage .messageTurnBody {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.messageBubble {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.messageBubbleAssistant {
+  color: var(--ai-text-primary);
+}
+
+.messageBubbleUser {
+  width: fit-content;
+  max-width: var(--ai-chat-user-width);
+  border: 1px solid var(--ai-border);
+  border-radius: 18px 18px 4px 18px;
+  background: var(--ai-bg-surface-active);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--ai-shadow-medium) 28%, transparent);
+}
+
+.messageText {
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--ai-text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.58;
+}
+
+.assistantSegments {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.messageMarkdown {
+  position: relative;
+  color: var(--ai-text-primary);
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.82;
+}
+
+.messageMarkdownStreaming > :where(p, h1, h2, h3, h4):last-child,
+.messageMarkdownStreaming > ul:last-child > li:last-child,
+.messageMarkdownStreaming > ol:last-child > li:last-child {
+  background-image: linear-gradient(
+    105deg,
+    var(--ai-text-primary) 0%,
+    var(--ai-text-primary) 43%,
+    color-mix(in srgb, var(--ai-accent) 70%, var(--ai-text-primary)) 48%,
+    color-mix(in srgb, var(--ai-success) 48%, var(--ai-text-primary)) 51%,
+    var(--ai-text-primary) 57%,
+    var(--ai-text-primary) 100%
+  );
+  background-size: 360% 100%;
+  animation: streamingTextShine 3.2s linear infinite;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .messageMarkdownStreaming > :where(p, h1, h2, h3, h4):last-child,
+  .messageMarkdownStreaming > ul:last-child > li:last-child,
+  .messageMarkdownStreaming > ol:last-child > li:last-child {
+    color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .messageMarkdownStreaming .markdownInlineCode {
+    color: var(--ai-text-primary);
+    -webkit-text-fill-color: var(--ai-text-primary);
+  }
+}
+
+.messageMarkdown p,
+.messageMarkdown ul,
+.messageMarkdown ol {
+  margin: 0 0 14px;
+}
+
+.messageMarkdown p:last-child,
+.messageMarkdown ul:last-child,
+.messageMarkdown ol:last-child,
+.messageMarkdown pre:last-child,
+.messageMarkdown h1:last-child,
+.messageMarkdown h2:last-child,
+.messageMarkdown h3:last-child {
+  margin-bottom: 0;
+}
+
+.messageMarkdown h1,
+.messageMarkdown h2,
+.messageMarkdown h3,
+.messageMarkdown h4 {
+  margin: 20px 0 10px;
+  color: var(--ai-text-primary);
+  font-weight: 780;
+  letter-spacing: 0;
+  line-height: 1.34;
+}
+
+.messageMarkdown h1:first-child,
+.messageMarkdown h2:first-child,
+.messageMarkdown h3:first-child,
+.messageMarkdown h4:first-child {
+  margin-top: 0;
+}
+
+.messageMarkdown h1 {
+  font-size: 20px;
+}
+
+.messageMarkdown h2 {
+  font-size: 17px;
+}
+
+.messageMarkdown h3 {
+  font-size: 15px;
+}
+
+.messageMarkdown h4 {
+  font-size: 13.5px;
+}
+
+.messageMarkdown hr {
+  margin: 18px 0 16px;
+  border: 0;
+  border-top: 1px solid var(--ai-border-strong);
+  opacity: 0.72;
+}
+
+.messageMarkdown ul,
+.messageMarkdown ol {
+  padding-left: 22px;
+}
+
+.messageMarkdown li {
+  margin: 7px 0;
+  line-height: 1.78;
+}
+
+.messageMarkdown li > p {
+  margin: 0 0 8px;
+}
+
+.messageMarkdown strong {
+  font-weight: 780;
+}
+
+.markdownInlineCode {
+  display: inline-block;
+  margin: 0 3px 2px;
+  padding: 2px 7px 3px;
+  border: 1px solid color-mix(in srgb, var(--ai-border-strong) 72%, transparent);
+  border-radius: var(--ai-radius-xs);
+  background: color-mix(in srgb, var(--ai-bg-elevated) 86%, transparent);
+  color: var(--ai-text-primary);
+  font-family: var(--ai-font-mono);
+  font-size: 0.92em;
+  line-height: 1.35;
+  vertical-align: baseline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition:
+    background var(--ai-transition),
+    border-color var(--ai-transition),
+    transform var(--ai-transition-fast);
+}
+
+.messageMarkdownStreaming > :where(p, h1, h2, h3, h4):last-child .markdownInlineCode,
+.messageMarkdownStreaming > ul:last-child > li:last-child .markdownInlineCode,
+.messageMarkdownStreaming > ol:last-child > li:last-child .markdownInlineCode {
+  animation: inlineCodeGlow 2.4s ease-in-out infinite;
+}
+
+.messageMarkdown pre {
+  overflow: auto;
+  margin: 15px 0 17px;
+  padding: 14px 16px;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-lg);
+  background: var(--ai-bg-code);
+  color: var(--ai-text-secondary);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
+  animation: codeBlockRise 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.markdownCode {
+  display: block;
+  min-width: max-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ai-text-secondary);
+  font-family: var(--ai-font-mono);
+  font-size: 11.5px;
+  line-height: 1.72;
+  white-space: pre;
+}
+
+.syntaxKeyword {
+  color: var(--ai-syntax-keyword);
+}
+
+.syntaxString {
+  color: var(--ai-syntax-string);
+}
+
+.syntaxNumber {
+  color: var(--ai-syntax-number);
+}
+
+.syntaxComment {
+  color: var(--ai-syntax-comment);
+  font-style: italic;
+}
+
+.syntaxIdentifier {
+  color: var(--ai-syntax-identifier);
+}
+
+.syntaxPunctuation {
+  color: var(--ai-syntax-punctuation);
+}
+
+.messageMarkdown a {
+  color: var(--ai-accent);
+}
+
+.reasoningInline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reasoningInlineActive .reasoningInlineButton {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--ai-accent) 34%, var(--ai-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ai-accent) 12%, transparent);
+}
+
+.reasoningInlineActive .reasoningInlineButton::after {
+  content: "";
+  position: absolute;
+  inset: -80% -24%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--ai-accent) 22%, transparent),
+    transparent
+  );
+  transform: translateX(-70%) rotate(12deg);
+  animation: reasoningSweep 1.65s ease-in-out infinite;
+}
+
+.reasoningInlineActive .reasoningInlineLabel {
+  animation: labelBreath 1.6s ease-in-out infinite;
+}
+
+.reasoningInlineButton {
+  width: fit-content;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-pill);
+  background: var(--ai-bg-surface);
+  color: var(--ai-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.reasoningInlineButton:hover {
+  background: var(--ai-bg-surface-hover);
+  color: var(--ai-text-primary);
+}
+
+.reasoningInlineArrow {
+  display: inline-flex;
+}
+
+.reasoningInlineLabel {
+  color: inherit;
+  font-size: 12px;
+}
+
+.reasoningInlineBody {
+  min-width: 0;
+}
+
+.reasoningText {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-lg);
+  background: var(--ai-bg-code);
+  color: var(--ai-text-muted);
+  white-space: pre-wrap;
+  font-family: var(--ai-font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.messageActionRail {
+  position: absolute;
+  top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ai-transition-fast);
+}
+
+.messageActionRailHorizontal {
+  flex-direction: column;
+}
+
+.messageRow:hover .messageActionRail {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.messageActionButton {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--ai-radius-sm);
+  background: transparent;
+  color: var(--ai-text-faint);
+  cursor: pointer;
+}
+
+.messageActionButton:hover {
+  border-color: var(--ai-border);
+  background: var(--ai-bg-surface);
+  color: var(--ai-text-primary);
+}
+
+.scrollToBottomButton {
+  position: fixed;
+  right: 28px;
+  bottom: 116px;
+  z-index: 12;
+  width: 34px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-pill);
+  background: var(--ai-bg-surface);
+  color: var(--ai-text-secondary);
+  cursor: pointer;
+  box-shadow: var(--ai-shadow-floating);
+  animation: scrollButtonEnter 260ms var(--ai-ease) both;
+}
+
+.scrollToBottomButton:hover {
+  background: var(--ai-bg-surface-hover);
+  color: var(--ai-text-primary);
+}
+
+.finalChangeSummary {
+  overflow: hidden;
+  width: 100%;
+  margin: 0 auto;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-lg);
+  background: var(--ai-bg-surface);
+  box-shadow: var(--ai-shadow-soft);
+}
+
+.finalChangeSummaryHeader,
+.finalChangeFileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+}
+
+.finalChangeSummaryHeader {
+  border-bottom: 1px solid var(--ai-border-subtle);
+  color: var(--ai-text-primary);
+  font-size: 12px;
+}
+
+.finalChangeFileList {
+  display: flex;
+  flex-direction: column;
+}
+
+.finalChangeFileItem {
+  color: var(--ai-text-secondary);
+  font-family: var(--ai-font-mono);
+  font-size: 12px;
+}
+
+.finalChangeFileItem + .finalChangeFileItem {
+  border-top: 1px solid var(--ai-border-subtle);
+}
+
+.finalChangeFileItem span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finalChangeFileItem span:last-child {
+  flex-shrink: 0;
+}
+
+.finalChangeFileItem em {
+  margin-left: 8px;
+  color: var(--ai-text-muted);
+  font-family: var(--ai-font-sans);
+  font-style: normal;
+}
+
+.diffAdded {
+  color: var(--ai-success);
+}
+
+.diffDeleted {
+  color: var(--ai-danger);
+}
+
+@keyframes messageEnter {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(14px) scale(0.985);
+  }
+  58% {
+    opacity: 1;
+    filter: blur(1px);
+    transform: translateY(-1px) scale(1.002);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes liveTurnBreath {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    filter: drop-shadow(0 0 18px color-mix(in srgb, var(--ai-accent) 10%, transparent));
+  }
+}
+
+@keyframes textBreath {
+  0%,
+  100% {
+    text-shadow: 0 0 0 transparent;
+  }
+  50% {
+    text-shadow: 0 0 10px color-mix(in srgb, var(--ai-accent) 12%, transparent);
+  }
+}
+
+@keyframes streamingTextShine {
+  0% {
+    background-position: 160% 0;
+  }
+  100% {
+    background-position: -160% 0;
+  }
+}
+
+@keyframes inlineCodeGlow {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--ai-border-strong) 72%, transparent);
+    box-shadow: 0 0 0 transparent;
+  }
+  50% {
+    border-color: color-mix(in srgb, var(--ai-accent) 36%, var(--ai-border));
+    box-shadow: 0 0 18px color-mix(in srgb, var(--ai-accent) 15%, transparent);
+  }
+}
+
+@keyframes codeBlockRise {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes reasoningSweep {
+  to {
+    transform: translateX(72%) rotate(12deg);
+  }
+}
+
+@keyframes labelBreath {
+  0%,
+  100% {
+    color: var(--ai-text-muted);
+  }
+  50% {
+    color: var(--ai-text-primary);
+  }
+}
+
+@keyframes scrollButtonEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .messageRow,
+  .messageRowLive,
+  .messageMarkdownStreaming > :where(p, h1, h2, h3, h4):last-child,
+  .messageMarkdownStreaming > ul:last-child > li:last-child,
+  .messageMarkdownStreaming > ol:last-child > li:last-child,
+  .messageMarkdownStreaming > :where(p, h1, h2, h3, h4):last-child .markdownInlineCode,
+  .messageMarkdownStreaming > ul:last-child > li:last-child .markdownInlineCode,
+  .messageMarkdownStreaming > ol:last-child > li:last-child .markdownInlineCode,
+  .messageMarkdown pre,
+  .reasoningInlineActive .reasoningInlineButton::after,
+  .reasoningInlineActive .reasoningInlineLabel,
+  .scrollToBottomButton {
+    animation: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .chatArea {
+    --ai-chat-bottom-safe-area: 184px;
+
+    padding: 16px 22px var(--ai-chat-bottom-safe-area);
+  }
+
+  .assistantMessage .messageActionRail,
+  .userMessage .messageActionRail {
+    display: none;
+  }
+
+  .scrollToBottomButton {
+    right: 18px;
+    bottom: 118px;
+  }
+
+  .messageBubbleUser {
+    max-width: 100%;
+  }
+}

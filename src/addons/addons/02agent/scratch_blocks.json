@@ -1,0 +1,3196 @@
+{
+  "categories": {
+    "core": {
+      "motion": {
+        "blocks": [
+          {
+            "opcode": "motion_movesteps",
+            "blockType": "COMMAND",
+            "text": "move [STEPS] steps",
+            "arguments": {
+              "STEPS": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "motion_gotoxy",
+            "blockType": "COMMAND",
+            "text": "go to x: [X] y: [Y]",
+            "arguments": {
+              "X": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              },
+              "Y": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              }
+            }
+          },
+          {
+            "opcode": "motion_goto",
+            "blockType": "COMMAND",
+            "text": "go to [TO]",
+            "arguments": {
+              "TO": {
+                "type": "STRING",
+                "menu": "DESTINATION_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "motion_turnright",
+            "blockType": "COMMAND",
+            "text": "turn right [DEGREES] degrees",
+            "arguments": {
+              "DEGREES": {
+                "type": "NUMBER",
+                "defaultValue": 15
+              }
+            }
+          },
+          {
+            "opcode": "motion_turnleft",
+            "blockType": "COMMAND",
+            "text": "turn left [DEGREES] degrees",
+            "arguments": {
+              "DEGREES": {
+                "type": "NUMBER",
+                "defaultValue": 15
+              }
+            }
+          },
+          {
+            "opcode": "motion_pointindirection",
+            "blockType": "COMMAND",
+            "text": "point in direction [DIRECTION]",
+            "arguments": {
+              "DIRECTION": {
+                "type": "ANGLE",
+                "defaultValue": 90
+              }
+            }
+          },
+          {
+            "opcode": "motion_pointtowards",
+            "blockType": "COMMAND",
+            "text": "point towards [TOWARDS]",
+            "arguments": {
+              "TOWARDS": {
+                "type": "STRING",
+                "menu": "TOUCHING_OBJECT_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "motion_glidesecstoxy",
+            "blockType": "COMMAND",
+            "text": "glide [SECS] secs to x: [X] y: [Y]",
+            "arguments": {
+              "SECS": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              },
+              "X": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              },
+              "Y": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              }
+            }
+          },
+          {
+            "opcode": "motion_glideto",
+            "blockType": "COMMAND",
+            "text": "glide [SECS] secs to [TO]",
+            "arguments": {
+              "SECS": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              },
+              "TO": {
+                "type": "STRING",
+                "menu": "DESTINATION_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "motion_ifonedgebounce",
+            "blockType": "COMMAND",
+            "text": "if on edge, bounce"
+          },
+          {
+            "opcode": "motion_setrotationstyle",
+            "blockType": "COMMAND",
+            "text": "set rotation style [STYLE]",
+            "arguments": {
+              "STYLE": {
+                "type": "STRING",
+                "menu": "ROTATION_STYLE_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "motion_changexby",
+            "blockType": "COMMAND",
+            "text": "change x by [DX]",
+            "arguments": {
+              "DX": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "motion_setx",
+            "blockType": "COMMAND",
+            "text": "set x to [X]",
+            "arguments": {
+              "X": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              }
+            }
+          },
+          {
+            "opcode": "motion_changeyby",
+            "blockType": "COMMAND",
+            "text": "change y by [DY]",
+            "arguments": {
+              "DY": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "motion_sety",
+            "blockType": "COMMAND",
+            "text": "set y to [Y]",
+            "arguments": {
+              "Y": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              }
+            }
+          },
+          {
+            "opcode": "motion_xposition",
+            "blockType": "REPORTER",
+            "text": "x position"
+          },
+          {
+            "opcode": "motion_yposition",
+            "blockType": "REPORTER",
+            "text": "y position"
+          },
+          {
+            "opcode": "motion_direction",
+            "blockType": "REPORTER",
+            "text": "direction"
+          }
+        ],
+        "menus": {
+          "DESTINATION_MENU": {
+            "acceptReporters": true,
+            "isDynamic": true,
+            "items": [
+              {
+                "text": "_mouse_",
+                "value": "_mouse_"
+              },
+              {
+                "text": "_random_",
+                "value": "_random_"
+              }
+            ]
+          },
+          "TOUCHING_OBJECT_MENU": {
+            "acceptReporters": true,
+            "isDynamic": true,
+            "items": [
+              {
+                "text": "_mouse_",
+                "value": "_mouse_"
+              },
+              {
+                "text": "_random_",
+                "value": "_random_"
+              }
+            ]
+          },
+          "ROTATION_STYLE_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "left-right",
+                "value": "left-right"
+              },
+              {
+                "text": "don't rotate",
+                "value": "don't rotate"
+              },
+              {
+                "text": "all around",
+                "value": "all around"
+              }
+            ]
+          }
+        }
+      },
+      "looks": {
+        "blocks": [
+          {
+            "opcode": "looks_say",
+            "blockType": "COMMAND",
+            "text": "say [MESSAGE]",
+            "arguments": {
+              "MESSAGE": {
+                "type": "STRING",
+                "defaultValue": "Hello!"
+              }
+            }
+          },
+          {
+            "opcode": "looks_sayforsecs",
+            "blockType": "COMMAND",
+            "text": "say [MESSAGE] for [SECS] seconds",
+            "arguments": {
+              "MESSAGE": {
+                "type": "STRING",
+                "defaultValue": "Hello!"
+              },
+              "SECS": {
+                "type": "NUMBER",
+                "defaultValue": 2
+              }
+            }
+          },
+          {
+            "opcode": "looks_think",
+            "blockType": "COMMAND",
+            "text": "think [MESSAGE]",
+            "arguments": {
+              "MESSAGE": {
+                "type": "STRING",
+                "defaultValue": "Hmm..."
+              }
+            }
+          },
+          {
+            "opcode": "looks_thinkforsecs",
+            "blockType": "COMMAND",
+            "text": "think [MESSAGE] for [SECS] seconds",
+            "arguments": {
+              "MESSAGE": {
+                "type": "STRING",
+                "defaultValue": "Hmm..."
+              },
+              "SECS": {
+                "type": "NUMBER",
+                "defaultValue": 2
+              }
+            }
+          },
+          {
+            "opcode": "looks_show",
+            "blockType": "COMMAND",
+            "text": "show"
+          },
+          {
+            "opcode": "looks_hide",
+            "blockType": "COMMAND",
+            "text": "hide"
+          },
+          {
+            "opcode": "looks_switchcostumeto",
+            "blockType": "COMMAND",
+            "text": "switch costume to [COSTUME]",
+            "arguments": {
+              "COSTUME": {
+                "type": "STRING",
+                "menu": "COSTUME_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "looks_switchbackdropto",
+            "blockType": "COMMAND",
+            "text": "switch backdrop to [BACKDROP]",
+            "arguments": {
+              "BACKDROP": {
+                "type": "STRING",
+                "menu": "BACKDROP_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "looks_switchbackdroptoandwait",
+            "blockType": "COMMAND",
+            "text": "switch backdrop to [BACKDROP] and wait",
+            "arguments": {
+              "BACKDROP": {
+                "type": "STRING",
+                "menu": "BACKDROP_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "looks_nextcostume",
+            "blockType": "COMMAND",
+            "text": "next costume"
+          },
+          {
+            "opcode": "looks_nextbackdrop",
+            "blockType": "COMMAND",
+            "text": "next backdrop"
+          },
+          {
+            "opcode": "looks_changeeffectby",
+            "blockType": "COMMAND",
+            "text": "change [EFFECT] effect by [CHANGE]",
+            "arguments": {
+              "EFFECT": {
+                "type": "STRING",
+                "menu": "GRAPHIC_EFFECT_MENU"
+              },
+              "CHANGE": {
+                "type": "NUMBER",
+                "defaultValue": 25
+              }
+            }
+          },
+          {
+            "opcode": "looks_seteffectto",
+            "blockType": "COMMAND",
+            "text": "set [EFFECT] effect to [VALUE]",
+            "arguments": {
+              "EFFECT": {
+                "type": "STRING",
+                "menu": "GRAPHIC_EFFECT_MENU"
+              },
+              "VALUE": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              }
+            }
+          },
+          {
+            "opcode": "looks_cleargraphiceffects",
+            "blockType": "COMMAND",
+            "text": "clear graphic effects"
+          },
+          {
+            "opcode": "looks_changesizeby",
+            "blockType": "COMMAND",
+            "text": "change size by [CHANGE]",
+            "arguments": {
+              "CHANGE": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "looks_setsizeto",
+            "blockType": "COMMAND",
+            "text": "set size to [SIZE] %",
+            "arguments": {
+              "SIZE": {
+                "type": "NUMBER",
+                "defaultValue": 100
+              }
+            }
+          },
+          {
+            "opcode": "looks_gotofrontback",
+            "blockType": "COMMAND",
+            "text": "go to [FRONT_BACK] layer",
+            "arguments": {
+              "FRONT_BACK": {
+                "type": "STRING",
+                "menu": "FRONT_BACK_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "looks_goforwardbackwardlayers",
+            "blockType": "COMMAND",
+            "text": "go [FORWARD_BACKWARD] [NUM] layers",
+            "arguments": {
+              "FORWARD_BACKWARD": {
+                "type": "STRING",
+                "menu": "FORWARD_BACKWARD_MENU"
+              },
+              "NUM": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              }
+            }
+          },
+          {
+            "opcode": "looks_size",
+            "blockType": "REPORTER",
+            "text": "size"
+          },
+          {
+            "opcode": "looks_costumenumbername",
+            "blockType": "REPORTER",
+            "text": "[NUMBER_NAME] of costume [COSTUME]",
+            "arguments": {
+              "NUMBER_NAME": {
+                "type": "STRING",
+                "menu": "NUMBER_NAME_MENU"
+              },
+              "COSTUME": {
+                "type": "STRING",
+                "menu": "COSTUME_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "looks_backdropnumbername",
+            "blockType": "REPORTER",
+            "text": "[NUMBER_NAME] of backdrop [BACKDROP]",
+            "arguments": {
+              "NUMBER_NAME": {
+                "type": "STRING",
+                "menu": "NUMBER_NAME_MENU"
+              },
+              "BACKDROP": {
+                "type": "STRING",
+                "menu": "BACKDROP_MENU"
+              }
+            }
+          }
+        ],
+        "menus": {
+          "GRAPHIC_EFFECT_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "color",
+                "value": "color"
+              },
+              {
+                "text": "fisheye",
+                "value": "fisheye"
+              },
+              {
+                "text": "whirl",
+                "value": "whirl"
+              },
+              {
+                "text": "pixelate",
+                "value": "pixelate"
+              },
+              {
+                "text": "mosaic",
+                "value": "mosaic"
+              },
+              {
+                "text": "brightness",
+                "value": "brightness"
+              },
+              {
+                "text": "ghost",
+                "value": "ghost"
+              }
+            ]
+          },
+          "FRONT_BACK_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "front",
+                "value": "front"
+              },
+              {
+                "text": "back",
+                "value": "back"
+              }
+            ]
+          },
+          "FORWARD_BACKWARD_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "forward",
+                "value": "forward"
+              },
+              {
+                "text": "backward",
+                "value": "backward"
+              }
+            ]
+          },
+          "NUMBER_NAME_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "number",
+                "value": "number"
+              },
+              {
+                "text": "name",
+                "value": "name"
+              }
+            ]
+          },
+          "COSTUME_MENU": {
+            "acceptReporters": true,
+            "isDynamic": true
+          },
+          "BACKDROP_MENU": {
+            "acceptReporters": true,
+            "isDynamic": true
+          }
+        }
+      },
+      "sound": {
+        "blocks": [
+          {
+            "opcode": "sound_play",
+            "blockType": "COMMAND",
+            "text": "start sound [SOUND_MENU]",
+            "arguments": {
+              "SOUND_MENU": {
+                "type": "STRING",
+                "menu": "SOUND_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "sound_playuntildone",
+            "blockType": "COMMAND",
+            "text": "play sound [SOUND_MENU] until done",
+            "arguments": {
+              "SOUND_MENU": {
+                "type": "STRING",
+                "menu": "SOUND_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "sound_stopallsounds",
+            "blockType": "COMMAND",
+            "text": "stop all sounds"
+          },
+          {
+            "opcode": "sound_seteffectto",
+            "blockType": "COMMAND",
+            "text": "set [EFFECT] effect to [VALUE]",
+            "arguments": {
+              "EFFECT": {
+                "type": "STRING",
+                "menu": "SOUND_EFFECTS_MENU"
+              },
+              "VALUE": {
+                "type": "NUMBER",
+                "defaultValue": 100
+              }
+            }
+          },
+          {
+            "opcode": "sound_changeeffectby",
+            "blockType": "COMMAND",
+            "text": "change [EFFECT] effect by [VALUE]",
+            "arguments": {
+              "EFFECT": {
+                "type": "STRING",
+                "menu": "SOUND_EFFECTS_MENU"
+              },
+              "VALUE": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "sound_cleareffects",
+            "blockType": "COMMAND",
+            "text": "clear sound effects"
+          },
+          {
+            "opcode": "sound_setvolumeto",
+            "blockType": "COMMAND",
+            "text": "set volume to [VOLUME] %",
+            "arguments": {
+              "VOLUME": {
+                "type": "NUMBER",
+                "defaultValue": 100
+              }
+            }
+          },
+          {
+            "opcode": "sound_changevolumeby",
+            "blockType": "COMMAND",
+            "text": "change volume by [VOLUME]",
+            "arguments": {
+              "VOLUME": {
+                "type": "NUMBER",
+                "defaultValue": -10
+              }
+            }
+          },
+          {
+            "opcode": "sound_volume",
+            "blockType": "REPORTER",
+            "text": "volume"
+          }
+        ],
+        "menus": {
+          "SOUND_EFFECTS_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "pitch",
+                "value": "pitch"
+              },
+              {
+                "text": "pan left/right",
+                "value": "pan"
+              }
+            ]
+          }
+        }
+      },
+      "control": {
+        "blocks": [
+          {
+            "opcode": "control_wait",
+            "blockType": "COMMAND",
+            "text": "wait [DURATION] seconds",
+            "arguments": {
+              "DURATION": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              }
+            }
+          },
+          {
+            "opcode": "control_repeat",
+            "blockType": "COMMAND",
+            "text": "repeat [TIMES] times",
+            "arguments": {
+              "TIMES": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "control_forever",
+            "blockType": "COMMAND",
+            "text": "forever"
+          },
+          {
+            "opcode": "control_if",
+            "blockType": "COMMAND",
+            "text": "if <[CONDITION]> then"
+          },
+          {
+            "opcode": "control_if_else",
+            "blockType": "COMMAND",
+            "text": "if <[CONDITION]> then...else"
+          },
+          {
+            "opcode": "control_wait_until",
+            "blockType": "COMMAND",
+            "text": "wait until <[CONDITION]>"
+          },
+          {
+            "opcode": "control_repeat_until",
+            "blockType": "COMMAND",
+            "text": "repeat until <[CONDITION]>"
+          },
+          {
+            "opcode": "control_while",
+            "blockType": "COMMAND",
+            "text": "while <[CONDITION]>"
+          },
+          {
+            "opcode": "control_for_each",
+            "blockType": "COMMAND",
+            "text": "for each [VARIABLE] in range [VALUE] to [VALUE]"
+          },
+          {
+            "opcode": "control_stop",
+            "blockType": "COMMAND",
+            "text": "stop [STOP_OPTION]",
+            "arguments": {
+              "STOP_OPTION": {
+                "type": "STRING",
+                "menu": "STOP_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "control_start_as_clone",
+            "blockType": "HAT",
+            "text": "when I start as a clone"
+          },
+          {
+            "opcode": "control_create_clone_of",
+            "blockType": "COMMAND",
+            "text": "create clone of [CLONE_OPTION]",
+            "arguments": {
+              "CLONE_OPTION": {
+                "type": "STRING",
+                "menu": "CLONE_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "control_delete_this_clone",
+            "blockType": "COMMAND",
+            "text": "delete this clone"
+          },
+          {
+            "opcode": "control_get_counter",
+            "blockType": "REPORTER",
+            "text": "counter"
+          },
+          {
+            "opcode": "control_incr_counter",
+            "blockType": "COMMAND",
+            "text": "increment counter"
+          },
+          {
+            "opcode": "control_clear_counter",
+            "blockType": "COMMAND",
+            "text": "clear counter"
+          },
+          {
+            "opcode": "control_all_at_once",
+            "blockType": "COMMAND",
+            "text": "all at once"
+          }
+        ],
+        "menus": {
+          "STOP_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "all",
+                "value": "all"
+              },
+              {
+                "text": "this script",
+                "value": "this script"
+              },
+              {
+                "text": "other scripts in sprite",
+                "value": "other scripts in sprite"
+              },
+              {
+                "text": "other scripts in stage",
+                "value": "other scripts in stage"
+              }
+            ]
+          },
+          "CLONE_MENU": {
+            "acceptReporters": true,
+            "isDynamic": true,
+            "items": [
+              {
+                "text": "_myself_",
+                "value": "_myself_"
+              }
+            ]
+          }
+        }
+      },
+      "event": {
+        "blocks": [
+          {
+            "opcode": "event_whenflagclicked",
+            "blockType": "HAT",
+            "text": "when green flag clicked"
+          },
+          {
+            "opcode": "event_whenkeypressed",
+            "blockType": "HAT",
+            "text": "when [KEY_OPTION] key pressed",
+            "arguments": {
+              "KEY_OPTION": {
+                "type": "STRING",
+                "menu": "KEY_OPTION_MENU",
+                "defaultValue": "space"
+              }
+            }
+          },
+          {
+            "opcode": "event_whenthisspriteclicked",
+            "blockType": "HAT",
+            "text": "when this sprite clicked"
+          },
+          {
+            "opcode": "event_whenstageclicked",
+            "blockType": "HAT",
+            "text": "when stage clicked"
+          },
+          {
+            "opcode": "event_whentouchingobject",
+            "blockType": "HAT",
+            "text": "when this sprite touches [TOUCHINGOBJECTMENU]",
+            "arguments": {
+              "TOUCHINGOBJECTMENU": {
+                "type": "STRING",
+                "menu": "TOUCHING_OBJECT_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "event_whenbackdropswitchesto",
+            "blockType": "HAT",
+            "text": "when backdrop switches to [BACKDROP]",
+            "arguments": {
+              "BACKDROP": {
+                "type": "STRING",
+                "menu": "BACKDROP_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "event_whengreaterthan",
+            "blockType": "HAT",
+            "text": "when [WHENGREATERTHANMENU] > [VALUE]",
+            "arguments": {
+              "WHENGREATERTHANMENU": {
+                "type": "STRING",
+                "menu": "WHENGREATERTHANMENU",
+                "defaultValue": "loudness"
+              },
+              "VALUE": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "event_whenbroadcastreceived",
+            "blockType": "HAT",
+            "text": "when I receive [BROADCAST_OPTION]",
+            "arguments": {
+              "BROADCAST_OPTION": {
+                "type": "STRING",
+                "menu": "BROADCAST_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "event_broadcast",
+            "blockType": "COMMAND",
+            "text": "broadcast [BROADCAST_OPTION]",
+            "arguments": {
+              "BROADCAST_OPTION": {
+                "type": "STRING",
+                "menu": "BROADCAST_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "event_broadcastandwait",
+            "blockType": "COMMAND",
+            "text": "broadcast [BROADCAST_OPTION] and wait",
+            "arguments": {
+              "BROADCAST_OPTION": {
+                "type": "STRING",
+                "menu": "BROADCAST_MENU"
+              }
+            }
+          }
+        ],
+        "menus": {
+          "KEY_OPTION_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "space",
+                "value": "space"
+              },
+              {
+                "text": "left arrow",
+                "value": "left arrow"
+              },
+              {
+                "text": "right arrow",
+                "value": "right arrow"
+              },
+              {
+                "text": "down arrow",
+                "value": "down arrow"
+              },
+              {
+                "text": "up arrow",
+                "value": "up arrow"
+              },
+              {
+                "text": "any",
+                "value": "any"
+              }
+            ]
+          },
+          "WHENGREATERTHANMENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "loudness",
+                "value": "loudness"
+              },
+              {
+                "text": "timer",
+                "value": "timer"
+              }
+            ]
+          },
+          "TOUCHING_OBJECT_MENU": {
+            "acceptReporters": false,
+            "isDynamic": true,
+            "items": [
+              {
+                "text": "_mouse_",
+                "value": "_mouse_"
+              },
+              {
+                "text": "_edge_",
+                "value": "_edge_"
+              }
+            ]
+          },
+          "BROADCAST_MENU": {
+            "acceptReporters": true,
+            "isDynamic": true
+          }
+        }
+      },
+      "sensing": {
+        "blocks": [
+          {
+            "opcode": "sensing_touchingobject",
+            "blockType": "BOOLEAN",
+            "text": "touching [TOUCHINGOBJECTMENU]?",
+            "arguments": {
+              "TOUCHINGOBJECTMENU": {
+                "type": "STRING",
+                "menu": "TOUCHING_OBJECT_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "sensing_touchingcolor",
+            "blockType": "BOOLEAN",
+            "text": "touching color [COLOR]?"
+          },
+          {
+            "opcode": "sensing_coloristouchingcolor",
+            "blockType": "BOOLEAN",
+            "text": "color [COLOR] is touching [COLOR2]?"
+          },
+          {
+            "opcode": "sensing_distanceto",
+            "blockType": "REPORTER",
+            "text": "distance to [DISTANCETOMENU]",
+            "arguments": {
+              "DISTANCETOMENU": {
+                "type": "STRING",
+                "menu": "DISTANCETOMENU"
+              }
+            }
+          },
+          {
+            "opcode": "sensing_timer",
+            "blockType": "REPORTER",
+            "text": "timer"
+          },
+          {
+            "opcode": "sensing_resettimer",
+            "blockType": "COMMAND",
+            "text": "reset timer"
+          },
+          {
+            "opcode": "sensing_of",
+            "blockType": "REPORTER",
+            "text": "[PROPERTY] of [OBJECT]",
+            "arguments": {
+              "PROPERTY": {
+                "type": "STRING",
+                "menu": "PROPERTY_MENU"
+              },
+              "OBJECT": {
+                "type": "STRING",
+                "menu": "OBJECT_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "sensing_mousex",
+            "blockType": "REPORTER",
+            "text": "mouse x"
+          },
+          {
+            "opcode": "sensing_mousey",
+            "blockType": "REPORTER",
+            "text": "mouse y"
+          },
+          {
+            "opcode": "sensing_setdragmode",
+            "blockType": "COMMAND",
+            "text": "set drag mode to [DRAG_MODE]",
+            "arguments": {
+              "DRAG_MODE": {
+                "type": "STRING",
+                "menu": "DRAG_MODE_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "sensing_mousedown",
+            "blockType": "BOOLEAN",
+            "text": "mouse down?"
+          },
+          {
+            "opcode": "sensing_keypressed",
+            "blockType": "BOOLEAN",
+            "text": "key [KEY_OPTION] pressed?",
+            "arguments": {
+              "KEY_OPTION": {
+                "type": "STRING",
+                "menu": "KEY_OPTION_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "sensing_current",
+            "blockType": "REPORTER",
+            "text": "current [CURRENTMENU]",
+            "arguments": {
+              "CURRENTMENU": {
+                "type": "STRING",
+                "menu": "CURRENTMENU"
+              }
+            }
+          },
+          {
+            "opcode": "sensing_dayssince2000",
+            "blockType": "REPORTER",
+            "text": "days since 2000"
+          },
+          {
+            "opcode": "sensing_loudness",
+            "blockType": "REPORTER",
+            "text": "loudness"
+          },
+          {
+            "opcode": "sensing_loud",
+            "blockType": "BOOLEAN",
+            "text": "loud?"
+          },
+          {
+            "opcode": "sensing_askandwait",
+            "blockType": "COMMAND",
+            "text": "ask [QUESTION] and wait",
+            "arguments": {
+              "QUESTION": {
+                "type": "STRING",
+                "defaultValue": "What's your name?"
+              }
+            }
+          },
+          {
+            "opcode": "sensing_answer",
+            "blockType": "REPORTER",
+            "text": "answer"
+          },
+          {
+            "opcode": "sensing_username",
+            "blockType": "REPORTER",
+            "text": "username"
+          }
+        ],
+        "menus": {
+          "TOUCHING_OBJECT_MENU": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "_mouse_",
+                "value": "_mouse_"
+              },
+              {
+                "text": "_edge_",
+                "value": "_edge_"
+              }
+            ]
+          },
+          "DISTANCETOMENU": {
+            "acceptReporters": true,
+            "isDynamic": true,
+            "items": [
+              {
+                "text": "_mouse_",
+                "value": "_mouse_"
+              }
+            ]
+          },
+          "OBJECT_MENU": {
+            "acceptReporters": true,
+            "isDynamic": true,
+            "items": [
+              {
+                "text": "Stage",
+                "value": "_stage_"
+              }
+            ]
+          },
+          "PROPERTY_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "x position",
+                "value": "x position"
+              },
+              {
+                "text": "y position",
+                "value": "y position"
+              },
+              {
+                "text": "direction",
+                "value": "direction"
+              },
+              {
+                "text": "costume #",
+                "value": "costume #"
+              },
+              {
+                "text": "costume name",
+                "value": "costume name"
+              },
+              {
+                "text": "size",
+                "value": "size"
+              },
+              {
+                "text": "volume",
+                "value": "volume"
+              },
+              {
+                "text": "backdrop #",
+                "value": "backdrop #"
+              },
+              {
+                "text": "backdrop name",
+                "value": "backdrop name"
+              }
+            ]
+          },
+          "DRAG_MODE_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "draggable",
+                "value": "draggable"
+              },
+              {
+                "text": "not draggable",
+                "value": "not draggable"
+              }
+            ]
+          },
+          "CURRENTMENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "year",
+                "value": "year"
+              },
+              {
+                "text": "month",
+                "value": "month"
+              },
+              {
+                "text": "date",
+                "value": "date"
+              },
+              {
+                "text": "day of week",
+                "value": "dayofweek"
+              },
+              {
+                "text": "hour",
+                "value": "hour"
+              },
+              {
+                "text": "minute",
+                "value": "minute"
+              },
+              {
+                "text": "second",
+                "value": "second"
+              }
+            ]
+          },
+          "KEY_OPTION_MENU": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "space",
+                "value": "space"
+              },
+              {
+                "text": "left arrow",
+                "value": "left arrow"
+              },
+              {
+                "text": "right arrow",
+                "value": "right arrow"
+              },
+              {
+                "text": "down arrow",
+                "value": "down arrow"
+              },
+              {
+                "text": "up arrow",
+                "value": "up arrow"
+              }
+            ]
+          }
+        }
+      },
+      "operators": {
+        "blocks": [
+          {
+            "opcode": "operator_add",
+            "blockType": "REPORTER",
+            "text": "([NUM1] + [NUM2])",
+            "arguments": {
+              "NUM1": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              },
+              "NUM2": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_subtract",
+            "blockType": "REPORTER",
+            "text": "([NUM1] - [NUM2])",
+            "arguments": {
+              "NUM1": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              },
+              "NUM2": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_multiply",
+            "blockType": "REPORTER",
+            "text": "([NUM1] * [NUM2])",
+            "arguments": {
+              "NUM1": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              },
+              "NUM2": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_divide",
+            "blockType": "REPORTER",
+            "text": "([NUM1] / [NUM2])",
+            "arguments": {
+              "NUM1": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              },
+              "NUM2": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_random",
+            "blockType": "REPORTER",
+            "text": "pick random [FROM] to [TO]",
+            "arguments": {
+              "FROM": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              },
+              "TO": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "operator_lt",
+            "blockType": "BOOLEAN",
+            "text": "<[OPERAND1] < [OPERAND2]>",
+            "arguments": {
+              "OPERAND1": {
+                "type": "STRING",
+                "defaultValue": ""
+              },
+              "OPERAND2": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_equals",
+            "blockType": "BOOLEAN",
+            "text": "<[OPERAND1] = [OPERAND2]>",
+            "arguments": {
+              "OPERAND1": {
+                "type": "STRING",
+                "defaultValue": ""
+              },
+              "OPERAND2": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_gt",
+            "blockType": "BOOLEAN",
+            "text": "<[OPERAND1] > [OPERAND2]>",
+            "arguments": {
+              "OPERAND1": {
+                "type": "STRING",
+                "defaultValue": ""
+              },
+              "OPERAND2": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_and",
+            "blockType": "BOOLEAN",
+            "text": "<[OPERAND1] and [OPERAND2]>",
+            "arguments": {
+              "OPERAND1": {
+                "type": "BOOLEAN",
+                "defaultValue": ""
+              },
+              "OPERAND2": {
+                "type": "BOOLEAN",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_or",
+            "blockType": "BOOLEAN",
+            "text": "<[OPERAND1] or [OPERAND2]>",
+            "arguments": {
+              "OPERAND1": {
+                "type": "BOOLEAN",
+                "defaultValue": ""
+              },
+              "OPERAND2": {
+                "type": "BOOLEAN",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_not",
+            "blockType": "BOOLEAN",
+            "text": "<not [OPERAND]>",
+            "arguments": {
+              "OPERAND": {
+                "type": "BOOLEAN",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_join",
+            "blockType": "REPORTER",
+            "text": "join [STRING1] [STRING2]",
+            "arguments": {
+              "STRING1": {
+                "type": "STRING",
+                "defaultValue": "hello"
+              },
+              "STRING2": {
+                "type": "STRING",
+                "defaultValue": "world"
+              }
+            }
+          },
+          {
+            "opcode": "operator_letter_of",
+            "blockType": "REPORTER",
+            "text": "letter [LETTER] of [STRING]",
+            "arguments": {
+              "LETTER": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              },
+              "STRING": {
+                "type": "STRING",
+                "defaultValue": "world"
+              }
+            }
+          },
+          {
+            "opcode": "operator_length",
+            "blockType": "REPORTER",
+            "text": "length of [STRING]",
+            "arguments": {
+              "STRING": {
+                "type": "STRING",
+                "defaultValue": "world"
+              }
+            }
+          },
+          {
+            "opcode": "operator_contains",
+            "blockType": "BOOLEAN",
+            "text": "<[STRING1] contains [STRING2]>",
+            "arguments": {
+              "STRING1": {
+                "type": "STRING",
+                "defaultValue": "world"
+              },
+              "STRING2": {
+                "type": "STRING",
+                "defaultValue": "or"
+              }
+            }
+          },
+          {
+            "opcode": "operator_mod",
+            "blockType": "REPORTER",
+            "text": "([NUM1] mod [NUM2])",
+            "arguments": {
+              "NUM1": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              },
+              "NUM2": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_round",
+            "blockType": "REPORTER",
+            "text": "round [NUM]",
+            "arguments": {
+              "NUM": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_mathop",
+            "blockType": "REPORTER",
+            "text": "([OPERATOR] of [NUM])",
+            "arguments": {
+              "OPERATOR": {
+                "type": "STRING",
+                "menu": "OPERATOR_MENU",
+                "defaultValue": "sqrt"
+              },
+              "NUM": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              }
+            }
+          }
+        ],
+        "menus": {
+          "OPERATOR_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "abs",
+                "value": "abs"
+              },
+              {
+                "text": "floor",
+                "value": "floor"
+              },
+              {
+                "text": "ceiling",
+                "value": "ceiling"
+              },
+              {
+                "text": "sqrt",
+                "value": "sqrt"
+              },
+              {
+                "text": "sin",
+                "value": "sin"
+              },
+              {
+                "text": "cos",
+                "value": "cos"
+              },
+              {
+                "text": "tan",
+                "value": "tan"
+              },
+              {
+                "text": "asin",
+                "value": "asin"
+              },
+              {
+                "text": "acos",
+                "value": "acos"
+              },
+              {
+                "text": "atan",
+                "value": "atan"
+              },
+              {
+                "text": "ln",
+                "value": "ln"
+              },
+              {
+                "text": "log",
+                "value": "log"
+              },
+              {
+                "text": "e ^",
+                "value": "e ^"
+              },
+              {
+                "text": "10 ^",
+                "value": "10 ^"
+              }
+            ]
+          }
+        }
+      },
+      "data": {
+        "blocks": [
+          {
+            "opcode": "data_variable",
+            "blockType": "REPORTER",
+            "text": "[VARIABLE]"
+          },
+          {
+            "opcode": "data_setvariableto",
+            "blockType": "COMMAND",
+            "text": "set [VARIABLE] to [VALUE]"
+          },
+          {
+            "opcode": "data_changevariableby",
+            "blockType": "COMMAND",
+            "text": "change [VARIABLE] by [VALUE]"
+          },
+          {
+            "opcode": "data_showvariable",
+            "blockType": "COMMAND",
+            "text": "show variable [VARIABLE]"
+          },
+          {
+            "opcode": "data_hidevariable",
+            "blockType": "COMMAND",
+            "text": "hide variable [VARIABLE]"
+          },
+          {
+            "opcode": "data_listcontents",
+            "blockType": "REPORTER",
+            "text": "[LIST]"
+          },
+          {
+            "opcode": "data_addtolist",
+            "blockType": "COMMAND",
+            "text": "add [ITEM] to [LIST]"
+          },
+          {
+            "opcode": "data_deleteoflist",
+            "blockType": "COMMAND",
+            "text": "delete [INDEX] of [LIST]"
+          },
+          {
+            "opcode": "data_deletealloflist",
+            "blockType": "COMMAND",
+            "text": "delete all of [LIST]"
+          },
+          {
+            "opcode": "data_insertatlist",
+            "blockType": "COMMAND",
+            "text": "insert [ITEM] at [INDEX] of [LIST]"
+          },
+          {
+            "opcode": "data_replaceitemoflist",
+            "blockType": "COMMAND",
+            "text": "replace item [INDEX] of [LIST] with [ITEM]"
+          },
+          {
+            "opcode": "data_itemoflist",
+            "blockType": "REPORTER",
+            "text": "item [INDEX] of [LIST]"
+          },
+          {
+            "opcode": "data_itemnumoflist",
+            "blockType": "REPORTER",
+            "text": "item # of [ITEM] in [LIST]"
+          },
+          {
+            "opcode": "data_lengthoflist",
+            "blockType": "REPORTER",
+            "text": "length of [LIST]"
+          },
+          {
+            "opcode": "data_listcontainsitem",
+            "blockType": "BOOLEAN",
+            "text": "[LIST] contains [ITEM]?"
+          },
+          {
+            "opcode": "data_showlist",
+            "blockType": "COMMAND",
+            "text": "show list [LIST]"
+          },
+          {
+            "opcode": "data_hidelist",
+            "blockType": "COMMAND",
+            "text": "hide list [LIST]"
+          }
+        ]
+      },
+      "procedures": {
+        "blocks": [
+          {
+            "opcode": "procedures_definition",
+            "blockType": "PROCEDURE",
+            "text": "define"
+          },
+          {
+            "opcode": "procedures_call",
+            "blockType": "PROCEDURE_CALL",
+            "text": "[PROCCODE]"
+          },
+          {
+            "opcode": "argument_reporter_string_number",
+            "blockType": "REPORTER",
+            "text": "[VALUE]"
+          },
+          {
+            "opcode": "argument_reporter_boolean",
+            "blockType": "BOOLEAN",
+            "text": "[VALUE]"
+          }
+        ]
+      }
+    },
+    "extensions": {
+      "music": {
+        "blocks": [
+          {
+            "opcode": "music_playDrumForBeats",
+            "blockType": "COMMAND",
+            "text": "play drum [DRUM] for [BEATS] beats",
+            "arguments": {
+              "DRUM": {
+                "type": "NUMBER",
+                "menu": "DRUM",
+                "defaultValue": 1
+              },
+              "BEATS": {
+                "type": "NUMBER",
+                "defaultValue": 0.25
+              }
+            }
+          },
+          {
+            "opcode": "music_restForBeats",
+            "blockType": "COMMAND",
+            "text": "rest for [BEATS] beats",
+            "arguments": {
+              "BEATS": {
+                "type": "NUMBER",
+                "defaultValue": 0.25
+              }
+            }
+          },
+          {
+            "opcode": "music_playNoteForBeats",
+            "blockType": "COMMAND",
+            "text": "play note [NOTE] for [BEATS] beats",
+            "arguments": {
+              "NOTE": {
+                "type": "NOTE",
+                "defaultValue": 60
+              },
+              "BEATS": {
+                "type": "NUMBER",
+                "defaultValue": 0.25
+              }
+            }
+          },
+          {
+            "opcode": "music_setInstrument",
+            "blockType": "COMMAND",
+            "text": "set instrument to [INSTRUMENT]",
+            "arguments": {
+              "INSTRUMENT": {
+                "type": "NUMBER",
+                "menu": "INSTRUMENT",
+                "defaultValue": 1
+              }
+            }
+          },
+          {
+            "opcode": "music_setTempo",
+            "blockType": "COMMAND",
+            "text": "set tempo to [TEMPO]",
+            "arguments": {
+              "TEMPO": {
+                "type": "NUMBER",
+                "defaultValue": 60
+              }
+            }
+          },
+          {
+            "opcode": "music_changeTempo",
+            "blockType": "COMMAND",
+            "text": "change tempo by [TEMPO]",
+            "arguments": {
+              "TEMPO": {
+                "type": "NUMBER",
+                "defaultValue": 20
+              }
+            }
+          },
+          {
+            "opcode": "music_getTempo",
+            "blockType": "REPORTER",
+            "text": "tempo"
+          }
+        ],
+        "menus": {
+          "DRUM": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "(1) Snare Drum",
+                "value": "1"
+              },
+              {
+                "text": "(2) Bass Drum",
+                "value": "2"
+              },
+              {
+                "text": "(3) Side Stick",
+                "value": "3"
+              },
+              {
+                "text": "(4) Crash Cymbal",
+                "value": "4"
+              },
+              {
+                "text": "(5) Open Hi-Hat",
+                "value": "5"
+              },
+              {
+                "text": "(6) Closed Hi-Hat",
+                "value": "6"
+              },
+              {
+                "text": "(7) Tambourine",
+                "value": "7"
+              },
+              {
+                "text": "(8) Hand Clap",
+                "value": "8"
+              },
+              {
+                "text": "(9) Claves",
+                "value": "9"
+              },
+              {
+                "text": "(10) Wood Block",
+                "value": "10"
+              },
+              {
+                "text": "(11) Cowbell",
+                "value": "11"
+              },
+              {
+                "text": "(12) Triangle",
+                "value": "12"
+              },
+              {
+                "text": "(13) Bongo",
+                "value": "13"
+              },
+              {
+                "text": "(14) Conga",
+                "value": "14"
+              },
+              {
+                "text": "(15) Cabasa",
+                "value": "15"
+              },
+              {
+                "text": "(16) Guiro",
+                "value": "16"
+              },
+              {
+                "text": "(17) Vibraslap",
+                "value": "17"
+              },
+              {
+                "text": "(18) Cuica",
+                "value": "18"
+              }
+            ]
+          },
+          "INSTRUMENT": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "(1) Piano",
+                "value": "1"
+              },
+              {
+                "text": "(2) Electric Piano",
+                "value": "2"
+              },
+              {
+                "text": "(3) Organ",
+                "value": "3"
+              },
+              {
+                "text": "(4) Guitar",
+                "value": "4"
+              },
+              {
+                "text": "(5) Electric Guitar",
+                "value": "5"
+              },
+              {
+                "text": "(6) Bass",
+                "value": "6"
+              },
+              {
+                "text": "(7) Pizzicato",
+                "value": "7"
+              },
+              {
+                "text": "(8) Cello",
+                "value": "8"
+              },
+              {
+                "text": "(9) Banjo",
+                "value": "9"
+              },
+              {
+                "text": "(10) Mandolin",
+                "value": "10"
+              },
+              {
+                "text": "(11) Trombone",
+                "value": "11"
+              },
+              {
+                "text": "(12) Clarinet",
+                "value": "12"
+              },
+              {
+                "text": "(13) Saxophone",
+                "value": "13"
+              },
+              {
+                "text": "(14) Trumpet",
+                "value": "14"
+              },
+              {
+                "text": "(15) Ring Organ",
+                "value": "15"
+              },
+              {
+                "text": "(16) Music Box",
+                "value": "16"
+              },
+              {
+                "text": "(17) Steel Drum",
+                "value": "17"
+              },
+              {
+                "text": "(18) Marimba",
+                "value": "18"
+              },
+              {
+                "text": "(19) Chimes",
+                "value": "19"
+              },
+              {
+                "text": "(20) Bell Kit",
+                "value": "20"
+              }
+            ]
+          }
+        }
+      },
+      "pen": {
+        "blocks": [
+          {
+            "opcode": "pen_clear",
+            "blockType": "COMMAND",
+            "text": "erase all"
+          },
+          {
+            "opcode": "pen_stamp",
+            "blockType": "COMMAND",
+            "text": "stamp"
+          },
+          {
+            "opcode": "pen_penDown",
+            "blockType": "COMMAND",
+            "text": "pen down"
+          },
+          {
+            "opcode": "pen_penUp",
+            "blockType": "COMMAND",
+            "text": "pen up"
+          },
+          {
+            "opcode": "pen_setPenColorToColor",
+            "blockType": "COMMAND",
+            "text": "set pen color to [COLOR]"
+          },
+          {
+            "opcode": "pen_changePenColorParamBy",
+            "blockType": "COMMAND",
+            "text": "change pen [COLOR_PARAM] by [VALUE]"
+          },
+          {
+            "opcode": "pen_setPenColorParamTo",
+            "blockType": "COMMAND",
+            "text": "set pen [COLOR_PARAM] to [VALUE]"
+          },
+          {
+            "opcode": "pen_changePenSizeBy",
+            "blockType": "COMMAND",
+            "text": "change pen size by [SIZE]"
+          },
+          {
+            "opcode": "pen_setPenSizeTo",
+            "blockType": "COMMAND",
+            "text": "set pen size to [SIZE]"
+          }
+        ],
+        "menus": {
+          "colorParam": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "color",
+                "value": "color"
+              },
+              {
+                "text": "saturation",
+                "value": "saturation"
+              },
+              {
+                "text": "brightness",
+                "value": "brightness"
+              },
+              {
+                "text": "transparency",
+                "value": "transparency"
+              }
+            ]
+          }
+        }
+      },
+      "videoSensing": {
+        "blocks": [
+          {
+            "opcode": "video_move",
+            "blockType": "COMMAND",
+            "text": "turn [MOTION_MENU] video [STATE_MENU]",
+            "arguments": {
+              "MOTION_MENU": {
+                "type": "STRING",
+                "menu": "MOTION_MENU"
+              },
+              "STATE_MENU": {
+                "type": "STRING",
+                "menu": "STATE_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "video_setTransparency",
+            "blockType": "COMMAND",
+            "text": "set video transparency to [TRANSPARENCY] %",
+            "arguments": {
+              "TRANSPARENCY": {
+                "type": "NUMBER",
+                "defaultValue": 50
+              }
+            }
+          },
+          {
+            "opcode": "video_on",
+            "blockType": "HAT",
+            "text": "when video motion > [THRESHOLD]"
+          },
+          {
+            "opcode": "video_whenMotionGreaterThan",
+            "blockType": "HAT",
+            "text": "when video motion > [THRESHOLD]"
+          },
+          {
+            "opcode": "video_of",
+            "blockType": "REPORTER",
+            "text": "[ATTRIBUTE] of [SUBJECT]",
+            "arguments": {
+              "ATTRIBUTE": {
+                "type": "STRING",
+                "menu": "ATTRIBUTE"
+              },
+              "SUBJECT": {
+                "type": "STRING",
+                "menu": "SUBJECT"
+              }
+            }
+          }
+        ],
+        "menus": {
+          "MOTION_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "motion",
+                "value": "motion"
+              },
+              {
+                "text": "direction",
+                "value": "direction"
+              }
+            ]
+          },
+          "STATE_MENU": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "on",
+                "value": "on"
+              },
+              {
+                "text": "off",
+                "value": "off"
+              },
+              {
+                "text": "on-flipped",
+                "value": "on-flipped"
+              }
+            ]
+          },
+          "ATTRIBUTE": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "motion",
+                "value": "motion"
+              },
+              {
+                "text": "direction",
+                "value": "direction"
+              }
+            ]
+          },
+          "SUBJECT": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "stage",
+                "value": "stage"
+              },
+              {
+                "text": "this sprite",
+                "value": "this sprite"
+              }
+            ]
+          }
+        }
+      },
+      "text2speech": {
+        "blocks": [
+          {
+            "opcode": "speakAndWait",
+            "blockType": "COMMAND",
+            "text": "speak [WORDS]",
+            "arguments": {
+              "WORDS": {
+                "type": "STRING",
+                "defaultValue": "hello"
+              }
+            }
+          },
+          {
+            "opcode": "setVoice",
+            "blockType": "COMMAND",
+            "text": "set voice to [VOICE]",
+            "arguments": {
+              "VOICE": {
+                "type": "STRING",
+                "menu": "voices"
+              }
+            }
+          },
+          {
+            "opcode": "setLanguage",
+            "blockType": "COMMAND",
+            "text": "set language to [LANGUAGE]",
+            "arguments": {
+              "LANGUAGE": {
+                "type": "STRING",
+                "menu": "languages"
+              }
+            }
+          }
+        ],
+        "menus": {
+          "voices": {
+            "acceptReporters": true
+          },
+          "languages": {
+            "acceptReporters": true
+          }
+        }
+      },
+      "translate": {
+        "blocks": [
+          {
+            "opcode": "getTranslate",
+            "blockType": "REPORTER",
+            "text": "translate [WORDS] to [LANGUAGE]",
+            "arguments": {
+              "WORDS": {
+                "type": "STRING",
+                "defaultValue": "hello"
+              },
+              "LANGUAGE": {
+                "type": "STRING",
+                "menu": "languages"
+              }
+            }
+          }
+        ],
+        "menus": {
+          "languages": {
+            "acceptReporters": true
+          }
+        }
+      },
+      "speech2text": {
+        "blocks": [
+          {
+            "opcode": "listenAndWait",
+            "blockType": "COMMAND",
+            "text": "when I hear [LISTEN]"
+          },
+          {
+            "opcode": "getSpeech",
+            "blockType": "REPORTER",
+            "text": "speech"
+          }
+        ],
+        "menus": {}
+      },
+      "wedo2": {
+        "blocks": [
+          {
+            "opcode": "wedo2_motor",
+            "blockType": "COMMAND",
+            "text": "motor [MOTOR_ID] [MOTOR_DIRECTION] for [DURATION] seconds",
+            "arguments": {
+              "MOTOR_ID": {
+                "type": "STRING",
+                "menu": "MOTOR_ID"
+              },
+              "MOTOR_DIRECTION": {
+                "type": "STRING",
+                "menu": "MOTOR_DIRECTION"
+              },
+              "DURATION": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              }
+            }
+          },
+          {
+            "opcode": "wedo2_motorOnFor",
+            "blockType": "COMMAND",
+            "text": "motor [MOTOR_ID] on for [DURATION] seconds",
+            "arguments": {
+              "MOTOR_ID": {
+                "type": "STRING",
+                "menu": "MOTOR_ID"
+              },
+              "DURATION": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              }
+            }
+          },
+          {
+            "opcode": "wedo2_setMotorPower",
+            "blockType": "COMMAND",
+            "text": "set [MOTOR_ID] motor power to [POWER]",
+            "arguments": {
+              "MOTOR_ID": {
+                "type": "STRING",
+                "menu": "MOTOR_ID"
+              },
+              "POWER": {
+                "type": "NUMBER",
+                "defaultValue": 100
+              }
+            }
+          },
+          {
+            "opcode": "wedo2_setMotorDirection",
+            "blockType": "COMMAND",
+            "text": "set [MOTOR_ID] motor direction to [MOTOR_DIRECTION]",
+            "arguments": {
+              "MOTOR_ID": {
+                "type": "STRING",
+                "menu": "MOTOR_ID"
+              },
+              "MOTOR_DIRECTION": {
+                "type": "STRING",
+                "menu": "MOTOR_DIRECTION"
+              }
+            }
+          },
+          {
+            "opcode": "wedo2_getMotorPower",
+            "blockType": "REPORTER",
+            "text": "motor [MOTOR_ID] power",
+            "arguments": {
+              "MOTOR_ID": {
+                "type": "STRING",
+                "menu": "MOTOR_ID"
+              }
+            }
+          },
+          {
+            "opcode": "wedo2_getMotorDirection",
+            "blockType": "REPORTER",
+            "text": "motor [MOTOR_ID] direction",
+            "arguments": {
+              "MOTOR_ID": {
+                "type": "STRING",
+                "menu": "MOTOR_ID"
+              }
+            }
+          },
+          {
+            "opcode": "wedo2_whenDistance",
+            "blockType": "HAT",
+            "text": "when distance [OP] [DISTANCE]"
+          },
+          {
+            "opcode": "wedo2_whenTilt",
+            "blockType": "HAT",
+            "text": "when tilted [TILT_DIRECTION_ANY]"
+          },
+          {
+            "opcode": "wedo2_getDistance",
+            "blockType": "REPORTER",
+            "text": "distance"
+          },
+          {
+            "opcode": "wedo2_getTilt",
+            "blockType": "REPORTER",
+            "text": "tilt angle [TILT_DIRECTION_ANY]"
+          }
+        ],
+        "menus": {
+          "MOTOR_ID": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "all",
+                "value": "all"
+              },
+              {
+                "text": "A",
+                "value": "A"
+              },
+              {
+                "text": "B",
+                "value": "B"
+              }
+            ]
+          },
+          "MOTOR_DIRECTION": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "this way",
+                "value": "this way"
+              },
+              {
+                "text": "that way",
+                "value": "that way"
+              },
+              {
+                "text": "reverse",
+                "value": "reverse"
+              }
+            ]
+          },
+          "OP": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "<",
+                "value": "<"
+              },
+              {
+                "text": "=",
+                "value": "="
+              },
+              {
+                "text": ">",
+                "value": ">"
+              }
+            ]
+          },
+          "TILT_DIRECTION_ANY": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "front",
+                "value": "front"
+              },
+              {
+                "text": "back",
+                "value": "back"
+              },
+              {
+                "text": "left",
+                "value": "left"
+              },
+              {
+                "text": "right",
+                "value": "right"
+              },
+              {
+                "text": "any",
+                "value": "any"
+              }
+            ]
+          }
+        }
+      },
+      "microbit": {
+        "blocks": [
+          {
+            "opcode": "microbit_whenButtonPressed",
+            "blockType": "HAT",
+            "text": "when [BTN] button pressed",
+            "arguments": {
+              "BTN": {
+                "type": "STRING",
+                "menu": "buttons"
+              }
+            }
+          },
+          {
+            "opcode": "microbit_whenGesture",
+            "blockType": "HAT",
+            "text": "when gesture [GESTURE]",
+            "arguments": {
+              "GESTURE": {
+                "type": "STRING",
+                "menu": "gestureOptions"
+              }
+            }
+          },
+          {
+            "opcode": "microbit_whenPinPressed",
+            "blockType": "HAT",
+            "text": "when pin [PINS] pressed",
+            "arguments": {
+              "PINS": {
+                "type": "STRING",
+                "menu": "PINS"
+              }
+            }
+          },
+          {
+            "opcode": "microbit_displaySymbol",
+            "blockType": "COMMAND",
+            "text": "display [MATRIX]",
+            "arguments": {
+              "MATRIX": {
+                "type": "STRING",
+                "menu": "MATRIX"
+              }
+            }
+          },
+          {
+            "opcode": "microbit_displayText",
+            "blockType": "COMMAND",
+            "text": "display text [TEXT]",
+            "arguments": {
+              "TEXT": {
+                "type": "STRING",
+                "defaultValue": "Hello!"
+              }
+            }
+          },
+          {
+            "opcode": "microbit_displayClear",
+            "blockType": "COMMAND",
+            "text": "clear display"
+          },
+          {
+            "opcode": "microbit_raiseAlert",
+            "blockType": "COMMAND",
+            "text": "raise alert with pattern [PATTERN]"
+          },
+          {
+            "opcode": "microbit_runMagneto",
+            "blockType": "COMMAND",
+            "text": "run magneto with strength [STRENGTH]"
+          },
+          {
+            "opcode": "microbit_getMagneticForce",
+            "blockType": "REPORTER",
+            "text": "magnetic force"
+          },
+          {
+            "opcode": "microbit_getTilt",
+            "blockType": "REPORTER",
+            "text": "tilt angle [TILT_AXES]"
+          },
+          {
+            "opcode": "microbit_getCompass",
+            "blockType": "REPORTER",
+            "text": "compass heading"
+          },
+          {
+            "opcode": "microbit_setMatrix",
+            "blockType": "COMMAND",
+            "text": "set [MATRIX] LED on"
+          }
+        ],
+        "menus": {
+          "buttons": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "A",
+                "value": "A"
+              },
+              {
+                "text": "B",
+                "value": "B"
+              },
+              {
+                "text": "A+B",
+                "value": "AB"
+              }
+            ]
+          },
+          "gestureOptions": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "shake",
+                "value": "shake"
+              },
+              {
+                "text": "tilt up",
+                "value": "tilt up"
+              },
+              {
+                "text": "tilt down",
+                "value": "tilt down"
+              },
+              {
+                "text": "tilt left",
+                "value": "tilt left"
+              },
+              {
+                "text": "tilt right",
+                "value": "tilt right"
+              },
+              {
+                "text": "face up",
+                "value": "face up"
+              },
+              {
+                "text": "face down",
+                "value": "face down"
+              },
+              {
+                "text": "freely",
+                "value": "freely"
+              }
+            ]
+          },
+          "PINS": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "0",
+                "value": "0"
+              },
+              {
+                "text": "1",
+                "value": "1"
+              },
+              {
+                "text": "2",
+                "value": "2"
+              }
+            ]
+          },
+          "MATRIX": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "heart",
+                "value": "heart"
+              },
+              {
+                "text": "happy",
+                "value": "happy"
+              },
+              {
+                "text": "sad",
+                "value": "sad"
+              },
+              {
+                "text": "confused",
+                "value": "confused"
+              },
+              {
+                "text": "angry",
+                "value": "angry"
+              },
+              {
+                "text": "asleep",
+                "value": "asleep"
+              },
+              {
+                "text": "surprised",
+                "value": "surprised"
+              },
+              {
+                "text": "meh",
+                "value": "meh"
+              },
+              {
+                "text": "yes",
+                "value": "yes"
+              },
+              {
+                "text": "no",
+                "value": "no"
+              },
+              {
+                "text": "confused",
+                "value": "confused"
+              },
+              {
+                "text": "arrow north",
+                "value": "arrow_north"
+              },
+              {
+                "text": "arrow east",
+                "value": "arrow_e"
+              },
+              {
+                "text": "arrow south",
+                "value": "arrow_s"
+              },
+              {
+                "text": "arrow west",
+                "value": "arrow_w"
+              }
+            ]
+          },
+          "TILT_AXES": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "x",
+                "value": "x"
+              },
+              {
+                "text": "y",
+                "value": "y"
+              },
+              {
+                "text": "z",
+                "value": "z"
+              }
+            ]
+          }
+        }
+      },
+      "boost": {
+        "blocks": [
+          {
+            "opcode": "boost_whenTilted",
+            "blockType": "HAT",
+            "text": "when tilted [TILT]",
+            "arguments": {
+              "TILT": {
+                "type": "STRING",
+                "menu": "BOOST_TILT_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "boost_motorOnFor",
+            "blockType": "COMMAND",
+            "text": "motor [MOTOR] on for [DURATION] seconds",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "BOOST_MOTOR_MENU"
+              },
+              "DURATION": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              }
+            }
+          },
+          {
+            "opcode": "boost_motorOn",
+            "blockType": "COMMAND",
+            "text": "turn [MOTOR] on",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "BOOST_MOTOR_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "boost_motorOff",
+            "blockType": "COMMAND",
+            "text": "turn [MOTOR] off",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "BOOST_MOTOR_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "boost_setMotorPower",
+            "blockType": "COMMAND",
+            "text": "set [MOTOR] speed to [POWER]",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "BOOST_MOTOR_MENU"
+              },
+              "POWER": {
+                "type": "NUMBER",
+                "defaultValue": 50
+              }
+            }
+          },
+          {
+            "opcode": "boost_setMotorDirection",
+            "blockType": "COMMAND",
+            "text": "set [MOTOR] direction to [DIRECTION]",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "BOOST_MOTOR_MENU"
+              },
+              "DIRECTION": {
+                "type": "STRING",
+                "menu": "BOOST_DIRECTION_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "boost_getTilt",
+            "blockType": "REPORTER",
+            "text": "tilt angle [TILT]",
+            "arguments": {
+              "TILT": {
+                "type": "STRING",
+                "menu": "BOOST_TILT_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "boost_getColor",
+            "blockType": "REPORTER",
+            "text": "color sensor"
+          },
+          {
+            "opcode": "boost_setLight",
+            "blockType": "COMMAND",
+            "text": "turn [COLOR] light on"
+          }
+        ],
+        "menus": {
+          "BOOST_MOTOR_MENU": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "A",
+                "value": "A"
+              },
+              {
+                "text": "B",
+                "value": "B"
+              },
+              {
+                "text": "A+B",
+                "value": "AB"
+              },
+              {
+                "text": "C",
+                "value": "C"
+              }
+            ]
+          },
+          "BOOST_TILT_MENU": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "front",
+                "value": "front"
+              },
+              {
+                "text": "back",
+                "value": "back"
+              },
+              {
+                "text": "left",
+                "value": "left"
+              },
+              {
+                "text": "right",
+                "value": "right"
+              }
+            ]
+          },
+          "BOOST_DIRECTION_MENU": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "clockwise",
+                "value": "clockwise"
+              },
+              {
+                "text": "counterclockwise",
+                "value": "counterclockwise"
+              },
+              {
+                "text": "reverse",
+                "value": "reverse"
+              }
+            ]
+          }
+        }
+      },
+      "gdx_for": {
+        "blocks": [
+          {
+            "opcode": "gdx_for_whenGesture",
+            "blockType": "HAT",
+            "text": "when [GESTURE] detected",
+            "arguments": {
+              "GESTURE": {
+                "type": "STRING",
+                "menu": "gestureOptions"
+              }
+            }
+          },
+          {
+            "opcode": "gdx_for_whenForcePushedOrPulled",
+            "blockType": "HAT",
+            "text": "when force sensor [PUSH_PULL]",
+            "arguments": {
+              "PUSH_PULL": {
+                "type": "STRING",
+                "menu": "pushPullOptions"
+              }
+            }
+          },
+          {
+            "opcode": "gdx_for_whenTilt",
+            "blockType": "HAT",
+            "text": "when tilted [TILT]"
+          },
+          {
+            "opcode": "gdx_for_getForce",
+            "blockType": "REPORTER",
+            "text": "force"
+          },
+          {
+            "opcode": "gdx_for_getTilt",
+            "blockType": "REPORTER",
+            "text": "tilt angle [TILT]"
+          },
+          {
+            "opcode": "gdx_for_getRotation",
+            "blockType": "REPORTER",
+            "text": "rotation"
+          },
+          {
+            "opcode": "gdx_for_isTilted",
+            "blockType": "BOOLEAN",
+            "text": "tilted?"
+          },
+          {
+            "opcode": "gdx_for_isFreeFall",
+            "blockType": "BOOLEAN",
+            "text": "falling?"
+          }
+        ],
+        "menus": {
+          "gestureOptions": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "shaken",
+                "value": "shaken"
+              },
+              {
+                "text": "thrown",
+                "value": "thrown"
+              },
+              {
+                "text": "pushed",
+                "value": "pushed"
+              },
+              {
+                "text": "pulled",
+                "value": "pulled"
+              },
+              {
+                "text": "freefall",
+                "value": "freefall"
+              },
+              {
+                "text": "tilted",
+                "value": "tilted"
+              }
+            ]
+          },
+          "pushPullOptions": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "pushed",
+                "value": "pushed"
+              },
+              {
+                "text": "pulled",
+                "value": "pulled"
+              }
+            ]
+          },
+          "TILT": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "front",
+                "value": "front"
+              },
+              {
+                "text": "back",
+                "value": "back"
+              },
+              {
+                "text": "left",
+                "value": "left"
+              },
+              {
+                "text": "right",
+                "value": "right"
+              }
+            ]
+          }
+        }
+      },
+      "ev3": {
+        "blocks": [
+          {
+            "opcode": "ev3_motorOn",
+            "blockType": "COMMAND",
+            "text": "motor [MOTOR] on",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "MOTOR_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "ev3_motorOnFor",
+            "blockType": "COMMAND",
+            "text": "motor [MOTOR] on for [DURATION] seconds",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "MOTOR_MENU"
+              },
+              "DURATION": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              }
+            }
+          },
+          {
+            "opcode": "ev3_motorSetPower",
+            "blockType": "COMMAND",
+            "text": "set [MOTOR] power to [POWER] %",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "MOTOR_MENU"
+              },
+              "POWER": {
+                "type": "NUMBER",
+                "defaultValue": 50
+              }
+            }
+          },
+          {
+            "opcode": "ev3_motorSetDirection",
+            "blockType": "COMMAND",
+            "text": "set [MOTOR] direction to [DIRECTION]",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "MOTOR_MENU"
+              },
+              "DIRECTION": {
+                "type": "STRING",
+                "menu": "DIRECTION_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "ev3_motorStop",
+            "blockType": "COMMAND",
+            "text": "stop [MOTOR]",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "MOTOR_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "ev3_getMotorPosition",
+            "blockType": "REPORTER",
+            "text": "[MOTOR] position",
+            "arguments": {
+              "MOTOR": {
+                "type": "STRING",
+                "menu": "MOTOR_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "ev3_whenDistance",
+            "blockType": "HAT",
+            "text": "when distance [OP] [DISTANCE]"
+          },
+          {
+            "opcode": "ev3_whenBrightness",
+            "blockType": "HAT",
+            "text": "when brightness [OP] [BRIGHTNESS]"
+          },
+          {
+            "opcode": "ev3_getDistance",
+            "blockType": "REPORTER",
+            "text": "distance"
+          },
+          {
+            "opcode": "ev3_getBrightness",
+            "blockType": "REPORTER",
+            "text": "brightness"
+          },
+          {
+            "opcode": "ev3_beep",
+            "blockType": "COMMAND",
+            "text": "beep note [NOTE] for [DURATION] secs",
+            "arguments": {
+              "NOTE": {
+                "type": "NUMBER",
+                "defaultValue": 60
+              },
+              "DURATION": {
+                "type": "NUMBER",
+                "defaultValue": 0.5
+              }
+            }
+          }
+        ],
+        "menus": {
+          "MOTOR_MENU": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "A",
+                "value": "A"
+              },
+              {
+                "text": "B",
+                "value": "B"
+              },
+              {
+                "text": "C",
+                "value": "C"
+              },
+              {
+                "text": "D",
+                "value": "D"
+              },
+              {
+                "text": "all",
+                "value": "all"
+              }
+            ]
+          },
+          "DIRECTION_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "clockwise",
+                "value": "clockwise"
+              },
+              {
+                "text": "counterclockwise",
+                "value": "counterclockwise"
+              },
+              {
+                "text": "reverse",
+                "value": "reverse"
+              }
+            ]
+          },
+          "OP": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "<",
+                "value": "<"
+              },
+              {
+                "text": "=",
+                "value": "="
+              },
+              {
+                "text": ">",
+                "value": ">"
+              }
+            ]
+          }
+        }
+      },
+      "makeymakey": {
+        "blocks": [
+          {
+            "opcode": "makeymakey_whenKeyPressed",
+            "blockType": "HAT",
+            "text": "when [KEY] key pressed",
+            "arguments": {
+              "KEY": {
+                "type": "STRING",
+                "menu": "MAKEY_KEY_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "makeymakey_whenAnyKeyPressed",
+            "blockType": "HAT",
+            "text": "when any key pressed"
+          }
+        ],
+        "menus": {
+          "MAKEY_KEY_MENU": {
+            "acceptReporters": true,
+            "items": [
+              {
+                "text": "up arrow",
+                "value": "up arrow"
+              },
+              {
+                "text": "down arrow",
+                "value": "down arrow"
+              },
+              {
+                "text": "left arrow",
+                "value": "left arrow"
+              },
+              {
+                "text": "right arrow",
+                "value": "right arrow"
+              },
+              {
+                "text": "space",
+                "value": "space"
+              },
+              {
+                "text": "w",
+                "value": "w"
+              },
+              {
+                "text": "a",
+                "value": "a"
+              },
+              {
+                "text": "s",
+                "value": "s"
+              },
+              {
+                "text": "d",
+                "value": "d"
+              },
+              {
+                "text": "f",
+                "value": "f"
+              },
+              {
+                "text": "g",
+                "value": "g"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

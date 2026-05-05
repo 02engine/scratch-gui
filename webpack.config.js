@@ -61,7 +61,12 @@ const base = {
     },
     resolve: {
         symlinks: false,
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
         alias: {
+            'assets': path.resolve(__dirname, 'src/addons/addons/02agent/assets'),
+            'components': path.resolve(__dirname, 'src/addons/addons/02agent/shims/components'),
+            'hooks': path.resolve(__dirname, 'src/addons/addons/02agent/shims/hooks'),
+            'utils': path.resolve(__dirname, 'src/addons/addons/02agent/shims/utils'),
             'text-encoding$': path.resolve(__dirname, 'src/lib/tw-text-encoder'),
             'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts')
         }
@@ -83,6 +88,21 @@ const base = {
                         messagesDir: './translations/messages/'
                     }]],
                 presets: ['@babel/preset-env', '@babel/preset-react']
+            }
+        },
+        {
+            test: /\.tsx?$/,
+            loader: 'babel-loader',
+            include: [
+                path.resolve(__dirname, 'src')
+            ],
+            options: {
+                babelrc: false,
+                plugins: [
+                    ['react-intl', {
+                        messagesDir: './translations/messages/'
+                    }]],
+                presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript']
             }
         },
         {
@@ -109,6 +129,22 @@ const base = {
                         ];
                     }
                 }
+            }]
+        },
+        {
+            test: /\.less$/,
+            use: [{
+                loader: 'style-loader'
+            }, {
+                loader: 'css-loader',
+                options: {
+                    modules: true,
+                    importLoaders: 1,
+                    localIdentName: '[name]_[local]_[hash:base64:5]',
+                    camelCase: true
+                }
+            }, {
+                loader: 'less-loader'
             }]
         }],
     },
