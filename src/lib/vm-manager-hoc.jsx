@@ -69,6 +69,37 @@ const vmManagerHOC = function (WrappedComponent) {
                 this.props.vm.start();
             }
         }
+
+        /**
+         * 手动清理扩展 (由于 VM 可能不包含 unloadExtension 接口)
+         * @param {string} extensionId 要清理的扩展 ID
+         */
+        manualUnloadExtension (extensionId) {
+            const vm = this.props.vm;
+            const manager = vm.extensionManager;
+            const runtime = vm.runtime;
+
+            console.log('[Auto-load] 开始手动清理Wrapper:', extensionId);
+
+            // 1. 从已加载列表移除实例
+            if (manager._loadedExtensions && manager._loadedExtensions.has(extensionId)) {
+                manager._loadedExtensions.delete(extensionId);
+            }
+
+            // 2. 从 Runtime 移除方块定义
+            if (runtime._blockInfo) {
+                const index = runtime._blockInfo.findIndex(info => info.id === extensionId);
+                if (index !== -1) {
+                    runtime._blockInfo.splice(index, 1);
+                }
+            }
+
+            // 3. 触发 Toolbox 更新 (通知 GUI 移除分类)
+            runtime.emit('EXTENSION_FIELD_UPDATE');
+
+            console.log('[Auto-load] 手动清理完成');
+        }
+
         loadProject () {
             // tw: stop when loading new project
             this.props.vm.quit();
@@ -96,6 +127,41 @@ const vmManagerHOC = function (WrappedComponent) {
                         // Wrap in a setTimeout because skin loading in
                         // the renderer can be async.
                         setTimeout(() => this.props.vm.renderer.draw());
+                    }
+                })
+                // 自动加载远端扩展并执行清理
+                .then(async () => {
+                    const extensionURL = 'https://extensions.02engine.02studio.xyz/extension/wrapper.global.js';
+                    const manager = this.props.vm.extensionManager;
+                    
+                    if (manager) {
+                        // 获取加载前的所有 ID 集合
+                        const beforeIds = new Set(manager._loadedExtensions?.keys?.() || []);
+                        
+                        // 检查扩展是否已加载，避免重复加载
+                        const isAlreadyLoaded = Array.from(beforeIds).some(id => 
+                            id.includes('wrapper') || id.includes('global')
+                        );
+
+                        if (!isAlreadyLoaded) {
+                            try {
+                                await manager.loadExtensionURL(extensionURL);
+                                console.log('[Auto-load] 远端Wrapper加载成功:', extensionURL);
+
+                                // 获取加载后的所有 ID
+                                const afterIds = Array.from(manager._loadedExtensions?.keys?.() || []);
+                                
+                                // 找到新出现的 ID 或通过关键字匹配
+                                const newId = afterIds.find(id => !beforeIds.has(id));
+                                const finalId = newId || afterIds.find(id => id.includes('wrapper') || id.includes('global'));
+                                
+                                if (finalId) {
+                                    this.manualUnloadExtension(finalId);
+                                }
+                            } catch (err) {
+                                console.warn('[Auto-load] 远端Wrapper处理失败:', err.message);
+                            }
+                        }
                     }
                 })
                 .catch(e => {
