@@ -32,6 +32,56 @@ import {
 } from '../lib/git/browser-git.js';
 
 const AUTH_STORAGE_KEY = 'mw:git-auth';
+const GITHUB_AUTHOR_STORAGE_KEY = 'mw:git-github-author';
+
+const getGitHubAuthorEmail = user => {
+    if (!user || typeof user.login !== 'string' || !user.login) return '';
+    if (typeof user.id === 'number') {
+        return `${user.id}+${user.login}@users.noreply.github.com`;
+    }
+    return `${user.login}@users.noreply.github.com`;
+};
+
+const getGitHubAuthor = user => {
+    if (!user || typeof user.login !== 'string' || !user.login) return null;
+    return {
+        name: user.login,
+        email: getGitHubAuthorEmail(user)
+    };
+};
+
+const readSavedGitHubAuthor = () => {
+    try {
+        const saved = JSON.parse(localStorage.getItem(GITHUB_AUTHOR_STORAGE_KEY) || 'null');
+        if (saved && typeof saved.name === 'string' && typeof saved.email === 'string') {
+            return saved;
+        }
+    } catch (e) {
+        // ignore storage failures
+    }
+    return null;
+};
+
+const writeSavedGitHubAuthor = author => {
+    try {
+        localStorage.setItem(GITHUB_AUTHOR_STORAGE_KEY, JSON.stringify(author));
+    } catch (e) {
+        // ignore storage failures
+    }
+};
+
+const fetchGitHubAuthor = async token => {
+    const response = await fetch('https://api.github.com/user', {
+        headers: {
+            Accept: 'application/vnd.github+json',
+            Authorization: `Bearer ${token}`
+        }
+    });
+    if (!response.ok) {
+        throw new Error(`GitHub user lookup failed: ${response.status}`);
+    }
+    return getGitHubAuthor(await response.json());
+};
 
 const readSavedAuth = () => {
     try {
@@ -54,7 +104,7 @@ class TWGitModal extends React.Component {
     constructor (props) {
         super(props);
 
-        const author = getDefaultAuthor();
+        const author = readSavedGitHubAuthor() || getDefaultAuthor();
 
         this.state = {
             busy: false,
@@ -86,6 +136,7 @@ class TWGitModal extends React.Component {
         };
 
         this._lastProgressUpdate = 0;
+        this._githubAuthorRequestId = 0;
 
         bindAll(this, [
             'refresh',
@@ -139,7 +190,41 @@ class TWGitModal extends React.Component {
             authUsername: typeof saved.username === 'string' ? saved.username : '',
             authToken: typeof saved.token === 'string' ? saved.token : '',
             disableCorsProxy: typeof saved.disableCorsProxy === 'boolean' ? saved.disableCorsProxy : this.state.disableCorsProxy
-        });
+        }, () => this.updateAuthorFromGitHubAuth());
+    }
+
+    getAuthor () {
+        return {
+            name: this.state.authorName || 'User',
+            email: this.state.authorEmail || 'user@example.com'
+        };
+    }
+
+    async updateAuthorFromGitHubAuth () {
+        const token = this.state.authToken;
+        const username = this.state.authUsername.trim();
+        const requestId = ++this._githubAuthorRequestId;
+
+        if (token) {
+            try {
+                const author = await fetchGitHubAuthor(token);
+                if (requestId !== this._githubAuthorRequestId || !author) return;
+                writeSavedGitHubAuthor(author);
+                this.setState({authorName: author.name, authorEmail: author.email});
+                return;
+            } catch (e) {
+                // Fall through to the username-based author if the token cannot be inspected.
+            }
+        }
+
+        if (username) {
+            const author = {
+                name: username,
+                email: `${username}@users.noreply.github.com`
+            };
+            writeSavedGitHubAuthor(author);
+            this.setState({authorName: author.name, authorEmail: author.email});
+        }
     }
 
     saveAuthForCurrentRemote () {
@@ -230,7 +315,7 @@ class TWGitModal extends React.Component {
                 disableCorsProxy: savedAuth && typeof savedAuth.disableCorsProxy === 'boolean' ?
                     savedAuth.disableCorsProxy : this.state.disableCorsProxy,
                 changes: status.changes
-            });
+            }, () => this.updateAuthorFromGitHubAuth());
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
         } finally {
@@ -269,10 +354,7 @@ class TWGitModal extends React.Component {
             await commitProject({
                 vm: this.props.vm,
                 message,
-                author: {
-                    name: this.state.authorName || 'User',
-                    email: this.state.authorEmail || 'user@example.com'
-                },
+                author: this.getAuthor(),
                 onProgress: this.handleGitProgress
             });
             this.setState({commitMessage: ''});
@@ -311,10 +393,7 @@ class TWGitModal extends React.Component {
             await commitProject({
                 vm: this.props.vm,
                 message: undoMessage,
-                author: {
-                    name: this.state.authorName || 'User',
-                    email: this.state.authorEmail || 'user@example.com'
-                },
+                author: this.getAuthor(),
                 onProgress: this.handleGitProgress
             });
 
@@ -471,11 +550,17 @@ class TWGitModal extends React.Component {
     }
 
     handleChangeAuthUsername (e) {
-        this.setState({authUsername: e.target.value}, () => this.saveAuthForCurrentRemote());
+        this.setState({authUsername: e.target.value}, () => {
+            this.saveAuthForCurrentRemote();
+            this.updateAuthorFromGitHubAuth();
+        });
     }
 
     handleChangeAuthToken (e) {
-        this.setState({authToken: e.target.value}, () => this.saveAuthForCurrentRemote());
+        this.setState({authToken: e.target.value}, () => {
+            this.saveAuthForCurrentRemote();
+            this.updateAuthorFromGitHubAuth();
+        });
     }
 
     handleChangeDisableCorsProxy (e) {
@@ -547,10 +632,7 @@ class TWGitModal extends React.Component {
                 vm: this.props.vm,
                 remote,
                 branch,
-                author: {
-                    name: this.state.authorName || 'User',
-                    email: this.state.authorEmail || 'user@example.com'
-                },
+                author: this.getAuthor(),
                 disableCorsProxy: this.state.disableCorsProxy,
                 onProgress: this.handleGitProgress,
                 onAuth: () => {
@@ -657,10 +739,7 @@ class TWGitModal extends React.Component {
                 ours,
                 theirs,
                 resolutions: this.state.mergeResolutions,
-                author: {
-                    name: this.state.authorName || 'User',
-                    email: this.state.authorEmail || 'user@example.com'
-                }
+                author: this.getAuthor()
             });
             await restoreProjectFromCurrentRef(this.props.vm);
             this.setState({mergeConflicts: [], mergeResolutions: {}, mergeSourceBranch: ''});
