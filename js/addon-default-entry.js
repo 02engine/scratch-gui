@@ -74766,6 +74766,384 @@ function jsToJsonWithComments(jsCode) {
 
 /***/ }),
 
+/***/ "./src/addons/addons/02agent/extensionRegistry.ts":
+/*!********************************************************!*\
+  !*** ./src/addons/addons/02agent/extensionRegistry.ts ***!
+  \********************************************************/
+/*! exports provided: fetchRemoteExtensions, getBuiltinExtensions, getAllKnownExtensions, searchKnownExtensions, resolveKnownExtension */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(process) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fetchRemoteExtensions", function() { return fetchRemoteExtensions; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getBuiltinExtensions", function() { return getBuiltinExtensions; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getAllKnownExtensions", function() { return getAllKnownExtensions; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "searchKnownExtensions", function() { return searchKnownExtensions; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resolveKnownExtension", function() { return resolveKnownExtension; });
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+const ROOT = typeof process !== "undefined" ?  false || "/" : "/";
+const BUILTIN_EXTENSIONS = [{
+  extensionId: "music",
+  name: "Music",
+  description: "Play instruments and drums.",
+  source: "scratch",
+  tags: ["scratch", "sound", "drum", "instrument"],
+  builtin: true
+}, {
+  extensionId: "pen",
+  name: "Pen",
+  description: "Draw with your sprites.",
+  source: "scratch",
+  tags: ["scratch", "draw", "line", "stamp", "render"],
+  builtin: true
+}, {
+  extensionId: "videoSensing",
+  name: "Video Sensing",
+  description: "Sense motion with the camera.",
+  source: "scratch",
+  tags: ["scratch", "camera", "motion"],
+  builtin: true
+}, {
+  extensionId: "text2speech",
+  name: "Text to Speech",
+  description: "Make your projects talk.",
+  source: "scratch",
+  tags: ["scratch", "speech", "voice"],
+  builtin: true,
+  internetConnectionRequired: true
+}, {
+  extensionId: "translate",
+  name: "Translate",
+  description: "Translate text into many languages.",
+  source: "scratch",
+  tags: ["scratch", "translation", "language"],
+  builtin: true,
+  internetConnectionRequired: true
+}, {
+  extensionId: "makeymakey",
+  name: "Makey Makey",
+  description: "Make anything into a key.",
+  source: "scratch",
+  tags: ["scratch", "keyboard", "hardware"],
+  builtin: true
+}, {
+  extensionId: "microbit",
+  name: "micro:bit",
+  description: "Connect your projects with the world.",
+  source: "scratch",
+  tags: ["scratch", "hardware", "bluetooth"],
+  builtin: true,
+  bluetoothRequired: true,
+  internetConnectionRequired: true
+}, {
+  extensionId: "ev3",
+  name: "LEGO MINDSTORMS EV3",
+  description: "Build interactive robots and more.",
+  source: "scratch",
+  tags: ["scratch", "lego", "robot", "bluetooth"],
+  builtin: true,
+  bluetoothRequired: true,
+  internetConnectionRequired: true
+}, {
+  extensionId: "boost",
+  name: "LEGO BOOST",
+  description: "Bring robotic creations to life.",
+  source: "scratch",
+  tags: ["scratch", "lego", "robot", "bluetooth"],
+  builtin: true,
+  bluetoothRequired: true,
+  internetConnectionRequired: true
+}, {
+  extensionId: "wedo2",
+  name: "LEGO Education WeDo 2.0",
+  description: "Build with motors and sensors.",
+  source: "scratch",
+  tags: ["scratch", "lego", "motor", "sensor", "bluetooth"],
+  builtin: true,
+  bluetoothRequired: true,
+  internetConnectionRequired: true
+}, {
+  extensionId: "gdxfor",
+  name: "Go Direct Force & Acceleration",
+  description: "Sense push, pull, motion, and spin.",
+  source: "scratch",
+  tags: ["scratch", "sensor", "force", "acceleration", "bluetooth"],
+  builtin: true,
+  bluetoothRequired: true,
+  internetConnectionRequired: true
+}, {
+  extensionId: "tw",
+  name: "TurboWarp Blocks",
+  description: "Extra TurboWarp blocks.",
+  source: "special",
+  tags: ["tw", "runtime", "utility"],
+  builtin: true,
+  incompatibleWithScratch: true
+}, {
+  extensionId: "procedures_enable_return",
+  name: "Custom Reporters",
+  description: "Allow custom blocks to output values and be used as inputs.",
+  source: "special",
+  tags: ["tw", "custom blocks", "reporter", "return"],
+  special: true,
+  incompatibleWithScratch: true
+}];
+let cachedRemoteExtensions = null;
+let cachedRemoteAt = 0;
+const REMOTE_CACHE_MS = 5 * 60 * 1000;
+const normalizeText = value => String(value || "").trim();
+const normalizeLookup = value => normalizeText(value).toLowerCase().replace(/\.js$/i, "").replace(/[^a-z0-9\u4e00-\u9fff]+/g, "");
+const getURLStem = value => {
+  const text = normalizeText(value);
+  if (!text || text.startsWith("data:")) return "";
+  try {
+    const url = new URL(text, window.location.href);
+    const last = url.pathname.split("/").filter(Boolean).pop() || "";
+    return last.replace(/\.js$/i, "");
+  } catch (_unused) {
+    var _text$split$filter$po;
+    return ((_text$split$filter$po = text.split("/").filter(Boolean).pop()) === null || _text$split$filter$po === void 0 ? void 0 : _text$split$filter$po.replace(/\.js$/i, "")) || text;
+  }
+};
+const creditToText = credit => {
+  if (!credit) return "";
+  if (typeof credit === "string") return credit;
+  if (typeof credit.name === "string") return credit.name;
+  return String(credit);
+};
+const safeFetchJson = async (url, fallback) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("HTTP ".concat(response.status));
+    return await response.json();
+  } catch (error) {
+    console.warn("[02Agent] Failed to fetch extension registry", url, error);
+    return fallback;
+  }
+};
+const fetchPenguinModExtensions = async () => {
+  try {
+    const module = await import(/* webpackIgnore: true */"/penguinmod/extensions.js");
+    const extensions = Array.isArray(module === null || module === void 0 ? void 0 : module.default) ? module.default : [];
+    return extensions.map(extension => ({
+      name: normalizeText(extension.name),
+      description: normalizeText(extension.description),
+      extensionId: normalizeText(extension.name),
+      extensionURL: "https://extensions.penguinmod.com/extensions/".concat(extension.code),
+      iconURL: "https://extensions.penguinmod.com/images/".concat(extension.banner || "images/unknown.svg"),
+      source: "pm",
+      tags: ["pm"],
+      credits: [normalizeText(extension.creator)].filter(Boolean),
+      docsURI: null,
+      samples: null,
+      incompatibleWithScratch: false
+    }));
+  } catch (error) {
+    console.warn("[02Agent] Failed to fetch PenguinMod extensions", error);
+    return [];
+  }
+};
+const fetchRemoteExtensions = async function fetchRemoteExtensions() {
+  let forceRefresh = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  const now = Date.now();
+  if (!forceRefresh && cachedRemoteExtensions && now - cachedRemoteAt < REMOTE_CACHE_MS) {
+    return cachedRemoteExtensions;
+  }
+  const _await$Promise$all = await Promise.all([safeFetchJson("https://extensions.02engine.02studio.xyz/extensions.json", {
+      extensions: []
+    }), safeFetchJson("https://extensions.turbowarp.org/generated-metadata/extensions-v0.json", {
+      extensions: []
+    }), safeFetchJson("https://mistiumextensions.02studio.xyz/generated-metadata/extensions-v0.json", {
+      extensions: []
+    }), safeFetchJson("https://sharkpoolextensions.02studio.xyz/Gallery%20Files/Extension-Keys.json", {
+      extensions: {}
+    }), fetchPenguinModExtensions()]),
+    _await$Promise$all2 = _slicedToArray(_await$Promise$all, 5),
+    engineData = _await$Promise$all2[0],
+    twData = _await$Promise$all2[1],
+    mistData = _await$Promise$all2[2],
+    sharkPoolData = _await$Promise$all2[3],
+    penguinModData = _await$Promise$all2[4];
+  const engineExtensions = (Array.isArray(engineData.extensions) ? engineData.extensions : []).map(extension => ({
+    name: normalizeText(extension.name),
+    description: normalizeText(extension.description),
+    extensionId: normalizeText(extension.id),
+    extensionURL: "https://extensions.02engine.02studio.xyz/extension/".concat(extension.slug, ".js"),
+    iconURL: "https://extensions.02engine.02studio.xyz/image/".concat(extension.image || "images/unknown.svg"),
+    source: "02engine",
+    tags: ["02engine", "ztengine"],
+    credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
+    docsURI: null,
+    samples: extension.samples ? extension.samples.map(sample => ({
+      href: "".concat(ROOT, "editor?project_url=https://extensions.02engine.02studio.xyz/samples/").concat(encodeURIComponent(sample), ".sb3"),
+      text: sample
+    })) : null,
+    incompatibleWithScratch: !extension.scratchCompatible
+  }));
+  const twExtensions = (Array.isArray(twData.extensions) ? twData.extensions : []).map(extension => ({
+    name: normalizeText(extension.name),
+    description: normalizeText(extension.description),
+    extensionId: normalizeText(extension.id),
+    extensionURL: "https://extensions.turbowarp.org/".concat(extension.slug, ".js"),
+    iconURL: "https://extensions.turbowarp.org/".concat(extension.image || "images/unknown.svg"),
+    source: "tw",
+    tags: ["tw"],
+    credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
+    docsURI: extension.docs ? "https://extensions.turbowarp.org/".concat(extension.slug) : null,
+    samples: extension.samples ? extension.samples.map(sample => ({
+      href: "".concat(ROOT, "editor?project_url=https://extensions.turbowarp.org/samples/").concat(encodeURIComponent(sample), ".sb3"),
+      text: sample
+    })) : null,
+    incompatibleWithScratch: !extension.scratchCompatible
+  }));
+  const mistExtensions = (Array.isArray(mistData.extensions) ? mistData.extensions : []).map(extension => ({
+    name: normalizeText(extension.name),
+    description: normalizeText(extension.description),
+    extensionId: normalizeText(extension.id),
+    extensionURL: "https://mistiumextensions.02studio.xyz/featured/".concat(extension.name, ".js"),
+    iconURL: "https://mistiumextensions.02studio.xyz/".concat(extension.image || "images/unknown.svg"),
+    source: "mist",
+    tags: ["mist"],
+    credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
+    docsURI: null,
+    samples: extension.samples ? extension.samples.map(sample => ({
+      href: "".concat(ROOT, "editor?project_url=https://extensions.turbowarp.org/samples/").concat(encodeURIComponent(sample), ".sb3"),
+      text: sample
+    })) : null,
+    incompatibleWithScratch: !extension.scratchCompatible
+  }));
+  const sharkPoolExtensions = Object.entries(sharkPoolData.extensions || {}).map(_ref => {
+    let _ref2 = _slicedToArray(_ref, 2),
+      slug = _ref2[0],
+      rawExtension = _ref2[1];
+    return {
+      name: slug,
+      description: normalizeText(rawExtension.desc),
+      extensionId: slug,
+      extensionURL: "https://sharkpoolextensions.02studio.xyz/extension-code/".concat(rawExtension.url),
+      iconURL: "https://sharkpoolextensions.02studio.xyz/extension-thumbs/".concat(rawExtension.banner || "images/unknown.svg"),
+      source: "sharkpool",
+      tags: [...(rawExtension.tags || []), "sharkpool"].map(String),
+      credits: normalizeText(rawExtension.creator).split(", ").filter(Boolean),
+      docsURI: null,
+      samples: null,
+      incompatibleWithScratch: false
+    };
+  });
+  cachedRemoteExtensions = [...engineExtensions, ...twExtensions, ...penguinModData, ...mistExtensions, ...sharkPoolExtensions].filter(extension => extension.extensionId || extension.extensionURL);
+  cachedRemoteAt = now;
+  return cachedRemoteExtensions;
+};
+const getBuiltinExtensions = () => [...BUILTIN_EXTENSIONS];
+const getAllKnownExtensions = async function getAllKnownExtensions() {
+  let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  const includeRemote = options.includeRemote !== false;
+  return includeRemote ? [...BUILTIN_EXTENSIONS, ...(await fetchRemoteExtensions(Boolean(options.forceRefresh)))] : [...BUILTIN_EXTENSIONS];
+};
+const searchKnownExtensions = async function searchKnownExtensions() {
+  let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  const includeBuiltin = options.includeBuiltin !== false;
+  const includeRemote = options.includeRemote !== false;
+  const includeSpecial = options.includeSpecial !== false;
+  const source = options.source || "all";
+  const query = normalizeText(options.query);
+  const queryTerms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const normalizedQuery = normalizeLookup(query);
+  const maxResults = Math.max(1, Math.min(100, Math.floor(Number(options.maxResults) || 20)));
+  const extensions = await getAllKnownExtensions({
+    includeRemote
+  });
+  const scored = extensions.filter(extension => includeBuiltin || !extension.builtin).filter(extension => includeSpecial || !extension.special).filter(extension => source === "all" || extension.source === source).filter(extension => !options.scratchCompatibleOnly || !extension.incompatibleWithScratch).map(extension => {
+    const haystackParts = [extension.extensionId, extension.name, extension.description, extension.extensionURL, getURLStem(extension.extensionURL), ...(extension.tags || []), ...(extension.credits || [])];
+    const haystack = haystackParts.join(" ").toLowerCase();
+    const normalizedHaystack = normalizeLookup(haystackParts.join(" "));
+    let score = query ? 0 : 1;
+    if (query) {
+      if (normalizeLookup(extension.extensionId) === normalizedQuery) score += 100;
+      if (normalizeLookup(extension.name) === normalizedQuery) score += 90;
+      if (normalizeLookup(getURLStem(extension.extensionURL)) === normalizedQuery) score += 80;
+      if (normalizedHaystack.includes(normalizedQuery)) score += 50;
+      score += queryTerms.filter(term => haystack.includes(term)).length * 10;
+    }
+    return {
+      extension,
+      score
+    };
+  }).filter(item => !query || item.score > 0).sort((left, right) => right.score - left.score || left.extension.name.localeCompare(right.extension.name));
+  return scored.slice(0, maxResults).map(_ref3 => {
+    let extension = _ref3.extension,
+      score = _ref3.score;
+    return _objectSpread(_objectSpread({}, extension), {}, {
+      score
+    });
+  });
+};
+const resolveKnownExtension = async options => {
+  const extensionId = normalizeText(options.extensionId);
+  const extensionURL = normalizeText(options.extensionURL);
+  const allExtensions = await getAllKnownExtensions({
+    includeRemote: true,
+    forceRefresh: options.forceRefresh
+  });
+  const normalizedId = normalizeLookup(extensionId);
+  const normalizedURL = normalizeLookup(extensionURL);
+  const exact = allExtensions.find(extension => {
+    if (options.source && options.source !== "all" && extension.source !== options.source) return false;
+    return normalizedId && normalizeLookup(extension.extensionId) === normalizedId || normalizedId && normalizeLookup(extension.name) === normalizedId || normalizedURL && normalizeLookup(extension.extensionURL) === normalizedURL || normalizedURL && normalizeLookup(getURLStem(extension.extensionURL)) === normalizedURL;
+  });
+  if (exact) return {
+    item: exact,
+    external: false,
+    matches: [exact]
+  };
+  if (extensionURL) {
+    if (!options.allowExternalUrl) {
+      return {
+        item: null,
+        external: true,
+        matches: [],
+        error: "External extensionURL requires allowExternalUrl: true."
+      };
+    }
+    return {
+      item: {
+        extensionId: extensionId || getURLStem(extensionURL) || "external_extension",
+        name: extensionId || getURLStem(extensionURL) || extensionURL,
+        description: "External extension URL supplied directly to 02Agent.",
+        source: "external",
+        extensionURL,
+        tags: ["external"],
+        incompatibleWithScratch: true
+      },
+      external: true,
+      matches: []
+    };
+  }
+  const matches = await searchKnownExtensions({
+    query: options.query || extensionId,
+    source: options.source,
+    maxResults: 8
+  });
+  return {
+    item: matches.length === 1 ? matches[0] : null,
+    external: false,
+    matches
+  };
+};
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../node_modules/process/browser.js */ "./node_modules/process/browser.js")))
+
+/***/ }),
+
 /***/ "./src/addons/addons/02agent/hooks/useAgents.ts":
 /*!******************************************************!*\
   !*** ./src/addons/addons/02agent/hooks/useAgents.ts ***!
@@ -75671,7 +76049,7 @@ const buildRequestMessages = function buildRequestMessages(messages) {
     return toProviderMessage(message, content, options);
   });
 };
-const SYSTEM_PROMPT = "You are 02Agent, an AI coding assistant inside 02engine (Scratch environment), based on the Gandi IDE AI assistant addon.\n\nLanguage:\n- Use the same language as the user's latest message. If unclear, use zh-CN.\n\nTools:\n- listFiles: list the virtual Scratch project files.\n- getProjectOverview: compact project/stage-size/runtime-options/file/script/costume/variable/list overview.\n- getScratchGuide: concise task-oriented DSL patterns; prefer this over reading long docs.\n- searchBlocks: search block docs and return exact JS DSL examples, fields, inputs, menus, and notes.\n- getBlockHelp: exact help for one opcode or dotted DSL call.\n- readFile: read /stage.js, /sprites/*.js, /sprites/*/costumes/*.svg, or docs.\n- searchFiles: search code and raw Scratch DSL/block docs.\n- applyPatch: edit writable virtual JS files with a Codex-style patch; successful patches immediately sync to Scratch blocks.\n- createSpriteWithSvg: create a new Scratch sprite with one SVG costume. It refuses existing sprite names; use addCostumeWithSvg for another costume on an existing sprite.\n- updateSpriteProperties: change an existing sprite's initial x/y/size/direction/rotation style/visibility/current costume.\n- listCostumes: inspect costume/backdrop order for one target or the whole project.\n- addCostumeWithSvg: add a new SVG costume to a target.\n- batchAddCostumesWithSvg: add multiple SVG costumes/backdrops to one existing target.\n- deleteCostume: delete a specific costume/backdrop from a target.\n- batchDeleteCostumes: delete multiple costumes/backdrops from one target while keeping at least one.\n- reorderCostume: move a costume/backdrop to a different index.\n- setCostumeOrder: set the complete costume/backdrop order for a target in one call.\n- deleteSprite: delete a sprite target.\n- getDiagnostics: validate current virtual JS files.\n\nWorkflow:\n1) Start with getProjectOverview, then readFile only for the stage/sprite files you will edit.\n2) Use getScratchGuide for common patterns, searchBlocks for candidate blocks, and getBlockHelp before using unfamiliar opcodes/menus.\n3) For rendering, algorithms, or repeated logic, call getScratchGuide with topic \"procedures\", \"custom-args\", or \"rendering\" and prefer custom blocks over broadcast-only designs.\n4) For non-trivial programs, patch one small script at a time, then call getDiagnostics before continuing.\n5) Edit scripts and costumes by applyPatch. Costume files are SVG paths under /sprites/<name>/costumes/*.svg; each sprite's costumes are grouped in that folder. Bitmap costumes are exposed as SVG with embedded data images. Do not wrap SVG in Markdown fences; if editing a stage backdrop, keep a complete <svg> document.\n6) After applyPatch, call getDiagnostics for the changed file.\n7) Keep existing // @script <scriptId> markers. Add new scripts with unique markers like // @script new-score-loop.\n8) Ordinary JS comments immediately before a block call become Scratch comments. Metadata comments like // @script and // blockId do not.\n9) Use stable paths from listFiles, such as /stage.js, /sprites/<name>.js, or /sprites/<name>/costumes/*.svg. Do not invent sprite paths with target ids.\n10) Stage backdrops are not movable. Sprite targets are movable and may use updateSpriteProperties for x/y/size/direction/rotation style/visibility/current costume.\n11) Scratch stage coordinates: origin (0, 0) is the center; x increases right, y increases up. Default stage is 480x360, so visible x is -240..240 and y is -180..180. SVG coordinates usually have origin at top-left with y downward; do not confuse SVG canvas coordinates with Scratch stage coordinates.\n12) For full-stage backdrops, make SVG canvas exactly width=\"480\" height=\"360\" viewBox=\"0 0 480 360\" and center content around SVG point (240, 180). For centered sprite costumes, make the SVG canvas tightly fit the costume and keep the visual center at width/2,height/2.\n13) Distinguish target vs asset: a sprite target owns scripts and state; a costume is only one visual asset in that sprite. A stage target owns backdrop assets but cannot move.\n14) When creating a sprite, always choose its intended default/current x/y/size/direction/rotationStyle/visible/currentCostumeIndex. Pass known defaults into createSpriteWithSvg; if anything should differ after creation, immediately call updateSpriteProperties for the new targetId.\n\napplyPatch format:\n- Do not wrap the patch in Markdown code fences.\n- Preferred format is:\n  *** Begin Patch\n  *** Update File: /sprites/Cat.js\n  @@\n   existing context line\n  +new line\n  *** End Patch\n- If the target virtual file is empty or you are replacing it completely, you may put the full replacement file directly after *** Update File without + prefixes.\n\nVirtual JS DSL:\n- Program sections contain expression statements only; each statement is one Scratch block call.\n- Block call: namespace.method({ args }) or identifier({ args }).\n- Block catalog opcodes like data_deletealloflist map to dotted DSL calls like data.deletealloflist(...). The underscore identifier form also works, but prefer dotted calls for readability.\n- Fields use \"$field_\" keys, for example { $field_VARIABLE: \"score\" }. Always use $field_VARIABLE for variables and $field_LIST for lists; use data.variable({ $field_VARIABLE: \"score\" }) to read a variable.\n- Dropdown/menu selectors also use \"$field_\" keys. Example: pen.setPenColorParamTo({ $field_COLOR_PARAM: \"color\", VALUE: 50 }); Valid pen COLOR_PARAM values are \"color\", \"saturation\", \"brightness\", \"transparency\".\n- Custom block parameters are not variables. Inside define(...), read them with argument.reporter_string_number({ $field_VALUE: \"paramName\" }) or argument.reporter_boolean({ $field_VALUE: \"flagName\" }). Never use data.variable to read a custom block parameter.\n- Inputs use plain keys, for example { MESSAGE: \"hi\", VALUE: 1 }.\n- Boolean slots such as CONDITION must contain Boolean blocks. Wrap values with operator.equals/operator.gt/operator.lt instead of using data.variable directly.\n- Substacks use arrow functions, for example SUBSTACK: () => { ... }.\n- Reserved meta keys: $mutation, $args, $xy.\n- Use $xy on top-level scripts to place stacks: { $xy: { x: 80, y: 120 } }.\n- Keep // blockId comments when editing existing code; they help the sync layer map changes.\n- Stage scripts should orchestrate variables, lists, broadcasts, backdrop, and sound. Put visual behavior that needs motion, pen, clones, position, size, or speech bubbles in sprite files.\n- The stage itself cannot move. Only sprite targets can move, rotate, change size, clone, or bounce on edges.\n- A sprite target is the actor/object; its costumes are visual assets. Use target paths (/sprites/<name>.js) for scripts/behavior and costume paths (/sprites/<name>/costumes/*.svg or /stage/costumes/*.svg) only for appearance.\n- After createSpriteWithSvg, verify or set default sprite state with updateSpriteProperties whenever the sprite needs a non-default position, size, direction, rotation style, visibility, or current costume.\n- Scratch stage coordinates use center origin: x right positive, y up positive, normally x=-240..240 and y=-180..180. SVG costume/backdrop coordinates are canvas coordinates, normally top-left origin with y downward.\n- For stage backdrops, prefer SVG width=\"480\" height=\"360\" viewBox=\"0 0 480 360\" and rotation center 240,180. For sprite costumes, prefer a centered SVG canvas and rotation center width/2,height/2. If using addCostumeWithSvg/batchAddCostumesWithSvg without explicit centers, tools default to the SVG canvas center.\n- When adding or deleting costumes/backdrops, inspect order first with getProjectOverview or listCostumes so you preserve the intended sequence. For multiple additions/deletions, prefer batchAddCostumesWithSvg/batchDeleteCostumes. Never call createSpriteWithSvg to add a costume to an existing sprite.\n- When changing costume order, use listCostumes first, then call reorderCostume for one move or setCostumeOrder for a full desired order.\n- Use broadcasts for cross-target orchestration. Do not use broadcasts as local function calls when a custom block can pass parameters.\n- Use custom blocks for reusable logic, sorting steps, math helpers, and pen rendering. Add info: [\"warp\"] when the helper should run without screen refresh.\n- For pen rendering, prefer: event/broadcast receives \"render\" -> calls one warp custom block -> custom block clears and draws the full frame. Pass highlights/scale/offsets through $args and read them with argument.reporter_*.\n- control.if only has SUBSTACK. Use control.if_else when you need SUBSTACK2 / else.\n- Arithmetic operators use NUM1/NUM2. Comparison operators use OPERAND1/OPERAND2.\n- If searchFiles cannot find an extension block such as pen.*, avoid relying on that extension unless an existing project already uses it.\n\nCanonical patterns:\n- Hat/event with body:\n  event.whenflagclicked({ $xy: { x: 80, y: 80 } }, () => { ... });\n  event.whenkeypressed({ $field_KEY_OPTION: \"space\", $xy: { x: 80, y: 240 } }, () => { ... });\n  event.whenbroadcastreceived({ $field_BROADCAST_OPTION: \"game-start\", $xy: { x: 80, y: 400 } }, () => { ... });\n  control.start_as_clone({ $xy: { x: 80, y: 560 } }, () => { ... });\n\n- If/else:\n  control.if_else({\n    CONDITION: sensing.keypressed({ $field_KEY_OPTION: \"space\" }),\n    SUBSTACK: () => { looks.say({ MESSAGE: \"space\" }); },\n    SUBSTACK2: () => { looks.say({ MESSAGE: \"waiting\" }); }\n  });\n  control.repeat_until({\n    CONDITION: operator.equals({ OPERAND1: data.variable({ $field_VARIABLE: \"done\" }), OPERAND2: 1 }),\n    SUBSTACK: () => { looks.say({ MESSAGE: \"looping\" }); }\n  });\n\n- Variables and lists:\n  data.setvariableto({ $field_VARIABLE: \"score\", VALUE: 0 });\n  data.changevariableby({ $field_VARIABLE: \"score\", VALUE: 1 });\n  data.deletealloflist({ $field_LIST: \"numbers\" });\n  data.addtolist({ $field_LIST: \"numbers\", ITEM: operator.random({ FROM: 1, TO: 100 }) });\n  data.itemoflist({ $field_LIST: \"numbers\", INDEX: data.variable({ $field_VARIABLE: \"score\" }) });\n\n- Menus:\n  pen.setPenColorParamTo({ $field_COLOR_PARAM: \"color\", VALUE: 50 });\n  pen.changePenColorParamBy({ $field_COLOR_PARAM: \"brightness\", VALUE: 10 });\n  event.whenkeypressed({ $field_KEY_OPTION: \"space\", $xy: { x: 80, y: 240 } }, () => { ... });\n\n- Custom block / warp function:\n  define({ proccode: \"draw frame %n[left] %n[right]\", info: [\"warp\"], $xy: { x: 80, y: 520 } }, () => {\n    pen.clear();\n    control.if({ CONDITION: operator.equals({ OPERAND1: data.variable({ $field_VARIABLE: \"i\" }), OPERAND2: argument.reporter_string_number({ $field_VALUE: \"left\" }) }), SUBSTACK: () => {\n      pen.setPenColorToColor({ COLOR: \"#ff4d4f\" });\n    } });\n    // Draw the whole frame here.\n  });\n  procedures.call({ $mutation: { proccode: \"draw frame %n %n\", warp: \"true\" }, $args: [0, 0] });\n\nMinimum example:\n// @script new-hello\nevent.whenflagclicked({ $xy: { x: 80, y: 80 } }, () => {\n  // This becomes a Scratch block comment.\n  control.repeat({ TIMES: 3, SUBSTACK: () => { looks.say({ MESSAGE: \"ok\" }); } });\n  event.broadcast({ BROADCAST_INPUT: \"msg1\" });\n});";
+const SYSTEM_PROMPT = "You are 02Agent, an AI coding assistant inside 02engine (Scratch environment), based on the Gandi IDE AI assistant addon.\n\nLanguage:\n- Use the same language as the user's latest message. If unclear, use zh-CN.\n\nTools:\n- listFiles: list the virtual Scratch project files.\n- getProjectOverview: compact project/stage-size/runtime-options/file/script/costume/variable/list overview.\n- getScratchGuide: concise task-oriented DSL patterns; prefer this over reading long docs.\n- searchBlocks: search block docs and return exact JS DSL examples, fields, inputs, menus, and notes.\n- getBlockHelp: exact help for one opcode or dotted DSL call.\n- searchExtensions: search built-in and known remote extensions before using extension blocks that are not loaded.\n- installExtension: install one built-in or known trusted extension and return its loaded blocks.\n- readFile: read /stage.js, /sprites/*.js, /sprites/*/costumes/*.svg, or docs.\n- searchFiles: search code and raw Scratch DSL/block docs.\n- applyPatch: edit writable virtual JS files with a Codex-style patch; successful patches immediately sync to Scratch blocks.\n- createSpriteWithSvg: create a new Scratch sprite with one SVG costume. It refuses existing sprite names; use addCostumeWithSvg for another costume on an existing sprite.\n- updateSpriteProperties: change an existing sprite's initial x/y/size/direction/rotation style/visibility/current costume.\n- listCostumes: inspect costume/backdrop order for one target or the whole project.\n- addCostumeWithSvg: add a new SVG costume to a target.\n- batchAddCostumesWithSvg: add multiple SVG costumes/backdrops to one existing target.\n- deleteCostume: delete a specific costume/backdrop from a target.\n- batchDeleteCostumes: delete multiple costumes/backdrops from one target while keeping at least one.\n- reorderCostume: move a costume/backdrop to a different index.\n- setCostumeOrder: set the complete costume/backdrop order for a target in one call.\n- deleteSprite: delete a sprite target.\n- getDiagnostics: validate current virtual JS files.\n\nWorkflow:\n1) Start with getProjectOverview, then readFile only for the stage/sprite files you will edit.\n2) Use getScratchGuide for common patterns, searchBlocks for candidate blocks, and getBlockHelp before using unfamiliar opcodes/menus.\n2a) If a needed extension block is not loaded, call searchExtensions, then installExtension for the specific built-in or trusted known extension. Do not install unrelated extensions. Do not install arbitrary direct URLs unless the user explicitly asked for that exact trusted URL.\n3) For rendering, algorithms, or repeated logic, call getScratchGuide with topic \"procedures\", \"custom-args\", or \"rendering\" and prefer custom blocks over broadcast-only designs.\n4) For non-trivial programs, patch one small script at a time, then call getDiagnostics before continuing.\n5) Edit scripts and costumes by applyPatch. Costume files are SVG paths under /sprites/<name>/costumes/*.svg; each sprite's costumes are grouped in that folder. Bitmap costumes are exposed as SVG with embedded data images. Do not wrap SVG in Markdown fences; if editing a stage backdrop, keep a complete <svg> document.\n6) After applyPatch, call getDiagnostics for the changed file.\n7) Keep existing // @script <scriptId> markers. Add new scripts with unique markers like // @script new-score-loop.\n8) Ordinary JS comments immediately before a block call become Scratch comments. Metadata comments like // @script and // blockId do not.\n9) Use stable paths from listFiles, such as /stage.js, /sprites/<name>.js, or /sprites/<name>/costumes/*.svg. Do not invent sprite paths with target ids.\n10) Stage backdrops are not movable. Sprite targets are movable and may use updateSpriteProperties for x/y/size/direction/rotation style/visibility/current costume.\n11) Scratch stage coordinates: origin (0, 0) is the center; x increases right, y increases up. Default stage is 480x360, so visible x is -240..240 and y is -180..180. SVG coordinates usually have origin at top-left with y downward; do not confuse SVG canvas coordinates with Scratch stage coordinates.\n12) For full-stage backdrops, make SVG canvas exactly width=\"480\" height=\"360\" viewBox=\"0 0 480 360\" and center content around SVG point (240, 180). For centered sprite costumes, make the SVG canvas tightly fit the costume and keep the visual center at width/2,height/2.\n13) Distinguish target vs asset: a sprite target owns scripts and state; a costume is only one visual asset in that sprite. A stage target owns backdrop assets but cannot move.\n14) When creating a sprite, always choose its intended default/current x/y/size/direction/rotationStyle/visible/currentCostumeIndex. Pass known defaults into createSpriteWithSvg; if anything should differ after creation, immediately call updateSpriteProperties for the new targetId.\n\napplyPatch format:\n- Do not wrap the patch in Markdown code fences.\n- Preferred format is:\n  *** Begin Patch\n  *** Update File: /sprites/Cat.js\n  @@\n   existing context line\n  +new line\n  *** End Patch\n- If the target virtual file is empty or you are replacing it completely, you may put the full replacement file directly after *** Update File without + prefixes.\n\nVirtual JS DSL:\n- Program sections contain expression statements only; each statement is one Scratch block call.\n- Block call: namespace.method({ args }) or identifier({ args }).\n- Block catalog opcodes like data_deletealloflist map to dotted DSL calls like data.deletealloflist(...). The underscore identifier form also works, but prefer dotted calls for readability.\n- Fields use \"$field_\" keys, for example { $field_VARIABLE: \"score\" }. Always use $field_VARIABLE for variables and $field_LIST for lists; use data.variable({ $field_VARIABLE: \"score\" }) to read a variable.\n- Dropdown/menu selectors also use \"$field_\" keys. Example: pen.setPenColorParamTo({ $field_COLOR_PARAM: \"color\", VALUE: 50 }); Valid pen COLOR_PARAM values are \"color\", \"saturation\", \"brightness\", \"transparency\".\n- Custom block parameters are not variables. Inside define(...), read them with argument.reporter_string_number({ $field_VALUE: \"paramName\" }) or argument.reporter_boolean({ $field_VALUE: \"flagName\" }). Never use data.variable to read a custom block parameter.\n- Inputs use plain keys, for example { MESSAGE: \"hi\", VALUE: 1 }.\n- Boolean slots such as CONDITION must contain Boolean blocks. Wrap values with operator.equals/operator.gt/operator.lt instead of using data.variable directly.\n- Substacks use arrow functions, for example SUBSTACK: () => { ... }.\n- Reserved meta keys: $mutation, $args, $xy.\n- Use $xy on top-level scripts to place stacks: { $xy: { x: 80, y: 120 } }.\n- Keep // blockId comments when editing existing code; they help the sync layer map changes.\n- Stage scripts should orchestrate variables, lists, broadcasts, backdrop, and sound. Put visual behavior that needs motion, pen, clones, position, size, or speech bubbles in sprite files.\n- The stage itself cannot move. Only sprite targets can move, rotate, change size, clone, or bounce on edges.\n- A sprite target is the actor/object; its costumes are visual assets. Use target paths (/sprites/<name>.js) for scripts/behavior and costume paths (/sprites/<name>/costumes/*.svg or /stage/costumes/*.svg) only for appearance.\n- After createSpriteWithSvg, verify or set default sprite state with updateSpriteProperties whenever the sprite needs a non-default position, size, direction, rotation style, visibility, or current costume.\n- Scratch stage coordinates use center origin: x right positive, y up positive, normally x=-240..240 and y=-180..180. SVG costume/backdrop coordinates are canvas coordinates, normally top-left origin with y downward.\n- For stage backdrops, prefer SVG width=\"480\" height=\"360\" viewBox=\"0 0 480 360\" and rotation center 240,180. For sprite costumes, prefer a centered SVG canvas and rotation center width/2,height/2. If using addCostumeWithSvg/batchAddCostumesWithSvg without explicit centers, tools default to the SVG canvas center.\n- When adding or deleting costumes/backdrops, inspect order first with getProjectOverview or listCostumes so you preserve the intended sequence. For multiple additions/deletions, prefer batchAddCostumesWithSvg/batchDeleteCostumes. Never call createSpriteWithSvg to add a costume to an existing sprite.\n- When changing costume order, use listCostumes first, then call reorderCostume for one move or setCostumeOrder for a full desired order.\n- Use broadcasts for cross-target orchestration. Do not use broadcasts as local function calls when a custom block can pass parameters.\n- Use custom blocks for reusable logic, sorting steps, math helpers, and pen rendering. Add info: [\"warp\"] when the helper should run without screen refresh.\n- For pen rendering, prefer: event/broadcast receives \"render\" -> calls one warp custom block -> custom block clears and draws the full frame. Pass highlights/scale/offsets through $args and read them with argument.reporter_*.\n- control.if only has SUBSTACK. Use control.if_else when you need SUBSTACK2 / else.\n- Arithmetic operators use NUM1/NUM2. Comparison operators use OPERAND1/OPERAND2.\n- If searchBlocks/searchFiles cannot find an extension block such as pen.*, use searchExtensions and installExtension for the needed built-in or trusted known extension, then call searchBlocks/getBlockHelp again before editing scripts.\n\nCanonical patterns:\n- Hat/event with body:\n  event.whenflagclicked({ $xy: { x: 80, y: 80 } }, () => { ... });\n  event.whenkeypressed({ $field_KEY_OPTION: \"space\", $xy: { x: 80, y: 240 } }, () => { ... });\n  event.whenbroadcastreceived({ $field_BROADCAST_OPTION: \"game-start\", $xy: { x: 80, y: 400 } }, () => { ... });\n  control.start_as_clone({ $xy: { x: 80, y: 560 } }, () => { ... });\n\n- If/else:\n  control.if_else({\n    CONDITION: sensing.keypressed({ $field_KEY_OPTION: \"space\" }),\n    SUBSTACK: () => { looks.say({ MESSAGE: \"space\" }); },\n    SUBSTACK2: () => { looks.say({ MESSAGE: \"waiting\" }); }\n  });\n  control.repeat_until({\n    CONDITION: operator.equals({ OPERAND1: data.variable({ $field_VARIABLE: \"done\" }), OPERAND2: 1 }),\n    SUBSTACK: () => { looks.say({ MESSAGE: \"looping\" }); }\n  });\n\n- Variables and lists:\n  data.setvariableto({ $field_VARIABLE: \"score\", VALUE: 0 });\n  data.changevariableby({ $field_VARIABLE: \"score\", VALUE: 1 });\n  data.deletealloflist({ $field_LIST: \"numbers\" });\n  data.addtolist({ $field_LIST: \"numbers\", ITEM: operator.random({ FROM: 1, TO: 100 }) });\n  data.itemoflist({ $field_LIST: \"numbers\", INDEX: data.variable({ $field_VARIABLE: \"score\" }) });\n\n- Menus:\n  pen.setPenColorParamTo({ $field_COLOR_PARAM: \"color\", VALUE: 50 });\n  pen.changePenColorParamBy({ $field_COLOR_PARAM: \"brightness\", VALUE: 10 });\n  event.whenkeypressed({ $field_KEY_OPTION: \"space\", $xy: { x: 80, y: 240 } }, () => { ... });\n\n- Custom block / warp function:\n  define({ proccode: \"draw frame %n[left] %n[right]\", info: [\"warp\"], $xy: { x: 80, y: 520 } }, () => {\n    pen.clear();\n    control.if({ CONDITION: operator.equals({ OPERAND1: data.variable({ $field_VARIABLE: \"i\" }), OPERAND2: argument.reporter_string_number({ $field_VALUE: \"left\" }) }), SUBSTACK: () => {\n      pen.setPenColorToColor({ COLOR: \"#ff4d4f\" });\n    } });\n    // Draw the whole frame here.\n  });\n  procedures.call({ $mutation: { proccode: \"draw frame %n %n\", warp: \"true\" }, $args: [0, 0] });\n\nMinimum example:\n// @script new-hello\nevent.whenflagclicked({ $xy: { x: 80, y: 80 } }, () => {\n  // This becomes a Scratch block comment.\n  control.repeat({ TIMES: 3, SUBSTACK: () => { looks.say({ MESSAGE: \"ok\" }); } });\n  event.broadcast({ BROADCAST_INPUT: \"msg1\" });\n});";
 function useChat(_ref) {
   let messages = _ref.messages,
     currentAgent = _ref.currentAgent,
@@ -77613,6 +77991,8 @@ const REQUIRED_TOOL_ARGUMENTS = {
   batchAddCostumesWithSvg: ["costumes"],
   reorderCostume: ["newIndex"]
 };
+const MUTATING_TOOLS = new Set(["applyPatch", "createSpriteWithSvg", "updateSpriteProperties", "addCostumeWithSvg", "batchAddCostumesWithSvg", "deleteCostume", "batchDeleteCostumes", "reorderCostume", "setCostumeOrder", "deleteSprite", "installExtension", "replaceBlocksRangeByUCF", "replaceScriptByUCF", "generateCodeFromUCF"]);
+let mutationQueue = Promise.resolve();
 const isMissingToolArgument = value => value === undefined || value === null || typeof value === "string" && value.trim() === "";
 const validateToolArguments = (functionName, args) => {
   const requiredArguments = REQUIRED_TOOL_ARGUMENTS[functionName] || [];
@@ -77621,17 +78001,17 @@ const validateToolArguments = (functionName, args) => {
     throw new Error("Tool ".concat(functionName, " requires argument(s): ").concat(missingArguments.join(", "), ". Received: ").concat(JSON.stringify(args)));
   }
 };
-const callAITool = async (aiTools, functionName, args) => {
-  if (!aiTools || typeof aiTools[functionName] !== "function") {
-    throw new Error("Tool ".concat(functionName, " not found"));
-  }
-  validateToolArguments(functionName, args);
+const dispatchAITool = async (aiTools, functionName, args) => {
   switch (functionName) {
     case "readFile":
       return aiTools[functionName](args.path, args.startLine, args.endLine);
     case "searchFiles":
       return aiTools[functionName](args);
     case "searchBlocks":
+      return aiTools[functionName](args);
+    case "searchExtensions":
+      return aiTools[functionName](args);
+    case "installExtension":
       return aiTools[functionName](args);
     case "getBlockHelp":
       return aiTools[functionName](args.opcode);
@@ -77668,6 +78048,29 @@ const callAITool = async (aiTools, functionName, args) => {
     default:
       return aiTools[functionName]();
   }
+};
+const enqueueMutation = async operation => {
+  const previous = mutationQueue;
+  let release = () => {};
+  mutationQueue = new Promise(resolve => {
+    release = resolve;
+  });
+  await previous.catch(() => undefined);
+  try {
+    return await operation();
+  } finally {
+    release();
+  }
+};
+const callAITool = async (aiTools, functionName, args) => {
+  if (!aiTools || typeof aiTools[functionName] !== "function") {
+    throw new Error("Tool ".concat(functionName, " not found"));
+  }
+  validateToolArguments(functionName, args);
+  if (MUTATING_TOOLS.has(functionName)) {
+    return enqueueMutation(() => dispatchAITool(aiTools, functionName, args));
+  }
+  return dispatchAITool(aiTools, functionName, args);
 };
 
 /***/ }),
@@ -77755,6 +78158,84 @@ const scratchToolSchemas = [{
         }
       },
       required: ["opcode"]
+    }
+  }
+}, {
+  type: "function",
+  function: {
+    name: "searchExtensions",
+    description: "Search built-in and known remote Scratch/TurboWarp/PenguinMod/Mist/SharkPool extensions by ID, name, keyword, source, or URL stem. Use before installing extension blocks that are not already loaded.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Extension name, ID, keyword, or URL stem, such as pen, music, files, JSON, or text."
+        },
+        source: {
+          type: "string",
+          description: "Optional source filter: scratch, 02engine, tw, pm, mist, sharkpool, special, external, or all."
+        },
+        scratchCompatibleOnly: {
+          type: "boolean",
+          description: "Only return extensions marked Scratch-compatible. Defaults to false."
+        },
+        includeBuiltin: {
+          type: "boolean",
+          description: "Include built-in Scratch/special extensions. Defaults to true."
+        },
+        includeRemote: {
+          type: "boolean",
+          description: "Include known remote extension galleries. Defaults to true."
+        },
+        includeSpecial: {
+          type: "boolean",
+          description: "Include special non-gallery features such as custom reporters. Defaults to true."
+        },
+        maxResults: {
+          type: "number",
+          description: "Maximum number of matches. Defaults to 20."
+        }
+      }
+    }
+  }
+}, {
+  type: "function",
+  function: {
+    name: "installExtension",
+    description: "Install one built-in or known remote extension into the current Scratch VM, then return loaded extension blocks. External direct URLs require allowExternalUrl: true because remote extensions execute unsandboxed.",
+    parameters: {
+      type: "object",
+      properties: {
+        extensionId: {
+          type: "string",
+          description: "Known extension ID or name, such as pen, music, or an ID returned by searchExtensions."
+        },
+        extensionURL: {
+          type: "string",
+          description: "Known gallery extension URL, or direct URL only when allowExternalUrl is true."
+        },
+        query: {
+          type: "string",
+          description: "Search query used only when extensionId/extensionURL are not enough to resolve exactly one extension."
+        },
+        source: {
+          type: "string",
+          description: "Optional source filter: scratch, 02engine, tw, pm, mist, sharkpool, special, external, or all."
+        },
+        mode: {
+          type: "string",
+          description: "Install mode: auto, builtin, url, or text. Text fetches JS and loads a data URL. Defaults to auto."
+        },
+        allowExternalUrl: {
+          type: "boolean",
+          description: "Required to install arbitrary direct extensionURL values outside known registries."
+        },
+        forceRefresh: {
+          type: "boolean",
+          description: "Refresh remote extension registries before resolving."
+        }
+      }
     }
   }
 }, {
@@ -78220,6 +78701,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _converter__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./converter */ "./src/addons/addons/02agent/converter.js");
 /* harmony import */ var _scratch_blocks_json__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./scratch_blocks.json */ "./src/addons/addons/02agent/scratch_blocks.json");
 var _scratch_blocks_json__WEBPACK_IMPORTED_MODULE_4___namespace = /*#__PURE__*/__webpack_require__.t(/*! ./scratch_blocks.json */ "./src/addons/addons/02agent/scratch_blocks.json", 1);
+/* harmony import */ var _extensionRegistry__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./extensionRegistry */ "./src/addons/addons/02agent/extensionRegistry.ts");
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _toArray(r) { return _arrayWithHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableRest(); }
@@ -78233,6 +78715,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+
 
 
 
@@ -80641,73 +81124,62 @@ class AITools {
         path: createdTarget ? this._getVirtualPathForTarget(createdTarget) : undefined
       };
     } catch (error) {
-      var _this$vm$runtime20;
       await cleanupCreatedTargets();
-      const templateTarget = (((_this$vm$runtime20 = this.vm.runtime) === null || _this$vm$runtime20 === void 0 ? void 0 : _this$vm$runtime20.targets) || []).find(target => !target.isStage && target.sprite && targetIdsBefore.has(target.id));
-      if (!templateTarget || typeof this.vm.duplicateSprite !== "function") {
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : String(error),
-          removedUnexpectedTargets: await cleanupCreatedTargets()
-        };
-      }
-      try {
-        var _this$vm$renameSprite, _this$vm16, _createdTarget$setXY2, _options$x3, _options$y3, _createdTarget$setSiz2, _options$size3, _createdTarget$setDir2, _options$direction3, _createdTarget$setRot2, _createdTarget$blocks, _createdTarget$sprite, _createdTarget$sprite2, _firstCostume$rotatio, _firstCostume$rotatio2, _this$vm$emitWorkspac3, _this$vm17, _this$vm$emitTargetsU9, _this$vm18, _this$vm$runtime$emit7, _this$vm$runtime21, _options$x4, _options$y4, _options$size4, _options$direction4;
-        await this.vm.duplicateSprite(templateTarget.id);
-        const createdTarget = this.vm.editingTarget;
-        (_this$vm$renameSprite = (_this$vm16 = this.vm).renameSprite) === null || _this$vm$renameSprite === void 0 ? void 0 : _this$vm$renameSprite.call(_this$vm16, createdTarget.id, spriteName);
-        (_createdTarget$setXY2 = createdTarget.setXY) === null || _createdTarget$setXY2 === void 0 ? void 0 : _createdTarget$setXY2.call(createdTarget, Number((_options$x3 = options === null || options === void 0 ? void 0 : options.x) !== null && _options$x3 !== void 0 ? _options$x3 : 0), Number((_options$y3 = options === null || options === void 0 ? void 0 : options.y) !== null && _options$y3 !== void 0 ? _options$y3 : 0));
-        (_createdTarget$setSiz2 = createdTarget.setSize) === null || _createdTarget$setSiz2 === void 0 ? void 0 : _createdTarget$setSiz2.call(createdTarget, Number((_options$size3 = options === null || options === void 0 ? void 0 : options.size) !== null && _options$size3 !== void 0 ? _options$size3 : 100));
-        (_createdTarget$setDir2 = createdTarget.setDirection) === null || _createdTarget$setDir2 === void 0 ? void 0 : _createdTarget$setDir2.call(createdTarget, Number((_options$direction3 = options === null || options === void 0 ? void 0 : options.direction) !== null && _options$direction3 !== void 0 ? _options$direction3 : 90));
-        (_createdTarget$setRot2 = createdTarget.setRotationStyle) === null || _createdTarget$setRot2 === void 0 ? void 0 : _createdTarget$setRot2.call(createdTarget, String((options === null || options === void 0 ? void 0 : options.rotationStyle) || "all around"));
-        if ((_createdTarget$blocks = createdTarget.blocks) !== null && _createdTarget$blocks !== void 0 && _createdTarget$blocks._blocks) createdTarget.blocks._blocks = {};
-        createdTarget.comments = {};
-        const firstCostume = (_createdTarget$sprite = createdTarget.sprite) === null || _createdTarget$sprite === void 0 ? void 0 : (_createdTarget$sprite2 = _createdTarget$sprite.costumes) === null || _createdTarget$sprite2 === void 0 ? void 0 : _createdTarget$sprite2[0];
-        if (!firstCostume) throw new Error("Duplicated sprite has no costume to replace.");
-        createdTarget.sprite.costumes.splice(1);
-        firstCostume.name = costumeName;
-        const fallbackRotationCenter = Number.isFinite(options === null || options === void 0 ? void 0 : options.rotationCenterX) && Number.isFinite(options === null || options === void 0 ? void 0 : options.rotationCenterY) ? [Number(options.rotationCenterX), Number(options.rotationCenterY)] : this._inferSvgRotationCenter(createdTarget, svg, [Number((_firstCostume$rotatio = firstCostume.rotationCenterX) !== null && _firstCostume$rotatio !== void 0 ? _firstCostume$rotatio : 0), Number((_firstCostume$rotatio2 = firstCostume.rotationCenterY) !== null && _firstCostume$rotatio2 !== void 0 ? _firstCostume$rotatio2 : 0)]);
-        this._applySvgToCostumeObject(firstCostume, svg, fallbackRotationCenter[0], fallbackRotationCenter[1]);
-        (_this$vm$emitWorkspac3 = (_this$vm17 = this.vm).emitWorkspaceUpdate) === null || _this$vm$emitWorkspac3 === void 0 ? void 0 : _this$vm$emitWorkspac3.call(_this$vm17);
-        (_this$vm$emitTargetsU9 = (_this$vm18 = this.vm).emitTargetsUpdate) === null || _this$vm$emitTargetsU9 === void 0 ? void 0 : _this$vm$emitTargetsU9.call(_this$vm18);
-        (_this$vm$runtime$emit7 = (_this$vm$runtime21 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit7 === void 0 ? void 0 : _this$vm$runtime$emit7.call(_this$vm$runtime21);
-        const actualName = normalizeSpriteName(this._getTargetName(createdTarget));
-        if (actualName !== requestedName) {
-          const removedUnexpectedTargets = await cleanupCreatedTargets();
-          return {
-            success: false,
-            error: "Sprite creation fallback was cancelled because Scratch created \"".concat(this._getTargetName(createdTarget), "\" instead of the requested \"").concat(spriteName, "\". Use addCostumeWithSvg for existing sprites."),
-            removedUnexpectedTargets
-          };
-        }
-        return {
-          success: true,
-          targetId: createdTarget === null || createdTarget === void 0 ? void 0 : createdTarget.id,
-          name: spriteName,
-          costumeName,
-          defaultProperties: {
-            x: Number((_options$x4 = options === null || options === void 0 ? void 0 : options.x) !== null && _options$x4 !== void 0 ? _options$x4 : 0),
-            y: Number((_options$y4 = options === null || options === void 0 ? void 0 : options.y) !== null && _options$y4 !== void 0 ? _options$y4 : 0),
-            size: Number((_options$size4 = options === null || options === void 0 ? void 0 : options.size) !== null && _options$size4 !== void 0 ? _options$size4 : 100),
-            direction: Number((_options$direction4 = options === null || options === void 0 ? void 0 : options.direction) !== null && _options$direction4 !== void 0 ? _options$direction4 : 90),
-            rotationStyle: String((options === null || options === void 0 ? void 0 : options.rotationStyle) || "all around"),
-            visible: createdTarget === null || createdTarget === void 0 ? void 0 : createdTarget.visible,
-            currentCostumeIndex: 0
-          },
-          nextStep: "If the intended initial/current sprite state differs, call updateSpriteProperties now with targetId and the desired x/y/size/direction/rotationStyle/visible/currentCostumeIndex.",
-          rotationCenterX: firstCostume.rotationCenterX,
-          rotationCenterY: firstCostume.rotationCenterY,
-          path: createdTarget ? this._getVirtualPathForTarget(createdTarget) : undefined,
-          fallback: "duplicated-template-sprite"
-        };
-      } catch (fallbackError) {
-        return {
-          success: false,
-          error: "addSprite failed (".concat(error instanceof Error ? error.message : String(error), "); duplicate fallback failed (").concat(fallbackError instanceof Error ? fallbackError.message : String(fallbackError), ")"),
-          removedUnexpectedTargets: await cleanupCreatedTargets()
-        };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+        removedUnexpectedTargets: await cleanupCreatedTargets()
+      };
+    }
+  }
+  _compactExtensionItem(extension) {
+    return {
+      extensionId: extension.extensionId,
+      name: extension.name,
+      description: extension.description,
+      source: extension.source,
+      extensionURL: extension.extensionURL,
+      builtin: Boolean(extension.builtin),
+      special: Boolean(extension.special),
+      incompatibleWithScratch: Boolean(extension.incompatibleWithScratch),
+      bluetoothRequired: Boolean(extension.bluetoothRequired),
+      internetConnectionRequired: Boolean(extension.internetConnectionRequired),
+      tags: extension.tags || [],
+      credits: extension.credits || [],
+      docsURI: extension.docsURI || null,
+      score: extension.score
+    };
+  }
+  _getLoadedExtensionIds() {
+    var _this$vm16, _this$vm17, _this$vm17$runtime;
+    const loaded = new Set();
+    const extensionManager = (_this$vm16 = this.vm) === null || _this$vm16 === void 0 ? void 0 : _this$vm16.extensionManager;
+    if ((extensionManager === null || extensionManager === void 0 ? void 0 : extensionManager._loadedExtensions) instanceof Map) {
+      for (const id of extensionManager._loadedExtensions.keys()) loaded.add(String(id));
+    }
+    if (Array.isArray((_this$vm17 = this.vm) === null || _this$vm17 === void 0 ? void 0 : (_this$vm17$runtime = _this$vm17.runtime) === null || _this$vm17$runtime === void 0 ? void 0 : _this$vm17$runtime._blockInfo)) {
+      for (const info of this.vm.runtime._blockInfo) {
+        if (info !== null && info !== void 0 && info.id) loaded.add(String(info.id));
       }
     }
+    return [...loaded];
+  }
+  _getLoadedExtensionInfo(extensionId) {
+    var _this$vm18, _this$vm18$runtime;
+    const wanted = String(extensionId || "").trim();
+    const blockInfo = Array.isArray((_this$vm18 = this.vm) === null || _this$vm18 === void 0 ? void 0 : (_this$vm18$runtime = _this$vm18.runtime) === null || _this$vm18$runtime === void 0 ? void 0 : _this$vm18$runtime._blockInfo) ? this.vm.runtime._blockInfo : [];
+    return blockInfo.filter(info => !wanted || (info === null || info === void 0 ? void 0 : info.id) === wanted).map(info => ({
+      id: info === null || info === void 0 ? void 0 : info.id,
+      name: info === null || info === void 0 ? void 0 : info.name,
+      blocks: this.getExtensionBlocks(info === null || info === void 0 ? void 0 : info.id).slice(0, 40)
+    }));
+  }
+  async _loadExtensionFromText(extensionURL) {
+    const response = await fetch(extensionURL);
+    if (!response.ok) throw new Error("HTTP ".concat(response.status, " while fetching extension text."));
+    const text = await response.text();
+    const dataURL = "data:application/javascript,".concat(encodeURIComponent(text));
+    await this.vm.extensionManager.loadExtensionURL(dataURL);
   }
   getTopLevelScripts(targetId) {
     const result = this._getBlocks(targetId);
@@ -81511,9 +81983,9 @@ class AITools {
     }
   }
   getProjectOverview() {
-    var _this$vm$runtime22, _this$vm$runtime23, _this$vm$runtime24, _this$vm$runtime24$io, _this$vm$runtime24$io2, _runtime$frameLoop, _runtime$runtimeOptio, _runtime$runtimeOptio2, _runtime$runtimeOptio3, _runtime$runtimeOptio4, _runtime$runtimeOptio5;
+    var _this$vm$runtime20, _this$vm$runtime21, _this$vm$runtime22, _this$vm$runtime22$io, _this$vm$runtime22$io2, _runtime$frameLoop, _runtime$runtimeOptio, _runtime$runtimeOptio2, _runtime$runtimeOptio3, _runtime$runtimeOptio4, _runtime$runtimeOptio5;
     const listRepairs = Object(_workspaceRangeTools__WEBPACK_IMPORTED_MODULE_2__["repairListVariableValues"])(this.vm);
-    const targets = Array.isArray((_this$vm$runtime22 = this.vm.runtime) === null || _this$vm$runtime22 === void 0 ? void 0 : _this$vm$runtime22.targets) ? this.vm.runtime.targets : [];
+    const targets = Array.isArray((_this$vm$runtime20 = this.vm.runtime) === null || _this$vm$runtime20 === void 0 ? void 0 : _this$vm$runtime20.targets) ? this.vm.runtime.targets : [];
     const virtualFiles = this._getVirtualFiles();
     const files = virtualFiles.filter(entry => entry.kind === "target");
     const costumeFiles = virtualFiles.filter(entry => entry.kind === "costume");
@@ -81525,7 +81997,7 @@ class AITools {
       project: {
         stageWidth: runtime.stageWidth,
         stageHeight: runtime.stageHeight,
-        turboMode: Boolean(((_this$vm$runtime23 = this.vm.runtime) === null || _this$vm$runtime23 === void 0 ? void 0 : _this$vm$runtime23.turboMode) || ((_this$vm$runtime24 = this.vm.runtime) === null || _this$vm$runtime24 === void 0 ? void 0 : (_this$vm$runtime24$io = _this$vm$runtime24.ioDevices) === null || _this$vm$runtime24$io === void 0 ? void 0 : (_this$vm$runtime24$io2 = _this$vm$runtime24$io.clock) === null || _this$vm$runtime24$io2 === void 0 ? void 0 : _this$vm$runtime24$io2.turboMode)),
+        turboMode: Boolean(((_this$vm$runtime21 = this.vm.runtime) === null || _this$vm$runtime21 === void 0 ? void 0 : _this$vm$runtime21.turboMode) || ((_this$vm$runtime22 = this.vm.runtime) === null || _this$vm$runtime22 === void 0 ? void 0 : (_this$vm$runtime22$io = _this$vm$runtime22.ioDevices) === null || _this$vm$runtime22$io === void 0 ? void 0 : (_this$vm$runtime22$io2 = _this$vm$runtime22$io.clock) === null || _this$vm$runtime22$io2 === void 0 ? void 0 : _this$vm$runtime22$io2.turboMode)),
         framerate: ((_runtime$frameLoop = runtime.frameLoop) === null || _runtime$frameLoop === void 0 ? void 0 : _runtime$frameLoop.framerate) || undefined,
         runtimeOptions: {
           maxClones: (_runtime$runtimeOptio = (_runtime$runtimeOptio2 = runtime.runtimeOptions) === null || _runtime$runtimeOptio2 === void 0 ? void 0 : _runtime$runtimeOptio2.maxClones) !== null && _runtime$runtimeOptio !== void 0 ? _runtime$runtimeOptio : runtime.maxClones,
@@ -81818,6 +82290,98 @@ class AITools {
       query,
       matchCount: matches.length,
       matches
+    };
+  }
+  async searchExtensions() {
+    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    const matches = await Object(_extensionRegistry__WEBPACK_IMPORTED_MODULE_5__["searchKnownExtensions"])(options);
+    const loadedExtensionIds = this._getLoadedExtensionIds();
+    const loadedSet = new Set(loadedExtensionIds);
+    return {
+      success: true,
+      query: options.query || "",
+      matchCount: matches.length,
+      loadedExtensionIds,
+      matches: matches.map(extension => _objectSpread(_objectSpread({}, this._compactExtensionItem(extension)), {}, {
+        loaded: loadedSet.has(extension.extensionId)
+      })),
+      notes: ["Built-in Scratch extensions can be installed by extensionId.", "Remote extension URLs run unsandboxed in this VM; install only trusted known extensions unless allowExternalUrl is explicitly true."]
+    };
+  }
+  async installExtension() {
+    var _this$vm24, _this$vm$emitWorkspac3, _this$vm25;
+    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    const extensionManager = (_this$vm24 = this.vm) === null || _this$vm24 === void 0 ? void 0 : _this$vm24.extensionManager;
+    if (!(extensionManager !== null && extensionManager !== void 0 && extensionManager.loadExtensionURL)) {
+      return {
+        success: false,
+        error: "Scratch VM extensionManager.loadExtensionURL is not available."
+      };
+    }
+    const resolved = await Object(_extensionRegistry__WEBPACK_IMPORTED_MODULE_5__["resolveKnownExtension"])(options);
+    if (resolved.error) {
+      return {
+        success: false,
+        error: resolved.error,
+        matches: resolved.matches.map(item => this._compactExtensionItem(item))
+      };
+    }
+    if (!resolved.item) {
+      return {
+        success: false,
+        error: "Extension did not resolve to exactly one known extension. Use searchExtensions, then pass extensionId or extensionURL.",
+        matches: resolved.matches.map(item => this._compactExtensionItem(item))
+      };
+    }
+    const item = resolved.item;
+    const mode = options.mode || "auto";
+    const beforeIds = new Set(this._getLoadedExtensionIds());
+    if (item.extensionId === "procedures_enable_return") {
+      if (!window.__twEnableProcedureReturns) {
+        return {
+          success: false,
+          error: "Procedure returns helper is not available in this page.",
+          extension: this._compactExtensionItem(item)
+        };
+      }
+      window.__twEnableProcedureReturns();
+    } else if (mode === "builtin" || mode === "auto" && item.builtin && item.source === "scratch") {
+      await extensionManager.loadExtensionURL(item.extensionId);
+    } else {
+      const extensionURL = item.extensionURL || options.extensionURL;
+      if (!extensionURL) {
+        return {
+          success: false,
+          error: "Resolved extension has no extensionURL.",
+          extension: this._compactExtensionItem(item)
+        };
+      }
+      if (mode === "text") {
+        await this._loadExtensionFromText(extensionURL);
+      } else {
+        await extensionManager.loadExtensionURL(extensionURL);
+      }
+    }
+    try {
+      var _extensionManager$ref;
+      await ((_extensionManager$ref = extensionManager.refreshBlocks) === null || _extensionManager$ref === void 0 ? void 0 : _extensionManager$ref.call(extensionManager));
+    } catch (error) {
+      console.warn("[02Agent] Failed to refresh extension blocks", error);
+    }
+    (_this$vm$emitWorkspac3 = (_this$vm25 = this.vm).emitWorkspaceUpdate) === null || _this$vm$emitWorkspac3 === void 0 ? void 0 : _this$vm$emitWorkspac3.call(_this$vm25);
+    const afterIds = this._getLoadedExtensionIds();
+    const addedExtensionIds = afterIds.filter(id => !beforeIds.has(id));
+    const primaryId = afterIds.includes(item.extensionId) ? item.extensionId : addedExtensionIds[0] || item.extensionId;
+    return {
+      success: true,
+      extension: this._compactExtensionItem(item),
+      requestedMode: mode,
+      external: Boolean(resolved.external),
+      alreadyLoaded: beforeIds.has(primaryId),
+      loadedExtensionIds: afterIds,
+      addedExtensionIds,
+      blocks: this._getLoadedExtensionInfo(primaryId),
+      nextSteps: ["Use searchBlocks or getBlockHelp for exact JS DSL syntax before editing scripts with the new extension blocks."]
     };
   }
   getBlockHelp(opcode) {
@@ -83100,9 +83664,6 @@ const replaceBlocksRangeByUCF = async function replaceBlocksRangeByUCF(vm, _work
     if ((_endBlock$nextConnect4 = endBlock.nextConnection) !== null && _endBlock$nextConnect4 !== void 0 && _endBlock$nextConnect4.isConnected()) {
       endBlock.nextConnection.disconnect();
     }
-    setTimeout(() => {
-      workspace.fireDeletionListeners(startBlock);
-    });
     startBlock.dispose(false, true);
     console.log("[AI Assistant Range Replace] after delete", {
       remainingStart: ((_workspace$getBlockBy = workspace.getBlockById(startBlockId)) === null || _workspace$getBlockBy === void 0 ? void 0 : _workspace$getBlockBy.id) || null,
@@ -83358,9 +83919,6 @@ const deleteScriptById = async (vm, _workspace, scriptId) => {
   }
   try {
     setBlocklyEventGroup(true);
-    setTimeout(() => {
-      workspace.fireDeletionListeners(topBlock);
-    });
     topBlock.dispose(false, true);
     return {
       success: true,
