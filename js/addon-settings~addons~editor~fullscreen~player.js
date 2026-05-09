@@ -23,7 +23,7 @@ __webpack_require__.r(__webpack_exports__);
     link: 'https://www.ccw.site/student/610b508176415b2f27e0f851'
   }],
   tags: ['editor', 'codeEditor'],
-  enabledByDefault: false,
+  enabledByDefault: true,
   userscripts: [{
     url: 'userscript.js',
     matches: ['projects']
