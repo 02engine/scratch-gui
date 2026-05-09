@@ -46,6 +46,73 @@ const getDefaultModelForProvider = (provider: Agent["provider"]) => {
   return { name: "GPT-4o", modelId: "gpt-4o" };
 };
 
+interface FetchedModel {
+  id: string;
+  name: string;
+}
+
+const normalizeModelsUrl = (baseUrl: string) => {
+  const normalized = baseUrl.trim().replace(/\/$/, "");
+  if (!normalized) return "";
+  if (normalized.endsWith("/models")) return normalized;
+  if (normalized.endsWith("/chat/completions")) return normalized.slice(0, -"/chat/completions".length) + "/models";
+  return `${normalized}/models`;
+};
+
+const getModelDisplayName = (model: Record<string, unknown>) => {
+  const value = model.display_name || model.displayName || model.name || model.id;
+  return typeof value === "string" ? value : "";
+};
+
+const parseModelResponse = (payload: unknown): FetchedModel[] => {
+  const candidate = payload as Record<string, unknown>;
+  const rawModels = Array.isArray(candidate?.data)
+    ? candidate.data
+    : Array.isArray(candidate?.models)
+      ? candidate.models
+      : Array.isArray(payload)
+        ? payload
+        : [];
+
+  return rawModels
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const model = item as Record<string, unknown>;
+      const idValue = model.id || model.name;
+      if (typeof idValue !== "string" || !idValue.trim()) return null;
+      return {
+        id: idValue,
+        name: getModelDisplayName(model) || idValue,
+      };
+    })
+    .filter((item): item is FetchedModel => Boolean(item));
+};
+
+const fetchProviderModels = async (provider: Agent["provider"], baseUrl: string, apiKey: string, signal?: AbortSignal) => {
+  const url = normalizeModelsUrl(baseUrl || PROVIDER_DEFAULT_URLS[provider] || "");
+  if (!url) throw new Error("请先填写 Base URL");
+  if (!apiKey.trim()) throw new Error("请先填写 API Key");
+
+  const headers: Record<string, string> = {};
+  if (provider === "anthropic" || provider === "custom_anthropic") {
+    headers["x-api-key"] = apiKey.trim();
+    headers["anthropic-version"] = "2023-06-01";
+    headers["anthropic-dangerous-direct-browser-access"] = "true";
+  } else {
+    headers.Authorization = `Bearer ${apiKey.trim()}`;
+  }
+
+  const response = await fetch(url, { headers, signal });
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(`获取模型列表失败：${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ""}`);
+  }
+
+  const models = parseModelResponse(await response.json());
+  if (models.length === 0) throw new Error("接口没有返回可用模型");
+  return models;
+};
+
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   agents,
   editingAgent,
@@ -63,6 +130,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [activeSection, setActiveSection] = React.useState<SettingsSection>("agents");
   const [formData, setFormData] = React.useState<Partial<Agent>>({ provider: "openai" });
   const [models, setModels] = React.useState<AgentModel[]>([createDefaultModel()]);
+  const [fetchedModels, setFetchedModels] = React.useState<FetchedModel[]>([]);
+  const [selectedFetchedModelId, setSelectedFetchedModelId] = React.useState("");
+  const [isFetchingModels, setIsFetchingModels] = React.useState(false);
+  const [modelFetchMessage, setModelFetchMessage] = React.useState("");
 
   React.useEffect(() => {
     if (editingAgent) {
@@ -90,6 +161,56 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setModels([createDefaultModel()]);
   }, [editingAgent]);
 
+  const handleFetchModels = React.useCallback(
+    async (options?: { silent?: boolean; signal?: AbortSignal }) => {
+      const provider = formData.provider || "openai";
+      const baseUrl = formData.baseUrl?.trim() || PROVIDER_DEFAULT_URLS[provider] || "";
+      const apiKey = formData.apiKey || "";
+
+      if (!apiKey.trim()) {
+        if (!options?.silent) setModelFetchMessage("填写 API Key 后会自动获取模型列表，也可以继续手动输入模型 ID。");
+        return;
+      }
+
+      setIsFetchingModels(true);
+      if (!options?.silent) setModelFetchMessage("正在获取模型列表...");
+
+      try {
+        const nextModels = await fetchProviderModels(provider, baseUrl, apiKey, options?.signal);
+        setFetchedModels(nextModels);
+        setSelectedFetchedModelId((previous) => previous || nextModels[0]?.id || "");
+        setModelFetchMessage(`已获取 ${nextModels.length} 个模型，可从下拉选择或继续自定义输入。`);
+      } catch (error) {
+        if (options?.signal?.aborted) return;
+        setFetchedModels([]);
+        setSelectedFetchedModelId("");
+        setModelFetchMessage(error instanceof Error ? error.message : "获取模型列表失败");
+      } finally {
+        if (!options?.signal?.aborted) setIsFetchingModels(false);
+      }
+    },
+    [formData.apiKey, formData.baseUrl, formData.provider],
+  );
+
+  React.useEffect(() => {
+    setFetchedModels([]);
+    setSelectedFetchedModelId("");
+    setModelFetchMessage("");
+  }, [formData.provider, formData.baseUrl]);
+
+  React.useEffect(() => {
+    if (!formData.apiKey?.trim()) return;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      void handleFetchModels({ silent: true, signal: controller.signal });
+    }, 600);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [formData.apiKey, formData.baseUrl, formData.provider, handleFetchModels]);
+
   const handleProviderChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const provider = event.target.value as Agent["provider"];
     const defaults = getDefaultModelForProvider(provider);
@@ -111,6 +232,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const addModel = () => {
     setModels((previous) => [...previous, createDefaultModel()]);
+  };
+
+  const addFetchedModel = () => {
+    const selected = fetchedModels.find((model) => model.id === selectedFetchedModelId);
+    if (!selected) return;
+
+    setModels((previous) => {
+      if (previous.some((model) => model.modelId === selected.id)) return previous;
+      return [
+        ...previous,
+        {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          name: selected.name || selected.id,
+          modelId: selected.id,
+        },
+      ];
+    });
   };
 
   const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
@@ -269,11 +407,52 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div className={settings.cardHeader}>
                       <div>
                         <h5>模型列表</h5>
-                        <p>显示名称用于界面展示，模型 ID 会直接传给对应供应商。</p>
+                        <p>配置 API Key 后会自动通过 API 获取模型列表；也可以继续手动输入自定义模型 ID。</p>
                       </div>
                       <button type="button" className={settings.button} onClick={addModel}>
                         添加模型
                       </button>
+                    </div>
+                    <div className={settings.modelFetchPanel}>
+                      <div className={settings.modelFetchControls}>
+                        <select
+                          className={settings.select}
+                          value={selectedFetchedModelId}
+                          onChange={(event) => setSelectedFetchedModelId(event.target.value)}
+                          disabled={fetchedModels.length === 0}
+                        >
+                          {fetchedModels.length === 0 ? <option value="">暂无可选模型</option> : null}
+                          {fetchedModels.map((model) => (
+                            <option key={model.id} value={model.id}>
+                              {model.name === model.id ? model.id : `${model.name} (${model.id})`}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className={settings.button}
+                          onClick={() => void handleFetchModels()}
+                          disabled={isFetchingModels}
+                        >
+                          {isFetchingModels ? "获取中..." : "刷新模型"}
+                        </button>
+                        <button
+                          type="button"
+                          className={settings.button}
+                          onClick={addFetchedModel}
+                          disabled={!selectedFetchedModelId}
+                        >
+                          添加选中模型
+                        </button>
+                      </div>
+                      <div className={settings.hint}>
+                        {modelFetchMessage || "模型 ID 输入框支持从已获取列表选择，也支持直接输入自定义模型。"}
+                      </div>
+                      <datalist id="02agent-fetched-models">
+                        {fetchedModels.map((model) => (
+                          <option key={model.id} value={model.id} label={model.name} />
+                        ))}
+                      </datalist>
                     </div>
                     <div className={settings.modelsTable}>
                       {models.map((model) => (
@@ -287,6 +466,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           />
                           <input
                             className={settings.input}
+                            list="02agent-fetched-models"
                             value={model.modelId}
                             onChange={(event) => updateModel(model.id, "modelId", event.target.value)}
                             placeholder="模型 ID"

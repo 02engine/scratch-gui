@@ -18,6 +18,7 @@ interface ExpansionBoxProps {
   children: React.ReactNode;
   containerInfo: ExpansionRect;
   onClose?: () => void;
+  onMinimize?: () => void;
   onSizeChange?: (rect: ExpansionRect) => void;
 }
 
@@ -46,6 +47,7 @@ const ExpansionBox = ({
   children,
   containerInfo,
   onClose,
+  onMinimize,
   onSizeChange
 }: ExpansionBoxProps) => {
   const isDark = themeMode === "dark";
@@ -155,6 +157,16 @@ const ExpansionBox = ({
             userSelect: "none"
           }}
         >
+          {onMinimize ? (
+            <button
+              type="button"
+              onClick={onMinimize}
+              title="最小化到后台"
+              style={{ position: "absolute", right: 34, background: "transparent", border: 0, color: "inherit" }}
+            >
+              −
+            </button>
+          ) : null}
           {onClose ? (
             <button
               type="button"

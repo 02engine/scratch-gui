@@ -16,7 +16,7 @@ export default {
         }
     ],
     tags: ['editor', 'codeEditor'],
-    enabledByDefault: false,
+    enabledByDefault: true,
     userscripts: [
         {
             url: 'userscript.js',

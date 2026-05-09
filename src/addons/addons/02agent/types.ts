@@ -96,3 +96,11 @@ export interface ChatSession {
   messages: ChatMessage[];
   updatedAt: number;
 }
+
+export type BridgeStatus = "disabled" | "connecting" | "connected" | "error";
+
+export interface BridgeConfig {
+  enabled: boolean;
+  port: number;
+  token: string;
+}

@@ -88,6 +88,7 @@
 
 .modalCompact .formGrid,
 .modalCompact .themeChoices,
+.modalCompact .modelFetchControls,
 .modalCompact .modelRow,
 .modalCompact .modelItem {
   grid-template-columns: 1fr;
@@ -298,6 +299,23 @@
   gap: 8px;
 }
 
+.modelFetchPanel {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid var(--ai-border-subtle);
+  border-radius: var(--ai-radius-lg);
+  background: var(--ai-bg-surface);
+}
+
+.modelFetchControls {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
 .modelRow {
   display: grid;
   grid-template-columns: minmax(120px, 1fr) minmax(150px, 1fr) minmax(120px, 0.8fr) auto;
@@ -387,6 +405,15 @@
   font: inherit;
   font-size: 13px;
   font-weight: 650;
+}
+
+.button:disabled,
+.primaryButton:disabled,
+.dangerButton:disabled,
+.ghostButton:disabled,
+.select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .button:hover,

@@ -20,6 +20,7 @@ import { useAttachmentInteraction } from "./hooks/useAttachmentInteraction";
 import { useBlockRangeSelection } from "./hooks/useBlockRangeSelection";
 import { useChatSessions } from "./hooks/useChatSessions";
 import { useChat } from "./hooks/useChat";
+import { useBridgeClient } from "./hooks/useBridgeClient";
 import { Attachment } from "./types";
 import { getAttachmentDisplayName } from "./attachmentUtils";
 import { callGetBlockInfo, setRuntime } from "./converter";
@@ -110,6 +111,7 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
     });
 
   const { previewAttachment, setPreviewAttachment, handleOpenAttachment } = useAttachmentInteraction(vm, workspace);
+  const { bridgeConfig, bridgeStatus, bridgeLastError, toggleBridge } = useBridgeClient(vm);
   const { isSelecting, startSelecting, cancelSelecting } = useBlockRangeSelection({
     workspace,
     vm,
@@ -137,6 +139,10 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
   }, [getContainerPosition, setContainerInfo]);
 
   const handleClose = () => {
+    setVisible(false);
+  };
+
+  const handleMinimize = () => {
     setVisible(false);
   };
 
@@ -307,9 +313,10 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
             id="02agent"
             title={"02Agent"}
             themeMode={themeMode}
-            containerInfo={containerInfo}
-            onClose={handleClose}
-            onSizeChange={handleSizeChange}
+             containerInfo={containerInfo}
+             onClose={handleClose}
+             onMinimize={handleMinimize}
+             onSizeChange={handleSizeChange}
             minWidth={400}
             minHeight={300}
             borderRadius={8}
@@ -327,6 +334,11 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                   onNewChat={handleNewChat}
                   onSelectSession={handleSelectSession}
                   onDeleteSession={handleDeleteSession}
+                  bridgeStatus={bridgeStatus}
+                  bridgeEnabled={bridgeConfig.enabled}
+                  bridgePort={bridgeConfig.port}
+                  bridgeLastError={bridgeLastError}
+                  onToggleBridge={toggleBridge}
                 />
               )}
 
@@ -458,39 +470,23 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
 
                 {/* History Modal for Narrow Screen */}
                 {useDrawerHistory && isLeftPanelOpen && (
-                  <div className={styles.drawerOverlay} onClick={() => setIsLeftPanelOpen(false)}>
-                    <div className={styles.historyDrawer} onClick={(e) => e.stopPropagation()}>
-                      <div className={styles.modalHeader}>
-                        <div>
-                          <h3>历史对话</h3>
-                          <p>继续之前的上下文，或快速开始一个新会话。</p>
-                        </div>
-                        <button onClick={handleNewChat} className={styles.newChatBtn} title="新对话">
-                          +
-                        </button>
-                      </div>
-                      <div className={styles.modalHistoryList}>
-                        {sessions.length === 0 && <div className={styles.emptyTip}>暂无历史对话</div>}
-                        {sessions.map((s) => (
-                          <div
-                            key={s.id}
-                            className={`${styles.historyItem} ${currentSessionId === s.id ? styles.active : ""}`}
-                            onClick={() => handleSelectSession(s.id)}
-                          >
-                            <span className={styles.historyTitle}>{s.title}</span>
-                            <button
-                              className={styles.deleteSessionBtn}
-                              onClick={(e) => handleDeleteSession(s.id, e)}
-                              title="删除对话"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      <button className={styles.closeBtn} onClick={() => setIsLeftPanelOpen(false)}>
-                        关闭
-                      </button>
+                  <div className={shell.drawerOverlay} onClick={() => setIsLeftPanelOpen(false)}>
+                    <div className={shell.historyDrawer} onClick={(e) => e.stopPropagation()}>
+                      <HistoryPanel
+                        sessions={sessions}
+                        currentSessionId={currentSessionId}
+                        onNewChat={handleNewChat}
+                        onSelectSession={(id) => {
+                          handleSelectSession(id);
+                          setIsLeftPanelOpen(false);
+                        }}
+                        onDeleteSession={handleDeleteSession}
+                        bridgeStatus={bridgeStatus}
+                        bridgeEnabled={bridgeConfig.enabled}
+                        bridgePort={bridgeConfig.port}
+                        bridgeLastError={bridgeLastError}
+                        onToggleBridge={toggleBridge}
+                      />
                     </div>
                   </div>
                 )}

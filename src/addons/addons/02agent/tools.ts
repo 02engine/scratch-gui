@@ -13,6 +13,16 @@ import scratchBlocksCatalog from "./scratch_blocks.json";
 
 // This file contains tools for 02Agent to interact with Scratch.
 
+declare const require: any;
+
+const ScratchVmSprite = (() => {
+  try {
+    return require("scratch-vm/src/sprites/sprite");
+  } catch (_error) {
+    return null;
+  }
+})();
+
 const NativeScratchBlockCatalog: Record<string, { block: any; menus: Record<string, any> }> = (() => {
   const result: Record<string, { block: any; menus: Record<string, any> }> = {};
   const root = scratchBlocksCatalog as any;
@@ -2830,7 +2840,7 @@ export class AITools {
     }
     try {
       const stageTarget = runtime.getTargetForStage?.();
-      const SpriteCtor = stageTarget?.sprite?.constructor || (runtime.targets || []).find((target: any) => target?.sprite)?.sprite?.constructor;
+      const SpriteCtor = stageTarget?.sprite?.constructor || (runtime.targets || []).find((target: any) => target?.sprite)?.sprite?.constructor || ScratchVmSprite;
       if (!SpriteCtor) {
         throw new Error("Sprite constructor is not available.");
       }
@@ -2870,12 +2880,14 @@ export class AITools {
       sprite.sounds = [];
       const createdTarget = sprite.createClone();
       runtime.addTarget(createdTarget);
+      createdTarget.updateAllDrawableProperties?.();
       createdTarget.setXY?.(Number(options?.x ?? 0), Number(options?.y ?? 0));
       createdTarget.setSize?.(Number(options?.size ?? 100));
       createdTarget.setDirection?.(Number(options?.direction ?? 90));
       createdTarget.setRotationStyle?.(String(options?.rotationStyle || "all around"));
       createdTarget.setCostume?.(0);
       this.vm.setEditingTarget?.(createdTarget.id);
+      runtime.setEditingTarget?.(createdTarget);
       this.vm.emitTargetsUpdate?.();
       this.vm.emitWorkspaceUpdate?.();
       runtime.emitProjectChanged?.();
