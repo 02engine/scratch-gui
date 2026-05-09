@@ -87,6 +87,46 @@ export const scratchToolSchemas = [
   {
     type: "function",
     function: {
+      name: "searchExtensions",
+      description:
+        "Search built-in and known remote Scratch/TurboWarp/PenguinMod/Mist/SharkPool extensions by ID, name, keyword, source, or URL stem. Use before installing extension blocks that are not already loaded.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "Extension name, ID, keyword, or URL stem, such as pen, music, files, JSON, or text." },
+          source: { type: "string", description: "Optional source filter: scratch, 02engine, tw, pm, mist, sharkpool, special, external, or all." },
+          scratchCompatibleOnly: { type: "boolean", description: "Only return extensions marked Scratch-compatible. Defaults to false." },
+          includeBuiltin: { type: "boolean", description: "Include built-in Scratch/special extensions. Defaults to true." },
+          includeRemote: { type: "boolean", description: "Include known remote extension galleries. Defaults to true." },
+          includeSpecial: { type: "boolean", description: "Include special non-gallery features such as custom reporters. Defaults to true." },
+          maxResults: { type: "number", description: "Maximum number of matches. Defaults to 20." },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "installExtension",
+      description:
+        "Install one built-in or known remote extension into the current Scratch VM, then return loaded extension blocks. External direct URLs require allowExternalUrl: true because remote extensions execute unsandboxed.",
+      parameters: {
+        type: "object",
+        properties: {
+          extensionId: { type: "string", description: "Known extension ID or name, such as pen, music, or an ID returned by searchExtensions." },
+          extensionURL: { type: "string", description: "Known gallery extension URL, or direct URL only when allowExternalUrl is true." },
+          query: { type: "string", description: "Search query used only when extensionId/extensionURL are not enough to resolve exactly one extension." },
+          source: { type: "string", description: "Optional source filter: scratch, 02engine, tw, pm, mist, sharkpool, special, external, or all." },
+          mode: { type: "string", description: "Install mode: auto, builtin, url, or text. Text fetches JS and loads a data URL. Defaults to auto." },
+          allowExternalUrl: { type: "boolean", description: "Required to install arbitrary direct extensionURL values outside known registries." },
+          forceRefresh: { type: "boolean", description: "Refresh remote extension registries before resolving." },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "readFile",
       description: "Read a virtual Scratch file. Supports optional 1-based line ranges.",
       parameters: {

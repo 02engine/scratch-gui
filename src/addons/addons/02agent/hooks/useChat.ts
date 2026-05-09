@@ -185,6 +185,8 @@ Tools:
 - getScratchGuide: concise task-oriented DSL patterns; prefer this over reading long docs.
 - searchBlocks: search block docs and return exact JS DSL examples, fields, inputs, menus, and notes.
 - getBlockHelp: exact help for one opcode or dotted DSL call.
+- searchExtensions: search built-in and known remote extensions before using extension blocks that are not loaded.
+- installExtension: install one built-in or known trusted extension and return its loaded blocks.
 - readFile: read /stage.js, /sprites/*.js, /sprites/*/costumes/*.svg, or docs.
 - searchFiles: search code and raw Scratch DSL/block docs.
 - applyPatch: edit writable virtual JS files with a Codex-style patch; successful patches immediately sync to Scratch blocks.
@@ -203,6 +205,7 @@ Tools:
 Workflow:
 1) Start with getProjectOverview, then readFile only for the stage/sprite files you will edit.
 2) Use getScratchGuide for common patterns, searchBlocks for candidate blocks, and getBlockHelp before using unfamiliar opcodes/menus.
+2a) If a needed extension block is not loaded, call searchExtensions, then installExtension for the specific built-in or trusted known extension. Do not install unrelated extensions. Do not install arbitrary direct URLs unless the user explicitly asked for that exact trusted URL.
 3) For rendering, algorithms, or repeated logic, call getScratchGuide with topic "procedures", "custom-args", or "rendering" and prefer custom blocks over broadcast-only designs.
 4) For non-trivial programs, patch one small script at a time, then call getDiagnostics before continuing.
 5) Edit scripts and costumes by applyPatch. Costume files are SVG paths under /sprites/<name>/costumes/*.svg; each sprite's costumes are grouped in that folder. Bitmap costumes are exposed as SVG with embedded data images. Do not wrap SVG in Markdown fences; if editing a stage backdrop, keep a complete <svg> document.
@@ -253,7 +256,7 @@ Virtual JS DSL:
 - For pen rendering, prefer: event/broadcast receives "render" -> calls one warp custom block -> custom block clears and draws the full frame. Pass highlights/scale/offsets through $args and read them with argument.reporter_*.
 - control.if only has SUBSTACK. Use control.if_else when you need SUBSTACK2 / else.
 - Arithmetic operators use NUM1/NUM2. Comparison operators use OPERAND1/OPERAND2.
-- If searchFiles cannot find an extension block such as pen.*, avoid relying on that extension unless an existing project already uses it.
+- If searchBlocks/searchFiles cannot find an extension block such as pen.*, use searchExtensions and installExtension for the needed built-in or trusted known extension, then call searchBlocks/getBlockHelp again before editing scripts.
 
 Canonical patterns:
 - Hat/event with body:

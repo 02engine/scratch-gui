@@ -10,6 +10,7 @@ import {
 } from "./workspaceRangeTools";
 import { setGetBlockInfoTool, setRuntime } from "./converter";
 import scratchBlocksCatalog from "./scratch_blocks.json";
+import { resolveKnownExtension, searchKnownExtensions, type ExtensionRegistryItem } from "./extensionRegistry";
 
 // This file contains tools for 02Agent to interact with Scratch.
 
@@ -2921,77 +2922,65 @@ export class AITools {
       };
     } catch (error) {
       await cleanupCreatedTargets();
-      const templateTarget = (this.vm.runtime?.targets || []).find((target: any) => !target.isStage && target.sprite && targetIdsBefore.has(target.id));
-      if (!templateTarget || typeof this.vm.duplicateSprite !== "function") {
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : String(error),
-          removedUnexpectedTargets: await cleanupCreatedTargets(),
-        };
-      }
-      try {
-        await this.vm.duplicateSprite(templateTarget.id);
-        const createdTarget = this.vm.editingTarget;
-        this.vm.renameSprite?.(createdTarget.id, spriteName);
-        createdTarget.setXY?.(Number(options?.x ?? 0), Number(options?.y ?? 0));
-        createdTarget.setSize?.(Number(options?.size ?? 100));
-        createdTarget.setDirection?.(Number(options?.direction ?? 90));
-        createdTarget.setRotationStyle?.(String(options?.rotationStyle || "all around"));
-        if (createdTarget.blocks?._blocks) createdTarget.blocks._blocks = {};
-        createdTarget.comments = {};
-        const firstCostume = createdTarget.sprite?.costumes?.[0];
-        if (!firstCostume) throw new Error("Duplicated sprite has no costume to replace.");
-        createdTarget.sprite.costumes.splice(1);
-        firstCostume.name = costumeName;
-        const fallbackRotationCenter = Number.isFinite(options?.rotationCenterX) && Number.isFinite(options?.rotationCenterY)
-          ? [Number(options.rotationCenterX), Number(options.rotationCenterY)] as [number, number]
-          : this._inferSvgRotationCenter(createdTarget, svg, [Number(firstCostume.rotationCenterX ?? 0), Number(firstCostume.rotationCenterY ?? 0)]);
-        this._applySvgToCostumeObject(
-          firstCostume,
-          svg,
-          fallbackRotationCenter[0],
-          fallbackRotationCenter[1],
-        );
-        this.vm.emitWorkspaceUpdate?.();
-        this.vm.emitTargetsUpdate?.();
-        this.vm.runtime.emitProjectChanged?.();
-        const actualName = normalizeSpriteName(this._getTargetName(createdTarget));
-        if (actualName !== requestedName) {
-          const removedUnexpectedTargets = await cleanupCreatedTargets();
-          return {
-            success: false,
-            error: `Sprite creation fallback was cancelled because Scratch created "${this._getTargetName(createdTarget)}" instead of the requested "${spriteName}". Use addCostumeWithSvg for existing sprites.`,
-            removedUnexpectedTargets,
-          };
-        }
-        return {
-          success: true,
-          targetId: createdTarget?.id,
-          name: spriteName,
-          costumeName,
-          defaultProperties: {
-            x: Number(options?.x ?? 0),
-            y: Number(options?.y ?? 0),
-            size: Number(options?.size ?? 100),
-            direction: Number(options?.direction ?? 90),
-            rotationStyle: String(options?.rotationStyle || "all around"),
-            visible: createdTarget?.visible,
-            currentCostumeIndex: 0,
-          },
-          nextStep: "If the intended initial/current sprite state differs, call updateSpriteProperties now with targetId and the desired x/y/size/direction/rotationStyle/visible/currentCostumeIndex.",
-          rotationCenterX: firstCostume.rotationCenterX,
-          rotationCenterY: firstCostume.rotationCenterY,
-          path: createdTarget ? this._getVirtualPathForTarget(createdTarget) : undefined,
-          fallback: "duplicated-template-sprite",
-        };
-      } catch (fallbackError) {
-        return {
-          success: false,
-          error: `addSprite failed (${error instanceof Error ? error.message : String(error)}); duplicate fallback failed (${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)})`,
-          removedUnexpectedTargets: await cleanupCreatedTargets(),
-        };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+        removedUnexpectedTargets: await cleanupCreatedTargets(),
+      };
+    }
+  }
+
+  private _compactExtensionItem(extension: ExtensionRegistryItem & { score?: number }) {
+    return {
+      extensionId: extension.extensionId,
+      name: extension.name,
+      description: extension.description,
+      source: extension.source,
+      extensionURL: extension.extensionURL,
+      builtin: Boolean(extension.builtin),
+      special: Boolean(extension.special),
+      incompatibleWithScratch: Boolean(extension.incompatibleWithScratch),
+      bluetoothRequired: Boolean(extension.bluetoothRequired),
+      internetConnectionRequired: Boolean(extension.internetConnectionRequired),
+      tags: extension.tags || [],
+      credits: extension.credits || [],
+      docsURI: extension.docsURI || null,
+      score: extension.score,
+    };
+  }
+
+  private _getLoadedExtensionIds() {
+    const loaded = new Set<string>();
+    const extensionManager = this.vm?.extensionManager;
+    if (extensionManager?._loadedExtensions instanceof Map) {
+      for (const id of extensionManager._loadedExtensions.keys()) loaded.add(String(id));
+    }
+    if (Array.isArray(this.vm?.runtime?._blockInfo)) {
+      for (const info of this.vm.runtime._blockInfo) {
+        if (info?.id) loaded.add(String(info.id));
       }
     }
+    return [...loaded];
+  }
+
+  private _getLoadedExtensionInfo(extensionId?: string) {
+    const wanted = String(extensionId || "").trim();
+    const blockInfo = Array.isArray(this.vm?.runtime?._blockInfo) ? this.vm.runtime._blockInfo : [];
+    return blockInfo
+      .filter((info: any) => !wanted || info?.id === wanted)
+      .map((info: any) => ({
+        id: info?.id,
+        name: info?.name,
+        blocks: this.getExtensionBlocks(info?.id).slice(0, 40),
+      }));
+  }
+
+  private async _loadExtensionFromText(extensionURL: string) {
+    const response = await fetch(extensionURL);
+    if (!response.ok) throw new Error(`HTTP ${response.status} while fetching extension text.`);
+    const text = await response.text();
+    const dataURL = `data:application/javascript,${encodeURIComponent(text)}`;
+    await this.vm.extensionManager.loadExtensionURL(dataURL);
   }
 
   getTopLevelScripts(targetId?: string) {
@@ -4258,6 +4247,108 @@ export class AITools {
       query,
       matchCount: matches.length,
       matches,
+    };
+  }
+
+  async searchExtensions(options: {
+    query?: string;
+    source?: "scratch" | "02engine" | "tw" | "pm" | "mist" | "sharkpool" | "special" | "external" | "all";
+    scratchCompatibleOnly?: boolean;
+    includeBuiltin?: boolean;
+    includeRemote?: boolean;
+    includeSpecial?: boolean;
+    maxResults?: number;
+  } = {}) {
+    const matches = await searchKnownExtensions(options);
+    const loadedExtensionIds = this._getLoadedExtensionIds();
+    const loadedSet = new Set(loadedExtensionIds);
+    return {
+      success: true,
+      query: options.query || "",
+      matchCount: matches.length,
+      loadedExtensionIds,
+      matches: matches.map((extension) => ({
+        ...this._compactExtensionItem(extension),
+        loaded: loadedSet.has(extension.extensionId),
+      })),
+      notes: [
+        "Built-in Scratch extensions can be installed by extensionId.",
+        "Remote extension URLs run unsandboxed in this VM; install only trusted known extensions unless allowExternalUrl is explicitly true.",
+      ],
+    };
+  }
+
+  async installExtension(options: {
+    extensionId?: string;
+    extensionURL?: string;
+    query?: string;
+    source?: "scratch" | "02engine" | "tw" | "pm" | "mist" | "sharkpool" | "special" | "external" | "all";
+    mode?: "auto" | "builtin" | "url" | "text";
+    allowExternalUrl?: boolean;
+    forceRefresh?: boolean;
+  } = {}) {
+    const extensionManager = this.vm?.extensionManager;
+    if (!extensionManager?.loadExtensionURL) {
+      return { success: false, error: "Scratch VM extensionManager.loadExtensionURL is not available." };
+    }
+
+    const resolved = await resolveKnownExtension(options);
+    if (resolved.error) {
+      return { success: false, error: resolved.error, matches: resolved.matches.map((item) => this._compactExtensionItem(item)) };
+    }
+    if (!resolved.item) {
+      return {
+        success: false,
+        error: "Extension did not resolve to exactly one known extension. Use searchExtensions, then pass extensionId or extensionURL.",
+        matches: resolved.matches.map((item) => this._compactExtensionItem(item)),
+      };
+    }
+
+    const item = resolved.item;
+    const mode = options.mode || "auto";
+    const beforeIds = new Set(this._getLoadedExtensionIds());
+
+    if (item.extensionId === "procedures_enable_return") {
+      if (!(window as any).__twEnableProcedureReturns) {
+        return { success: false, error: "Procedure returns helper is not available in this page.", extension: this._compactExtensionItem(item) };
+      }
+      (window as any).__twEnableProcedureReturns();
+    } else if (mode === "builtin" || (mode === "auto" && item.builtin && item.source === "scratch")) {
+      await extensionManager.loadExtensionURL(item.extensionId);
+    } else {
+      const extensionURL = item.extensionURL || options.extensionURL;
+      if (!extensionURL) {
+        return { success: false, error: "Resolved extension has no extensionURL.", extension: this._compactExtensionItem(item) };
+      }
+      if (mode === "text") {
+        await this._loadExtensionFromText(extensionURL);
+      } else {
+        await extensionManager.loadExtensionURL(extensionURL);
+      }
+    }
+
+    try {
+      await extensionManager.refreshBlocks?.();
+    } catch (error) {
+      console.warn("[02Agent] Failed to refresh extension blocks", error);
+    }
+    this.vm.emitWorkspaceUpdate?.();
+
+    const afterIds = this._getLoadedExtensionIds();
+    const addedExtensionIds = afterIds.filter((id) => !beforeIds.has(id));
+    const primaryId = afterIds.includes(item.extensionId) ? item.extensionId : addedExtensionIds[0] || item.extensionId;
+    return {
+      success: true,
+      extension: this._compactExtensionItem(item),
+      requestedMode: mode,
+      external: Boolean(resolved.external),
+      alreadyLoaded: beforeIds.has(primaryId),
+      loadedExtensionIds: afterIds,
+      addedExtensionIds,
+      blocks: this._getLoadedExtensionInfo(primaryId),
+      nextSteps: [
+        "Use searchBlocks or getBlockHelp for exact JS DSL syntax before editing scripts with the new extension blocks.",
+      ],
     };
   }
 

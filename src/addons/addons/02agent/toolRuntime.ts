@@ -10,6 +10,25 @@ export const REQUIRED_TOOL_ARGUMENTS: Record<string, string[]> = {
   reorderCostume: ["newIndex"],
 };
 
+const MUTATING_TOOLS = new Set([
+  "applyPatch",
+  "createSpriteWithSvg",
+  "updateSpriteProperties",
+  "addCostumeWithSvg",
+  "batchAddCostumesWithSvg",
+  "deleteCostume",
+  "batchDeleteCostumes",
+  "reorderCostume",
+  "setCostumeOrder",
+  "deleteSprite",
+  "installExtension",
+  "replaceBlocksRangeByUCF",
+  "replaceScriptByUCF",
+  "generateCodeFromUCF",
+]);
+
+let mutationQueue = Promise.resolve();
+
 const isMissingToolArgument = (value: unknown) =>
   value === undefined || value === null || (typeof value === "string" && value.trim() === "");
 
@@ -24,19 +43,17 @@ export const validateToolArguments = (functionName: string, args: Record<string,
   }
 };
 
-export const callAITool = async (aiTools: Record<string, any> | null, functionName: string, args: Record<string, any>) => {
-  if (!aiTools || typeof aiTools[functionName] !== "function") {
-    throw new Error(`Tool ${functionName} not found`);
-  }
-
-  validateToolArguments(functionName, args);
-
+const dispatchAITool = async (aiTools: Record<string, any>, functionName: string, args: Record<string, any>) => {
   switch (functionName) {
     case "readFile":
       return aiTools[functionName](args.path, args.startLine, args.endLine);
     case "searchFiles":
       return aiTools[functionName](args);
     case "searchBlocks":
+      return aiTools[functionName](args);
+    case "searchExtensions":
+      return aiTools[functionName](args);
+    case "installExtension":
       return aiTools[functionName](args);
     case "getBlockHelp":
       return aiTools[functionName](args.opcode);
@@ -73,4 +90,32 @@ export const callAITool = async (aiTools: Record<string, any> | null, functionNa
     default:
       return aiTools[functionName]();
   }
+};
+
+const enqueueMutation = async <T>(operation: () => Promise<T>) => {
+  const previous = mutationQueue;
+  let release: () => void = () => {};
+  mutationQueue = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await previous.catch(() => undefined);
+  try {
+    return await operation();
+  } finally {
+    release();
+  }
+};
+
+export const callAITool = async (aiTools: Record<string, any> | null, functionName: string, args: Record<string, any>) => {
+  if (!aiTools || typeof aiTools[functionName] !== "function") {
+    throw new Error(`Tool ${functionName} not found`);
+  }
+
+  validateToolArguments(functionName, args);
+
+  if (MUTATING_TOOLS.has(functionName)) {
+    return enqueueMutation(() => dispatchAITool(aiTools, functionName, args));
+  }
+
+  return dispatchAITool(aiTools, functionName, args);
 };

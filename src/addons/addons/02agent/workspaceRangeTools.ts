@@ -560,9 +560,6 @@ export const replaceBlocksRangeByUCF = async (
     if (endBlock.nextConnection?.isConnected()) {
       endBlock.nextConnection.disconnect();
     }
-    setTimeout(() => {
-      workspace.fireDeletionListeners(startBlock);
-    });
     startBlock.dispose(false, true);
 
     console.log("[AI Assistant Range Replace] after delete", {
@@ -869,9 +866,6 @@ export const deleteScriptById = async (
 
   try {
     setBlocklyEventGroup(true);
-    setTimeout(() => {
-      workspace.fireDeletionListeners(topBlock);
-    });
     topBlock.dispose(false, true);
     return {
       success: true,
