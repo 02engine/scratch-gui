@@ -79,6 +79,7 @@ interface ParsedPatchUpdate {
 const SCRIPT_MARKER_RE = /^\/\/\s*@script\s+([^\s]+)(?:\s+.*)?$/;
 const DOC_SCRATCH_AGENT_PATH = "/docs/scratch-agent.md";
 const DOC_BLOCK_CATALOG_PATH = "/docs/block-catalog.md";
+const DEFAULT_READ_FILE_MAX_LINES = 240;
 const COMMON_OPCODE_ALIASES: Record<string, string> = {
   argument_reporter: "argument_reporter_string_number",
   argument_reporter_string_number: "argument_reporter_string_number",
@@ -2113,8 +2114,11 @@ export class AITools {
     }
 
     const lines = entry.content.split("\n");
+    const hasExplicitRange = startLine !== undefined || endLine !== undefined;
     const start = Math.max(1, Math.floor(startLine || 1));
-    const end = Math.min(lines.length, Math.floor(endLine || lines.length));
+    const defaultEnd = hasExplicitRange ? lines.length : Math.min(lines.length, DEFAULT_READ_FILE_MAX_LINES);
+    const end = Math.min(lines.length, Math.floor(endLine || defaultEnd));
+    const truncated = !hasExplicitRange && end < lines.length;
 
     return {
       success: true,
@@ -2123,6 +2127,10 @@ export class AITools {
       startLine: start,
       endLine: end,
       totalLines: lines.length,
+      truncated,
+      note: truncated
+        ? `File has ${lines.length} total lines. Showing lines ${start}-${end} by default to keep tool output manageable. To read more, call readFile again with startLine and endLine.`
+        : undefined,
       content: lines.slice(start - 1, end).join("\n"),
     };
   }

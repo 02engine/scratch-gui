@@ -2,6 +2,7 @@ import { scratchToUCF, ucfToScratch } from "./ucf";
 import { normalizeModelUCF, toAnnotatedUCF } from "./annotatedUcf";
 
 const getScratchBlocks = () => (window as any).ScratchBlocks || window.Blockly;
+const LARGE_SCRIPT_BLOCK_THRESHOLD = 120;
 
 const setBlocklyEventGroup = (grouped: boolean) => {
   const events = getScratchBlocks()?.Events;
@@ -407,6 +408,138 @@ const buildFailureResult = (error: string, stage: string, diagnostics: Record<st
   diagnostics,
 });
 
+const collectRuntimeSubtreeBlockIds = (target: Scratch.RenderTarget | null, blockId: string, result = new Set<string>()) => {
+  if (!target?.blocks?._blocks || !blockId || result.has(blockId)) return result;
+  const block = target.blocks._blocks[blockId];
+  if (!block) return result;
+  result.add(blockId);
+  Object.values(block.inputs || {}).forEach((input: any) => {
+    if (input?.block) collectRuntimeSubtreeBlockIds(target, input.block, result);
+    if (input?.shadow) collectRuntimeSubtreeBlockIds(target, input.shadow, result);
+  });
+  if (block.next) collectRuntimeSubtreeBlockIds(target, block.next, result);
+  return result;
+};
+
+const removeRuntimeScriptBlocks = (target: Scratch.RenderTarget, topBlockId: string) => {
+  const targetBlocks = target.blocks as any;
+  const blockIds = collectRuntimeSubtreeBlockIds(target, topBlockId);
+  const removedComments: string[] = [];
+
+  blockIds.forEach((blockId) => {
+    const block = targetBlocks._blocks?.[blockId];
+    if (block?.comment && target.comments?.[block.comment]) {
+      delete target.comments[block.comment];
+      removedComments.push(block.comment);
+    }
+  });
+  Object.entries(target.comments || {}).forEach(([commentId, comment]: [string, any]) => {
+    if (comment?.blockId && blockIds.has(comment.blockId)) {
+      delete target.comments[commentId];
+      removedComments.push(commentId);
+    }
+  });
+  blockIds.forEach((blockId) => {
+    delete targetBlocks._blocks[blockId];
+  });
+  if (Array.isArray(targetBlocks._scripts)) {
+    targetBlocks._scripts = targetBlocks._scripts.filter((scriptId: string) => scriptId !== topBlockId);
+  }
+  targetBlocks.resetCache?.();
+  return { removedBlockIds: [...blockIds], removedComments };
+};
+
+const insertRuntimeBlocks = (target: Scratch.RenderTarget, blocksState: any[]) => {
+  const targetBlocks = target.blocks as any;
+  const insertedBlockIds: string[] = [];
+  const insertedCommentIds: string[] = [];
+
+  blocksState.forEach((blockState) => {
+    const block = {
+      ...blockState,
+      fields: { ...(blockState.fields || {}) },
+      inputs: { ...(blockState.inputs || {}) },
+    };
+    delete block.commentText;
+    delete block.commentWidth;
+    delete block.commentHeight;
+    targetBlocks._blocks[block.id] = block;
+    insertedBlockIds.push(block.id);
+  });
+
+  blocksState.forEach((blockState) => {
+    if (typeof blockState.commentText !== "string" || !blockState.commentText.trim()) return;
+    const commentId = `comment-${blockState.id}`;
+    const width = Number(blockState.commentWidth) || 200;
+    const height = Number(blockState.commentHeight) || 160;
+    const x = Number(blockState.x || 0) + 32;
+    const y = Number(blockState.y || 0) + 32;
+    target.createComment?.(commentId, blockState.id, blockState.commentText, x, y, width, height, false);
+    insertedCommentIds.push(commentId);
+  });
+
+  const topLevelBlocks = blocksState.filter((blockState) => blockState.topLevel);
+  if (Array.isArray(targetBlocks._scripts)) {
+    topLevelBlocks.forEach((blockState) => {
+      if (!targetBlocks._scripts.includes(blockState.id)) targetBlocks._scripts.push(blockState.id);
+      if (targetBlocks._blocks[blockState.id]) targetBlocks._blocks[blockState.id].topLevel = true;
+    });
+  }
+  targetBlocks.resetCache?.();
+  target.blocks.updateTargetSpecificBlocks?.(Boolean(target.isStage));
+  return { insertedBlockIds, insertedCommentIds };
+};
+
+const refreshWorkspaceAfterRuntimeWrite = async (vm: PluginContext["vm"], target: Scratch.RenderTarget) => {
+  if (vm.editingTarget?.id !== target.id) {
+    vm.setEditingTarget(target.id);
+    await new Promise((resolve) => window.setTimeout(resolve, 60));
+  }
+  try {
+    vm.emitWorkspaceUpdate?.();
+  } catch (error) {
+    console.warn("[02Agent] Runtime blocks were written but workspace refresh failed", error);
+    return error instanceof Error ? error.message : String(error);
+  }
+  vm.emitTargetsUpdate?.(false);
+  vm.runtime?.emitProjectChanged?.();
+  return null;
+};
+
+const syncLargeScriptDirectly = async (
+  vm: PluginContext["vm"],
+  target: Scratch.RenderTarget,
+  oldTopBlockId: string | null,
+  blocksState: any[],
+  operation: "insert" | "replace",
+) => {
+  const topLevelBlocks = blocksState.filter((blockState) => blockState.topLevel);
+  if (topLevelBlocks.length !== 1) {
+    return buildFailureResult("Runtime-direct sync requires exactly one top-level stack", "validate_direct_topology", {
+      targetId: target.id,
+      topLevelBlockCount: topLevelBlocks.length,
+    });
+  }
+
+  const removed = oldTopBlockId ? removeRuntimeScriptBlocks(target, oldTopBlockId) : { removedBlockIds: [], removedComments: [] };
+  const inserted = insertRuntimeBlocks(target, blocksState);
+  repairListVariableValues(vm, target.id);
+  const refreshError = await refreshWorkspaceAfterRuntimeWrite(vm, target);
+
+  return {
+    success: true,
+    syncMode: "vm-direct",
+    operation,
+    targetId: target.id,
+    insertedTopBlockId: topLevelBlocks[0].id,
+    blockCount: blocksState.length,
+    removedBlockCount: removed.removedBlockIds.length,
+    insertedBlockCount: inserted.insertedBlockIds.length,
+    commentCount: inserted.insertedCommentIds.length,
+    workspaceRefreshWarning: refreshError || undefined,
+  };
+};
+
 const applyBlockCommentsToWorkspace = (workspace: Blockly.WorkspaceSvg, blocksState: any[]) => {
   blocksState.forEach((blockState) => {
     if (typeof blockState.commentText !== "string" || !blockState.commentText.trim()) return;
@@ -707,7 +840,46 @@ export const replaceScriptByUCF = async (
     });
   }
 
-  const result = await replaceBlocksRangeByUCF(vm, workspace, boundary.startBlockId, boundary.endBlockId, ucfString, {
+  let parsedBlockDiagnostics: Record<string, unknown> = {};
+  let directSyncResult: any = null;
+  try {
+    const newBlocksState = ucfToScratch(normalizeModelUCF(ucfString), {
+      runtime: vm.runtime,
+      includeComments: options.includeComments === true,
+    });
+    parsedBlockDiagnostics = {
+      parsedBlockCount: newBlocksState.length,
+      parsedTopLevelBlocks: newBlocksState.filter((blockState) => blockState.topLevel).map((blockState) => ({
+        id: blockState.id,
+        opcode: blockState.opcode,
+      })),
+    };
+    if (newBlocksState.length >= LARGE_SCRIPT_BLOCK_THRESHOLD) {
+      const oldTopBlock = getBlockStateById(target, scriptId);
+      const x = Number(oldTopBlock?.x ?? 50);
+      const y = Number(oldTopBlock?.y ?? 50);
+      const topLevelBlockState = newBlocksState.find((blockState) => blockState.topLevel);
+      if (topLevelBlockState) {
+        topLevelBlockState.x = x;
+        topLevelBlockState.y = y;
+      }
+      const workspaceForVariables = workspace || (window.Blockly.getMainWorkspace() as Blockly.WorkspaceSvg);
+      if (vm.editingTarget?.id !== target.id) {
+        vm.setEditingTarget(target.id);
+        await new Promise((resolve) => window.setTimeout(resolve, 60));
+      }
+      resolveVariableReferences(vm, workspaceForVariables, newBlocksState);
+      directSyncResult = await syncLargeScriptDirectly(vm, target, scriptId, newBlocksState, "replace");
+    }
+  } catch (error) {
+    return buildFailureResult(error instanceof Error ? error.message : "Failed to parse replacement script", "parse_direct_candidate", {
+      scriptId,
+      targetId: target.id,
+      ...parsedBlockDiagnostics,
+    });
+  }
+
+  const result = directSyncResult || await replaceBlocksRangeByUCF(vm, workspace, boundary.startBlockId, boundary.endBlockId, ucfString, {
     includeComments: options.includeComments === true,
   });
   return {
@@ -718,6 +890,7 @@ export const replaceScriptByUCF = async (
       startBlockId: boundary.startBlockId,
       endBlockId: boundary.endBlockId,
       scriptBlockCount: boundary.blockCount,
+      ...parsedBlockDiagnostics,
       ...(result.diagnostics || {}),
     },
   };
@@ -774,6 +947,12 @@ export const insertScriptByUCF = async (
     }
 
     resolveVariableReferences(vm, workspace, newBlocksState);
+    if (newBlocksState.length >= LARGE_SCRIPT_BLOCK_THRESHOLD) {
+      const topLevelBlockState = topLevelBlocks[0];
+      if (topLevelBlockState.x === undefined) topLevelBlockState.x = 50;
+      if (topLevelBlockState.y === undefined) topLevelBlockState.y = 50;
+      return syncLargeScriptDirectly(vm, target, null, newBlocksState, "insert");
+    }
     const xmlText = blockStatesToXml(newBlocksState);
 
     setBlocklyEventGroup(true);
