@@ -78753,6 +78753,7 @@ const NativeScratchBlockCatalog = (() => {
 const SCRIPT_MARKER_RE = /^\/\/\s*@script\s+([^\s]+)(?:\s+.*)?$/;
 const DOC_SCRATCH_AGENT_PATH = "/docs/scratch-agent.md";
 const DOC_BLOCK_CATALOG_PATH = "/docs/block-catalog.md";
+const DEFAULT_READ_FILE_MAX_LINES = 240;
 const COMMON_OPCODE_ALIASES = {
   argument_reporter: "argument_reporter_string_number",
   argument_reporter_string_number: "argument_reporter_string_number",
@@ -80296,8 +80297,11 @@ class AITools {
       };
     }
     const lines = entry.content.split("\n");
+    const hasExplicitRange = startLine !== undefined || endLine !== undefined;
     const start = Math.max(1, Math.floor(startLine || 1));
-    const end = Math.min(lines.length, Math.floor(endLine || lines.length));
+    const defaultEnd = hasExplicitRange ? lines.length : Math.min(lines.length, DEFAULT_READ_FILE_MAX_LINES);
+    const end = Math.min(lines.length, Math.floor(endLine || defaultEnd));
+    const truncated = !hasExplicitRange && end < lines.length;
     return {
       success: true,
       path: entry.path,
@@ -80305,6 +80309,8 @@ class AITools {
       startLine: start,
       endLine: end,
       totalLines: lines.length,
+      truncated,
+      note: truncated ? "File has ".concat(lines.length, " total lines. Showing lines ").concat(start, "-").concat(end, " by default to keep tool output manageable. To read more, call readFile again with startLine and endLine.") : undefined,
       content: lines.slice(start - 1, end).join("\n")
     };
   }
@@ -83189,6 +83195,7 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 
 
 const getScratchBlocks = () => window.ScratchBlocks || window.Blockly;
+const LARGE_SCRIPT_BLOCK_THRESHOLD = 120;
 const setBlocklyEventGroup = grouped => {
   var _getScratchBlocks;
   const events = (_getScratchBlocks = getScratchBlocks()) === null || _getScratchBlocks === void 0 ? void 0 : _getScratchBlocks.Events;
@@ -83536,6 +83543,140 @@ const buildFailureResult = function buildFailureResult(error, stage) {
     diagnostics
   };
 };
+const _collectRuntimeSubtreeBlockIds = function collectRuntimeSubtreeBlockIds(target, blockId) {
+  var _target$blocks2;
+  let result = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new Set();
+  if (!(target !== null && target !== void 0 && (_target$blocks2 = target.blocks) !== null && _target$blocks2 !== void 0 && _target$blocks2._blocks) || !blockId || result.has(blockId)) return result;
+  const block = target.blocks._blocks[blockId];
+  if (!block) return result;
+  result.add(blockId);
+  Object.values(block.inputs || {}).forEach(input => {
+    if (input !== null && input !== void 0 && input.block) _collectRuntimeSubtreeBlockIds(target, input.block, result);
+    if (input !== null && input !== void 0 && input.shadow) _collectRuntimeSubtreeBlockIds(target, input.shadow, result);
+  });
+  if (block.next) _collectRuntimeSubtreeBlockIds(target, block.next, result);
+  return result;
+};
+const removeRuntimeScriptBlocks = (target, topBlockId) => {
+  var _targetBlocks$resetCa;
+  const targetBlocks = target.blocks;
+  const blockIds = _collectRuntimeSubtreeBlockIds(target, topBlockId);
+  const removedComments = [];
+  blockIds.forEach(blockId => {
+    var _targetBlocks$_blocks, _target$comments;
+    const block = (_targetBlocks$_blocks = targetBlocks._blocks) === null || _targetBlocks$_blocks === void 0 ? void 0 : _targetBlocks$_blocks[blockId];
+    if (block !== null && block !== void 0 && block.comment && (_target$comments = target.comments) !== null && _target$comments !== void 0 && _target$comments[block.comment]) {
+      delete target.comments[block.comment];
+      removedComments.push(block.comment);
+    }
+  });
+  Object.entries(target.comments || {}).forEach(_ref5 => {
+    let _ref6 = _slicedToArray(_ref5, 2),
+      commentId = _ref6[0],
+      comment = _ref6[1];
+    if (comment !== null && comment !== void 0 && comment.blockId && blockIds.has(comment.blockId)) {
+      delete target.comments[commentId];
+      removedComments.push(commentId);
+    }
+  });
+  blockIds.forEach(blockId => {
+    delete targetBlocks._blocks[blockId];
+  });
+  if (Array.isArray(targetBlocks._scripts)) {
+    targetBlocks._scripts = targetBlocks._scripts.filter(scriptId => scriptId !== topBlockId);
+  }
+  (_targetBlocks$resetCa = targetBlocks.resetCache) === null || _targetBlocks$resetCa === void 0 ? void 0 : _targetBlocks$resetCa.call(targetBlocks);
+  return {
+    removedBlockIds: [...blockIds],
+    removedComments
+  };
+};
+const insertRuntimeBlocks = (target, blocksState) => {
+  var _targetBlocks$resetCa2, _target$blocks$update, _target$blocks3;
+  const targetBlocks = target.blocks;
+  const insertedBlockIds = [];
+  const insertedCommentIds = [];
+  blocksState.forEach(blockState => {
+    const block = _objectSpread(_objectSpread({}, blockState), {}, {
+      fields: _objectSpread({}, blockState.fields || {}),
+      inputs: _objectSpread({}, blockState.inputs || {})
+    });
+    delete block.commentText;
+    delete block.commentWidth;
+    delete block.commentHeight;
+    targetBlocks._blocks[block.id] = block;
+    insertedBlockIds.push(block.id);
+  });
+  blocksState.forEach(blockState => {
+    var _target$createComment;
+    if (typeof blockState.commentText !== "string" || !blockState.commentText.trim()) return;
+    const commentId = "comment-".concat(blockState.id);
+    const width = Number(blockState.commentWidth) || 200;
+    const height = Number(blockState.commentHeight) || 160;
+    const x = Number(blockState.x || 0) + 32;
+    const y = Number(blockState.y || 0) + 32;
+    (_target$createComment = target.createComment) === null || _target$createComment === void 0 ? void 0 : _target$createComment.call(target, commentId, blockState.id, blockState.commentText, x, y, width, height, false);
+    insertedCommentIds.push(commentId);
+  });
+  const topLevelBlocks = blocksState.filter(blockState => blockState.topLevel);
+  if (Array.isArray(targetBlocks._scripts)) {
+    topLevelBlocks.forEach(blockState => {
+      if (!targetBlocks._scripts.includes(blockState.id)) targetBlocks._scripts.push(blockState.id);
+      if (targetBlocks._blocks[blockState.id]) targetBlocks._blocks[blockState.id].topLevel = true;
+    });
+  }
+  (_targetBlocks$resetCa2 = targetBlocks.resetCache) === null || _targetBlocks$resetCa2 === void 0 ? void 0 : _targetBlocks$resetCa2.call(targetBlocks);
+  (_target$blocks$update = (_target$blocks3 = target.blocks).updateTargetSpecificBlocks) === null || _target$blocks$update === void 0 ? void 0 : _target$blocks$update.call(_target$blocks3, Boolean(target.isStage));
+  return {
+    insertedBlockIds,
+    insertedCommentIds
+  };
+};
+const refreshWorkspaceAfterRuntimeWrite = async (vm, target) => {
+  var _vm$editingTarget, _vm$emitTargetsUpdate, _vm$runtime4, _vm$runtime4$emitProj;
+  if (((_vm$editingTarget = vm.editingTarget) === null || _vm$editingTarget === void 0 ? void 0 : _vm$editingTarget.id) !== target.id) {
+    vm.setEditingTarget(target.id);
+    await new Promise(resolve => window.setTimeout(resolve, 60));
+  }
+  try {
+    var _vm$emitWorkspaceUpda;
+    (_vm$emitWorkspaceUpda = vm.emitWorkspaceUpdate) === null || _vm$emitWorkspaceUpda === void 0 ? void 0 : _vm$emitWorkspaceUpda.call(vm);
+  } catch (error) {
+    console.warn("[02Agent] Runtime blocks were written but workspace refresh failed", error);
+    return error instanceof Error ? error.message : String(error);
+  }
+  (_vm$emitTargetsUpdate = vm.emitTargetsUpdate) === null || _vm$emitTargetsUpdate === void 0 ? void 0 : _vm$emitTargetsUpdate.call(vm, false);
+  (_vm$runtime4 = vm.runtime) === null || _vm$runtime4 === void 0 ? void 0 : (_vm$runtime4$emitProj = _vm$runtime4.emitProjectChanged) === null || _vm$runtime4$emitProj === void 0 ? void 0 : _vm$runtime4$emitProj.call(_vm$runtime4);
+  return null;
+};
+const syncLargeScriptDirectly = async (vm, target, oldTopBlockId, blocksState, operation) => {
+  const topLevelBlocks = blocksState.filter(blockState => blockState.topLevel);
+  if (topLevelBlocks.length !== 1) {
+    return buildFailureResult("Runtime-direct sync requires exactly one top-level stack", "validate_direct_topology", {
+      targetId: target.id,
+      topLevelBlockCount: topLevelBlocks.length
+    });
+  }
+  const removed = oldTopBlockId ? removeRuntimeScriptBlocks(target, oldTopBlockId) : {
+    removedBlockIds: [],
+    removedComments: []
+  };
+  const inserted = insertRuntimeBlocks(target, blocksState);
+  repairListVariableValues(vm, target.id);
+  const refreshError = await refreshWorkspaceAfterRuntimeWrite(vm, target);
+  return {
+    success: true,
+    syncMode: "vm-direct",
+    operation,
+    targetId: target.id,
+    insertedTopBlockId: topLevelBlocks[0].id,
+    blockCount: blocksState.length,
+    removedBlockCount: removed.removedBlockIds.length,
+    insertedBlockCount: inserted.insertedBlockIds.length,
+    commentCount: inserted.insertedCommentIds.length,
+    workspaceRefreshWarning: refreshError || undefined
+  };
+};
 const applyBlockCommentsToWorkspace = (workspace, blocksState) => {
   blocksState.forEach(blockState => {
     if (typeof blockState.commentText !== "string" || !blockState.commentText.trim()) return;
@@ -83567,14 +83708,14 @@ const getBlocksRangeUCF = (vm, _workspace, startBlockId, endBlockId) => {
   };
 };
 const replaceBlocksRangeByUCF = async function replaceBlocksRangeByUCF(vm, _workspace, startBlockId, endBlockId, ucfString) {
-  var _vm$editingTarget, _vm$editingTarget2, _startBlock$previousC, _startBlock$previousC2, _startBlock$previousC3, _endBlock$nextConnect, _endBlock$nextConnect2, _endBlock$nextConnect3, _blocksToDelete;
+  var _vm$editingTarget2, _vm$editingTarget3, _startBlock$previousC, _startBlock$previousC2, _startBlock$previousC3, _endBlock$nextConnect, _endBlock$nextConnect2, _endBlock$nextConnect3, _blocksToDelete;
   let options = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : {};
   const target = resolveTargetForRange(vm, startBlockId, endBlockId);
   console.log("[AI Assistant Range Replace] resolved runtime target", {
     startBlockId,
     endBlockId,
     targetId: (target === null || target === void 0 ? void 0 : target.id) || null,
-    editingTargetId: ((_vm$editingTarget = vm.editingTarget) === null || _vm$editingTarget === void 0 ? void 0 : _vm$editingTarget.id) || null
+    editingTargetId: ((_vm$editingTarget2 = vm.editingTarget) === null || _vm$editingTarget2 === void 0 ? void 0 : _vm$editingTarget2.id) || null
   });
   if (!target) {
     return buildFailureResult("Range blocks not found in runtime targets", "resolve_target", {
@@ -83583,10 +83724,10 @@ const replaceBlocksRangeByUCF = async function replaceBlocksRangeByUCF(vm, _work
     });
   }
   let switchedTarget = false;
-  if (((_vm$editingTarget2 = vm.editingTarget) === null || _vm$editingTarget2 === void 0 ? void 0 : _vm$editingTarget2.id) !== target.id) {
-    var _vm$editingTarget3;
+  if (((_vm$editingTarget3 = vm.editingTarget) === null || _vm$editingTarget3 === void 0 ? void 0 : _vm$editingTarget3.id) !== target.id) {
+    var _vm$editingTarget4;
     console.log("[AI Assistant Range Replace] switching editing target", {
-      from: (_vm$editingTarget3 = vm.editingTarget) === null || _vm$editingTarget3 === void 0 ? void 0 : _vm$editingTarget3.id,
+      from: (_vm$editingTarget4 = vm.editingTarget) === null || _vm$editingTarget4 === void 0 ? void 0 : _vm$editingTarget4.id,
       to: target.id
     });
     vm.setEditingTarget(target.id);
@@ -83781,21 +83922,59 @@ const replaceScriptByUCF = async function replaceScriptByUCF(vm, workspace, scri
       targetId: target.id
     });
   }
-  const result = await replaceBlocksRangeByUCF(vm, workspace, boundary.startBlockId, boundary.endBlockId, ucfString, {
+  let parsedBlockDiagnostics = {};
+  let directSyncResult = null;
+  try {
+    const newBlocksState = Object(_ucf__WEBPACK_IMPORTED_MODULE_0__["ucfToScratch"])(Object(_annotatedUcf__WEBPACK_IMPORTED_MODULE_1__["normalizeModelUCF"])(ucfString), {
+      runtime: vm.runtime,
+      includeComments: options.includeComments === true
+    });
+    parsedBlockDiagnostics = {
+      parsedBlockCount: newBlocksState.length,
+      parsedTopLevelBlocks: newBlocksState.filter(blockState => blockState.topLevel).map(blockState => ({
+        id: blockState.id,
+        opcode: blockState.opcode
+      }))
+    };
+    if (newBlocksState.length >= LARGE_SCRIPT_BLOCK_THRESHOLD) {
+      var _oldTopBlock$x, _oldTopBlock$y, _vm$editingTarget5;
+      const oldTopBlock = getBlockStateById(target, scriptId);
+      const x = Number((_oldTopBlock$x = oldTopBlock === null || oldTopBlock === void 0 ? void 0 : oldTopBlock.x) !== null && _oldTopBlock$x !== void 0 ? _oldTopBlock$x : 50);
+      const y = Number((_oldTopBlock$y = oldTopBlock === null || oldTopBlock === void 0 ? void 0 : oldTopBlock.y) !== null && _oldTopBlock$y !== void 0 ? _oldTopBlock$y : 50);
+      const topLevelBlockState = newBlocksState.find(blockState => blockState.topLevel);
+      if (topLevelBlockState) {
+        topLevelBlockState.x = x;
+        topLevelBlockState.y = y;
+      }
+      const workspaceForVariables = workspace || window.Blockly.getMainWorkspace();
+      if (((_vm$editingTarget5 = vm.editingTarget) === null || _vm$editingTarget5 === void 0 ? void 0 : _vm$editingTarget5.id) !== target.id) {
+        vm.setEditingTarget(target.id);
+        await new Promise(resolve => window.setTimeout(resolve, 60));
+      }
+      resolveVariableReferences(vm, workspaceForVariables, newBlocksState);
+      directSyncResult = await syncLargeScriptDirectly(vm, target, scriptId, newBlocksState, "replace");
+    }
+  } catch (error) {
+    return buildFailureResult(error instanceof Error ? error.message : "Failed to parse replacement script", "parse_direct_candidate", _objectSpread({
+      scriptId,
+      targetId: target.id
+    }, parsedBlockDiagnostics));
+  }
+  const result = directSyncResult || (await replaceBlocksRangeByUCF(vm, workspace, boundary.startBlockId, boundary.endBlockId, ucfString, {
     includeComments: options.includeComments === true
-  });
+  }));
   return _objectSpread(_objectSpread({}, result), {}, {
-    diagnostics: _objectSpread({
+    diagnostics: _objectSpread(_objectSpread({
       scriptId,
       targetId: target.id,
       startBlockId: boundary.startBlockId,
       endBlockId: boundary.endBlockId,
       scriptBlockCount: boundary.blockCount
-    }, result.diagnostics || {})
+    }, parsedBlockDiagnostics), result.diagnostics || {})
   });
 };
 const insertScriptByUCF = async function insertScriptByUCF(vm, _workspace, targetId, ucfString) {
-  var _vm$editingTarget4;
+  var _vm$editingTarget6;
   let options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
   const target = targetId ? vm.runtime.getTargetById(targetId) : vm.editingTarget;
   if (!target) {
@@ -83804,7 +83983,7 @@ const insertScriptByUCF = async function insertScriptByUCF(vm, _workspace, targe
     });
   }
   let switchedTarget = false;
-  if (((_vm$editingTarget4 = vm.editingTarget) === null || _vm$editingTarget4 === void 0 ? void 0 : _vm$editingTarget4.id) !== target.id) {
+  if (((_vm$editingTarget6 = vm.editingTarget) === null || _vm$editingTarget6 === void 0 ? void 0 : _vm$editingTarget6.id) !== target.id) {
     vm.setEditingTarget(target.id);
     await new Promise(resolve => window.setTimeout(resolve, 60));
     switchedTarget = true;
@@ -83838,6 +84017,12 @@ const insertScriptByUCF = async function insertScriptByUCF(vm, _workspace, targe
       });
     }
     resolveVariableReferences(vm, workspace, newBlocksState);
+    if (newBlocksState.length >= LARGE_SCRIPT_BLOCK_THRESHOLD) {
+      const topLevelBlockState = topLevelBlocks[0];
+      if (topLevelBlockState.x === undefined) topLevelBlockState.x = 50;
+      if (topLevelBlockState.y === undefined) topLevelBlockState.y = 50;
+      return syncLargeScriptDirectly(vm, target, null, newBlocksState, "insert");
+    }
     const xmlText = blockStatesToXml(newBlocksState);
     setBlocklyEventGroup(true);
     const xmlDom = window.Blockly.Xml.textToDom(xmlText);
@@ -83886,7 +84071,7 @@ const insertScriptByUCF = async function insertScriptByUCF(vm, _workspace, targe
   }
 };
 const deleteScriptById = async (vm, _workspace, scriptId) => {
-  var _vm$editingTarget5;
+  var _vm$editingTarget7;
   const target = vm.runtime.targets.find(item => {
     var _item$blocks3, _item$blocks3$_blocks;
     return (_item$blocks3 = item.blocks) === null || _item$blocks3 === void 0 ? void 0 : (_item$blocks3$_blocks = _item$blocks3._blocks) === null || _item$blocks3$_blocks === void 0 ? void 0 : _item$blocks3$_blocks[scriptId];
@@ -83904,7 +84089,7 @@ const deleteScriptById = async (vm, _workspace, scriptId) => {
     });
   }
   let switchedTarget = false;
-  if (((_vm$editingTarget5 = vm.editingTarget) === null || _vm$editingTarget5 === void 0 ? void 0 : _vm$editingTarget5.id) !== target.id) {
+  if (((_vm$editingTarget7 = vm.editingTarget) === null || _vm$editingTarget7 === void 0 ? void 0 : _vm$editingTarget7.id) !== target.id) {
     vm.setEditingTarget(target.id);
     await new Promise(resolve => window.setTimeout(resolve, 60));
     switchedTarget = true;
