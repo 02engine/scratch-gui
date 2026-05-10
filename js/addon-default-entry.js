@@ -75702,6 +75702,28 @@ const DEFAULT_BRIDGE_CONFIG = {
   port: 40202,
   token: ""
 };
+const MAX_BRIDGE_MESSAGE_CHARS = 2 * 1024 * 1024;
+const safeStringifyBridgeMessage = message => {
+  try {
+    const text = JSON.stringify(message);
+    if (text.length > MAX_BRIDGE_MESSAGE_CHARS) {
+      return JSON.stringify({
+        id: message.id,
+        error: {
+          message: "02Agent bridge response exceeded ".concat(MAX_BRIDGE_MESSAGE_CHARS, " characters; retry with a narrower tool call.")
+        }
+      });
+    }
+    return text;
+  } catch (error) {
+    return JSON.stringify({
+      id: message.id,
+      error: {
+        message: error instanceof Error ? error.message : String(error)
+      }
+    });
+  }
+};
 const makeToken = () => {
   const randomValues = new Uint8Array(16);
   if (typeof crypto !== "undefined" && crypto.getRandomValues) {
@@ -75768,7 +75790,7 @@ const useBridgeClient = vm => {
   const send = Object(react__WEBPACK_IMPORTED_MODULE_0__["useCallback"])(message => {
     const socket = socketRef.current;
     if (!socket || socket.readyState !== WebSocket.OPEN) return false;
-    socket.send(JSON.stringify(message));
+    socket.send(safeStringifyBridgeMessage(message));
     return true;
   }, []);
   const handleRequest = Object(react__WEBPACK_IMPORTED_MODULE_0__["useCallback"])(async message => {
@@ -76049,7 +76071,7 @@ const buildRequestMessages = function buildRequestMessages(messages) {
     return toProviderMessage(message, content, options);
   });
 };
-const SYSTEM_PROMPT = "You are 02Agent, an AI coding assistant inside 02engine (Scratch environment), based on the Gandi IDE AI assistant addon.\n\nLanguage:\n- Use the same language as the user's latest message. If unclear, use zh-CN.\n\nTools:\n- listFiles: list the virtual Scratch project files.\n- getProjectOverview: compact project/stage-size/runtime-options/file/script/costume/variable/list overview.\n- getScratchGuide: concise task-oriented DSL patterns; prefer this over reading long docs.\n- searchBlocks: search block docs and return exact JS DSL examples, fields, inputs, menus, and notes.\n- getBlockHelp: exact help for one opcode or dotted DSL call.\n- searchExtensions: search built-in and known remote extensions before using extension blocks that are not loaded.\n- installExtension: install one built-in or known trusted extension and return its loaded blocks.\n- readFile: read /stage.js, /sprites/*.js, /sprites/*/costumes/*.svg, or docs.\n- searchFiles: search code and raw Scratch DSL/block docs.\n- applyPatch: edit writable virtual JS files with a Codex-style patch; successful patches immediately sync to Scratch blocks.\n- createSpriteWithSvg: create a new Scratch sprite with one SVG costume. It refuses existing sprite names; use addCostumeWithSvg for another costume on an existing sprite.\n- updateSpriteProperties: change an existing sprite's initial x/y/size/direction/rotation style/visibility/current costume.\n- listCostumes: inspect costume/backdrop order for one target or the whole project.\n- addCostumeWithSvg: add a new SVG costume to a target.\n- batchAddCostumesWithSvg: add multiple SVG costumes/backdrops to one existing target.\n- deleteCostume: delete a specific costume/backdrop from a target.\n- batchDeleteCostumes: delete multiple costumes/backdrops from one target while keeping at least one.\n- reorderCostume: move a costume/backdrop to a different index.\n- setCostumeOrder: set the complete costume/backdrop order for a target in one call.\n- deleteSprite: delete a sprite target.\n- getDiagnostics: validate current virtual JS files.\n\nWorkflow:\n1) Start with getProjectOverview, then readFile only for the stage/sprite files you will edit.\n2) Use getScratchGuide for common patterns, searchBlocks for candidate blocks, and getBlockHelp before using unfamiliar opcodes/menus.\n2a) If a needed extension block is not loaded, call searchExtensions, then installExtension for the specific built-in or trusted known extension. Do not install unrelated extensions. Do not install arbitrary direct URLs unless the user explicitly asked for that exact trusted URL.\n3) For rendering, algorithms, or repeated logic, call getScratchGuide with topic \"procedures\", \"custom-args\", or \"rendering\" and prefer custom blocks over broadcast-only designs.\n4) For non-trivial programs, patch one small script at a time, then call getDiagnostics before continuing.\n5) Edit scripts and costumes by applyPatch. Costume files are SVG paths under /sprites/<name>/costumes/*.svg; each sprite's costumes are grouped in that folder. Bitmap costumes are exposed as SVG with embedded data images. Do not wrap SVG in Markdown fences; if editing a stage backdrop, keep a complete <svg> document.\n6) After applyPatch, call getDiagnostics for the changed file.\n7) Keep existing // @script <scriptId> markers. Add new scripts with unique markers like // @script new-score-loop.\n8) Ordinary JS comments immediately before a block call become Scratch comments. Metadata comments like // @script and // blockId do not.\n9) Use stable paths from listFiles, such as /stage.js, /sprites/<name>.js, or /sprites/<name>/costumes/*.svg. Do not invent sprite paths with target ids.\n10) Stage backdrops are not movable. Sprite targets are movable and may use updateSpriteProperties for x/y/size/direction/rotation style/visibility/current costume.\n11) Scratch stage coordinates: origin (0, 0) is the center; x increases right, y increases up. Default stage is 480x360, so visible x is -240..240 and y is -180..180. SVG coordinates usually have origin at top-left with y downward; do not confuse SVG canvas coordinates with Scratch stage coordinates.\n12) For full-stage backdrops, make SVG canvas exactly width=\"480\" height=\"360\" viewBox=\"0 0 480 360\" and center content around SVG point (240, 180). For centered sprite costumes, make the SVG canvas tightly fit the costume and keep the visual center at width/2,height/2.\n13) Distinguish target vs asset: a sprite target owns scripts and state; a costume is only one visual asset in that sprite. A stage target owns backdrop assets but cannot move.\n14) When creating a sprite, always choose its intended default/current x/y/size/direction/rotationStyle/visible/currentCostumeIndex. Pass known defaults into createSpriteWithSvg; if anything should differ after creation, immediately call updateSpriteProperties for the new targetId.\n\napplyPatch format:\n- Do not wrap the patch in Markdown code fences.\n- Preferred format is:\n  *** Begin Patch\n  *** Update File: /sprites/Cat.js\n  @@\n   existing context line\n  +new line\n  *** End Patch\n- If the target virtual file is empty or you are replacing it completely, you may put the full replacement file directly after *** Update File without + prefixes.\n\nVirtual JS DSL:\n- Program sections contain expression statements only; each statement is one Scratch block call.\n- Block call: namespace.method({ args }) or identifier({ args }).\n- Block catalog opcodes like data_deletealloflist map to dotted DSL calls like data.deletealloflist(...). The underscore identifier form also works, but prefer dotted calls for readability.\n- Fields use \"$field_\" keys, for example { $field_VARIABLE: \"score\" }. Always use $field_VARIABLE for variables and $field_LIST for lists; use data.variable({ $field_VARIABLE: \"score\" }) to read a variable.\n- Dropdown/menu selectors also use \"$field_\" keys. Example: pen.setPenColorParamTo({ $field_COLOR_PARAM: \"color\", VALUE: 50 }); Valid pen COLOR_PARAM values are \"color\", \"saturation\", \"brightness\", \"transparency\".\n- Custom block parameters are not variables. Inside define(...), read them with argument.reporter_string_number({ $field_VALUE: \"paramName\" }) or argument.reporter_boolean({ $field_VALUE: \"flagName\" }). Never use data.variable to read a custom block parameter.\n- Inputs use plain keys, for example { MESSAGE: \"hi\", VALUE: 1 }.\n- Boolean slots such as CONDITION must contain Boolean blocks. Wrap values with operator.equals/operator.gt/operator.lt instead of using data.variable directly.\n- Substacks use arrow functions, for example SUBSTACK: () => { ... }.\n- Reserved meta keys: $mutation, $args, $xy.\n- Use $xy on top-level scripts to place stacks: { $xy: { x: 80, y: 120 } }.\n- Keep // blockId comments when editing existing code; they help the sync layer map changes.\n- Stage scripts should orchestrate variables, lists, broadcasts, backdrop, and sound. Put visual behavior that needs motion, pen, clones, position, size, or speech bubbles in sprite files.\n- The stage itself cannot move. Only sprite targets can move, rotate, change size, clone, or bounce on edges.\n- A sprite target is the actor/object; its costumes are visual assets. Use target paths (/sprites/<name>.js) for scripts/behavior and costume paths (/sprites/<name>/costumes/*.svg or /stage/costumes/*.svg) only for appearance.\n- After createSpriteWithSvg, verify or set default sprite state with updateSpriteProperties whenever the sprite needs a non-default position, size, direction, rotation style, visibility, or current costume.\n- Scratch stage coordinates use center origin: x right positive, y up positive, normally x=-240..240 and y=-180..180. SVG costume/backdrop coordinates are canvas coordinates, normally top-left origin with y downward.\n- For stage backdrops, prefer SVG width=\"480\" height=\"360\" viewBox=\"0 0 480 360\" and rotation center 240,180. For sprite costumes, prefer a centered SVG canvas and rotation center width/2,height/2. If using addCostumeWithSvg/batchAddCostumesWithSvg without explicit centers, tools default to the SVG canvas center.\n- When adding or deleting costumes/backdrops, inspect order first with getProjectOverview or listCostumes so you preserve the intended sequence. For multiple additions/deletions, prefer batchAddCostumesWithSvg/batchDeleteCostumes. Never call createSpriteWithSvg to add a costume to an existing sprite.\n- When changing costume order, use listCostumes first, then call reorderCostume for one move or setCostumeOrder for a full desired order.\n- Use broadcasts for cross-target orchestration. Do not use broadcasts as local function calls when a custom block can pass parameters.\n- Use custom blocks for reusable logic, sorting steps, math helpers, and pen rendering. Add info: [\"warp\"] when the helper should run without screen refresh.\n- For pen rendering, prefer: event/broadcast receives \"render\" -> calls one warp custom block -> custom block clears and draws the full frame. Pass highlights/scale/offsets through $args and read them with argument.reporter_*.\n- control.if only has SUBSTACK. Use control.if_else when you need SUBSTACK2 / else.\n- Arithmetic operators use NUM1/NUM2. Comparison operators use OPERAND1/OPERAND2.\n- If searchBlocks/searchFiles cannot find an extension block such as pen.*, use searchExtensions and installExtension for the needed built-in or trusted known extension, then call searchBlocks/getBlockHelp again before editing scripts.\n\nCanonical patterns:\n- Hat/event with body:\n  event.whenflagclicked({ $xy: { x: 80, y: 80 } }, () => { ... });\n  event.whenkeypressed({ $field_KEY_OPTION: \"space\", $xy: { x: 80, y: 240 } }, () => { ... });\n  event.whenbroadcastreceived({ $field_BROADCAST_OPTION: \"game-start\", $xy: { x: 80, y: 400 } }, () => { ... });\n  control.start_as_clone({ $xy: { x: 80, y: 560 } }, () => { ... });\n\n- If/else:\n  control.if_else({\n    CONDITION: sensing.keypressed({ $field_KEY_OPTION: \"space\" }),\n    SUBSTACK: () => { looks.say({ MESSAGE: \"space\" }); },\n    SUBSTACK2: () => { looks.say({ MESSAGE: \"waiting\" }); }\n  });\n  control.repeat_until({\n    CONDITION: operator.equals({ OPERAND1: data.variable({ $field_VARIABLE: \"done\" }), OPERAND2: 1 }),\n    SUBSTACK: () => { looks.say({ MESSAGE: \"looping\" }); }\n  });\n\n- Variables and lists:\n  data.setvariableto({ $field_VARIABLE: \"score\", VALUE: 0 });\n  data.changevariableby({ $field_VARIABLE: \"score\", VALUE: 1 });\n  data.deletealloflist({ $field_LIST: \"numbers\" });\n  data.addtolist({ $field_LIST: \"numbers\", ITEM: operator.random({ FROM: 1, TO: 100 }) });\n  data.itemoflist({ $field_LIST: \"numbers\", INDEX: data.variable({ $field_VARIABLE: \"score\" }) });\n\n- Menus:\n  pen.setPenColorParamTo({ $field_COLOR_PARAM: \"color\", VALUE: 50 });\n  pen.changePenColorParamBy({ $field_COLOR_PARAM: \"brightness\", VALUE: 10 });\n  event.whenkeypressed({ $field_KEY_OPTION: \"space\", $xy: { x: 80, y: 240 } }, () => { ... });\n\n- Custom block / warp function:\n  define({ proccode: \"draw frame %n[left] %n[right]\", info: [\"warp\"], $xy: { x: 80, y: 520 } }, () => {\n    pen.clear();\n    control.if({ CONDITION: operator.equals({ OPERAND1: data.variable({ $field_VARIABLE: \"i\" }), OPERAND2: argument.reporter_string_number({ $field_VALUE: \"left\" }) }), SUBSTACK: () => {\n      pen.setPenColorToColor({ COLOR: \"#ff4d4f\" });\n    } });\n    // Draw the whole frame here.\n  });\n  procedures.call({ $mutation: { proccode: \"draw frame %n %n\", warp: \"true\" }, $args: [0, 0] });\n\nMinimum example:\n// @script new-hello\nevent.whenflagclicked({ $xy: { x: 80, y: 80 } }, () => {\n  // This becomes a Scratch block comment.\n  control.repeat({ TIMES: 3, SUBSTACK: () => { looks.say({ MESSAGE: \"ok\" }); } });\n  event.broadcast({ BROADCAST_INPUT: \"msg1\" });\n});";
+const SYSTEM_PROMPT = "You are 02Agent, an AI coding assistant inside 02engine (Scratch environment), based on the Gandi IDE AI assistant addon.\n\nLanguage:\n- Use the same language as the user's latest message. If unclear, use zh-CN.\n\nTools:\n- listFiles: list the virtual Scratch project files.\n- getProjectOverview: compact project/stage-size/runtime-options/file/script/costume/variable/list overview.\n- getScratchGuide: concise task-oriented DSL patterns; prefer this over reading long docs.\n- searchBlocks: search block docs and return exact JS DSL examples, fields, inputs, menus, and notes.\n- getBlockHelp: exact help for one opcode or dotted DSL call.\n- searchExtensions: search built-in and known remote extensions before using extension blocks that are not loaded.\n- installExtension: install one built-in or known trusted extension and return its loaded blocks.\n- readFile: read /stage.js, /sprites/*.js, /sprites/*/costumes/*.svg, or docs.\n- readVariable/readListSlice/searchList/getDataSummary: inspect variables and large lists by name/id and bounded slices.\n- searchFiles: search code and raw Scratch DSL/block docs.\n- applyPatch: edit writable virtual JS files with a Codex-style patch; successful patches immediately sync to Scratch blocks.\n- createSpriteWithSvg: create a new Scratch sprite with one SVG costume. It refuses existing sprite names; use addCostumeWithSvg for another costume on an existing sprite.\n- updateSpriteProperties: change an existing sprite's initial x/y/size/direction/rotation style/visibility/current costume.\n- listCostumes: inspect costume/backdrop order for one target or the whole project.\n- addCostumeWithSvg: add a new SVG costume to a target.\n- batchAddCostumesWithSvg: add multiple SVG costumes/backdrops to one existing target.\n- deleteCostume: delete a specific costume/backdrop from a target.\n- batchDeleteCostumes: delete multiple costumes/backdrops from one target while keeping at least one.\n- reorderCostume: move a costume/backdrop to a different index.\n- setCostumeOrder: set the complete costume/backdrop order for a target in one call.\n- deleteSprite: delete a sprite target.\n- getDiagnostics: validate current virtual JS files.\n\nWorkflow:\n1) Start with getProjectOverview, then readFile only for the stage/sprite files you will edit.\n1a) If getProjectOverview returns mode \"indexed\", do not ask for full list/variable contents. Use readVariable, readListSlice, searchList, or getDataSummary for specific data slices by name/id.\n2) Use getScratchGuide for common patterns, searchBlocks for candidate blocks, and getBlockHelp before using unfamiliar opcodes/menus.\n2a) If a needed extension block is not loaded, call searchExtensions, then installExtension for the specific built-in or trusted known extension. Do not install unrelated extensions. Do not install arbitrary direct URLs unless the user explicitly asked for that exact trusted URL.\n3) For rendering, algorithms, or repeated logic, call getScratchGuide with topic \"procedures\", \"custom-args\", or \"rendering\" and prefer custom blocks over broadcast-only designs.\n4) For non-trivial programs, patch one small script at a time, then call getDiagnostics before continuing.\n5) Edit scripts and costumes by applyPatch. Costume files are SVG paths under /sprites/<name>/costumes/*.svg; each sprite's costumes are grouped in that folder. Bitmap costumes are exposed as SVG with embedded data images. Do not wrap SVG in Markdown fences; if editing a stage backdrop, keep a complete <svg> document.\n6) After applyPatch, call getDiagnostics for the changed file.\n7) Keep existing // @script <scriptId> markers. Add new scripts with unique markers like // @script new-score-loop.\n8) Ordinary JS comments immediately before a block call become Scratch comments. Metadata comments like // @script and // blockId do not.\n9) Use stable paths from listFiles, such as /stage.js, /sprites/<name>.js, or /sprites/<name>/costumes/*.svg. Do not invent sprite paths with target ids.\n10) Stage backdrops are not movable. Sprite targets are movable and may use updateSpriteProperties for x/y/size/direction/rotation style/visibility/current costume.\n11) Scratch stage coordinates: origin (0, 0) is the center; x increases right, y increases up. Default stage is 480x360, so visible x is -240..240 and y is -180..180. SVG coordinates usually have origin at top-left with y downward; do not confuse SVG canvas coordinates with Scratch stage coordinates.\n12) For full-stage backdrops, make SVG canvas exactly width=\"480\" height=\"360\" viewBox=\"0 0 480 360\" and center content around SVG point (240, 180). For centered sprite costumes, make the SVG canvas tightly fit the costume and keep the visual center at width/2,height/2.\n13) Distinguish target vs asset: a sprite target owns scripts and state; a costume is only one visual asset in that sprite. A stage target owns backdrop assets but cannot move.\n14) When creating a sprite, always choose its intended default/current x/y/size/direction/rotationStyle/visible/currentCostumeIndex. Pass known defaults into createSpriteWithSvg; if anything should differ after creation, immediately call updateSpriteProperties for the new targetId.\n\napplyPatch format:\n- Do not wrap the patch in Markdown code fences.\n- Preferred format is:\n  *** Begin Patch\n  *** Update File: /sprites/Cat.js\n  @@\n   existing context line\n  +new line\n  *** End Patch\n- If the target virtual file is empty or you are replacing it completely, you may put the full replacement file directly after *** Update File without + prefixes.\n\nVirtual JS DSL:\n- Program sections contain expression statements only; each statement is one Scratch block call.\n- Block call: namespace.method({ args }) or identifier({ args }).\n- Block catalog opcodes like data_deletealloflist map to dotted DSL calls like data.deletealloflist(...). The underscore identifier form also works, but prefer dotted calls for readability.\n- Fields use \"$field_\" keys, for example { $field_VARIABLE: \"score\" }. Always use $field_VARIABLE for variables and $field_LIST for lists; use data.variable({ $field_VARIABLE: \"score\" }) to read a variable.\n- Dropdown/menu selectors also use \"$field_\" keys. Example: pen.setPenColorParamTo({ $field_COLOR_PARAM: \"color\", VALUE: 50 }); Valid pen COLOR_PARAM values are \"color\", \"saturation\", \"brightness\", \"transparency\".\n- Custom block parameters are not variables. Inside define(...), read them with argument.reporter_string_number({ $field_VALUE: \"paramName\" }) or argument.reporter_boolean({ $field_VALUE: \"flagName\" }). Never use data.variable to read a custom block parameter.\n- Inputs use plain keys, for example { MESSAGE: \"hi\", VALUE: 1 }.\n- Boolean slots such as CONDITION must contain Boolean blocks. Wrap values with operator.equals/operator.gt/operator.lt instead of using data.variable directly.\n- Substacks use arrow functions, for example SUBSTACK: () => { ... }.\n- Reserved meta keys: $mutation, $args, $xy.\n- Use $xy on top-level scripts to place stacks: { $xy: { x: 80, y: 120 } }.\n- Keep // blockId comments when editing existing code; they help the sync layer map changes.\n- Stage scripts should orchestrate variables, lists, broadcasts, backdrop, and sound. Put visual behavior that needs motion, pen, clones, position, size, or speech bubbles in sprite files.\n- The stage itself cannot move. Only sprite targets can move, rotate, change size, clone, or bounce on edges.\n- A sprite target is the actor/object; its costumes are visual assets. Use target paths (/sprites/<name>.js) for scripts/behavior and costume paths (/sprites/<name>/costumes/*.svg or /stage/costumes/*.svg) only for appearance.\n- After createSpriteWithSvg, verify or set default sprite state with updateSpriteProperties whenever the sprite needs a non-default position, size, direction, rotation style, visibility, or current costume.\n- Scratch stage coordinates use center origin: x right positive, y up positive, normally x=-240..240 and y=-180..180. SVG costume/backdrop coordinates are canvas coordinates, normally top-left origin with y downward.\n- For stage backdrops, prefer SVG width=\"480\" height=\"360\" viewBox=\"0 0 480 360\" and rotation center 240,180. For sprite costumes, prefer a centered SVG canvas and rotation center width/2,height/2. If using addCostumeWithSvg/batchAddCostumesWithSvg without explicit centers, tools default to the SVG canvas center.\n- When adding or deleting costumes/backdrops, inspect order first with getProjectOverview or listCostumes so you preserve the intended sequence. For multiple additions/deletions, prefer batchAddCostumesWithSvg/batchDeleteCostumes. Never call createSpriteWithSvg to add a costume to an existing sprite.\n- When changing costume order, use listCostumes first, then call reorderCostume for one move or setCostumeOrder for a full desired order.\n- Use broadcasts for cross-target orchestration. Do not use broadcasts as local function calls when a custom block can pass parameters.\n- Use custom blocks for reusable logic, sorting steps, math helpers, and pen rendering. Add info: [\"warp\"] when the helper should run without screen refresh.\n- For pen rendering, prefer: event/broadcast receives \"render\" -> calls one warp custom block -> custom block clears and draws the full frame. Pass highlights/scale/offsets through $args and read them with argument.reporter_*.\n- control.if only has SUBSTACK. Use control.if_else when you need SUBSTACK2 / else.\n- Arithmetic operators use NUM1/NUM2. Comparison operators use OPERAND1/OPERAND2.\n- If searchBlocks/searchFiles cannot find an extension block such as pen.*, use searchExtensions and installExtension for the needed built-in or trusted known extension, then call searchBlocks/getBlockHelp again before editing scripts.\n\nCanonical patterns:\n- Hat/event with body:\n  event.whenflagclicked({ $xy: { x: 80, y: 80 } }, () => { ... });\n  event.whenkeypressed({ $field_KEY_OPTION: \"space\", $xy: { x: 80, y: 240 } }, () => { ... });\n  event.whenbroadcastreceived({ $field_BROADCAST_OPTION: \"game-start\", $xy: { x: 80, y: 400 } }, () => { ... });\n  control.start_as_clone({ $xy: { x: 80, y: 560 } }, () => { ... });\n\n- If/else:\n  control.if_else({\n    CONDITION: sensing.keypressed({ $field_KEY_OPTION: \"space\" }),\n    SUBSTACK: () => { looks.say({ MESSAGE: \"space\" }); },\n    SUBSTACK2: () => { looks.say({ MESSAGE: \"waiting\" }); }\n  });\n  control.repeat_until({\n    CONDITION: operator.equals({ OPERAND1: data.variable({ $field_VARIABLE: \"done\" }), OPERAND2: 1 }),\n    SUBSTACK: () => { looks.say({ MESSAGE: \"looping\" }); }\n  });\n\n- Variables and lists:\n  data.setvariableto({ $field_VARIABLE: \"score\", VALUE: 0 });\n  data.changevariableby({ $field_VARIABLE: \"score\", VALUE: 1 });\n  data.deletealloflist({ $field_LIST: \"numbers\" });\n  data.addtolist({ $field_LIST: \"numbers\", ITEM: operator.random({ FROM: 1, TO: 100 }) });\n  data.itemoflist({ $field_LIST: \"numbers\", INDEX: data.variable({ $field_VARIABLE: \"score\" }) });\n\n- Menus:\n  pen.setPenColorParamTo({ $field_COLOR_PARAM: \"color\", VALUE: 50 });\n  pen.changePenColorParamBy({ $field_COLOR_PARAM: \"brightness\", VALUE: 10 });\n  event.whenkeypressed({ $field_KEY_OPTION: \"space\", $xy: { x: 80, y: 240 } }, () => { ... });\n\n- Custom block / warp function:\n  define({ proccode: \"draw frame %n[left] %n[right]\", info: [\"warp\"], $xy: { x: 80, y: 520 } }, () => {\n    pen.clear();\n    control.if({ CONDITION: operator.equals({ OPERAND1: data.variable({ $field_VARIABLE: \"i\" }), OPERAND2: argument.reporter_string_number({ $field_VALUE: \"left\" }) }), SUBSTACK: () => {\n      pen.setPenColorToColor({ COLOR: \"#ff4d4f\" });\n    } });\n    // Draw the whole frame here.\n  });\n  procedures.call({ $mutation: { proccode: \"draw frame %n %n\", warp: \"true\" }, $args: [0, 0] });\n\nMinimum example:\n// @script new-hello\nevent.whenflagclicked({ $xy: { x: 80, y: 80 } }, () => {\n  // This becomes a Scratch block comment.\n  control.repeat({ TIMES: 3, SUBSTACK: () => { looks.say({ MESSAGE: \"ok\" }); } });\n  event.broadcast({ BROADCAST_INPUT: \"msg1\" });\n});";
 function useChat(_ref) {
   let messages = _ref.messages,
     currentAgent = _ref.currentAgent,
@@ -76236,7 +76258,11 @@ function useChat(_ref) {
                 throw new Error("Invalid tool arguments: ".concat(parseError.message));
               }
               const result = await callTool(functionName, args);
-              toolResult = typeof result === "object" ? JSON.stringify(result) : String(result);
+              try {
+                toolResult = typeof result === "object" ? JSON.stringify(result) : String(result);
+              } catch (stringifyError) {
+                toolResult = "Error: Tool result could not be serialized: ".concat(stringifyError.message);
+              }
             } catch (err) {
               toolResult = "Error: ".concat(err.message);
             }
@@ -77982,6 +78008,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "callAITool", function() { return callAITool; });
 const REQUIRED_TOOL_ARGUMENTS = {
   readFile: ["path"],
+  readVariable: [],
+  readListSlice: [],
+  searchList: ["query"],
   searchFiles: ["query"],
   searchBlocks: ["query"],
   getBlockHelp: ["opcode"],
@@ -77994,17 +78023,32 @@ const REQUIRED_TOOL_ARGUMENTS = {
 const MUTATING_TOOLS = new Set(["applyPatch", "createSpriteWithSvg", "updateSpriteProperties", "addCostumeWithSvg", "batchAddCostumesWithSvg", "deleteCostume", "batchDeleteCostumes", "reorderCostume", "setCostumeOrder", "deleteSprite", "installExtension", "replaceBlocksRangeByUCF", "replaceScriptByUCF", "generateCodeFromUCF"]);
 let mutationQueue = Promise.resolve();
 const isMissingToolArgument = value => value === undefined || value === null || typeof value === "string" && value.trim() === "";
+const hasAnyToolArgument = (args, names) => names.some(name => !isMissingToolArgument(args[name]));
 const validateToolArguments = (functionName, args) => {
   const requiredArguments = REQUIRED_TOOL_ARGUMENTS[functionName] || [];
   const missingArguments = requiredArguments.filter(argumentName => isMissingToolArgument(args[argumentName]));
   if (missingArguments.length > 0) {
     throw new Error("Tool ".concat(functionName, " requires argument(s): ").concat(missingArguments.join(", "), ". Received: ").concat(JSON.stringify(args)));
   }
+  if ((functionName === "readVariable" || functionName === "readListSlice") && !hasAnyToolArgument(args, ["name", "variableId"])) {
+    throw new Error("Tool ".concat(functionName, " requires either name or variableId. Received: ").concat(JSON.stringify(args)));
+  }
+  if (functionName === "searchList" && !hasAnyToolArgument(args, ["name", "variableId"])) {
+    throw new Error("Tool ".concat(functionName, " requires either name or variableId. Received: ").concat(JSON.stringify(args)));
+  }
 };
 const dispatchAITool = async (aiTools, functionName, args) => {
   switch (functionName) {
     case "readFile":
       return aiTools[functionName](args.path, args.startLine, args.endLine);
+    case "readVariable":
+      return aiTools[functionName](args);
+    case "readListSlice":
+      return aiTools[functionName](args);
+    case "searchList":
+      return aiTools[functionName](args);
+    case "getDataSummary":
+      return aiTools[functionName](args);
     case "searchFiles":
       return aiTools[functionName](args);
     case "searchBlocks":
@@ -78260,6 +78304,150 @@ const scratchToolSchemas = [{
         }
       },
       required: ["path"]
+    }
+  }
+}, {
+  type: "function",
+  function: {
+    name: "readVariable",
+    description: "Read one Scratch variable by target/name or variableId. For long string variables, optional startChar/endChar reads a slice.",
+    parameters: {
+      type: "object",
+      properties: {
+        targetId: {
+          type: "string",
+          description: "Optional target ID. Defaults to current editing target when omitted."
+        },
+        targetName: {
+          type: "string",
+          description: "Optional target name such as Stage or a sprite name."
+        },
+        variableId: {
+          type: "string",
+          description: "Variable ID from getProjectOverview."
+        },
+        name: {
+          type: "string",
+          description: "Variable name from getProjectOverview."
+        },
+        startChar: {
+          type: "number",
+          description: "Optional 0-based start character for string variables."
+        },
+        endChar: {
+          type: "number",
+          description: "Optional end character for string variables."
+        }
+      }
+    }
+  }
+}, {
+  type: "function",
+  function: {
+    name: "readListSlice",
+    description: "Read a bounded slice of one Scratch list by target/name or variableId. Use this for large projects instead of expecting full list values in getProjectOverview.",
+    parameters: {
+      type: "object",
+      properties: {
+        targetId: {
+          type: "string",
+          description: "Optional target ID. Defaults to current editing target when omitted."
+        },
+        targetName: {
+          type: "string",
+          description: "Optional target name such as Stage or a sprite name."
+        },
+        variableId: {
+          type: "string",
+          description: "List variable ID from getProjectOverview."
+        },
+        name: {
+          type: "string",
+          description: "List name from getProjectOverview."
+        },
+        start: {
+          type: "number",
+          description: "0-based start index. Defaults to 0."
+        },
+        count: {
+          type: "number",
+          description: "Number of items to read. Capped by the tool to keep responses small."
+        }
+      }
+    }
+  }
+}, {
+  type: "function",
+  function: {
+    name: "searchList",
+    description: "Search a bounded window of one Scratch list for a string value and return matching indexes with previews.",
+    parameters: {
+      type: "object",
+      properties: {
+        targetId: {
+          type: "string",
+          description: "Optional target ID. Defaults to current editing target when omitted."
+        },
+        targetName: {
+          type: "string",
+          description: "Optional target name such as Stage or a sprite name."
+        },
+        variableId: {
+          type: "string",
+          description: "List variable ID from getProjectOverview."
+        },
+        name: {
+          type: "string",
+          description: "List name from getProjectOverview."
+        },
+        query: {
+          type: "string",
+          description: "Search text, such as NaN or a token."
+        },
+        start: {
+          type: "number",
+          description: "0-based index to start searching from. Defaults to 0."
+        },
+        limit: {
+          type: "number",
+          description: "Maximum matches. Defaults to 20 and is capped."
+        },
+        maxVisited: {
+          type: "number",
+          description: "Maximum items to scan from start. Defaults to the safe cap."
+        }
+      },
+      required: ["query"]
+    }
+  }
+}, {
+  type: "function",
+  function: {
+    name: "getDataSummary",
+    description: "Get compact variable/list summaries and first/last samples for selected targets or names without serializing full large lists.",
+    parameters: {
+      type: "object",
+      properties: {
+        targetId: {
+          type: "string",
+          description: "Optional target ID."
+        },
+        targetName: {
+          type: "string",
+          description: "Optional target name."
+        },
+        names: {
+          type: "array",
+          items: {
+            type: "string"
+          },
+          description: "Optional variable/list names to include."
+        },
+        sampleCount: {
+          type: "number",
+          description: "Number of first/last list items to sample. Capped by the tool."
+        }
+      }
     }
   }
 }, {
@@ -78754,6 +78942,30 @@ const SCRIPT_MARKER_RE = /^\/\/\s*@script\s+([^\s]+)(?:\s+.*)?$/;
 const DOC_SCRATCH_AGENT_PATH = "/docs/scratch-agent.md";
 const DOC_BLOCK_CATALOG_PATH = "/docs/block-catalog.md";
 const DEFAULT_READ_FILE_MAX_LINES = 240;
+const PREVIEW_STRING_MAX_CHARS = 240;
+const LIST_PREVIEW_ITEM_COUNT = 10;
+const SMALL_PROJECT_MAX_TOTAL_LIST_ITEMS = 5000;
+const SMALL_PROJECT_MAX_LIST_LENGTH = 1000;
+const LARGE_PROJECT_MAX_TOTAL_LIST_ITEMS = 100000;
+const LARGE_PROJECT_MAX_LIST_LENGTH = 50000;
+const SMALL_PROJECT_MAX_VIRTUAL_FILE_CHARS = 1024 * 1024;
+const DATA_SLICE_MAX_COUNT = 1000;
+const DATA_SEARCH_MAX_VISITED = 100000;
+const previewValue = function previewValue(value) {
+  let maxChars = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : PREVIEW_STRING_MAX_CHARS;
+  if (typeof value === "string") {
+    return value.length > maxChars ? "".concat(value.slice(0, maxChars), "... [truncated ").concat(value.length - maxChars, " chars]") : value;
+  }
+  if (typeof value === "number" || typeof value === "boolean" || value === null || value === undefined) {
+    return value;
+  }
+  try {
+    const text = JSON.stringify(value);
+    return text.length > maxChars ? "".concat(text.slice(0, maxChars), "... [truncated ").concat(text.length - maxChars, " chars]") : value;
+  } catch (_unused) {
+    return String(value);
+  }
+};
 const COMMON_OPCODE_ALIASES = {
   argument_reporter: "argument_reporter_string_number",
   argument_reporter_string_number: "argument_reporter_string_number",
@@ -78877,7 +79089,7 @@ const getSvgCanvasSize = svgText => {
       width,
       height
     };
-  } catch (_unused) {
+  } catch (_unused2) {
     return null;
   }
 };
@@ -79120,6 +79332,94 @@ class AITools {
     }
     return targetId ? ((_this$vm$runtime3 = this.vm.runtime) === null || _this$vm$runtime3 === void 0 ? void 0 : (_this$vm$runtime3$get = _this$vm$runtime3.getTargetById) === null || _this$vm$runtime3$get === void 0 ? void 0 : _this$vm$runtime3$get.call(_this$vm$runtime3, targetId)) || null : this.vm.editingTarget || null;
   }
+  _resolveDataVariable(options) {
+    const target = this._resolveTarget(options === null || options === void 0 ? void 0 : options.targetId, options === null || options === void 0 ? void 0 : options.targetName);
+    if (!target) return {
+      target: null,
+      variable: null,
+      error: "Target not found."
+    };
+    const values = Object.values((target === null || target === void 0 ? void 0 : target.variables) || {});
+    const requestedType = options === null || options === void 0 ? void 0 : options.type;
+    const normalizedName = String((options === null || options === void 0 ? void 0 : options.name) || "").trim().toLowerCase();
+    const variable = values.find(item => {
+      const itemType = (item === null || item === void 0 ? void 0 : item.type) === "list" || Array.isArray(item === null || item === void 0 ? void 0 : item.value) ? "list" : "variable";
+      if (requestedType && itemType !== requestedType) return false;
+      if (options !== null && options !== void 0 && options.variableId && (item === null || item === void 0 ? void 0 : item.id) === options.variableId) return true;
+      return Boolean(normalizedName) && String((item === null || item === void 0 ? void 0 : item.name) || "").trim().toLowerCase() === normalizedName;
+    });
+    if (!variable) return {
+      target,
+      variable: null,
+      error: "".concat(requestedType || "Data item", " not found.")
+    };
+    return {
+      target,
+      variable,
+      error: ""
+    };
+  }
+  _getProjectSizeProfile(virtualFiles) {
+    var _this$vm$runtime4;
+    const targets = Array.isArray((_this$vm$runtime4 = this.vm.runtime) === null || _this$vm$runtime4 === void 0 ? void 0 : _this$vm$runtime4.targets) ? this.vm.runtime.targets : [];
+    let variableCount = 0;
+    let listCount = 0;
+    let totalListItems = 0;
+    let maxListLength = 0;
+    let blockCount = 0;
+    let scriptCount = 0;
+    let estimatedVariableChars = 0;
+    targets.forEach(target => {
+      var _target$blocks;
+      const blocks = target !== null && target !== void 0 && (_target$blocks = target.blocks) !== null && _target$blocks !== void 0 && _target$blocks._blocks && typeof target.blocks._blocks === "object" ? target.blocks._blocks : {};
+      const blockIds = Object.keys(blocks);
+      blockCount += blockIds.length;
+      scriptCount += blockIds.filter(blockId => {
+        var _blocks$blockId, _blocks$blockId2;
+        return ((_blocks$blockId = blocks[blockId]) === null || _blocks$blockId === void 0 ? void 0 : _blocks$blockId.topLevel) && !((_blocks$blockId2 = blocks[blockId]) !== null && _blocks$blockId2 !== void 0 && _blocks$blockId2.parent);
+      }).length;
+      const values = Object.values((target === null || target === void 0 ? void 0 : target.variables) || {});
+      values.forEach(item => {
+        const isList = (item === null || item === void 0 ? void 0 : item.type) === "list" || Array.isArray(item === null || item === void 0 ? void 0 : item.value);
+        if (isList) {
+          listCount += 1;
+          const length = Array.isArray(item === null || item === void 0 ? void 0 : item.value) ? item.value.length : 0;
+          totalListItems += length;
+          maxListLength = Math.max(maxListLength, length);
+          estimatedVariableChars += Math.min(length, LIST_PREVIEW_ITEM_COUNT) * PREVIEW_STRING_MAX_CHARS;
+        } else {
+          variableCount += 1;
+          estimatedVariableChars += typeof (item === null || item === void 0 ? void 0 : item.value) === "string" ? item.value.length : 32;
+        }
+      });
+    });
+    const estimatedVirtualFileChars = virtualFiles ? virtualFiles.reduce((sum, entry) => {
+      var _entry$content;
+      return sum + (((_entry$content = entry.content) === null || _entry$content === void 0 ? void 0 : _entry$content.length) || 0);
+    }, 0) : 0;
+    const estimatedJsonChars = estimatedVariableChars + estimatedVirtualFileChars + blockCount * 500;
+    const scale = totalListItems >= LARGE_PROJECT_MAX_TOTAL_LIST_ITEMS || maxListLength >= LARGE_PROJECT_MAX_LIST_LENGTH ? "huge" : totalListItems >= SMALL_PROJECT_MAX_TOTAL_LIST_ITEMS || maxListLength >= SMALL_PROJECT_MAX_LIST_LENGTH || estimatedVirtualFileChars >= SMALL_PROJECT_MAX_VIRTUAL_FILE_CHARS ? "large" : "small";
+    return {
+      scale,
+      isSmall: scale === "small",
+      isLargeRuntimeData: scale !== "small",
+      targetCount: targets.length,
+      scriptCount,
+      blockCount,
+      variableCount,
+      listCount,
+      totalListItems,
+      maxListLength,
+      estimatedJsonChars,
+      estimatedVirtualFileChars,
+      thresholds: {
+        smallProjectMaxTotalListItems: SMALL_PROJECT_MAX_TOTAL_LIST_ITEMS,
+        smallProjectMaxListLength: SMALL_PROJECT_MAX_LIST_LENGTH,
+        hugeProjectMaxTotalListItems: LARGE_PROJECT_MAX_TOTAL_LIST_ITEMS,
+        hugeProjectMaxListLength: LARGE_PROJECT_MAX_LIST_LENGTH
+      }
+    };
+  }
   _resolveCostumeIndex(target, costumeIndex, costumeName) {
     var _target$sprite;
     const costumes = Array.isArray(target === null || target === void 0 ? void 0 : (_target$sprite = target.sprite) === null || _target$sprite === void 0 ? void 0 : _target$sprite.costumes) ? target.sprite.costumes : [];
@@ -79145,9 +79445,9 @@ class AITools {
     return nextId;
   }
   _getBlocks(targetId) {
-    var _target$blocks;
+    var _target$blocks2;
     const target = this._getTarget(targetId);
-    if (!(target !== null && target !== void 0 && (_target$blocks = target.blocks) !== null && _target$blocks !== void 0 && _target$blocks._blocks)) {
+    if (!(target !== null && target !== void 0 && (_target$blocks2 = target.blocks) !== null && _target$blocks2 !== void 0 && _target$blocks2._blocks)) {
       return null;
     }
     return {
@@ -79183,8 +79483,8 @@ class AITools {
     return pathByTargetId;
   }
   _getVirtualPathForTarget(target, pathByTargetId) {
-    var _this$vm$runtime4;
-    const resolvedPathMap = pathByTargetId || this._getVirtualPathMapForTargets(Array.isArray((_this$vm$runtime4 = this.vm.runtime) === null || _this$vm$runtime4 === void 0 ? void 0 : _this$vm$runtime4.targets) ? this.vm.runtime.targets : []);
+    var _this$vm$runtime5;
+    const resolvedPathMap = pathByTargetId || this._getVirtualPathMapForTargets(Array.isArray((_this$vm$runtime5 = this.vm.runtime) === null || _this$vm$runtime5 === void 0 ? void 0 : _this$vm$runtime5.targets) ? this.vm.runtime.targets : []);
     if (target !== null && target !== void 0 && target.id && resolvedPathMap !== null && resolvedPathMap !== void 0 && resolvedPathMap.has(target.id)) {
       return resolvedPathMap.get(target.id) || "/stage.js";
     }
@@ -79266,8 +79566,8 @@ class AITools {
     return commentsByBlockId;
   }
   _getTargetTopBlocks(target) {
-    var _target$blocks2;
-    const blocks = target === null || target === void 0 ? void 0 : (_target$blocks2 = target.blocks) === null || _target$blocks2 === void 0 ? void 0 : _target$blocks2._blocks;
+    var _target$blocks3;
+    const blocks = target === null || target === void 0 ? void 0 : (_target$blocks3 = target.blocks) === null || _target$blocks3 === void 0 ? void 0 : _target$blocks3._blocks;
     if (!blocks) return [];
     return this._getTopLevelBlocks(blocks).sort((left, right) => {
       const leftY = typeof left.y === "number" ? left.y : 0;
@@ -79280,8 +79580,8 @@ class AITools {
     });
   }
   _buildTargetVirtualFile(target, virtualPath) {
-    var _target$blocks3;
-    const blocks = target === null || target === void 0 ? void 0 : (_target$blocks3 = target.blocks) === null || _target$blocks3 === void 0 ? void 0 : _target$blocks3._blocks;
+    var _target$blocks4;
+    const blocks = target === null || target === void 0 ? void 0 : (_target$blocks4 = target.blocks) === null || _target$blocks4 === void 0 ? void 0 : _target$blocks4._blocks;
     const commentsByBlockId = this._getCommentsByBlockId(target);
     const header = ["/* @scratch-target", "path: ".concat(virtualPath || this._getVirtualPathForTarget(target)), "targetId: ".concat(target.id), "targetName: ".concat(this._getTargetName(target)), "targetType: ".concat(target.isStage ? "stage" : "sprite"), "This is a virtual Scratch file. Edit with applyPatch and keep // @script markers.", "*/", ""].join("\n");
     if (!blocks) {
@@ -79334,9 +79634,9 @@ class AITools {
     };
   }
   _getVirtualFiles() {
-    var _this$vm$runtime5;
+    var _this$vm$runtime6;
     Object(_workspaceRangeTools__WEBPACK_IMPORTED_MODULE_2__["repairListVariableValues"])(this.vm);
-    const targets = Array.isArray((_this$vm$runtime5 = this.vm.runtime) === null || _this$vm$runtime5 === void 0 ? void 0 : _this$vm$runtime5.targets) ? this.vm.runtime.targets : [];
+    const targets = Array.isArray((_this$vm$runtime6 = this.vm.runtime) === null || _this$vm$runtime6 === void 0 ? void 0 : _this$vm$runtime6.targets) ? this.vm.runtime.targets : [];
     const pathByTargetId = this._getVirtualPathMapForTargets(targets);
     const scriptEntries = targets.map(target => {
       const path = this._getVirtualPathForTarget(target, pathByTargetId);
@@ -79659,7 +79959,7 @@ class AITools {
       const info = this.getBlockInfo(block.opcode);
       const type = String((info === null || info === void 0 ? void 0 : info.type) || (info === null || info === void 0 ? void 0 : info.blockType) || "").toLowerCase();
       if (type.includes("boolean") || type.includes("predicate")) return true;
-    } catch (_unused2) {
+    } catch (_unused3) {
       // Fall through to opcode heuristics.
     }
     return /^operator_(lt|gt|equals|and|or|not)$/.test(String(block.opcode)) || /^sensing_.*(touching|color|keypressed|mousedown|loud)$/.test(String(block.opcode)) || /^data_listcontainsitem$/.test(String(block.opcode));
@@ -80066,18 +80366,18 @@ class AITools {
     return diagnostics;
   }
   _validateVirtualCostumeFile(entry, content) {
-    var _this$vm$runtime6, _this$vm$runtime6$get;
+    var _this$vm$runtime7, _this$vm$runtime7$get;
     const errors = validateSvgText(content);
-    const target = entry.targetId ? (_this$vm$runtime6 = this.vm.runtime) === null || _this$vm$runtime6 === void 0 ? void 0 : (_this$vm$runtime6$get = _this$vm$runtime6.getTargetById) === null || _this$vm$runtime6$get === void 0 ? void 0 : _this$vm$runtime6$get.call(_this$vm$runtime6, entry.targetId) : null;
+    const target = entry.targetId ? (_this$vm$runtime7 = this.vm.runtime) === null || _this$vm$runtime7 === void 0 ? void 0 : (_this$vm$runtime7$get = _this$vm$runtime7.getTargetById) === null || _this$vm$runtime7$get === void 0 ? void 0 : _this$vm$runtime7$get.call(_this$vm$runtime7, entry.targetId) : null;
     const canvasSize = getSvgCanvasSize(content);
     const warnings = entry.dataFormat && entry.dataFormat !== "svg" ? [{
       line: 1,
       message: "Original costume format was ".concat(entry.dataFormat, "; successful writeback will convert it to SVG with embedded image data.")
     }] : [];
     if (target !== null && target !== void 0 && target.isStage && canvasSize) {
-      var _this$vm$runtime7, _this$vm$runtime8;
-      const stageWidth = Number(((_this$vm$runtime7 = this.vm.runtime) === null || _this$vm$runtime7 === void 0 ? void 0 : _this$vm$runtime7.stageWidth) || 480);
-      const stageHeight = Number(((_this$vm$runtime8 = this.vm.runtime) === null || _this$vm$runtime8 === void 0 ? void 0 : _this$vm$runtime8.stageHeight) || 360);
+      var _this$vm$runtime8, _this$vm$runtime9;
+      const stageWidth = Number(((_this$vm$runtime8 = this.vm.runtime) === null || _this$vm$runtime8 === void 0 ? void 0 : _this$vm$runtime8.stageWidth) || 480);
+      const stageHeight = Number(((_this$vm$runtime9 = this.vm.runtime) === null || _this$vm$runtime9 === void 0 ? void 0 : _this$vm$runtime9.stageHeight) || 360);
       if (Math.abs(canvasSize.width - stageWidth) > 0.01 || Math.abs(canvasSize.height - stageHeight) > 0.01) {
         warnings.push({
           line: 1,
@@ -80163,6 +80463,27 @@ class AITools {
     const detailText = Object.values(details).some(Boolean) ? " ".concat(JSON.stringify(details).slice(0, 800)) : "";
     return "".concat(action, " script ").concat(scriptId, ": ").concat((result === null || result === void 0 ? void 0 : result.error) || "unknown error", ".").concat(detailText);
   }
+  _summarizeSyncResult(result) {
+    return {
+      path: result === null || result === void 0 ? void 0 : result.path,
+      targetId: result === null || result === void 0 ? void 0 : result.targetId,
+      costumeIndex: result === null || result === void 0 ? void 0 : result.costumeIndex,
+      costumeName: result === null || result === void 0 ? void 0 : result.costumeName,
+      operationCount: Number(result === null || result === void 0 ? void 0 : result.operationCount) || 0,
+      operations: Array.isArray(result === null || result === void 0 ? void 0 : result.operations) ? result.operations.map(operation => {
+        var _operation$result, _operation$result2, _operation$result3;
+        return {
+          type: operation === null || operation === void 0 ? void 0 : operation.type,
+          scriptId: operation === null || operation === void 0 ? void 0 : operation.scriptId,
+          syncMode: operation === null || operation === void 0 ? void 0 : (_operation$result = operation.result) === null || _operation$result === void 0 ? void 0 : _operation$result.syncMode,
+          blockCount: operation === null || operation === void 0 ? void 0 : (_operation$result2 = operation.result) === null || _operation$result2 === void 0 ? void 0 : _operation$result2.blockCount,
+          warningCount: Array.isArray(operation === null || operation === void 0 ? void 0 : (_operation$result3 = operation.result) === null || _operation$result3 === void 0 ? void 0 : _operation$result3.warnings) ? operation.result.warnings.length : undefined
+        };
+      }) : [],
+      rotationCenterX: result === null || result === void 0 ? void 0 : result.rotationCenterX,
+      rotationCenterY: result === null || result === void 0 ? void 0 : result.rotationCenterY
+    };
+  }
   async _syncVirtualTargetFile(entry, oldContent, newContent) {
     const oldSections = extractVirtualScriptSections(oldContent);
     const newSections = extractVirtualScriptSections(newContent);
@@ -80236,7 +80557,7 @@ class AITools {
     };
   }
   async _syncVirtualCostumeFile(entry, _oldContent, newContent) {
-    var _target$sprite4, _target$sprite4$costu, _costume$size3, _costume$size4, _this$vm$emitTargetsU, _this$vm2, _this$vm$runtime$emit, _this$vm$runtime9;
+    var _target$sprite4, _target$sprite4$costu, _costume$size3, _costume$size4, _this$vm$emitTargetsU, _this$vm2, _this$vm$runtime$emit, _this$vm$runtime0;
     const target = entry.targetId ? this.vm.runtime.getTargetById(entry.targetId) : null;
     const costume = typeof entry.costumeIndex === "number" ? target === null || target === void 0 ? void 0 : (_target$sprite4 = target.sprite) === null || _target$sprite4 === void 0 ? void 0 : (_target$sprite4$costu = _target$sprite4.costumes) === null || _target$sprite4$costu === void 0 ? void 0 : _target$sprite4$costu[entry.costumeIndex] : null;
     if (!target || !costume) {
@@ -80252,7 +80573,7 @@ class AITools {
     const rotationCenterY = inferredCenter[1];
     this._applySvgToCostumeObject(costume, newContent, rotationCenterX, rotationCenterY);
     (_this$vm$emitTargetsU = (_this$vm2 = this.vm).emitTargetsUpdate) === null || _this$vm$emitTargetsU === void 0 ? void 0 : _this$vm$emitTargetsU.call(_this$vm2);
-    (_this$vm$runtime$emit = (_this$vm$runtime9 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit === void 0 ? void 0 : _this$vm$runtime$emit.call(_this$vm$runtime9);
+    (_this$vm$runtime$emit = (_this$vm$runtime0 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit === void 0 ? void 0 : _this$vm$runtime$emit.call(_this$vm$runtime0);
     return {
       path: entry.path,
       targetId: target.id,
@@ -80312,6 +80633,166 @@ class AITools {
       truncated,
       note: truncated ? "File has ".concat(lines.length, " total lines. Showing lines ").concat(start, "-").concat(end, " by default to keep tool output manageable. To read more, call readFile again with startLine and endLine.") : undefined,
       content: lines.slice(start - 1, end).join("\n")
+    };
+  }
+  readVariable(options) {
+    const _this$_resolveDataVar = this._resolveDataVariable(_objectSpread(_objectSpread({}, options), {}, {
+        type: "variable"
+      })),
+      target = _this$_resolveDataVar.target,
+      variable = _this$_resolveDataVar.variable,
+      error = _this$_resolveDataVar.error;
+    if (!target || !variable) return {
+      success: false,
+      error
+    };
+    const value = variable.value;
+    const startChar = Math.max(0, Math.floor(Number(options === null || options === void 0 ? void 0 : options.startChar) || 0));
+    const hasRange = (options === null || options === void 0 ? void 0 : options.startChar) !== undefined || (options === null || options === void 0 ? void 0 : options.endChar) !== undefined;
+    if (typeof value === "string") {
+      const endChar = Math.min(value.length, Math.floor(Number(options === null || options === void 0 ? void 0 : options.endChar) || (hasRange ? value.length : PREVIEW_STRING_MAX_CHARS)));
+      return {
+        success: true,
+        targetId: target.id,
+        targetName: this._getTargetName(target),
+        id: variable.id,
+        name: variable.name,
+        type: "variable",
+        valueType: "string",
+        length: value.length,
+        startChar,
+        endChar,
+        value: value.slice(startChar, endChar),
+        truncated: endChar < value.length || startChar > 0,
+        isCloud: Boolean(variable.isCloud)
+      };
+    }
+    return {
+      success: true,
+      targetId: target.id,
+      targetName: this._getTargetName(target),
+      id: variable.id,
+      name: variable.name,
+      type: "variable",
+      valueType: typeof value,
+      value: previewValue(value),
+      truncated: false,
+      isCloud: Boolean(variable.isCloud)
+    };
+  }
+  readListSlice(options) {
+    const _this$_resolveDataVar2 = this._resolveDataVariable(_objectSpread(_objectSpread({}, options), {}, {
+        type: "list"
+      })),
+      target = _this$_resolveDataVar2.target,
+      variable = _this$_resolveDataVar2.variable,
+      error = _this$_resolveDataVar2.error;
+    if (!target || !variable) return {
+      success: false,
+      error
+    };
+    const value = Array.isArray(variable.value) ? variable.value : [];
+    const start = Math.max(0, Math.floor(Number(options === null || options === void 0 ? void 0 : options.start) || 0));
+    const requestedCount = Math.floor(Number(options === null || options === void 0 ? void 0 : options.count) || 100);
+    const count = Math.max(0, Math.min(DATA_SLICE_MAX_COUNT, requestedCount));
+    const end = Math.min(value.length, start + count);
+    return {
+      success: true,
+      targetId: target.id,
+      targetName: this._getTargetName(target),
+      id: variable.id,
+      name: variable.name,
+      type: "list",
+      length: value.length,
+      start,
+      count: end - start,
+      maxCount: DATA_SLICE_MAX_COUNT,
+      items: value.slice(start, end).map(item => previewValue(item)),
+      truncated: end < value.length
+    };
+  }
+  searchList(options) {
+    const _this$_resolveDataVar3 = this._resolveDataVariable(_objectSpread(_objectSpread({}, options), {}, {
+        type: "list"
+      })),
+      target = _this$_resolveDataVar3.target,
+      variable = _this$_resolveDataVar3.variable,
+      error = _this$_resolveDataVar3.error;
+    if (!target || !variable) return {
+      success: false,
+      error
+    };
+    const query = String((options === null || options === void 0 ? void 0 : options.query) || "");
+    if (!query) return {
+      success: false,
+      error: "query is required."
+    };
+    const value = Array.isArray(variable.value) ? variable.value : [];
+    const start = Math.max(0, Math.floor(Number(options === null || options === void 0 ? void 0 : options.start) || 0));
+    const limit = Math.max(1, Math.min(100, Math.floor(Number(options === null || options === void 0 ? void 0 : options.limit) || 20)));
+    const maxVisited = Math.max(1, Math.min(DATA_SEARCH_MAX_VISITED, Math.floor(Number(options === null || options === void 0 ? void 0 : options.maxVisited) || DATA_SEARCH_MAX_VISITED)));
+    const matches = [];
+    const queryLower = query.toLowerCase();
+    const end = Math.min(value.length, start + maxVisited);
+    for (let index = start; index < end && matches.length < limit; index++) {
+      const item = value[index];
+      if (String(item).toLowerCase().includes(queryLower)) {
+        matches.push({
+          index,
+          value: previewValue(item)
+        });
+      }
+    }
+    return {
+      success: true,
+      targetId: target.id,
+      targetName: this._getTargetName(target),
+      id: variable.id,
+      name: variable.name,
+      length: value.length,
+      query,
+      start,
+      visited: end - start,
+      limit,
+      matches,
+      truncated: end < value.length && matches.length < limit
+    };
+  }
+  getDataSummary(options) {
+    var _this$vm$runtime1;
+    const target = options !== null && options !== void 0 && options.targetId || options !== null && options !== void 0 && options.targetName ? this._resolveTarget(options.targetId, options.targetName) : null;
+    const targets = target ? [target] : Array.isArray((_this$vm$runtime1 = this.vm.runtime) === null || _this$vm$runtime1 === void 0 ? void 0 : _this$vm$runtime1.targets) ? this.vm.runtime.targets : [];
+    const requestedNames = new Set((Array.isArray(options === null || options === void 0 ? void 0 : options.names) ? options.names : []).map(name => String(name).trim().toLowerCase()).filter(Boolean));
+    const sampleCount = Math.max(1, Math.min(100, Math.floor(Number(options === null || options === void 0 ? void 0 : options.sampleCount) || LIST_PREVIEW_ITEM_COUNT)));
+    return {
+      success: true,
+      sampleCount,
+      targets: targets.map(itemTarget => {
+        const values = Object.values((itemTarget === null || itemTarget === void 0 ? void 0 : itemTarget.variables) || {}).filter(item => {
+          if (requestedNames.size === 0) return true;
+          return requestedNames.has(String((item === null || item === void 0 ? void 0 : item.name) || "").trim().toLowerCase());
+        });
+        return {
+          targetId: itemTarget.id,
+          targetName: this._getTargetName(itemTarget),
+          variables: values.filter(item => !Array.isArray(item === null || item === void 0 ? void 0 : item.value) && (item === null || item === void 0 ? void 0 : item.type) !== "list").map(item => ({
+            id: item.id,
+            name: item.name,
+            valueType: typeof item.value,
+            preview: previewValue(item.value)
+          })),
+          lists: values.filter(item => Array.isArray(item === null || item === void 0 ? void 0 : item.value) || (item === null || item === void 0 ? void 0 : item.type) === "list").map(item => {
+            const list = Array.isArray(item.value) ? item.value : [];
+            return {
+              id: item.id,
+              name: item.name,
+              length: list.length,
+              first: list.slice(0, sampleCount).map(value => previewValue(value)),
+              last: list.slice(Math.max(0, list.length - sampleCount)).map(value => previewValue(value))
+            };
+          })
+        };
+      })
     };
   }
   searchFiles(options) {
@@ -80433,7 +80914,9 @@ class AITools {
         diagnostics: validationResults
       };
     }
-    const snapshot = typeof ((_this$vm3 = this.vm) === null || _this$vm3 === void 0 ? void 0 : _this$vm3.toJSON) === "function" ? this.vm.toJSON() : "";
+    const sizeProfile = this._getProjectSizeProfile(entries);
+    const useFullSnapshot = sizeProfile.isSmall && typeof ((_this$vm3 = this.vm) === null || _this$vm3 === void 0 ? void 0 : _this$vm3.toJSON) === "function";
+    const snapshot = useFullSnapshot ? this.vm.toJSON() : "";
     const syncResults = [];
     try {
       for (const entry of changedEntries) {
@@ -80441,19 +80924,25 @@ class AITools {
         syncResults.push(result);
       }
     } catch (error) {
-      await this._restoreProjectSnapshot(snapshot);
+      if (snapshot) {
+        await this._restoreProjectSnapshot(snapshot);
+      }
       changedEntries.forEach(entry => {
         if (entry.kind === "costume") {
           this.draftContentByPath.set(entry.path, nextContentByPath.get(entry.path) || "");
         }
       });
       const costumeDraftSaved = changedEntries.some(entry => entry.kind === "costume");
+      const largeProjectNote = sizeProfile.isSmall ? undefined : "Large runtime data detected; full project rollback and verbose sync results were skipped to avoid oversized serialization.";
       return {
         success: false,
-        error: costumeDraftSaved ? "".concat(error instanceof Error ? error.message : "Failed to apply virtual file changes", ". Invalid costume drafts were saved in 02Agent memory when possible; script changes were discarded.") : error instanceof Error ? error.message : "Failed to apply virtual file changes",
+        mode: sizeProfile.isSmall ? "full" : "large-project",
+        sizeProfile,
+        error: costumeDraftSaved ? "".concat(error instanceof Error ? error.message : "Failed to apply virtual file changes", ". Invalid costume drafts were saved in 02Agent memory when possible; script changes before the failed operation may already be applied.") : error instanceof Error ? error.message : "Failed to apply virtual file changes",
         rolledBack: Boolean(snapshot),
         draftSaved: costumeDraftSaved,
-        syncResults
+        syncResults: sizeProfile.isSmall ? syncResults : syncResults.map(result => this._summarizeSyncResult(result)),
+        note: largeProjectNote
       };
     }
     const scriptOperationCount = syncResults.reduce((sum, item) => sum + item.operationCount, 0);
@@ -80461,24 +80950,29 @@ class AITools {
     if (changedTargetEntries.length > 0 && scriptOperationCount === 0) {
       return {
         success: false,
+        mode: sizeProfile.isSmall ? "full" : "large-project",
+        sizeProfile,
         error: "Patch changed virtual file text but did not add, delete, or modify any // @script sections. Header-only changes are ignored.",
         changedFiles: changedEntries.map(entry => entry.path),
-        syncResults,
+        syncResults: sizeProfile.isSmall ? syncResults : syncResults.map(result => this._summarizeSyncResult(result)),
         diagnostics: validationResults
       };
     }
     return {
       success: true,
+      mode: sizeProfile.isSmall ? "full" : "large-project",
+      sizeProfile,
       changedFiles: changedEntries.map(entry => entry.path),
       fileCount: changedEntries.length,
       scriptOperationCount,
-      syncResults,
-      diagnostics: validationResults
+      syncResults: sizeProfile.isSmall ? syncResults : syncResults.map(result => this._summarizeSyncResult(result)),
+      diagnostics: validationResults,
+      note: sizeProfile.isSmall ? undefined : "Large runtime data detected; applyPatch used compact output and skipped full project snapshot serialization."
     };
   }
   listTargets() {
-    var _this$vm$runtime0;
-    const targets = Array.isArray((_this$vm$runtime0 = this.vm.runtime) === null || _this$vm$runtime0 === void 0 ? void 0 : _this$vm$runtime0.targets) ? this.vm.runtime.targets : [];
+    var _this$vm$runtime10;
+    const targets = Array.isArray((_this$vm$runtime10 = this.vm.runtime) === null || _this$vm$runtime10 === void 0 ? void 0 : _this$vm$runtime10.targets) ? this.vm.runtime.targets : [];
     return targets.map(target => {
       var _target$getName2, _target$sprite5, _this$vm$editingTarge;
       return {
@@ -80498,7 +80992,7 @@ class AITools {
     });
   }
   updateSpriteProperties(options) {
-    var _this$vm$emitTargetsU2, _this$vm4, _this$vm$emitWorkspac, _this$vm5, _this$vm$runtime1, _this$vm$runtime1$emi;
+    var _this$vm$emitTargetsU2, _this$vm4, _this$vm$emitWorkspac, _this$vm5, _this$vm$runtime11, _this$vm$runtime11$em;
     const target = this._resolveTarget(options === null || options === void 0 ? void 0 : options.targetId, options === null || options === void 0 ? void 0 : options.targetName);
     if (!target) {
       return {
@@ -80563,7 +81057,7 @@ class AITools {
     }
     (_this$vm$emitTargetsU2 = (_this$vm4 = this.vm).emitTargetsUpdate) === null || _this$vm$emitTargetsU2 === void 0 ? void 0 : _this$vm$emitTargetsU2.call(_this$vm4);
     (_this$vm$emitWorkspac = (_this$vm5 = this.vm).emitWorkspaceUpdate) === null || _this$vm$emitWorkspac === void 0 ? void 0 : _this$vm$emitWorkspac.call(_this$vm5);
-    (_this$vm$runtime1 = this.vm.runtime) === null || _this$vm$runtime1 === void 0 ? void 0 : (_this$vm$runtime1$emi = _this$vm$runtime1.emitProjectChanged) === null || _this$vm$runtime1$emi === void 0 ? void 0 : _this$vm$runtime1$emi.call(_this$vm$runtime1);
+    (_this$vm$runtime11 = this.vm.runtime) === null || _this$vm$runtime11 === void 0 ? void 0 : (_this$vm$runtime11$em = _this$vm$runtime11.emitProjectChanged) === null || _this$vm$runtime11$em === void 0 ? void 0 : _this$vm$runtime11$em.call(_this$vm$runtime11);
     return {
       success: true,
       targetId: target.id,
@@ -80581,8 +81075,8 @@ class AITools {
     };
   }
   listCostumes(options) {
-    var _this$vm$runtime10;
-    const targets = options !== null && options !== void 0 && options.targetId || options !== null && options !== void 0 && options.targetName ? [this._resolveTarget(options === null || options === void 0 ? void 0 : options.targetId, options === null || options === void 0 ? void 0 : options.targetName)].filter(Boolean) : Array.isArray((_this$vm$runtime10 = this.vm.runtime) === null || _this$vm$runtime10 === void 0 ? void 0 : _this$vm$runtime10.targets) ? this.vm.runtime.targets : [];
+    var _this$vm$runtime12;
+    const targets = options !== null && options !== void 0 && options.targetId || options !== null && options !== void 0 && options.targetName ? [this._resolveTarget(options === null || options === void 0 ? void 0 : options.targetId, options === null || options === void 0 ? void 0 : options.targetName)].filter(Boolean) : Array.isArray((_this$vm$runtime12 = this.vm.runtime) === null || _this$vm$runtime12 === void 0 ? void 0 : _this$vm$runtime12.targets) ? this.vm.runtime.targets : [];
     return {
       success: true,
       targets: targets.map(target => {
@@ -80613,7 +81107,7 @@ class AITools {
     };
   }
   async addCostumeWithSvg(options) {
-    var _this$vm$runtime11, _this$vm$runtime12, _this$vm$editingTarge2, _target$sprite7, _this$vm$runtime13;
+    var _this$vm$runtime13, _this$vm$runtime14, _this$vm$editingTarge2, _target$sprite7, _this$vm$runtime15;
     const target = this._resolveTarget(options === null || options === void 0 ? void 0 : options.targetId, options === null || options === void 0 ? void 0 : options.targetName);
     if (!target) {
       return {
@@ -80630,8 +81124,8 @@ class AITools {
         errors
       };
     }
-    const storage = (_this$vm$runtime11 = this.vm.runtime) === null || _this$vm$runtime11 === void 0 ? void 0 : _this$vm$runtime11.storage;
-    const renderer = (_this$vm$runtime12 = this.vm.runtime) === null || _this$vm$runtime12 === void 0 ? void 0 : _this$vm$runtime12.renderer;
+    const storage = (_this$vm$runtime13 = this.vm.runtime) === null || _this$vm$runtime13 === void 0 ? void 0 : _this$vm$runtime13.storage;
+    const renderer = (_this$vm$runtime14 = this.vm.runtime) === null || _this$vm$runtime14 === void 0 ? void 0 : _this$vm$runtime14.renderer;
     if (!storage || !renderer || typeof target.addCostume !== "function") {
       return {
         success: false,
@@ -80661,9 +81155,9 @@ class AITools {
     const previousEditingTargetId = (_this$vm$editingTarge2 = this.vm.editingTarget) === null || _this$vm$editingTarge2 === void 0 ? void 0 : _this$vm$editingTarge2.id;
     const previousCostumeIndex = Number(target.currentCostume) || 0;
     const previousCostume = Array.isArray((_target$sprite7 = target.sprite) === null || _target$sprite7 === void 0 ? void 0 : _target$sprite7.costumes) ? target.sprite.costumes[previousCostumeIndex] : null;
-    const targetIdsBefore = new Set((Array.isArray((_this$vm$runtime13 = this.vm.runtime) === null || _this$vm$runtime13 === void 0 ? void 0 : _this$vm$runtime13.targets) ? this.vm.runtime.targets : []).map(runtimeTarget => runtimeTarget === null || runtimeTarget === void 0 ? void 0 : runtimeTarget.id).filter(Boolean));
+    const targetIdsBefore = new Set((Array.isArray((_this$vm$runtime15 = this.vm.runtime) === null || _this$vm$runtime15 === void 0 ? void 0 : _this$vm$runtime15.targets) ? this.vm.runtime.targets : []).map(runtimeTarget => runtimeTarget === null || runtimeTarget === void 0 ? void 0 : runtimeTarget.id).filter(Boolean));
     try {
-      var _target$sprite8, _this$vm$emitTargetsU3, _this$vm6, _this$vm$runtime$emit2, _this$vm$runtime14, _this$vm$runtime15;
+      var _target$sprite8, _this$vm$emitTargetsU3, _this$vm6, _this$vm$runtime$emit2, _this$vm$runtime16, _this$vm$runtime17;
       const requestedInsertIndex = Number.isFinite(options === null || options === void 0 ? void 0 : options.insertIndex) ? Math.max(0, Math.floor(Number(options === null || options === void 0 ? void 0 : options.insertIndex))) : null;
       target.addCostume(costume, requestedInsertIndex === null ? undefined : requestedInsertIndex);
       const finalIndex = Array.isArray((_target$sprite8 = target.sprite) === null || _target$sprite8 === void 0 ? void 0 : _target$sprite8.costumes) ? target.sprite.costumes.indexOf(costume) : -1;
@@ -80676,8 +81170,8 @@ class AITools {
         (_target$setCostume3 = target.setCostume) === null || _target$setCostume3 === void 0 ? void 0 : _target$setCostume3.call(target, finalIndex);
       }
       (_this$vm$emitTargetsU3 = (_this$vm6 = this.vm).emitTargetsUpdate) === null || _this$vm$emitTargetsU3 === void 0 ? void 0 : _this$vm$emitTargetsU3.call(_this$vm6);
-      (_this$vm$runtime$emit2 = (_this$vm$runtime14 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit2 === void 0 ? void 0 : _this$vm$runtime$emit2.call(_this$vm$runtime14);
-      const unexpectedTargets = (Array.isArray((_this$vm$runtime15 = this.vm.runtime) === null || _this$vm$runtime15 === void 0 ? void 0 : _this$vm$runtime15.targets) ? this.vm.runtime.targets : []).filter(runtimeTarget => (runtimeTarget === null || runtimeTarget === void 0 ? void 0 : runtimeTarget.id) && !targetIdsBefore.has(runtimeTarget.id));
+      (_this$vm$runtime$emit2 = (_this$vm$runtime16 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit2 === void 0 ? void 0 : _this$vm$runtime$emit2.call(_this$vm$runtime16);
+      const unexpectedTargets = (Array.isArray((_this$vm$runtime17 = this.vm.runtime) === null || _this$vm$runtime17 === void 0 ? void 0 : _this$vm$runtime17.targets) ? this.vm.runtime.targets : []).filter(runtimeTarget => (runtimeTarget === null || runtimeTarget === void 0 ? void 0 : runtimeTarget.id) && !targetIdsBefore.has(runtimeTarget.id));
       const removedUnexpectedTargets = [];
       for (const unexpectedTarget of unexpectedTargets) {
         if (!(unexpectedTarget !== null && unexpectedTarget !== void 0 && unexpectedTarget.isStage) && typeof this.vm.deleteSprite === "function") {
@@ -80747,7 +81241,7 @@ class AITools {
     const previousCostumeIndex = Number(target.currentCostume) || 0;
     const added = [];
     try {
-      var _target$sprite0, _this$vm$emitTargetsU4, _this$vm9, _this$vm$runtime$emit3, _this$vm$runtime16;
+      var _target$sprite0, _this$vm$emitTargetsU4, _this$vm9, _this$vm$runtime$emit3, _this$vm$runtime18;
       for (const _ref24 of costumes.entries()) {
         var _ref25 = _slicedToArray(_ref24, 2);
         const index = _ref25[0];
@@ -80775,7 +81269,7 @@ class AITools {
         (_target$setCostume5 = target.setCostume) === null || _target$setCostume5 === void 0 ? void 0 : _target$setCostume5.call(target, finalCostumes.length - 1);
       }
       (_this$vm$emitTargetsU4 = (_this$vm9 = this.vm).emitTargetsUpdate) === null || _this$vm$emitTargetsU4 === void 0 ? void 0 : _this$vm$emitTargetsU4.call(_this$vm9);
-      (_this$vm$runtime$emit3 = (_this$vm$runtime16 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit3 === void 0 ? void 0 : _this$vm$runtime$emit3.call(_this$vm$runtime16);
+      (_this$vm$runtime$emit3 = (_this$vm$runtime18 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit3 === void 0 ? void 0 : _this$vm$runtime$emit3.call(_this$vm$runtime18);
       return {
         success: true,
         targetId: target.id,
@@ -80798,7 +81292,7 @@ class AITools {
     }
   }
   deleteCostume(options) {
-    var _target$sprite1, _target$sprite1$costu, _target$deleteCostume, _this$vm$emitTargetsU5, _this$vm0, _this$vm$runtime$emit4, _this$vm$runtime17, _target$sprite10;
+    var _target$sprite1, _target$sprite1$costu, _target$deleteCostume, _this$vm$emitTargetsU5, _this$vm0, _this$vm$runtime$emit4, _this$vm$runtime19, _target$sprite10;
     const target = this._resolveTarget(options === null || options === void 0 ? void 0 : options.targetId, options === null || options === void 0 ? void 0 : options.targetName);
     if (!target) {
       return {
@@ -80822,7 +81316,7 @@ class AITools {
       };
     }
     (_this$vm$emitTargetsU5 = (_this$vm0 = this.vm).emitTargetsUpdate) === null || _this$vm$emitTargetsU5 === void 0 ? void 0 : _this$vm$emitTargetsU5.call(_this$vm0);
-    (_this$vm$runtime$emit4 = (_this$vm$runtime17 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit4 === void 0 ? void 0 : _this$vm$runtime$emit4.call(_this$vm$runtime17);
+    (_this$vm$runtime$emit4 = (_this$vm$runtime19 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit4 === void 0 ? void 0 : _this$vm$runtime$emit4.call(_this$vm$runtime19);
     return {
       success: true,
       targetId: target.id,
@@ -80833,7 +81327,7 @@ class AITools {
     };
   }
   batchDeleteCostumes(options) {
-    var _target$sprite11, _this$vm$emitTargetsU6, _this$vm1, _this$vm$runtime$emit5, _this$vm$runtime18, _target$sprite13;
+    var _target$sprite11, _this$vm$emitTargetsU6, _this$vm1, _this$vm$runtime$emit5, _this$vm$runtime20, _target$sprite13;
     const target = this._resolveTarget(options === null || options === void 0 ? void 0 : options.targetId, options === null || options === void 0 ? void 0 : options.targetName);
     if (!target) {
       return {
@@ -80876,7 +81370,7 @@ class AITools {
       }
     }
     (_this$vm$emitTargetsU6 = (_this$vm1 = this.vm).emitTargetsUpdate) === null || _this$vm$emitTargetsU6 === void 0 ? void 0 : _this$vm$emitTargetsU6.call(_this$vm1);
-    (_this$vm$runtime$emit5 = (_this$vm$runtime18 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit5 === void 0 ? void 0 : _this$vm$runtime$emit5.call(_this$vm$runtime18);
+    (_this$vm$runtime$emit5 = (_this$vm$runtime20 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit5 === void 0 ? void 0 : _this$vm$runtime$emit5.call(_this$vm$runtime20);
     const remainingCostumes = Array.isArray((_target$sprite13 = target.sprite) === null || _target$sprite13 === void 0 ? void 0 : _target$sprite13.costumes) ? target.sprite.costumes : [];
     return {
       success: true,
@@ -80928,7 +81422,7 @@ class AITools {
     };
   }
   setCostumeOrder(options) {
-    var _target$sprite15, _this$vm$emitTargetsU7, _this$vm11, _this$vm$runtime$emit6, _this$vm$runtime19;
+    var _target$sprite15, _this$vm$emitTargetsU7, _this$vm11, _this$vm$runtime$emit6, _this$vm$runtime21;
     const target = this._resolveTarget(options === null || options === void 0 ? void 0 : options.targetId, options === null || options === void 0 ? void 0 : options.targetName);
     if (!target) {
       return {
@@ -80959,7 +81453,7 @@ class AITools {
       (_target$setCostume6 = target.setCostume) === null || _target$setCostume6 === void 0 ? void 0 : _target$setCostume6.call(target, nextCurrentIndex);
     }
     (_this$vm$emitTargetsU7 = (_this$vm11 = this.vm).emitTargetsUpdate) === null || _this$vm$emitTargetsU7 === void 0 ? void 0 : _this$vm$emitTargetsU7.call(_this$vm11);
-    (_this$vm$runtime$emit6 = (_this$vm$runtime19 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit6 === void 0 ? void 0 : _this$vm$runtime$emit6.call(_this$vm$runtime19);
+    (_this$vm$runtime$emit6 = (_this$vm$runtime21 = this.vm.runtime).emitProjectChanged) === null || _this$vm$runtime$emit6 === void 0 ? void 0 : _this$vm$runtime$emit6.call(_this$vm$runtime21);
     return {
       success: true,
       targetId: target.id,
@@ -81232,8 +81726,8 @@ class AITools {
     const targets = targetId ? [this._getTarget(targetId)].filter(Boolean) : this.listTargets().map(item => this._getTarget(item.id));
     const matches = [];
     for (const target of targets) {
-      var _target$blocks4;
-      if (!(target !== null && target !== void 0 && (_target$blocks4 = target.blocks) !== null && _target$blocks4 !== void 0 && _target$blocks4._blocks)) {
+      var _target$blocks5;
+      if (!(target !== null && target !== void 0 && (_target$blocks5 = target.blocks) !== null && _target$blocks5 !== void 0 && _target$blocks5._blocks)) {
         continue;
       }
       const blocks = target.blocks._blocks;
@@ -81465,10 +81959,10 @@ class AITools {
     if (!field || typeof field.getOptions !== "function") return null;
     try {
       return this._normalizeMenuOptions(field.getOptions(false));
-    } catch (_unused3) {
+    } catch (_unused4) {
       try {
         return this._normalizeMenuOptions(field.getOptions());
-      } catch (_unused4) {
+      } catch (_unused5) {
         return null;
       }
     }
@@ -81514,7 +82008,7 @@ class AITools {
           let defaultValue;
           try {
             defaultValue = typeof field.getValue === "function" ? field.getValue() : undefined;
-          } catch (_unused5) {
+          } catch (_unused6) {
             defaultValue = undefined;
           }
           const fieldName = String((field === null || field === void 0 ? void 0 : field.name) || preferredFieldName || "");
@@ -81532,20 +82026,20 @@ class AITools {
         }
       }
       return firstMeta;
-    } catch (_unused6) {
+    } catch (_unused7) {
       return null;
     } finally {
       try {
         var _block2, _block2$dispose;
         (_block2 = block) === null || _block2 === void 0 ? void 0 : (_block2$dispose = _block2.dispose) === null || _block2$dispose === void 0 ? void 0 : _block2$dispose.call(_block2);
-      } catch (_unused7) {
+      } catch (_unused8) {
         // ignore temp block disposal failures
       }
       if (ownsWorkspace) {
         try {
           var _workspace$dispose;
           (_workspace$dispose = workspace.dispose) === null || _workspace$dispose === void 0 ? void 0 : _workspace$dispose.call(workspace);
-        } catch (_unused8) {
+        } catch (_unused9) {
           // ignore temp workspace disposal failures
         }
       }
@@ -81689,7 +82183,7 @@ class AITools {
         let defaultValue;
         try {
           defaultValue = typeof field.getValue === "function" ? field.getValue() : undefined;
-        } catch (_unused9) {
+        } catch (_unused0) {
           defaultValue = undefined;
         }
         return {
@@ -81835,7 +82329,7 @@ class AITools {
     let block = null;
     try {
       block = workspace.newBlock(opcode);
-    } catch (_unused0) {
+    } catch (_unused1) {
       return;
     }
     if (!block) return;
@@ -81862,7 +82356,7 @@ class AITools {
           let defaultValue;
           try {
             defaultValue = typeof field.getValue === "function" ? field.getValue() : undefined;
-          } catch (_unused1) {
+          } catch (_unused10) {
             defaultValue = undefined;
           }
           const hasMenu = typeof (field === null || field === void 0 ? void 0 : field.getOptions) === "function";
@@ -81917,14 +82411,14 @@ class AITools {
       try {
         var _block$dispose, _block3;
         (_block$dispose = (_block3 = block).dispose) === null || _block$dispose === void 0 ? void 0 : _block$dispose.call(_block3);
-      } catch (_unused10) {
+      } catch (_unused11) {
         // ignore temp block disposal failures
       }
       if (ownsWorkspace) {
         try {
           var _workspace$dispose2, _workspace;
           (_workspace$dispose2 = (_workspace = workspace).dispose) === null || _workspace$dispose2 === void 0 ? void 0 : _workspace$dispose2.call(_workspace);
-        } catch (_unused11) {
+        } catch (_unused12) {
           // ignore temp workspace disposal failures
         }
       }
@@ -81989,21 +82483,26 @@ class AITools {
     }
   }
   getProjectOverview() {
-    var _this$vm$runtime20, _this$vm$runtime21, _this$vm$runtime22, _this$vm$runtime22$io, _this$vm$runtime22$io2, _runtime$frameLoop, _runtime$runtimeOptio, _runtime$runtimeOptio2, _runtime$runtimeOptio3, _runtime$runtimeOptio4, _runtime$runtimeOptio5;
+    var _this$vm$runtime22, _this$vm$runtime23, _this$vm$runtime24, _this$vm$runtime24$io, _this$vm$runtime24$io2, _runtime$frameLoop, _runtime$runtimeOptio, _runtime$runtimeOptio2, _runtime$runtimeOptio3, _runtime$runtimeOptio4, _runtime$runtimeOptio5;
     const listRepairs = Object(_workspaceRangeTools__WEBPACK_IMPORTED_MODULE_2__["repairListVariableValues"])(this.vm);
-    const targets = Array.isArray((_this$vm$runtime20 = this.vm.runtime) === null || _this$vm$runtime20 === void 0 ? void 0 : _this$vm$runtime20.targets) ? this.vm.runtime.targets : [];
+    const targets = Array.isArray((_this$vm$runtime22 = this.vm.runtime) === null || _this$vm$runtime22 === void 0 ? void 0 : _this$vm$runtime22.targets) ? this.vm.runtime.targets : [];
     const virtualFiles = this._getVirtualFiles();
     const files = virtualFiles.filter(entry => entry.kind === "target");
     const costumeFiles = virtualFiles.filter(entry => entry.kind === "costume");
     const pathByTargetId = new Map(files.map(entry => [entry.targetId, entry.path]));
     const runtime = this.vm.runtime || {};
     const health = this._getDataHealth(targets, pathByTargetId, listRepairs);
+    const sizeProfile = this._getProjectSizeProfile(virtualFiles);
+    const overviewMode = sizeProfile.isSmall ? "full" : "indexed";
     return {
       success: true,
+      mode: overviewMode,
+      sizeProfile,
+      reason: sizeProfile.isSmall ? undefined : "Project has large runtime data; full variable/list values are omitted. Use readVariable, readListSlice, searchList, or getDataSummary for specific data slices.",
       project: {
         stageWidth: runtime.stageWidth,
         stageHeight: runtime.stageHeight,
-        turboMode: Boolean(((_this$vm$runtime21 = this.vm.runtime) === null || _this$vm$runtime21 === void 0 ? void 0 : _this$vm$runtime21.turboMode) || ((_this$vm$runtime22 = this.vm.runtime) === null || _this$vm$runtime22 === void 0 ? void 0 : (_this$vm$runtime22$io = _this$vm$runtime22.ioDevices) === null || _this$vm$runtime22$io === void 0 ? void 0 : (_this$vm$runtime22$io2 = _this$vm$runtime22$io.clock) === null || _this$vm$runtime22$io2 === void 0 ? void 0 : _this$vm$runtime22$io2.turboMode)),
+        turboMode: Boolean(((_this$vm$runtime23 = this.vm.runtime) === null || _this$vm$runtime23 === void 0 ? void 0 : _this$vm$runtime23.turboMode) || ((_this$vm$runtime24 = this.vm.runtime) === null || _this$vm$runtime24 === void 0 ? void 0 : (_this$vm$runtime24$io = _this$vm$runtime24.ioDevices) === null || _this$vm$runtime24$io === void 0 ? void 0 : (_this$vm$runtime24$io2 = _this$vm$runtime24$io.clock) === null || _this$vm$runtime24$io2 === void 0 ? void 0 : _this$vm$runtime24$io2.turboMode)),
         framerate: ((_runtime$frameLoop = runtime.frameLoop) === null || _runtime$frameLoop === void 0 ? void 0 : _runtime$frameLoop.framerate) || undefined,
         runtimeOptions: {
           maxClones: (_runtime$runtimeOptio = (_runtime$runtimeOptio2 = runtime.runtimeOptions) === null || _runtime$runtimeOptio2 === void 0 ? void 0 : _runtime$runtimeOptio2.maxClones) !== null && _runtime$runtimeOptio !== void 0 ? _runtime$runtimeOptio : runtime.maxClones,
@@ -82114,19 +82613,26 @@ class AITools {
           variables: values.filter(item => !Array.isArray(item === null || item === void 0 ? void 0 : item.value) && (item === null || item === void 0 ? void 0 : item.type) !== "list").map(item => ({
             id: item.id,
             name: item.name,
-            value: item.value,
+            value: sizeProfile.isSmall ? item.value : undefined,
+            preview: sizeProfile.isSmall ? undefined : previewValue(item.value),
+            valueType: typeof item.value,
+            length: typeof item.value === "string" ? item.value.length : undefined,
+            omitted: !sizeProfile.isSmall,
             isCloud: Boolean(item.isCloud)
           })),
           lists: values.filter(item => Array.isArray(item === null || item === void 0 ? void 0 : item.value) || (item === null || item === void 0 ? void 0 : item.type) === "list").map(item => ({
             id: item.id,
             name: item.name,
             length: Array.isArray(item.value) ? item.value.length : 0,
-            preview: Array.isArray(item.value) ? item.value.slice(0, 10) : []
+            preview: Array.isArray(item.value) ? item.value.slice(0, sizeProfile.isSmall ? Math.min(100, item.value.length) : LIST_PREVIEW_ITEM_COUNT).map(value => previewValue(value)) : [],
+            truncated: Array.isArray(item.value) && item.value.length > (sizeProfile.isSmall ? 100 : LIST_PREVIEW_ITEM_COUNT),
+            omitted: !sizeProfile.isSmall
           }))
         };
       }),
       health,
-      nextSteps: ["Use getScratchGuide for concise DSL patterns.", "Use searchBlocks for candidate opcodes.", "Use getBlockHelp before writing unfamiliar blocks.", 'For rendering, algorithms, or reusable parameterized logic, use getScratchGuide({ topic: "procedures" }) and prefer warp custom blocks over broadcast-only flows.']
+      availableDataTools: sizeProfile.isSmall ? ["readVariable", "readListSlice", "searchList", "getDataSummary"] : ["readVariable", "readListSlice", "searchList", "getDataSummary"],
+      nextSteps: ["Use getScratchGuide for concise DSL patterns.", "Use searchBlocks for candidate opcodes.", "Use getBlockHelp before writing unfamiliar blocks.", sizeProfile.isSmall ? "Small project mode: overview includes fuller data previews." : "Indexed mode: use readVariable/readListSlice/searchList/getDataSummary for specific variable or list slices before editing data-dependent scripts.", 'For rendering, algorithms, or reusable parameterized logic, use getScratchGuide({ topic: "procedures" }) and prefer warp custom blocks over broadcast-only flows.']
     };
   }
   getScratchGuide(topic) {
@@ -82281,7 +82787,7 @@ class AITools {
           notes: help.notes
         });
         seenOpcodes.add(opcode);
-      } catch (_unused12) {
+      } catch (_unused13) {
         matches.push({
           opcode,
           dslCall: this._toDslCallName(opcode),
@@ -82586,10 +83092,10 @@ class AITools {
     return false;
   }
   getWorkspaceUCF(targetId) {
-    var _target$blocks5;
+    var _target$blocks6;
     const target = targetId ? this.vm.runtime.getTargetById(targetId) : this.vm.editingTarget;
     if (!target) return "";
-    const blocks = (_target$blocks5 = target.blocks) === null || _target$blocks5 === void 0 ? void 0 : _target$blocks5._blocks;
+    const blocks = (_target$blocks6 = target.blocks) === null || _target$blocks6 === void 0 ? void 0 : _target$blocks6._blocks;
     if (!blocks) return "";
     const sequences = this._getTopLevelBlocks(blocks).map(block => this._collectStatementBlocks(blocks, block.id));
     return Object(_annotatedUcf__WEBPACK_IMPORTED_MODULE_1__["toAnnotatedUCF"])(sequences, this.vm.runtime);
@@ -82608,7 +83114,7 @@ class AITools {
           try {
             var _block$mutation5;
             return JSON.parse(((_block$mutation5 = block.mutation) === null || _block$mutation5 === void 0 ? void 0 : _block$mutation5.argumentids) || "[]");
-          } catch (_unused13) {
+          } catch (_unused14) {
             return [];
           }
         })(),
@@ -82616,7 +83122,7 @@ class AITools {
           try {
             var _block$mutation6;
             return JSON.parse(((_block$mutation6 = block.mutation) === null || _block$mutation6 === void 0 ? void 0 : _block$mutation6.argumentnames) || "[]");
-          } catch (_unused14) {
+          } catch (_unused15) {
             return [];
           }
         })(),
@@ -82624,7 +83130,7 @@ class AITools {
           try {
             var _block$mutation7;
             return JSON.parse(((_block$mutation7 = block.mutation) === null || _block$mutation7 === void 0 ? void 0 : _block$mutation7.argumentdefaults) || "[]");
-          } catch (_unused15) {
+          } catch (_unused16) {
             return [];
           }
         })(),
