@@ -64,7 +64,8 @@ class SB3Downloader extends React.Component {
             const content = await this.props.saveProjectSb3('arraybuffer');
             const contentWithGit = await appendGitDataToSb3(content, 'blob');
             this.finishedSaving();
-            downloadBlob(this.props.projectFilename, contentWithGit);
+            const blob = new Blob([contentWithGit], {type: 'application/octet-stream'});
+            downloadBlob(this.props.projectFilename, blob);
         } catch (e) {
             this.handleSaveError(e);
         }
