@@ -76535,8 +76535,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _ui_Theme_module_less__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_ui_Theme_module_less__WEBPACK_IMPORTED_MODULE_4__);
 /* harmony import */ var _ui_Shell_module_less__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./ui/Shell.module.less */ "./src/addons/addons/02agent/ui/Shell.module.less");
 /* harmony import */ var _ui_Shell_module_less__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_ui_Shell_module_less__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var components_Tooltip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! components/Tooltip */ "./src/addons/addons/02agent/shims/components/Tooltip.tsx");
-/* harmony import */ var components_ExpansionBox__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! components/ExpansionBox */ "./src/addons/addons/02agent/shims/components/ExpansionBox.tsx");
+/* harmony import */ var _shims_components_Tooltip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./shims/components/Tooltip */ "./src/addons/addons/02agent/shims/components/Tooltip.tsx");
+/* harmony import */ var _shims_components_ExpansionBox_tsx__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./shims/components/ExpansionBox.tsx */ "./src/addons/addons/02agent/shims/components/ExpansionBox.tsx");
 /* harmony import */ var _hooks_useStoredState__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./hooks/useStoredState */ "./src/addons/addons/02agent/hooks/useStoredState.ts");
 /* harmony import */ var _contextMenu__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./contextMenu */ "./src/addons/addons/02agent/contextMenu.ts");
 /* harmony import */ var _components_AIAssistantIcon__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./components/AIAssistantIcon */ "./src/addons/addons/02agent/components/AIAssistantIcon.tsx");
@@ -76859,14 +76859,14 @@ const Agent = _ref => {
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("section", {
     className: _styles_less__WEBPACK_IMPORTED_MODULE_3___default.a.aiAssistantRoot,
     ref: containerRef
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"](components_Tooltip__WEBPACK_IMPORTED_MODULE_6__["default"], {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"](_shims_components_Tooltip__WEBPACK_IMPORTED_MODULE_6__["default"], {
     className: "tw-02agent-launcher-handle ".concat(_styles_less__WEBPACK_IMPORTED_MODULE_3___default.a.icon, " ").concat(themeMode === "dark" ? _styles_less__WEBPACK_IMPORTED_MODULE_3___default.a.iconDark : _styles_less__WEBPACK_IMPORTED_MODULE_3___default.a.iconLight),
     icon: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"](react__WEBPACK_IMPORTED_MODULE_0__["Fragment"], null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"](_components_AIAssistantIcon__WEBPACK_IMPORTED_MODULE_10__["AIAssistantIcon"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", null, "02Agent")),
     onClick: () => {
       if (!launcherDraggedRef.current) handleShow();
     },
     tipText: "02Agent"
-  }), visible && /*#__PURE__*/react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.createPortal(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"](components_ExpansionBox__WEBPACK_IMPORTED_MODULE_7__["default"], {
+  }), visible && /*#__PURE__*/react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.createPortal(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"](_shims_components_ExpansionBox_tsx__WEBPACK_IMPORTED_MODULE_7__["default"], {
     id: "02agent",
     title: "02Agent",
     themeMode: themeMode,
