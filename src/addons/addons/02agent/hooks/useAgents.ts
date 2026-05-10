@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import useStorageInfo from "hooks/useStorageInfo";
+import useStorageInfo from "../shims/hooks/useStorageInfo";
 import { Agent, AgentModel, FlattenedAgent } from "../types";
 import { PROVIDER_DEFAULT_URLS } from "../constants";
 

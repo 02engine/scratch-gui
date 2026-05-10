@@ -1,5 +1,5 @@
 import * as React from "react";
-import { scrollBlockIntoView } from "utils/block-helper";
+import { scrollBlockIntoView } from "../shims/utils/block-helper";
 import { Attachment } from "../types";
 
 const findFirstUsableBlockId = (attachment: Attachment, vm: PluginContext["vm"]) => {
