@@ -1,5 +1,8 @@
 export const REQUIRED_TOOL_ARGUMENTS: Record<string, string[]> = {
   readFile: ["path"],
+  readVariable: [],
+  readListSlice: [],
+  searchList: ["query"],
   searchFiles: ["query"],
   searchBlocks: ["query"],
   getBlockHelp: ["opcode"],
@@ -32,6 +35,9 @@ let mutationQueue = Promise.resolve();
 const isMissingToolArgument = (value: unknown) =>
   value === undefined || value === null || (typeof value === "string" && value.trim() === "");
 
+const hasAnyToolArgument = (args: Record<string, unknown>, names: string[]) =>
+  names.some((name) => !isMissingToolArgument(args[name]));
+
 export const validateToolArguments = (functionName: string, args: Record<string, unknown>) => {
   const requiredArguments = REQUIRED_TOOL_ARGUMENTS[functionName] || [];
   const missingArguments = requiredArguments.filter((argumentName) => isMissingToolArgument(args[argumentName]));
@@ -41,12 +47,28 @@ export const validateToolArguments = (functionName: string, args: Record<string,
       `Tool ${functionName} requires argument(s): ${missingArguments.join(", ")}. Received: ${JSON.stringify(args)}`,
     );
   }
+
+  if ((functionName === "readVariable" || functionName === "readListSlice") && !hasAnyToolArgument(args, ["name", "variableId"])) {
+    throw new Error(`Tool ${functionName} requires either name or variableId. Received: ${JSON.stringify(args)}`);
+  }
+
+  if (functionName === "searchList" && !hasAnyToolArgument(args, ["name", "variableId"])) {
+    throw new Error(`Tool ${functionName} requires either name or variableId. Received: ${JSON.stringify(args)}`);
+  }
 };
 
 const dispatchAITool = async (aiTools: Record<string, any>, functionName: string, args: Record<string, any>) => {
   switch (functionName) {
     case "readFile":
       return aiTools[functionName](args.path, args.startLine, args.endLine);
+    case "readVariable":
+      return aiTools[functionName](args);
+    case "readListSlice":
+      return aiTools[functionName](args);
+    case "searchList":
+      return aiTools[functionName](args);
+    case "getDataSummary":
+      return aiTools[functionName](args);
     case "searchFiles":
       return aiTools[functionName](args);
     case "searchBlocks":

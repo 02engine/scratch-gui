@@ -18,6 +18,27 @@ const DEFAULT_BRIDGE_CONFIG: BridgeConfig = {
   port: 40202,
   token: "",
 };
+const MAX_BRIDGE_MESSAGE_CHARS = 2 * 1024 * 1024;
+
+const safeStringifyBridgeMessage = (message: BridgeMessage) => {
+  try {
+    const text = JSON.stringify(message);
+    if (text.length > MAX_BRIDGE_MESSAGE_CHARS) {
+      return JSON.stringify({
+        id: message.id,
+        error: {
+          message: `02Agent bridge response exceeded ${MAX_BRIDGE_MESSAGE_CHARS} characters; retry with a narrower tool call.`,
+        },
+      });
+    }
+    return text;
+  } catch (error) {
+    return JSON.stringify({
+      id: message.id,
+      error: { message: error instanceof Error ? error.message : String(error) },
+    });
+  }
+};
 
 const makeToken = () => {
   const randomValues = new Uint8Array(16);
@@ -75,7 +96,7 @@ export const useBridgeClient = (vm: any) => {
   const send = useCallback((message: BridgeMessage) => {
     const socket = socketRef.current;
     if (!socket || socket.readyState !== WebSocket.OPEN) return false;
-    socket.send(JSON.stringify(message));
+    socket.send(safeStringifyBridgeMessage(message));
     return true;
   }, []);
 

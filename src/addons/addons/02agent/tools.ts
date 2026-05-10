@@ -80,6 +80,30 @@ const SCRIPT_MARKER_RE = /^\/\/\s*@script\s+([^\s]+)(?:\s+.*)?$/;
 const DOC_SCRATCH_AGENT_PATH = "/docs/scratch-agent.md";
 const DOC_BLOCK_CATALOG_PATH = "/docs/block-catalog.md";
 const DEFAULT_READ_FILE_MAX_LINES = 240;
+const PREVIEW_STRING_MAX_CHARS = 240;
+const LIST_PREVIEW_ITEM_COUNT = 10;
+const SMALL_PROJECT_MAX_TOTAL_LIST_ITEMS = 5000;
+const SMALL_PROJECT_MAX_LIST_LENGTH = 1000;
+const LARGE_PROJECT_MAX_TOTAL_LIST_ITEMS = 100000;
+const LARGE_PROJECT_MAX_LIST_LENGTH = 50000;
+const SMALL_PROJECT_MAX_VIRTUAL_FILE_CHARS = 1024 * 1024;
+const DATA_SLICE_MAX_COUNT = 1000;
+const DATA_SEARCH_MAX_VISITED = 100000;
+
+const previewValue = (value: any, maxChars = PREVIEW_STRING_MAX_CHARS): any => {
+  if (typeof value === "string") {
+    return value.length > maxChars ? `${value.slice(0, maxChars)}... [truncated ${value.length - maxChars} chars]` : value;
+  }
+  if (typeof value === "number" || typeof value === "boolean" || value === null || value === undefined) {
+    return value;
+  }
+  try {
+    const text = JSON.stringify(value);
+    return text.length > maxChars ? `${text.slice(0, maxChars)}... [truncated ${text.length - maxChars} chars]` : value;
+  } catch {
+    return String(value);
+  }
+};
 const COMMON_OPCODE_ALIASES: Record<string, string> = {
   argument_reporter: "argument_reporter_string_number",
   argument_reporter_string_number: "argument_reporter_string_number",
@@ -800,6 +824,87 @@ export class AITools {
       if (byName) return byName;
     }
     return targetId ? this.vm.runtime?.getTargetById?.(targetId) || null : this.vm.editingTarget || null;
+  }
+
+  private _resolveDataVariable(options?: { targetId?: string; targetName?: string; variableId?: string; name?: string; type?: "variable" | "list" }) {
+    const target = this._resolveTarget(options?.targetId, options?.targetName);
+    if (!target) return { target: null, variable: null, error: "Target not found." };
+    const values = Object.values(target?.variables || {}) as any[];
+    const requestedType = options?.type;
+    const normalizedName = String(options?.name || "").trim().toLowerCase();
+    const variable = values.find((item) => {
+      const itemType = item?.type === "list" || Array.isArray(item?.value) ? "list" : "variable";
+      if (requestedType && itemType !== requestedType) return false;
+      if (options?.variableId && item?.id === options.variableId) return true;
+      return Boolean(normalizedName) && String(item?.name || "").trim().toLowerCase() === normalizedName;
+    });
+    if (!variable) return { target, variable: null, error: `${requestedType || "Data item"} not found.` };
+    return { target, variable, error: "" };
+  }
+
+  private _getProjectSizeProfile(virtualFiles?: VirtualFileEntry[]) {
+    const targets = Array.isArray(this.vm.runtime?.targets) ? this.vm.runtime.targets : [];
+    let variableCount = 0;
+    let listCount = 0;
+    let totalListItems = 0;
+    let maxListLength = 0;
+    let blockCount = 0;
+    let scriptCount = 0;
+    let estimatedVariableChars = 0;
+
+    targets.forEach((target: any) => {
+      const blocks = target?.blocks?._blocks && typeof target.blocks._blocks === "object" ? target.blocks._blocks : {};
+      const blockIds = Object.keys(blocks);
+      blockCount += blockIds.length;
+      scriptCount += blockIds.filter((blockId) => blocks[blockId]?.topLevel && !blocks[blockId]?.parent).length;
+      const values = Object.values(target?.variables || {}) as any[];
+      values.forEach((item) => {
+        const isList = item?.type === "list" || Array.isArray(item?.value);
+        if (isList) {
+          listCount += 1;
+          const length = Array.isArray(item?.value) ? item.value.length : 0;
+          totalListItems += length;
+          maxListLength = Math.max(maxListLength, length);
+          estimatedVariableChars += Math.min(length, LIST_PREVIEW_ITEM_COUNT) * PREVIEW_STRING_MAX_CHARS;
+        } else {
+          variableCount += 1;
+          estimatedVariableChars += typeof item?.value === "string" ? item.value.length : 32;
+        }
+      });
+    });
+
+    const estimatedVirtualFileChars = virtualFiles
+      ? virtualFiles.reduce((sum, entry) => sum + (entry.content?.length || 0), 0)
+      : 0;
+    const estimatedJsonChars = estimatedVariableChars + estimatedVirtualFileChars + blockCount * 500;
+    const scale = totalListItems >= LARGE_PROJECT_MAX_TOTAL_LIST_ITEMS || maxListLength >= LARGE_PROJECT_MAX_LIST_LENGTH
+      ? "huge"
+      : totalListItems >= SMALL_PROJECT_MAX_TOTAL_LIST_ITEMS ||
+        maxListLength >= SMALL_PROJECT_MAX_LIST_LENGTH ||
+        estimatedVirtualFileChars >= SMALL_PROJECT_MAX_VIRTUAL_FILE_CHARS
+        ? "large"
+        : "small";
+
+    return {
+      scale,
+      isSmall: scale === "small",
+      isLargeRuntimeData: scale !== "small",
+      targetCount: targets.length,
+      scriptCount,
+      blockCount,
+      variableCount,
+      listCount,
+      totalListItems,
+      maxListLength,
+      estimatedJsonChars,
+      estimatedVirtualFileChars,
+      thresholds: {
+        smallProjectMaxTotalListItems: SMALL_PROJECT_MAX_TOTAL_LIST_ITEMS,
+        smallProjectMaxListLength: SMALL_PROJECT_MAX_LIST_LENGTH,
+        hugeProjectMaxTotalListItems: LARGE_PROJECT_MAX_TOTAL_LIST_ITEMS,
+        hugeProjectMaxListLength: LARGE_PROJECT_MAX_LIST_LENGTH,
+      },
+    };
   }
 
   private _resolveCostumeIndex(target: any, costumeIndex?: number, costumeName?: string) {
@@ -1987,6 +2092,27 @@ export class AITools {
     return `${action} script ${scriptId}: ${result?.error || "unknown error"}.${detailText}`;
   }
 
+  private _summarizeSyncResult(result: any) {
+    return {
+      path: result?.path,
+      targetId: result?.targetId,
+      costumeIndex: result?.costumeIndex,
+      costumeName: result?.costumeName,
+      operationCount: Number(result?.operationCount) || 0,
+      operations: Array.isArray(result?.operations)
+        ? result.operations.map((operation: any) => ({
+            type: operation?.type,
+            scriptId: operation?.scriptId,
+            syncMode: operation?.result?.syncMode,
+            blockCount: operation?.result?.blockCount,
+            warningCount: Array.isArray(operation?.result?.warnings) ? operation.result.warnings.length : undefined,
+          }))
+        : [],
+      rotationCenterX: result?.rotationCenterX,
+      rotationCenterY: result?.rotationCenterY,
+    };
+  }
+
   private async _syncVirtualTargetFile(entry: VirtualFileEntry, oldContent: string, newContent: string) {
     const oldSections = extractVirtualScriptSections(oldContent);
     const newSections = extractVirtualScriptSections(newContent);
@@ -2135,6 +2261,138 @@ export class AITools {
     };
   }
 
+  readVariable(options: { targetId?: string; targetName?: string; variableId?: string; name?: string; startChar?: number; endChar?: number }) {
+    const { target, variable, error } = this._resolveDataVariable({ ...options, type: "variable" });
+    if (!target || !variable) return { success: false, error };
+    const value = variable.value;
+    const startChar = Math.max(0, Math.floor(Number(options?.startChar) || 0));
+    const hasRange = options?.startChar !== undefined || options?.endChar !== undefined;
+    if (typeof value === "string") {
+      const endChar = Math.min(value.length, Math.floor(Number(options?.endChar) || (hasRange ? value.length : PREVIEW_STRING_MAX_CHARS)));
+      return {
+        success: true,
+        targetId: target.id,
+        targetName: this._getTargetName(target),
+        id: variable.id,
+        name: variable.name,
+        type: "variable",
+        valueType: "string",
+        length: value.length,
+        startChar,
+        endChar,
+        value: value.slice(startChar, endChar),
+        truncated: endChar < value.length || startChar > 0,
+        isCloud: Boolean(variable.isCloud),
+      };
+    }
+    return {
+      success: true,
+      targetId: target.id,
+      targetName: this._getTargetName(target),
+      id: variable.id,
+      name: variable.name,
+      type: "variable",
+      valueType: typeof value,
+      value: previewValue(value),
+      truncated: false,
+      isCloud: Boolean(variable.isCloud),
+    };
+  }
+
+  readListSlice(options: { targetId?: string; targetName?: string; variableId?: string; name?: string; start?: number; count?: number }) {
+    const { target, variable, error } = this._resolveDataVariable({ ...options, type: "list" });
+    if (!target || !variable) return { success: false, error };
+    const value = Array.isArray(variable.value) ? variable.value : [];
+    const start = Math.max(0, Math.floor(Number(options?.start) || 0));
+    const requestedCount = Math.floor(Number(options?.count) || 100);
+    const count = Math.max(0, Math.min(DATA_SLICE_MAX_COUNT, requestedCount));
+    const end = Math.min(value.length, start + count);
+    return {
+      success: true,
+      targetId: target.id,
+      targetName: this._getTargetName(target),
+      id: variable.id,
+      name: variable.name,
+      type: "list",
+      length: value.length,
+      start,
+      count: end - start,
+      maxCount: DATA_SLICE_MAX_COUNT,
+      items: value.slice(start, end).map((item: any) => previewValue(item)),
+      truncated: end < value.length,
+    };
+  }
+
+  searchList(options: { targetId?: string; targetName?: string; variableId?: string; name?: string; query?: string; limit?: number; start?: number; maxVisited?: number }) {
+    const { target, variable, error } = this._resolveDataVariable({ ...options, type: "list" });
+    if (!target || !variable) return { success: false, error };
+    const query = String(options?.query || "");
+    if (!query) return { success: false, error: "query is required." };
+    const value = Array.isArray(variable.value) ? variable.value : [];
+    const start = Math.max(0, Math.floor(Number(options?.start) || 0));
+    const limit = Math.max(1, Math.min(100, Math.floor(Number(options?.limit) || 20)));
+    const maxVisited = Math.max(1, Math.min(DATA_SEARCH_MAX_VISITED, Math.floor(Number(options?.maxVisited) || DATA_SEARCH_MAX_VISITED)));
+    const matches: any[] = [];
+    const queryLower = query.toLowerCase();
+    const end = Math.min(value.length, start + maxVisited);
+    for (let index = start; index < end && matches.length < limit; index++) {
+      const item = value[index];
+      if (String(item).toLowerCase().includes(queryLower)) {
+        matches.push({ index, value: previewValue(item) });
+      }
+    }
+    return {
+      success: true,
+      targetId: target.id,
+      targetName: this._getTargetName(target),
+      id: variable.id,
+      name: variable.name,
+      length: value.length,
+      query,
+      start,
+      visited: end - start,
+      limit,
+      matches,
+      truncated: end < value.length && matches.length < limit,
+    };
+  }
+
+  getDataSummary(options?: { targetId?: string; targetName?: string; names?: string[]; sampleCount?: number }) {
+    const target = options?.targetId || options?.targetName ? this._resolveTarget(options.targetId, options.targetName) : null;
+    const targets = target ? [target] : (Array.isArray(this.vm.runtime?.targets) ? this.vm.runtime.targets : []);
+    const requestedNames = new Set((Array.isArray(options?.names) ? options.names : []).map((name) => String(name).trim().toLowerCase()).filter(Boolean));
+    const sampleCount = Math.max(1, Math.min(100, Math.floor(Number(options?.sampleCount) || LIST_PREVIEW_ITEM_COUNT)));
+    return {
+      success: true,
+      sampleCount,
+      targets: targets.map((itemTarget: any) => {
+        const values = (Object.values(itemTarget?.variables || {}) as any[]).filter((item) => {
+          if (requestedNames.size === 0) return true;
+          return requestedNames.has(String(item?.name || "").trim().toLowerCase());
+        });
+        return {
+          targetId: itemTarget.id,
+          targetName: this._getTargetName(itemTarget),
+          variables: values
+            .filter((item) => !Array.isArray(item?.value) && item?.type !== "list")
+            .map((item) => ({ id: item.id, name: item.name, valueType: typeof item.value, preview: previewValue(item.value) })),
+          lists: values
+            .filter((item) => Array.isArray(item?.value) || item?.type === "list")
+            .map((item) => {
+              const list = Array.isArray(item.value) ? item.value : [];
+              return {
+                id: item.id,
+                name: item.name,
+                length: list.length,
+                first: list.slice(0, sampleCount).map((value: any) => previewValue(value)),
+                last: list.slice(Math.max(0, list.length - sampleCount)).map((value: any) => previewValue(value)),
+              };
+            }),
+        };
+      }),
+    };
+  }
+
   searchFiles(options?: { query?: string; path?: string; maxResults?: number }) {
     const query = String(options?.query || "").trim().toLowerCase();
     if (!query) {
@@ -2268,7 +2526,9 @@ export class AITools {
       };
     }
 
-    const snapshot = typeof this.vm?.toJSON === "function" ? this.vm.toJSON() : "";
+    const sizeProfile = this._getProjectSizeProfile(entries);
+    const useFullSnapshot = sizeProfile.isSmall && typeof this.vm?.toJSON === "function";
+    const snapshot = useFullSnapshot ? this.vm.toJSON() : "";
     const syncResults = [];
 
     try {
@@ -2277,21 +2537,29 @@ export class AITools {
         syncResults.push(result);
       }
     } catch (error) {
-      await this._restoreProjectSnapshot(snapshot);
+      if (snapshot) {
+        await this._restoreProjectSnapshot(snapshot);
+      }
       changedEntries.forEach((entry) => {
         if (entry.kind === "costume") {
           this.draftContentByPath.set(entry.path, nextContentByPath.get(entry.path) || "");
         }
       });
       const costumeDraftSaved = changedEntries.some((entry) => entry.kind === "costume");
+      const largeProjectNote = sizeProfile.isSmall
+        ? undefined
+        : "Large runtime data detected; full project rollback and verbose sync results were skipped to avoid oversized serialization.";
       return {
         success: false,
+        mode: sizeProfile.isSmall ? "full" : "large-project",
+        sizeProfile,
         error: costumeDraftSaved
-          ? `${error instanceof Error ? error.message : "Failed to apply virtual file changes"}. Invalid costume drafts were saved in 02Agent memory when possible; script changes were discarded.`
+          ? `${error instanceof Error ? error.message : "Failed to apply virtual file changes"}. Invalid costume drafts were saved in 02Agent memory when possible; script changes before the failed operation may already be applied.`
           : error instanceof Error ? error.message : "Failed to apply virtual file changes",
         rolledBack: Boolean(snapshot),
         draftSaved: costumeDraftSaved,
-        syncResults,
+        syncResults: sizeProfile.isSmall ? syncResults : syncResults.map((result) => this._summarizeSyncResult(result)),
+        note: largeProjectNote,
       };
     }
 
@@ -2300,21 +2568,28 @@ export class AITools {
     if (changedTargetEntries.length > 0 && scriptOperationCount === 0) {
       return {
         success: false,
+        mode: sizeProfile.isSmall ? "full" : "large-project",
+        sizeProfile,
         error:
           "Patch changed virtual file text but did not add, delete, or modify any // @script sections. Header-only changes are ignored.",
         changedFiles: changedEntries.map((entry) => entry.path),
-        syncResults,
+        syncResults: sizeProfile.isSmall ? syncResults : syncResults.map((result) => this._summarizeSyncResult(result)),
         diagnostics: validationResults,
       };
     }
 
     return {
       success: true,
+      mode: sizeProfile.isSmall ? "full" : "large-project",
+      sizeProfile,
       changedFiles: changedEntries.map((entry) => entry.path),
       fileCount: changedEntries.length,
       scriptOperationCount,
-      syncResults,
+      syncResults: sizeProfile.isSmall ? syncResults : syncResults.map((result) => this._summarizeSyncResult(result)),
       diagnostics: validationResults,
+      note: sizeProfile.isSmall
+        ? undefined
+        : "Large runtime data detected; applyPatch used compact output and skipped full project snapshot serialization.",
     };
   }
 
@@ -3826,9 +4101,16 @@ export class AITools {
     const pathByTargetId = new Map(files.map((entry) => [entry.targetId, entry.path]));
     const runtime = this.vm.runtime || {};
     const health = this._getDataHealth(targets, pathByTargetId, listRepairs);
+    const sizeProfile = this._getProjectSizeProfile(virtualFiles);
+    const overviewMode = sizeProfile.isSmall ? "full" : "indexed";
 
     return {
       success: true,
+      mode: overviewMode,
+      sizeProfile,
+      reason: sizeProfile.isSmall
+        ? undefined
+        : "Project has large runtime data; full variable/list values are omitted. Use readVariable, readListSlice, searchList, or getDataSummary for specific data slices.",
       project: {
         stageWidth: runtime.stageWidth,
         stageHeight: runtime.stageHeight,
@@ -3948,7 +4230,11 @@ export class AITools {
             .map((item) => ({
               id: item.id,
               name: item.name,
-              value: item.value,
+              value: sizeProfile.isSmall ? item.value : undefined,
+              preview: sizeProfile.isSmall ? undefined : previewValue(item.value),
+              valueType: typeof item.value,
+              length: typeof item.value === "string" ? item.value.length : undefined,
+              omitted: !sizeProfile.isSmall,
               isCloud: Boolean(item.isCloud),
             })),
           lists: values
@@ -3957,15 +4243,25 @@ export class AITools {
               id: item.id,
               name: item.name,
               length: Array.isArray(item.value) ? item.value.length : 0,
-              preview: Array.isArray(item.value) ? item.value.slice(0, 10) : [],
+              preview: Array.isArray(item.value)
+                ? item.value.slice(0, sizeProfile.isSmall ? Math.min(100, item.value.length) : LIST_PREVIEW_ITEM_COUNT).map((value: any) => previewValue(value))
+                : [],
+              truncated: Array.isArray(item.value) && item.value.length > (sizeProfile.isSmall ? 100 : LIST_PREVIEW_ITEM_COUNT),
+              omitted: !sizeProfile.isSmall,
           })),
         };
       }),
       health,
+      availableDataTools: sizeProfile.isSmall
+        ? ["readVariable", "readListSlice", "searchList", "getDataSummary"]
+        : ["readVariable", "readListSlice", "searchList", "getDataSummary"],
       nextSteps: [
         "Use getScratchGuide for concise DSL patterns.",
         "Use searchBlocks for candidate opcodes.",
         "Use getBlockHelp before writing unfamiliar blocks.",
+        sizeProfile.isSmall
+          ? "Small project mode: overview includes fuller data previews."
+          : "Indexed mode: use readVariable/readListSlice/searchList/getDataSummary for specific variable or list slices before editing data-dependent scripts.",
         'For rendering, algorithms, or reusable parameterized logic, use getScratchGuide({ topic: "procedures" }) and prefer warp custom blocks over broadcast-only flows.',
       ],
     };

@@ -152,6 +152,79 @@ export const scratchToolSchemas = [
   {
     type: "function",
     function: {
+      name: "readVariable",
+      description: "Read one Scratch variable by target/name or variableId. For long string variables, optional startChar/endChar reads a slice.",
+      parameters: {
+        type: "object",
+        properties: {
+          targetId: { type: "string", description: "Optional target ID. Defaults to current editing target when omitted." },
+          targetName: { type: "string", description: "Optional target name such as Stage or a sprite name." },
+          variableId: { type: "string", description: "Variable ID from getProjectOverview." },
+          name: { type: "string", description: "Variable name from getProjectOverview." },
+          startChar: { type: "number", description: "Optional 0-based start character for string variables." },
+          endChar: { type: "number", description: "Optional end character for string variables." },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "readListSlice",
+      description: "Read a bounded slice of one Scratch list by target/name or variableId. Use this for large projects instead of expecting full list values in getProjectOverview.",
+      parameters: {
+        type: "object",
+        properties: {
+          targetId: { type: "string", description: "Optional target ID. Defaults to current editing target when omitted." },
+          targetName: { type: "string", description: "Optional target name such as Stage or a sprite name." },
+          variableId: { type: "string", description: "List variable ID from getProjectOverview." },
+          name: { type: "string", description: "List name from getProjectOverview." },
+          start: { type: "number", description: "0-based start index. Defaults to 0." },
+          count: { type: "number", description: "Number of items to read. Capped by the tool to keep responses small." },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "searchList",
+      description: "Search a bounded window of one Scratch list for a string value and return matching indexes with previews.",
+      parameters: {
+        type: "object",
+        properties: {
+          targetId: { type: "string", description: "Optional target ID. Defaults to current editing target when omitted." },
+          targetName: { type: "string", description: "Optional target name such as Stage or a sprite name." },
+          variableId: { type: "string", description: "List variable ID from getProjectOverview." },
+          name: { type: "string", description: "List name from getProjectOverview." },
+          query: { type: "string", description: "Search text, such as NaN or a token." },
+          start: { type: "number", description: "0-based index to start searching from. Defaults to 0." },
+          limit: { type: "number", description: "Maximum matches. Defaults to 20 and is capped." },
+          maxVisited: { type: "number", description: "Maximum items to scan from start. Defaults to the safe cap." },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getDataSummary",
+      description: "Get compact variable/list summaries and first/last samples for selected targets or names without serializing full large lists.",
+      parameters: {
+        type: "object",
+        properties: {
+          targetId: { type: "string", description: "Optional target ID." },
+          targetName: { type: "string", description: "Optional target name." },
+          names: { type: "array", items: { type: "string" }, description: "Optional variable/list names to include." },
+          sampleCount: { type: "number", description: "Number of first/last list items to sample. Capped by the tool." },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "searchFiles",
       description: "Search virtual Scratch JS files and read-only docs by keyword.",
       parameters: {

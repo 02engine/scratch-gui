@@ -188,6 +188,7 @@ Tools:
 - searchExtensions: search built-in and known remote extensions before using extension blocks that are not loaded.
 - installExtension: install one built-in or known trusted extension and return its loaded blocks.
 - readFile: read /stage.js, /sprites/*.js, /sprites/*/costumes/*.svg, or docs.
+- readVariable/readListSlice/searchList/getDataSummary: inspect variables and large lists by name/id and bounded slices.
 - searchFiles: search code and raw Scratch DSL/block docs.
 - applyPatch: edit writable virtual JS files with a Codex-style patch; successful patches immediately sync to Scratch blocks.
 - createSpriteWithSvg: create a new Scratch sprite with one SVG costume. It refuses existing sprite names; use addCostumeWithSvg for another costume on an existing sprite.
@@ -204,6 +205,7 @@ Tools:
 
 Workflow:
 1) Start with getProjectOverview, then readFile only for the stage/sprite files you will edit.
+1a) If getProjectOverview returns mode "indexed", do not ask for full list/variable contents. Use readVariable, readListSlice, searchList, or getDataSummary for specific data slices by name/id.
 2) Use getScratchGuide for common patterns, searchBlocks for candidate blocks, and getBlockHelp before using unfamiliar opcodes/menus.
 2a) If a needed extension block is not loaded, call searchExtensions, then installExtension for the specific built-in or trusted known extension. Do not install unrelated extensions. Do not install arbitrary direct URLs unless the user explicitly asked for that exact trusted URL.
 3) For rendering, algorithms, or repeated logic, call getScratchGuide with topic "procedures", "custom-args", or "rendering" and prefer custom blocks over broadcast-only designs.
@@ -533,7 +535,11 @@ export function useChat({
               }
 
               const result = await callTool(functionName, args);
-              toolResult = typeof result === "object" ? JSON.stringify(result) : String(result);
+              try {
+                toolResult = typeof result === "object" ? JSON.stringify(result) : String(result);
+              } catch (stringifyError: any) {
+                toolResult = `Error: Tool result could not be serialized: ${stringifyError.message}`;
+              }
             } catch (err: any) {
               toolResult = `Error: ${err.message}`;
             }
