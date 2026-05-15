@@ -206,7 +206,7 @@ export default async function createThreadsTab({ debug, addon, console, msg }) {
 
   let isVisible = false;
 
-  debug.addAfterStepCallback(() => {
+  debug.addThrottledAfterStepCallback(() => {
     if (!isVisible) {
       return;
     }
@@ -218,7 +218,7 @@ export default async function createThreadsTab({ debug, addon, console, msg }) {
     } else {
       highlighter.setGlowingThreads([]);
     }
-  });
+  }, 50);
 
   const stepButton = debug.createHeaderButton({
     text: msg("step"),

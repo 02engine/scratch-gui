@@ -234,21 +234,32 @@ export default async function ({ addon, console, msg }) {
 
   const originalStep = vm.runtime._step;
   const afterStepCallbacks = [];
-  let lastAfterStepCallbackTime = 0;
-  const AFTER_STEP_CALLBACK_INTERVAL = 50;
+  const throttledAfterStepCallbacks = [];
   vm.runtime._step = function (...args) {
     const ret = originalStep.call(this, ...args);
-    const now = performance.now();
-    if (isInterfaceVisible && now - lastAfterStepCallbackTime >= AFTER_STEP_CALLBACK_INTERVAL) {
-      lastAfterStepCallbackTime = now;
+    if (isInterfaceVisible) {
       for (const cb of afterStepCallbacks) {
         cb();
+      }
+      const now = performance.now();
+      for (const item of throttledAfterStepCallbacks) {
+        if (now - item.lastCallTime >= item.interval) {
+          item.lastCallTime = now;
+          item.callback();
+        }
       }
     }
     return ret;
   };
   const addAfterStepCallback = (cb) => {
     afterStepCallbacks.push(cb);
+  };
+  const addThrottledAfterStepCallback = (cb, interval = 50) => {
+    throttledAfterStepCallbacks.push({
+      callback: cb,
+      interval,
+      lastCallTime: 0,
+    });
   };
 
   const getBlock = (target, id) => target.blocks.getBlock(id) || vm.runtime.flyoutBlocks.getBlock(id);
@@ -515,6 +526,7 @@ export default async function ({ addon, console, msg }) {
       createHeaderTab,
       setHasUnreadMessage,
       addAfterStepCallback,
+      addThrottledAfterStepCallback,
       getBlock,
       getTargetInfoById,
       createBlockLink,
