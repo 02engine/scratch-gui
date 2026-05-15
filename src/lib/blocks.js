@@ -10,6 +10,18 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
     const draggerProto = ScratchBlocks.WorkspaceDragger && ScratchBlocks.WorkspaceDragger.prototype;
     const blockProto = ScratchBlocks.BlockSvg && ScratchBlocks.BlockSvg.prototype;
 
+    const clearIntersectionObserver = workspace => {
+        const observer = workspace && workspace.intersectionObserver;
+        if (!observer) return;
+        if (observer.intersectionCheckFrame_ !== null && observer.intersectionCheckFrame_ !== undefined) {
+            cancelAnimationFrame(observer.intersectionCheckFrame_);
+            observer.intersectionCheckFrame_ = null;
+        }
+        observer.intersectionCheckQueued = false;
+        observer.observing = [];
+        workspace.intersectionCheckPendingAfterDrag_ = false;
+    };
+
     if (workspaceProto) {
         workspaceProto.pendingWheelFrame_ = null;
         workspaceProto.pendingWheelScrollDelta_ = null;
@@ -21,6 +33,36 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         const originalTranslate = workspaceProto.translate;
         const originalOnMouseWheel = workspaceProto.onMouseWheel_;
         const originalSetScale = workspaceProto.setScale;
+        const originalQueueIntersectionCheck = workspaceProto.queueIntersectionCheck;
+        const originalSetOffscreenTopBlockCullingEnabled = workspaceProto.setOffscreenTopBlockCullingEnabled;
+        workspaceProto.queueIntersectionCheck = function () {
+            if (!this.offscreenTopBlockCullingEnabled_) {
+                return;
+            }
+            if (typeof originalQueueIntersectionCheck === 'function') {
+                return originalQueueIntersectionCheck.call(this);
+            }
+        };
+
+        workspaceProto.setOffscreenTopBlockCullingEnabled = function (enabled) {
+            if (typeof originalSetOffscreenTopBlockCullingEnabled === 'function') {
+                originalSetOffscreenTopBlockCullingEnabled.call(this, enabled);
+            } else {
+                this.offscreenTopBlockCullingEnabled_ = enabled;
+            }
+
+            if (!enabled) {
+                clearIntersectionObserver(this);
+                const topBlocks = typeof this.getTopBlocks === 'function' ? this.getTopBlocks(false) : [];
+                for (let i = 0; i < topBlocks.length; i++) {
+                    const block = topBlocks[i];
+                    if (block && block.intersects_ === false && typeof block.setIntersects === 'function') {
+                        block.setIntersects(true);
+                    }
+                }
+            }
+        };
+
         workspaceProto.translate = function (x, y) {
             originalTranslate.call(this, x, y);
             if (!this.isFlyout && this.grid_) {
@@ -217,6 +259,21 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         };
     }
 
+    if (blockProto) {
+        const originalUpdateIntersectionObserver = blockProto.updateIntersectionObserver;
+        blockProto.updateIntersectionObserver = function () {
+            if (!this.workspace || !this.workspace.offscreenTopBlockCullingEnabled_) {
+                if (this.intersects_ === false && typeof this.setIntersects === 'function') {
+                    this.setIntersects(true);
+                }
+                return;
+            }
+            if (typeof originalUpdateIntersectionObserver === 'function') {
+                return originalUpdateIntersectionObserver.call(this);
+            }
+        };
+    }
+
     const originalClearWorkspaceAndLoadFromXml = ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml;
     ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml = function (xml, workspace) {
         const deferBlockRendering = !!(
@@ -292,13 +349,6 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         }
         return topBlock;
     };
-
-    if (blockProto) {
-        const originalInitSvg = blockProto.initSvg;
-        blockProto.initSvg = function () {
-            originalInitSvg.call(this);
-        };
-    }
 };
 
 /**

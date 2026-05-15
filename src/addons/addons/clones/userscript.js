@@ -25,6 +25,8 @@ export default async function ({ addon, console, msg }) {
   countContainer.appendChild(count);
 
   let lastChecked = 0;
+  let lastStepCheckTime = 0;
+  const STEP_CHECK_INTERVAL = 100;
 
   const cache = Array(301)
     .fill()
@@ -61,7 +63,11 @@ export default async function ({ addon, console, msg }) {
   const oldStep = vm.runtime._step;
   vm.runtime._step = function (...args) {
     const ret = oldStep.call(this, ...args);
-    doCloneChecks();
+    const now = performance.now();
+    if (now - lastStepCheckTime >= STEP_CHECK_INTERVAL) {
+      lastStepCheckTime = now;
+      doCloneChecks();
+    }
     return ret;
   };
 

@@ -234,9 +234,13 @@ export default async function ({ addon, console, msg }) {
 
   const originalStep = vm.runtime._step;
   const afterStepCallbacks = [];
+  let lastAfterStepCallbackTime = 0;
+  const AFTER_STEP_CALLBACK_INTERVAL = 50;
   vm.runtime._step = function (...args) {
     const ret = originalStep.call(this, ...args);
-    if (isInterfaceVisible) {
+    const now = performance.now();
+    if (isInterfaceVisible && now - lastAfterStepCallbackTime >= AFTER_STEP_CALLBACK_INTERVAL) {
+      lastAfterStepCallbackTime = now;
       for (const cb of afterStepCallbacks) {
         cb();
       }

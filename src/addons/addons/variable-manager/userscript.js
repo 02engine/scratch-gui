@@ -10,6 +10,8 @@ export default async function ({ addon, console, msg }) {
   let localVariables = [];
   let globalVariables = [];
   let preventUpdate = false;
+  let lastQuickReloadTime = 0;
+  const QUICK_RELOAD_INTERVAL = 100;
 
   const manager = document.createElement("div");
   manager.classList.add(addon.tab.scratchClass("asset-panel_wrapper"), "sa-var-manager");
@@ -320,6 +322,9 @@ export default async function ({ addon, console, msg }) {
 
   function quickReload() {
     if (addon.tab.redux.state?.scratchGui?.editorTab?.activeTabIndex !== 3 || preventUpdate) return;
+    const now = performance.now();
+    if (now - lastQuickReloadTime < QUICK_RELOAD_INTERVAL) return;
+    lastQuickReloadTime = now;
 
     for (const variable of localVariables) {
       variable.updateValue();
