@@ -766,22 +766,27 @@ class Blocks extends React.Component {
     }
     onScriptGlowOn(data) {
         if (this.isLargeWorkspace) return;
+        if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.glowStack(data.id, true);
     }
     onScriptGlowOff(data) {
         if (this.isLargeWorkspace) return;
+        if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.glowStack(data.id, false);
     }
     onBlockGlowOn(data) {
         if (this.isLargeWorkspace) return;
+        if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.glowBlock(data.id, true);
     }
     onBlockGlowOff(data) {
         if (this.isLargeWorkspace) return;
+        if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.glowBlock(data.id, false);
     }
     onVisualReport(data) {
         if (this.isLargeWorkspace) return;
+        if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.reportValue(data.id, data.value);
     }
     updateToolboxStateIfNeeded(toolboxXML, force = false) {
