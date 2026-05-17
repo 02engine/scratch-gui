@@ -28,6 +28,8 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         workspaceProto.pendingWheelZoomDelta_ = 0;
         workspaceProto.pendingWheelZoomPosition_ = null;
         workspaceProto.pendingGridUpdateTimer_ = null;
+        workspaceProto.pendingScrollbarResizeTimer_ = null;
+        workspaceProto.pendingFlyoutReflowTimer_ = null;
         workspaceProto.deferGridUpdate_ = false;
 
         const originalTranslate = workspaceProto.translate;
@@ -130,6 +132,32 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             }, 80);
         };
 
+        workspaceProto.scheduleDeferredScrollbarResize_ = function () {
+            if (!this.scrollbar) return;
+            if (this.pendingScrollbarResizeTimer_ !== null) {
+                clearTimeout(this.pendingScrollbarResizeTimer_);
+            }
+            this.pendingScrollbarResizeTimer_ = setTimeout(() => {
+                this.pendingScrollbarResizeTimer_ = null;
+                if (this.scrollbar) {
+                    this.scrollbar.resize();
+                }
+            }, 80);
+        };
+
+        workspaceProto.scheduleDeferredFlyoutReflow_ = function () {
+            if (!this.flyout_) return;
+            if (this.pendingFlyoutReflowTimer_ !== null) {
+                clearTimeout(this.pendingFlyoutReflowTimer_);
+            }
+            this.pendingFlyoutReflowTimer_ = setTimeout(() => {
+                this.pendingFlyoutReflowTimer_ = null;
+                if (this.flyout_) {
+                    this.flyout_.reflow();
+                }
+            }, 80);
+        };
+
         workspaceProto.onMouseWheel_ = function (e) {
             if (this.isFlyout && typeof originalOnMouseWheel === 'function') {
                 return originalOnMouseWheel.call(this, e);
@@ -180,13 +208,21 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                 }
             }
             if (this.scrollbar) {
-                this.scrollbar.resize();
+                if (this.deferGridUpdate_) {
+                    this.scheduleDeferredScrollbarResize_();
+                } else {
+                    this.scrollbar.resize();
+                }
             } else {
                 this.translate(this.scrollX, this.scrollY);
             }
             ScratchBlocks.hideChaff(false);
             if (this.flyout_) {
-                this.flyout_.reflow();
+                if (this.deferGridUpdate_) {
+                    this.scheduleDeferredFlyoutReflow_();
+                } else {
+                    this.flyout_.reflow();
+                }
             }
         };
 
@@ -199,6 +235,14 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             if (this.pendingGridUpdateTimer_ !== null) {
                 clearTimeout(this.pendingGridUpdateTimer_);
                 this.pendingGridUpdateTimer_ = null;
+            }
+            if (this.pendingScrollbarResizeTimer_ !== null) {
+                clearTimeout(this.pendingScrollbarResizeTimer_);
+                this.pendingScrollbarResizeTimer_ = null;
+            }
+            if (this.pendingFlyoutReflowTimer_ !== null) {
+                clearTimeout(this.pendingFlyoutReflowTimer_);
+                this.pendingFlyoutReflowTimer_ = null;
             }
             originalWorkspaceDispose.call(this);
         };

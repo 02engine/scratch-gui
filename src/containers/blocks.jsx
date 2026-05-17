@@ -95,7 +95,7 @@ const DroppableBlocks = DropAreaHOC([
     DragConstants.BACKPACK_CODE
 ])(BlocksComponent);
 
-const WORKSPACE_METRICS_DEBOUNCE_MS = 120;
+const WORKSPACE_METRICS_IDLE_MS = 500;
 class Blocks extends React.Component {
     constructor(props) {
         super(props);
@@ -156,7 +156,7 @@ class Blocks extends React.Component {
             prompt: null
         };
         this.onTargetsUpdate = debounce(this.onTargetsUpdate, 100);
-        this.flushWorkspaceMetrics = debounce(this.flushWorkspaceMetrics, WORKSPACE_METRICS_DEBOUNCE_MS);
+        this.flushWorkspaceMetricsDebounced = debounce(this.flushWorkspaceMetrics, WORKSPACE_METRICS_IDLE_MS);
         this.toolboxUpdateQueue = [];
         this.toolboxDirty = true;
         this.lastEditingTargetId = null;
@@ -164,6 +164,9 @@ class Blocks extends React.Component {
         this.lastToolboxXML = props.toolboxXML || null;
         this.pendingWorkspaceData = null;
         this.pendingWorkspaceMetricsTargetId = null;
+        this.workspaceMetricsFrame = null;
+        this.lastWorkspaceMetrics = null;
+        this.lastWorkspaceMetricsTargetId = null;
         this.pendingMonitorState = null;
         this.workspaceUpdateFrame = null;
         this.toolboxUpdateFrame = null;
@@ -327,6 +330,7 @@ class Blocks extends React.Component {
             )
         ) {
             if (this.props.editingTargetId !== prevProps.editingTargetId) {
+                this.flushWorkspaceMetrics();
                 this.props.vm.refreshWorkspace();
                 this.requestToolboxStateSync(true);
             }
@@ -367,7 +371,12 @@ class Blocks extends React.Component {
     componentWillUnmount() {
         this.detachVM();
         this.unmounted = true;
-        this.flushWorkspaceMetrics.cancel();
+        this.flushWorkspaceMetrics();
+        this.flushWorkspaceMetricsDebounced.cancel();
+        if (this.workspaceMetricsFrame) {
+            cancelAnimationFrame(this.workspaceMetricsFrame);
+            this.workspaceMetricsFrame = null;
+        }
         if (this.workspaceUpdateFrame) {
             cancelAnimationFrame(this.workspaceUpdateFrame);
             this.workspaceUpdateFrame = null;
@@ -713,20 +722,48 @@ class Blocks extends React.Component {
     onWorkspaceMetricsChange() {
         const target = this.props.vm.editingTarget;
         if (target && target.id) {
-            this.pendingWorkspaceMetricsTargetId = target.id;
-            this.flushWorkspaceMetrics();
+            this.updateWorkspaceMetricsCache(target.id);
+            if (this.workspaceMetricsFrame) {
+                return;
+            }
+            this.workspaceMetricsFrame = requestAnimationFrame(() => {
+                this.workspaceMetricsFrame = null;
+                this.flushWorkspaceMetricsDebounced();
+            });
         }
+    }
+    updateWorkspaceMetricsCache(targetId) {
+        if (!this.workspace || !targetId) return null;
+        const nextMetrics = {
+            targetID: targetId,
+            scrollX: this.workspace.scrollX,
+            scrollY: this.workspace.scrollY,
+            scale: this.workspace.scale
+        };
+        this.lastWorkspaceMetrics = nextMetrics;
+        this.lastWorkspaceMetricsTargetId = targetId;
+        this.pendingWorkspaceMetricsTargetId = targetId;
+        return nextMetrics;
     }
     flushWorkspaceMetrics() {
         const targetId = this.pendingWorkspaceMetricsTargetId ||
             (this.props.vm.editingTarget && this.props.vm.editingTarget.id);
         if (!this.workspace || !targetId) return;
-        this.props.updateMetrics({
-            targetID: targetId,
-            scrollX: this.workspace.scrollX,
-            scrollY: this.workspace.scrollY,
-            scale: this.workspace.scale
-        });
+        const nextMetrics = this.lastWorkspaceMetricsTargetId === targetId && this.lastWorkspaceMetrics ?
+            this.lastWorkspaceMetrics :
+            this.updateWorkspaceMetricsCache(targetId);
+        if (!nextMetrics) return;
+        const savedMetrics = this.props.workspaceMetrics.targets[targetId];
+        if (
+            savedMetrics &&
+            savedMetrics.scrollX === nextMetrics.scrollX &&
+            savedMetrics.scrollY === nextMetrics.scrollY &&
+            savedMetrics.scale === nextMetrics.scale
+        ) {
+            this.pendingWorkspaceMetricsTargetId = null;
+            return;
+        }
+        this.props.updateMetrics(nextMetrics);
         this.pendingWorkspaceMetricsTargetId = null;
     }
     onScriptGlowOn(data) {
@@ -814,7 +851,8 @@ class Blocks extends React.Component {
         }
 
         if (editingTarget && !this.props.workspaceMetrics.targets[editingTarget.id]) {
-            this.onWorkspaceMetricsChange();
+            this.updateWorkspaceMetricsCache(editingTarget.id);
+            this.flushWorkspaceMetrics();
         }
 
         if (!workspaceChanged) {
