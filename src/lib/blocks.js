@@ -22,6 +22,17 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         workspace.intersectionCheckPendingAfterDrag_ = false;
     };
 
+    const observeTopBlocks = workspace => {
+        if (!workspace || !workspace.intersectionObserver || typeof workspace.getTopBlocks !== 'function') return;
+        const topBlocks = workspace.getTopBlocks(false);
+        for (let i = 0; i < topBlocks.length; i++) {
+            const block = topBlocks[i];
+            if (block && typeof block.updateIntersectionObserver === 'function') {
+                block.updateIntersectionObserver();
+            }
+        }
+    };
+
     if (workspaceProto) {
         workspaceProto.pendingWheelFrame_ = null;
         workspaceProto.pendingWheelScrollDelta_ = null;
@@ -30,7 +41,9 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         workspaceProto.pendingGridUpdateTimer_ = null;
         workspaceProto.pendingScrollbarResizeTimer_ = null;
         workspaceProto.pendingFlyoutReflowTimer_ = null;
+        workspaceProto.pendingIntersectionCheckTimer_ = null;
         workspaceProto.deferGridUpdate_ = false;
+        workspaceProto.deferIntersectionChecks_ = false;
 
         const originalTranslate = workspaceProto.translate;
         const originalOnMouseWheel = workspaceProto.onMouseWheel_;
@@ -39,6 +52,10 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         const originalSetOffscreenTopBlockCullingEnabled = workspaceProto.setOffscreenTopBlockCullingEnabled;
         workspaceProto.queueIntersectionCheck = function () {
             if (!this.offscreenTopBlockCullingEnabled_) {
+                return;
+            }
+            if (this.deferIntersectionChecks_) {
+                this.scheduleDeferredIntersectionCheck_();
                 return;
             }
             if (typeof originalQueueIntersectionCheck === 'function') {
@@ -62,6 +79,9 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                         block.setIntersects(true);
                     }
                 }
+            } else {
+                observeTopBlocks(this);
+                this.queueIntersectionCheck();
             }
         };
 
@@ -96,22 +116,29 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         };
 
         workspaceProto.flushWheelUpdate_ = function () {
-            if (this.pendingWheelZoomDelta_ && this.pendingWheelZoomPosition_) {
-                const zoomDelta = this.pendingWheelZoomDelta_;
-                const zoomPosition = this.pendingWheelZoomPosition_;
-                this.pendingWheelZoomDelta_ = 0;
-                this.pendingWheelZoomPosition_ = null;
-                this.deferGridUpdate_ = true;
-                this.zoom(zoomPosition.x, zoomPosition.y, zoomDelta);
-                this.deferGridUpdate_ = false;
-                this.scheduleDeferredGridUpdate_();
-            }
+            this.deferIntersectionChecks_ = true;
+            try {
+                if (this.pendingWheelZoomDelta_ && this.pendingWheelZoomPosition_) {
+                    const zoomDelta = this.pendingWheelZoomDelta_;
+                    const zoomPosition = this.pendingWheelZoomPosition_;
+                    this.pendingWheelZoomDelta_ = 0;
+                    this.pendingWheelZoomPosition_ = null;
+                    this.deferGridUpdate_ = true;
+                    this.zoom(zoomPosition.x, zoomPosition.y, zoomDelta);
+                    this.deferGridUpdate_ = false;
+                    this.scheduleDeferredGridUpdate_();
+                }
 
-            if (this.pendingWheelScrollDelta_) {
-                const scrollDelta = this.pendingWheelScrollDelta_;
-                this.pendingWheelScrollDelta_ = null;
-                this.startDragMetrics = this.getMetrics();
-                this.scroll(this.scrollX - scrollDelta.x, this.scrollY - scrollDelta.y);
+                if (this.pendingWheelScrollDelta_) {
+                    const scrollDelta = this.pendingWheelScrollDelta_;
+                    this.pendingWheelScrollDelta_ = null;
+                    this.startDragMetrics = this.getMetrics();
+                    this.scroll(this.scrollX - scrollDelta.x, this.scrollY - scrollDelta.y);
+                }
+            } finally {
+                this.deferGridUpdate_ = false;
+                this.deferIntersectionChecks_ = false;
+                this.scheduleDeferredIntersectionCheck_();
             }
         };
 
@@ -156,6 +183,20 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                     this.flyout_.reflow();
                 }
             }, 80);
+        };
+
+        workspaceProto.scheduleDeferredIntersectionCheck_ = function () {
+            if (!this.offscreenTopBlockCullingEnabled_) return;
+            if (this.pendingIntersectionCheckTimer_ !== null) {
+                clearTimeout(this.pendingIntersectionCheckTimer_);
+            }
+            this.pendingIntersectionCheckTimer_ = setTimeout(() => {
+                this.pendingIntersectionCheckTimer_ = null;
+                if (!this.offscreenTopBlockCullingEnabled_) return;
+                if (typeof originalQueueIntersectionCheck === 'function') {
+                    originalQueueIntersectionCheck.call(this);
+                }
+            }, 120);
         };
 
         workspaceProto.onMouseWheel_ = function (e) {
@@ -244,6 +285,10 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                 clearTimeout(this.pendingFlyoutReflowTimer_);
                 this.pendingFlyoutReflowTimer_ = null;
             }
+            if (this.pendingIntersectionCheckTimer_ !== null) {
+                clearTimeout(this.pendingIntersectionCheckTimer_);
+                this.pendingIntersectionCheckTimer_ = null;
+            }
             originalWorkspaceDispose.call(this);
         };
 
@@ -286,19 +331,27 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             this.pendingScrollUpdate_ = null;
             this.pendingDragFrame_ = null;
 
-            workspace.scrollX = -update.x - metrics.contentLeft;
-            workspace.scrollY = -update.y - metrics.contentTop;
+            workspace.deferIntersectionChecks_ = true;
+            try {
+                workspace.scrollX = -update.x - metrics.contentLeft;
+                workspace.scrollY = -update.y - metrics.contentTop;
 
-            const translatedX = workspace.scrollX + metrics.absoluteLeft;
-            const translatedY = workspace.scrollY + metrics.absoluteTop;
-            workspace.translate(translatedX, translatedY);
-            if (workspace.grid_) {
-                workspace.grid_.moveTo(translatedX, translatedY);
-            }
+                const translatedX = workspace.scrollX + metrics.absoluteLeft;
+                const translatedY = workspace.scrollY + metrics.absoluteTop;
+                workspace.translate(translatedX, translatedY);
+                if (workspace.grid_) {
+                    workspace.grid_.moveTo(translatedX, translatedY);
+                }
 
-            if (workspace.scrollbar) {
-                workspace.scrollbar.hScroll.setHandlePosition(update.x * workspace.scrollbar.hScroll.ratio_);
-                workspace.scrollbar.vScroll.setHandlePosition(update.y * workspace.scrollbar.vScroll.ratio_);
+                if (workspace.scrollbar) {
+                    workspace.scrollbar.hScroll.setHandlePosition(update.x * workspace.scrollbar.hScroll.ratio_);
+                    workspace.scrollbar.vScroll.setHandlePosition(update.y * workspace.scrollbar.vScroll.ratio_);
+                }
+            } finally {
+                workspace.deferIntersectionChecks_ = false;
+                if (workspace.scheduleDeferredIntersectionCheck_) {
+                    workspace.scheduleDeferredIntersectionCheck_();
+                }
             }
         };
     }

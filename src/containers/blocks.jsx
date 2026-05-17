@@ -96,6 +96,7 @@ const DroppableBlocks = DropAreaHOC([
 ])(BlocksComponent);
 
 const WORKSPACE_METRICS_IDLE_MS = 500;
+const OFFSCREEN_CULLING_BLOCK_THRESHOLD = 1000;
 class Blocks extends React.Component {
     constructor(props) {
         super(props);
@@ -590,12 +591,9 @@ class Blocks extends React.Component {
         if (!this.workspace || !this.workspace.setOffscreenTopBlockCullingEnabled) {
             return;
         }
-        // The experimental offscreen top-block culling path caused very large
-        // projects to spend more time in XML load/render bookkeeping than they
-        // saved during interaction. Keep it disabled and use the original
-        // TurboWarp/Scratch Blocks rendering path for stability.
-        this.isLargeWorkspace = false;
-        this.workspace.setOffscreenTopBlockCullingEnabled(false);
+        const blocks = this.workspace.getAllBlocks ? this.workspace.getAllBlocks(false) : [];
+        this.isLargeWorkspace = blocks.length >= OFFSCREEN_CULLING_BLOCK_THRESHOLD;
+        this.workspace.setOffscreenTopBlockCullingEnabled(this.isLargeWorkspace);
     }
     setLocale() {
         this.ScratchBlocks.ScratchMsgs.setLocale(this.props.locale);
