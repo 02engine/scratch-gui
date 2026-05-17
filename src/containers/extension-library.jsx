@@ -56,6 +56,11 @@ const messages = defineMessages({
         description: 'Label for the TurboWarp source filter in the extension library',
         id: 'tw.extensionLibrary.source.tw'
     },
+    sourceAstraEditor: {
+        defaultMessage: 'AstraEditor',
+        description: 'Label for the AstraEditor source filter in the extension library',
+        id: 'tw.extensionLibrary.source.astra'
+    },
     sourcePenguinMod: {
         defaultMessage: 'PenguinMod',
         description: 'Label for the PenguinMod source filter in the extension library',
@@ -183,6 +188,7 @@ const SOURCE_KEYS = {
     SCRATCH: 'scratch',
     ENGINE: '02engine',
     TW: 'tw',
+    ASTRA: 'astra',
     PM: 'pm',
     MIST: 'mist',
     SHARKPOOL: 'sharkpool',
@@ -199,6 +205,7 @@ const SOURCE_NAV_ORDER = [
     SOURCE_KEYS.PM,
     SOURCE_KEYS.MIST,
     SOURCE_KEYS.SHARKPOOL,
+    SOURCE_KEYS.ASTRA,
     SOURCE_KEYS.OTHER
 ];
 
@@ -355,7 +362,7 @@ const fetchLibrary = async () => {
         }
     };
 
-    const [engineData, twData, mistData, sharkPoolData, penguinModData] = await Promise.all([
+    const [engineData, twData, astraData, mistData, sharkPoolData, penguinModData] = await Promise.all([
         safeFetch(
             'https://extensions.02engine.02studio.xyz/extensions.json',
             data => data.extensions.map(extension => ({
@@ -417,6 +424,42 @@ const fetchLibrary = async () => {
                 docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
                 samples: extension.samples ? extension.samples.map(sample => ({
                     href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
+                    text: sample
+                })) : null,
+                incompatibleWithScratch: !extension.scratchCompatible,
+                featured: true
+            })),
+            []
+        ),
+        safeFetch(
+            'https://editors.astras.top/extensions/generated-metadata/extensions-v0.json',
+            data => data.extensions.map(extension => ({
+                name: extension.name,
+                nameTranslations: extension.nameTranslations || {},
+                description: extension.description,
+                descriptionTranslations: extension.descriptionTranslations || {},
+                extensionId: extension.id,
+                extensionURL: `https://editors.astras.top/extensions/${extension.slug}.js`,
+                iconURL: extension.image ?
+                    `https://editors.astras.top/extensions/${extension.image}` :
+                    'https://extensions.turbowarp.org/images/unknown.svg',
+                tags: ['astra'],
+                credits: [
+                    ...(extension.original || []),
+                    ...(extension.by || [])
+                ].filter(credit => credit && typeof credit === 'object').map(credit => {
+                    if (credit.link) {
+                        return (
+                            <a href={credit.link} target="_blank" rel="noreferrer" key={credit.name}>
+                                {credit.name}
+                            </a>
+                        );
+                    }
+                    return credit.name;
+                }),
+                docsURI: extension.docs ? `https://editors.astras.top/extensions/${extension.slug}` : null,
+                samples: extension.samples ? extension.samples.map(sample => ({
+                    href: `${process.env.ROOT}editor?project_url=https://editors.astras.top/extensions/samples/${encodeURIComponent(sample)}.sb3`,
                     text: sample
                 })) : null,
                 incompatibleWithScratch: !extension.scratchCompatible,
@@ -488,6 +531,7 @@ const fetchLibrary = async () => {
     return [
         ...engineData,
         ...twData,
+        ...astraData,
         ...penguinModData,
         ...mistData,
         ...sharkPoolData
@@ -586,6 +630,7 @@ class ExtensionLibrary extends React.PureComponent {
             [SOURCE_KEYS.SCRATCH]: messages.sourceScratch,
             [SOURCE_KEYS.ENGINE]: messages.source02Engine,
             [SOURCE_KEYS.TW]: messages.sourceTurboWarp,
+            [SOURCE_KEYS.ASTRA]: messages.sourceAstraEditor,
             [SOURCE_KEYS.PM]: messages.sourcePenguinMod,
             [SOURCE_KEYS.MIST]: messages.sourceMist,
             [SOURCE_KEYS.SHARKPOOL]: messages.sourceSharkPool,
@@ -651,6 +696,8 @@ class ExtensionLibrary extends React.PureComponent {
                     source = SOURCE_KEYS.SCRATCH;
                 } else if (item.tags && item.tags.includes('ztengine')) {
                     source = SOURCE_KEYS.ENGINE;
+                } else if (item.tags && item.tags.includes('astra')) {
+                    source = SOURCE_KEYS.ASTRA;
                 } else if (item.tags && item.tags.includes('pm')) {
                     source = SOURCE_KEYS.PM;
                 } else if (item.tags && item.tags.includes('mist')) {
@@ -884,6 +931,7 @@ class ExtensionLibrary extends React.PureComponent {
                 SOURCE_KEYS.SCRATCH,
                 SOURCE_KEYS.ENGINE,
                 SOURCE_KEYS.TW,
+                SOURCE_KEYS.ASTRA,
                 SOURCE_KEYS.PM,
                 SOURCE_KEYS.MIST,
                 SOURCE_KEYS.SHARKPOOL
@@ -926,6 +974,7 @@ class ExtensionLibrary extends React.PureComponent {
             [SOURCE_KEYS.SCRATCH]: 0,
             [SOURCE_KEYS.ENGINE]: 0,
             [SOURCE_KEYS.TW]: 0,
+            [SOURCE_KEYS.ASTRA]: 0,
             [SOURCE_KEYS.PM]: 0,
             [SOURCE_KEYS.MIST]: 0,
             [SOURCE_KEYS.SHARKPOOL]: 0,
@@ -1028,6 +1077,7 @@ class ExtensionLibrary extends React.PureComponent {
             [SOURCE_KEYS.SCRATCH]: 'Scratch',
             [SOURCE_KEYS.ENGINE]: 'Engine',
             [SOURCE_KEYS.TW]: 'Tw',
+            [SOURCE_KEYS.ASTRA]: 'Astra',
             [SOURCE_KEYS.PM]: 'Pm',
             [SOURCE_KEYS.MIST]: 'Mist',
             [SOURCE_KEYS.SHARKPOOL]: 'Sharkpool',

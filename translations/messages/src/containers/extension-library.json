@@ -40,6 +40,11 @@
     "defaultMessage": "TurboWarp"
   },
   {
+    "id": "tw.extensionLibrary.source.astra",
+    "description": "Label for the AstraEditor source filter in the extension library",
+    "defaultMessage": "AstraEditor"
+  },
+  {
     "id": "tw.extensionLibrary.source.pm",
     "description": "Label for the PenguinMod source filter in the extension library",
     "defaultMessage": "PenguinMod"

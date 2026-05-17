@@ -349,6 +349,10 @@
     background: rgba(255, 74, 74, 0.9);
 }
 
+.source-badgeAstra {
+    background: rgba(96, 191, 255, 0.92);
+}
+
 .source-badgePm {
     background: rgba(0, 176, 111, 0.9);
 }
