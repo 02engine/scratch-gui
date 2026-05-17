@@ -140,11 +140,6 @@
     "defaultMessage": "Native"
   },
   {
-    "id": "tw.extensionLibrary.badge.batch",
-    "description": "Status badge for extensions that support batch selection",
-    "defaultMessage": "Batch"
-  },
-  {
     "id": "tw.extensionLibrary.action.custom",
     "description": "Action hint for the custom extension item",
     "defaultMessage": "Open custom loader"

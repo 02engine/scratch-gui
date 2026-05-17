@@ -156,11 +156,6 @@ const messages = defineMessages({
         description: 'Status badge for native extensions',
         id: 'tw.extensionLibrary.badge.native'
     },
-    badgeBatch: {
-        defaultMessage: 'Batch',
-        description: 'Status badge for extensions that support batch selection',
-        id: 'tw.extensionLibrary.badge.batch'
-    },
     openCustomLoader: {
         defaultMessage: 'Open custom loader',
         description: 'Action hint for the custom extension item',
@@ -1066,13 +1061,6 @@ class ExtensionLibrary extends React.PureComponent {
                 label: <FormattedMessage {...messages.badgeNative} />
             });
         }
-        if (item.isBatchSelectable) {
-            badges.push({
-                key: 'batch',
-                label: <FormattedMessage {...messages.badgeBatch} />
-            });
-        }
-
         const sourceToneMap = {
             [SOURCE_KEYS.SCRATCH]: 'Scratch',
             [SOURCE_KEYS.ENGINE]: 'Engine',
