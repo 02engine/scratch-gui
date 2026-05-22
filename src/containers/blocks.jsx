@@ -848,7 +848,7 @@ class Blocks extends React.Component {
         const editingTarget = this.props.vm.editingTarget;
         const editingTargetId = editingTarget ? editingTarget.id : null;
         const targetChanged = editingTargetId !== this.lastEditingTargetId;
-        const workspaceChanged = data.xml !== this.lastAppliedWorkspaceXML;
+        const workspaceChanged = targetChanged || data.xml !== this.lastAppliedWorkspaceXML;
 
         if (targetChanged || this.toolboxDirty) {
             this.requestToolboxStateSync(targetChanged);
