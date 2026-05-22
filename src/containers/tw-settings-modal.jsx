@@ -3,7 +3,7 @@ import React from 'react';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
-import {closeSettingsModal} from '../reducers/modals';
+import {close02EngineSettingsModal, closeSettingsModal, openToolboxLayoutModal} from '../reducers/modals';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
 import {defaultStageSize} from '../reducers/custom-stage-size';
 import { setOpsPerFrameState, setCustomUIState, setEditorBackgroundState } from '../reducers/tw';
@@ -231,6 +231,7 @@ class UsernameModal extends React.Component {
             'handleClearBackgroundImage',
             'handleStoreProjectOptions',
             'handleResetWindowCoefficients',
+            'handleOpenToolboxLayout',
             'handleExtensionDebugConnect'
         ]);
     }
@@ -379,6 +380,9 @@ class UsernameModal extends React.Component {
         // 刷新页面以应用重置
         window.location.reload();
     }
+    handleOpenToolboxLayout () {
+        this.props.onOpenToolboxLayout();
+    }
     componentDidMount () {
         // 监听扩展调试状态变化
         const handleStatusChange = (event) => {
@@ -445,9 +449,11 @@ class UsernameModal extends React.Component {
                 }
                 onStoreProjectOptions={this.handleStoreProjectOptions}
                 onResetWindowCoefficients={this.handleResetWindowCoefficients}
+                onOpenToolboxLayout={this.handleOpenToolboxLayout}
                 extensionDebugConnected={this.state.extensionDebugConnected}
                 extensionDebugFailed={this.state.extensionDebugFailed}
                 onExtensionDebugConnect={this.handleExtensionDebugConnect}
+                engineSettings={this.props.engineSettings}
                 {...props}
             />
         );
@@ -470,6 +476,7 @@ UsernameModal.propTypes = {
         storeProjectOptions: PropTypes.func
     }),
     isEmbedded: PropTypes.bool,
+    engineSettings: PropTypes.bool,
     framerate: PropTypes.number,
     opsPerFrame: PropTypes.number,
     highQualityPen: PropTypes.bool,
@@ -490,7 +497,8 @@ UsernameModal.propTypes = {
         height: PropTypes.number
     }),
     disableCompiler: PropTypes.bool,
-    setEditorBackground: PropTypes.func
+    setEditorBackground: PropTypes.func,
+    onOpenToolboxLayout: PropTypes.func
 };
 
 const mapStateToProps = state => ({
@@ -515,10 +523,28 @@ const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeSettingsModal()),
     setOpsPerFrame: (value) => dispatch(setOpsPerFrameState(value)),
     setCustomUI: value => dispatch(setCustomUIState(value)),
-    setEditorBackground: value => dispatch(setEditorBackgroundState(value))
+    setEditorBackground: value => dispatch(setEditorBackgroundState(value)),
+    onOpenToolboxLayout: () => dispatch(openToolboxLayoutModal())
 });
 
-export default injectIntl(connect(
+const ConnectedSettingsModal = injectIntl(connect(
     mapStateToProps,
     mapDispatchToProps
 )(UsernameModal));
+
+const map02EngineDispatchToProps = dispatch => Object.assign({}, mapDispatchToProps(dispatch), {
+    onClose: () => dispatch(close02EngineSettingsModal())
+});
+
+const TW02EngineSettingsModal = injectIntl(connect(
+    mapStateToProps,
+    map02EngineDispatchToProps
+)(props => (
+    <UsernameModal
+        {...props}
+        engineSettings
+    />
+)));
+
+export {TW02EngineSettingsModal};
+export default ConnectedSettingsModal;

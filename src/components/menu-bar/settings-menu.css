@@ -88,3 +88,7 @@
 .open-link {
     margin-left: 0.5rem;
 }
+
+.engine-settings-item {
+    font-weight: bold;
+}

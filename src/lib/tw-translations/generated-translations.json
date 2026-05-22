@@ -9138,7 +9138,22 @@
     "tw.settingsModal.warpTimer": "循环计时器",
     "gui.gitDropdown.commit": "提交到 GitHub",
     "gui.gitDropdown.fetch": "从 GitHub 获取",
-    "gui.gitDropdown.pullRequest": "拉取请求"
+    "gui.gitDropdown.pullRequest": "拉取请求",
+    "tw.toolboxLayoutModal.title": "自定义积木栏",
+    "tw.toolboxLayoutModal.newGroupName": "自定义组",
+    "tw.toolboxLayoutModal.enable": "启用自定义积木栏",
+    "tw.toolboxLayoutModal.reset": "重置",
+    "tw.toolboxLayoutModal.hint": "取消勾选积木可将其从默认分类中移除，然后把被移除的积木添加到你自己的分组中。修改会立即生效。",
+    "tw.toolboxLayoutModal.defaultCategories": "默认分类",
+    "tw.toolboxLayoutModal.customGroups": "自定义分组",
+    "tw.toolboxLayoutModal.addGroup": "添加分组",
+    "tw.toolboxLayoutModal.editingGroup": "正在编辑：{name}",
+    "tw.toolboxLayoutModal.deleteGroup": "删除",
+    "tw.toolboxLayoutModal.addedBlocks": "已添加的积木",
+    "tw.toolboxLayoutModal.noSelectedGroupBlocks": "这个分组里还没有积木。",
+    "tw.toolboxLayoutModal.availableBlocks": "可添加的积木",
+    "tw.toolboxLayoutModal.noAvailableBlocks": "没有更多可添加的积木。",
+    "tw.toolboxLayoutModal.noGroups": "创建一个分组后就可以开始整理积木了。"
   },
   "zh-tw": {
     "gui.gitCommit.title": "推送變更至 GitHub",
@@ -9445,6 +9460,21 @@
     "tw.settingsModal.customUI": "使用新 UI（分離視窗/角色面板）",
     "tw.settingsModal.customUIHelp": "切換到新的分離視窗舞台/角色面板介面（替代原始單視窗佈局）。",
     "tw.menuBar.compileError": "{sprite}：{error}",
-    "tw.settingsModal.warpTimer": "防卡死"
+    "tw.settingsModal.warpTimer": "防卡死",
+    "tw.toolboxLayoutModal.title": "自訂積木欄",
+    "tw.toolboxLayoutModal.newGroupName": "自訂群組",
+    "tw.toolboxLayoutModal.enable": "啟用自訂積木欄",
+    "tw.toolboxLayoutModal.reset": "重設",
+    "tw.toolboxLayoutModal.hint": "取消勾選積木可將它們從預設分類中移除，再把被移除的積木加入你自己的群組。變更會立即套用。",
+    "tw.toolboxLayoutModal.defaultCategories": "預設分類",
+    "tw.toolboxLayoutModal.customGroups": "自訂群組",
+    "tw.toolboxLayoutModal.addGroup": "新增群組",
+    "tw.toolboxLayoutModal.editingGroup": "正在編輯：{name}",
+    "tw.toolboxLayoutModal.deleteGroup": "刪除",
+    "tw.toolboxLayoutModal.addedBlocks": "已加入的積木",
+    "tw.toolboxLayoutModal.noSelectedGroupBlocks": "這個群組裡還沒有積木。",
+    "tw.toolboxLayoutModal.availableBlocks": "可加入的積木",
+    "tw.toolboxLayoutModal.noAvailableBlocks": "沒有更多可加入的積木。",
+    "tw.toolboxLayoutModal.noGroups": "建立一個群組後就可以開始整理積木。"
   }
 }

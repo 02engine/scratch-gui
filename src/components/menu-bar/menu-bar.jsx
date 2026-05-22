@@ -35,7 +35,13 @@ import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 
-import {openTipsLibrary, openSettingsModal, openRestorePointModal, openGitModal} from '../../reducers/modals';
+import {
+    open02EngineSettingsModal,
+    openTipsLibrary,
+    openSettingsModal,
+    openRestorePointModal,
+    openGitModal
+} from '../../reducers/modals';
 import {openCollaborationModal} from '../../reducers/collaboration';
 import {setPlayer} from '../../reducers/mode';
 import {
@@ -737,6 +743,7 @@ class MenuBar extends React.Component {
                                 this.props.onClickAddonSettings &&
                                 this.props.onClickAddonSettings.bind(null, 'editor-theme3')
                             }
+                            onOpen02EngineSettings={this.props.onClick02EngineSettingsModal}
                             onRequestClose={this.props.onRequestCloseSettings}
                             onRequestOpen={this.props.onClickSettings}
                             onSetDefaultProject={this.handleSetDefaultProject}
@@ -1339,6 +1346,7 @@ MenuBar.propTypes = {
     onClickSave: PropTypes.func,
     onClickSaveAsCopy: PropTypes.func,
     onClickSettings: PropTypes.func,
+    onClick02EngineSettingsModal: PropTypes.func,
     onClickSettingsModal: PropTypes.func,
     onLogOut: PropTypes.func,
     onMenuBarCollapseChange: PropTypes.func,
@@ -1432,8 +1440,14 @@ const mapDispatchToProps = dispatch => ({
     onRequestCloseAbout: () => dispatch(closeAboutMenu()),
     onClickRestorePoints: () => dispatch(openRestorePointModal()),
     onClickSettings: () => dispatch(openSettingsMenu()),
+    onClick02EngineSettingsModal: () => {
+        dispatch(closeEditMenu());
+        dispatch(closeSettingsMenu());
+        dispatch(open02EngineSettingsModal());
+    },
     onClickSettingsModal: () => {
         dispatch(closeEditMenu());
+        dispatch(closeSettingsMenu());
         dispatch(openSettingsModal());
     },
     onRequestCloseSettings: () => dispatch(closeSettingsMenu()),

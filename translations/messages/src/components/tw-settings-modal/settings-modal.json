@@ -5,6 +5,11 @@
     "defaultMessage": "Advanced Settings"
   },
   {
+    "id": "tw.settingsModal.02engineTitle",
+    "description": "Title of 02engine settings modal",
+    "defaultMessage": "02engine Settings"
+  },
+  {
     "id": "tw.settingsModal.help",
     "description": "Hover text of help icon in settings",
     "defaultMessage": "Click for help"
@@ -204,6 +209,16 @@
     "defaultMessage": "Resets all draggable window positions and sizes to their default values. This will restore the stage and sprites windows to their initial layout."
   },
   {
+    "id": "tw.settingsModal.customizeToolbox",
+    "description": "Button in 02engine settings modal to customize toolbox categories",
+    "defaultMessage": "Customize Toolbox"
+  },
+  {
+    "id": "tw.settingsModal.customizeToolboxHelp",
+    "description": "Help text for customize toolbox button",
+    "defaultMessage": "Choose which default blocks appear in the toolbox and create your own colored groups."
+  },
+  {
     "id": "tw.settingsModal.extensionDebuggingServer",
     "description": "Extension debugging server status",
     "defaultMessage": "02Engine VScode Toolbox Server"
@@ -242,6 +257,11 @@
     "id": "tw.settingsModal.dangerZone",
     "description": "Settings modal section",
     "defaultMessage": "Danger Zone"
+  },
+  {
+    "id": "tw.settingsModal.02engine",
+    "description": "02engine settings modal section",
+    "defaultMessage": "02engine"
   },
   {
     "id": "tw.settingsModal.extensionDebugging",

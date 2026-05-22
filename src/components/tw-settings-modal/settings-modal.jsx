@@ -24,6 +24,11 @@ const messages = defineMessages({
         description: 'Title of settings modal',
         id: 'tw.settingsModal.title'
     },
+    engineTitle: {
+        defaultMessage: '02engine Settings',
+        description: 'Title of 02engine settings modal',
+        id: 'tw.settingsModal.02engineTitle'
+    },
     help: {
         defaultMessage: 'Click for help',
         description: 'Hover text of help icon in settings',
@@ -690,6 +695,34 @@ ResetWindowCoefficients.propTypes = {
     onResetWindowCoefficients: PropTypes.func
 };
 
+const CustomizeToolbox = ({onOpenToolboxLayout}) => (
+    <div className={styles.setting}>
+        <div>
+            <button
+                onClick={onOpenToolboxLayout}
+                className={styles.button}
+            >
+                <FormattedMessage
+                    defaultMessage="Customize Toolbox"
+                    description="Button in 02engine settings modal to customize toolbox categories"
+                    id="tw.settingsModal.customizeToolbox"
+                />
+            </button>
+            <p>
+                <FormattedMessage
+                    // eslint-disable-next-line max-len
+                    defaultMessage="Choose which default blocks appear in the toolbox and create your own colored groups."
+                    description="Help text for customize toolbox button"
+                    id="tw.settingsModal.customizeToolboxHelp"
+                />
+            </p>
+        </div>
+    </div>
+);
+CustomizeToolbox.propTypes = {
+    onOpenToolboxLayout: PropTypes.func
+};
+
 const ExtensionDebugging = ({isConnected, isConnectionFailed, onConnect}) => (
     <div className={styles.setting}>
         <div className={styles.label}>
@@ -753,119 +786,141 @@ const SettingsModalComponent = props => (
     <Modal
         className={styles.modalContent}
         onRequestClose={props.onClose}
-        contentLabel={props.intl.formatMessage(messages.title)}
-        id="settingsModal"
+        contentLabel={props.intl.formatMessage(props.engineSettings ? messages.engineTitle : messages.title)}
+        id={props.engineSettings ? '02engineSettingsModal' : 'settingsModal'}
     >
         <Box className={styles.body}>
-            <Header>
-                <FormattedMessage
-                    defaultMessage="Featured"
-                    description="Settings modal section"
-                    id="tw.settingsModal.featured"
-                />
-            </Header>
-            <CustomFPS
-                framerate={props.framerate}
-                onChange={props.onFramerateChange}
-                onCustomizeFramerate={props.onCustomizeFramerate}
-            />
-            <CustomOPF
-                opsPerFrame={props.opsPerFrame}
-                onChange={props.onOpsPerFrameChange}
-                onCustomizeOpsPerFrame={props.onCustomizeOpsPerFrame}
-            />
-            <CustomUI
-                customUI={props.customUI}
-                onChange={props.onCustomUIChange}
-            />
-            <Interpolation
-                value={props.interpolation}
-                onChange={props.onInterpolationChange}
-            />
-            <HighQualityPen
-                value={props.highQualityPen}
-                onChange={props.onHighQualityPenChange}
-            />
-            <OffscreenDrawableCulling
-                value={props.offscreenDrawableCulling}
-                onChange={props.onOffscreenDrawableCullingChange}
-            />
-            <WarpTimer
-                value={props.warpTimer}
-                onChange={props.onWarpTimerChange}
-            />
-            <Header>
-                <FormattedMessage
-                    defaultMessage="Remove Limits"
-                    description="Settings modal section"
-                    id="tw.settingsModal.removeLimits"
-                />
-            </Header>
-            <InfiniteClones
-                value={props.infiniteClones}
-                onChange={props.onInfiniteClonesChange}
-            />
-            <RemoveFencing
-                value={props.removeFencing}
-                onChange={props.onRemoveFencingChange}
-            />
-            <RemoveMiscLimits
-                value={props.removeLimits}
-                onChange={props.onRemoveLimitsChange}
-            />
-            <Header>
-                <FormattedMessage
-                    defaultMessage="Danger Zone"
-                    description="Settings modal section"
-                    id="tw.settingsModal.dangerZone"
-                />
-            </Header>
-            {!props.isEmbedded && (
-                <CustomStageSize
-                    {...props}
-                />
+            {!props.engineSettings && (
+                <React.Fragment>
+                    <Header>
+                        <FormattedMessage
+                            defaultMessage="Featured"
+                            description="Settings modal section"
+                            id="tw.settingsModal.featured"
+                        />
+                    </Header>
+                    <CustomFPS
+                        framerate={props.framerate}
+                        onChange={props.onFramerateChange}
+                        onCustomizeFramerate={props.onCustomizeFramerate}
+                    />
+                    <CustomOPF
+                        opsPerFrame={props.opsPerFrame}
+                        onChange={props.onOpsPerFrameChange}
+                        onCustomizeOpsPerFrame={props.onCustomizeOpsPerFrame}
+                    />
+                    <Interpolation
+                        value={props.interpolation}
+                        onChange={props.onInterpolationChange}
+                    />
+                    <HighQualityPen
+                        value={props.highQualityPen}
+                        onChange={props.onHighQualityPenChange}
+                    />
+                    <OffscreenDrawableCulling
+                        value={props.offscreenDrawableCulling}
+                        onChange={props.onOffscreenDrawableCullingChange}
+                    />
+                    <WarpTimer
+                        value={props.warpTimer}
+                        onChange={props.onWarpTimerChange}
+                    />
+                    <Header>
+                        <FormattedMessage
+                            defaultMessage="Remove Limits"
+                            description="Settings modal section"
+                            id="tw.settingsModal.removeLimits"
+                        />
+                    </Header>
+                    <InfiniteClones
+                        value={props.infiniteClones}
+                        onChange={props.onInfiniteClonesChange}
+                    />
+                    <RemoveFencing
+                        value={props.removeFencing}
+                        onChange={props.onRemoveFencingChange}
+                    />
+                    <RemoveMiscLimits
+                        value={props.removeLimits}
+                        onChange={props.onRemoveLimitsChange}
+                    />
+                    <Header>
+                        <FormattedMessage
+                            defaultMessage="Danger Zone"
+                            description="Settings modal section"
+                            id="tw.settingsModal.dangerZone"
+                        />
+                    </Header>
+                    {!props.isEmbedded && (
+                        <CustomStageSize
+                            {...props}
+                        />
+                    )}
+                    <DisableCompiler
+                        value={props.disableCompiler}
+                        onChange={props.onDisableCompilerChange}
+                    />
+                    {!props.isEmbedded && (
+                        <StoreProjectOptions
+                            {...props}
+                        />
+                    )}
+                </React.Fragment>
             )}
-            <DisableCompiler
-                value={props.disableCompiler}
-                onChange={props.onDisableCompilerChange}
-            />
-            {!props.isEmbedded && (
-                <StoreProjectOptions
-                    {...props}
-                />
+            {props.engineSettings && (
+                <React.Fragment>
+                    <Header>
+                        <FormattedMessage
+                            defaultMessage="02engine"
+                            description="02engine settings modal section"
+                            id="tw.settingsModal.02engine"
+                        />
+                    </Header>
+                    <CustomUI
+                        customUI={props.customUI}
+                        onChange={props.onCustomUIChange}
+                    />
+                    <CustomizeToolbox
+                        onOpenToolboxLayout={props.onOpenToolboxLayout}
+                    />
+                </React.Fragment>
             )}
-            {props.customUI && (
+            {props.engineSettings && props.customUI && (
                 <ResetWindowCoefficients
                     onResetWindowCoefficients={props.onResetWindowCoefficients}
                 />
             )}
-            <Header>
-                <FormattedMessage
-                    defaultMessage="02Engine VScode Toolbox"
-                    description="Settings modal section"
-                    id="tw.settingsModal.extensionDebugging"
-                />
-            </Header>
-            <ExtensionDebugging
-                isConnected={props.extensionDebugConnected}
-                isConnectionFailed={props.extensionDebugFailed}
-                onConnect={props.onExtensionDebugConnect}
-            />
-            <Header>
-                <FormattedMessage
-                    defaultMessage="Background Settings"
-                    description="Settings modal section for custom editor backgrounds"
-                    id="tw.settingsModal.backgroundSettings"
-                />
-            </Header>
-            <BackgroundSettings
-                editorBackground={props.editorBackground}
-                intl={props.intl}
-                onBlurChange={props.onBackgroundBlurChange}
-                onClearImage={props.onClearBackgroundImage}
-                onImageChange={props.onBackgroundImageChange}
-                onTargetChange={props.onBackgroundTargetChange}
-            />
+            {props.engineSettings && (
+                <React.Fragment>
+                    <Header>
+                        <FormattedMessage
+                            defaultMessage="02Engine VScode Toolbox"
+                            description="Settings modal section"
+                            id="tw.settingsModal.extensionDebugging"
+                        />
+                    </Header>
+                    <ExtensionDebugging
+                        isConnected={props.extensionDebugConnected}
+                        isConnectionFailed={props.extensionDebugFailed}
+                        onConnect={props.onExtensionDebugConnect}
+                    />
+                    <Header>
+                        <FormattedMessage
+                            defaultMessage="Background Settings"
+                            description="Settings modal section for custom editor backgrounds"
+                            id="tw.settingsModal.backgroundSettings"
+                        />
+                    </Header>
+                    <BackgroundSettings
+                        editorBackground={props.editorBackground}
+                        intl={props.intl}
+                        onBlurChange={props.onBackgroundBlurChange}
+                        onClearImage={props.onClearBackgroundImage}
+                        onImageChange={props.onBackgroundImageChange}
+                        onTargetChange={props.onBackgroundTargetChange}
+                    />
+                </React.Fragment>
+            )}
         </Box>
     </Modal>
 );
@@ -874,6 +929,7 @@ SettingsModalComponent.propTypes = {
     intl: intlShape,
     onClose: PropTypes.func,
     isEmbedded: PropTypes.bool,
+    engineSettings: PropTypes.bool,
     framerate: PropTypes.number,
     onFramerateChange: PropTypes.func,
     onCustomizeFramerate: PropTypes.func,
@@ -907,6 +963,7 @@ SettingsModalComponent.propTypes = {
     onBackgroundBlurChange: PropTypes.func,
     onBackgroundTargetChange: PropTypes.func,
     onClearBackgroundImage: PropTypes.func,
+    onOpenToolboxLayout: PropTypes.func,
     onResetWindowCoefficients: PropTypes.func,
     extensionDebugConnected: PropTypes.bool,
     extensionDebugFailed: PropTypes.bool,

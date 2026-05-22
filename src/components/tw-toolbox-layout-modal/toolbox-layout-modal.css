@@ -1,0 +1,370 @@
+@import "../../css/colors.css";
+@import "../../css/default-colors.css";
+
+.modal-content {
+    max-width: 980px;
+    margin-top: 35px;
+}
+
+.body {
+    background: $ui-modal-background;
+    padding: 1.35rem 1.6rem;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+}
+
+.top-bar,
+.panel-header-row,
+.group-editor {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.top-bar {
+    justify-content: space-between;
+}
+
+.enable-row {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+}
+
+.checkbox {
+    margin-right: 0.5rem;
+}
+
+.hint {
+    margin: 0.65rem 0 1rem;
+    color: $text-primary-transparent;
+}
+
+.layout-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.9fr) minmax(420px, 1.2fr);
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    background: $ui-white;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 0.5rem;
+    padding: 0.85rem;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.panel-header,
+.sub-header {
+    font-weight: bold;
+    color: $text-primary-default;
+}
+
+.panel-header-row {
+    justify-content: space-between;
+    margin-bottom: 0.65rem;
+}
+
+.group-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 0.75rem;
+}
+
+.group-chip,
+.group-chip-selected,
+.group-chip-add {
+    border: 0;
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font: inherit;
+    cursor: pointer;
+}
+
+.group-chip {
+    background: $ui-tertiary;
+    color: $text-primary-default;
+}
+
+.group-chip-selected {
+    background: $looks-secondary;
+    color: $ui-white;
+}
+
+.group-chip-add {
+    width: 2rem;
+    justify-content: center;
+    background: $ui-black-transparent;
+    color: $text-primary-default;
+}
+
+.group-chip-name {
+    font-weight: bold;
+}
+
+.group-chip-count {
+    min-width: 1.3rem;
+    height: 1.3rem;
+    padding: 0 0.25rem;
+    border-radius: 999px;
+    background: $ui-white;
+    color: $text-primary-default;
+    font-size: 0.75rem;
+    line-height: 1.3rem;
+    text-align: center;
+}
+
+.group-chip-selected .group-chip-count {
+    background: $ui-white;
+}
+
+.group-editor-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.group-editor-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.current-group-label {
+    font-weight: bold;
+    color: $text-primary-default;
+}
+
+.group-editor-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.group-editor-column {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.block-list,
+.mini-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    border-radius: 0.35rem;
+}
+
+.block-list {
+    padding-right: 0.25rem;
+}
+
+.category-section {
+    margin-top: 0.8rem;
+}
+
+.category-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.35rem;
+}
+
+.category-bubble {
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 2px solid;
+    border-radius: 100%;
+    flex: 0 0 auto;
+}
+
+.category-title {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: $text-primary-transparent;
+}
+
+.block-row,
+.group-block-row,
+.add-block-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 2rem;
+    margin-bottom: 0.25rem;
+}
+
+.block-row {
+    padding: 0.1rem 0;
+    background: transparent;
+}
+
+.block-preview-wrap {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    height: 2.5rem;
+    background: transparent;
+    padding: 0;
+    border: 0;
+}
+
+.block-preview :global(.blocklySvg) {
+    width: 100% !important;
+    height: auto !important;
+}
+
+.block-preview :global(.blocklyWorkspace) {
+    display: block;
+}
+
+.block-preview {
+    width: 100%;
+    height: 100%;
+}
+
+.block-row:hover,
+.group-block-row:hover,
+.add-block-button:hover {
+    background: $badge-border;
+}
+
+.block-type {
+    font-family: monospace;
+    font-size: 0.82rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sub-header {
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+}
+
+.mini-list {
+    padding: 0.45rem;
+    background: $ui-modal-background;
+}
+
+.group-block-row {
+    justify-content: space-between;
+    padding: 0.35rem 0.45rem;
+    font-family: monospace;
+    font-size: 0.82rem;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button,
+.remove-block-button {
+    border: none;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+    padding: 0.45rem 0.75rem;
+}
+
+.primary-button {
+    background: $looks-secondary;
+    color: $ui-white;
+}
+
+.secondary-button {
+    background: $ui-tertiary;
+    color: $text-primary-default;
+}
+
+.danger-button,
+.remove-block-button {
+    background: $error-primary;
+    color: $ui-white;
+}
+
+.remove-block-button {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.group-name-edit {
+    border: 1px solid $ui-black-transparent;
+    border-radius: 0.25rem;
+    padding: 0.2rem 0.4rem;
+    min-width: 11rem;
+    font: inherit;
+    color: $text-primary-default;
+    background: $ui-white;
+}
+
+.group-color-inline {
+    width: 2.5rem;
+    height: 2rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 0.25rem;
+    background: $ui-white;
+}
+
+.group-delete-inline {
+    border: none;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    padding: 0.35rem 0.65rem;
+    background: $error-primary;
+    color: $ui-white;
+}
+
+.empty-text,
+.empty-state {
+    color: $text-primary-transparent;
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    padding: 2rem;
+    text-align: center;
+}
+
+@media (max-width: 760px) {
+    .layout-grid,
+    .group-editor-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .layout-grid {
+        align-items: start;
+    }
+
+    .body {
+        overflow-y: auto;
+    }
+}
+
+@media (max-height: 600px) {
+    .modal-content {
+        margin: 50px auto;
+        height: calc(100vh - 100px);
+        max-height: calc(100vh - 100px);
+    }
+
+    .body {
+        max-height: calc(100vh - 130px);
+    }
+}

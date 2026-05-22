@@ -23,6 +23,7 @@ const SettingsMenu = ({
     isRtl,
     onClickDesktopSettings,
     onOpenCustomSettings,
+    onOpen02EngineSettings,
     onRequestClose,
     onRequestOpen,
     onSetDefaultProject,
@@ -59,6 +60,17 @@ const SettingsMenu = ({
             place={isRtl ? 'left' : 'right'}
         >
             <MenuSection>
+                {onOpen02EngineSettings && (
+                    <MenuItem onClick={onOpen02EngineSettings}>
+                        <span className={styles.engineSettingsItem}>
+                            <FormattedMessage
+                                defaultMessage="02engine Settings"
+                                description="Menu bar item for 02engine settings"
+                                id="tw.menuBar.02engineSettings"
+                            />
+                        </span>
+                    </MenuItem>
+                )}
                 {canChangeLanguage && <LanguageMenu onRequestCloseSettings={onRequestClose} />}
                 {canChangeTheme && (
                     <React.Fragment>
@@ -103,6 +115,7 @@ SettingsMenu.propTypes = {
     isRtl: PropTypes.bool,
     onClickDesktopSettings: PropTypes.func,
     onOpenCustomSettings: PropTypes.func,
+    onOpen02EngineSettings: PropTypes.func,
     onRequestClose: PropTypes.func,
     onRequestOpen: PropTypes.func,
     onSetDefaultProject: PropTypes.func,

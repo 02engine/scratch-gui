@@ -15,6 +15,8 @@ const MODAL_CONNECTION = 'connectionModal';
 const MODAL_TIPS_LIBRARY = 'tipsLibrary';
 const MODAL_USERNAME = 'usernameModal';
 const MODAL_SETTINGS = 'settingsModal';
+const MODAL_02ENGINE_SETTINGS = '02engineSettingsModal';
+const MODAL_TOOLBOX_LAYOUT = 'toolboxLayoutModal';
 const MODAL_CUSTOM_EXTENSION = 'customExtensionModal';
 const MODAL_CCW_EXTENSION = 'ccwExtensionModal';
 const MODAL_EXTENSION_IMPORT_METHOD = 'extensionImportMethodModal';
@@ -37,6 +39,8 @@ const initialState = {
     [MODAL_TIPS_LIBRARY]: false,
     [MODAL_USERNAME]: false,
     [MODAL_SETTINGS]: false,
+    [MODAL_02ENGINE_SETTINGS]: false,
+    [MODAL_TOOLBOX_LAYOUT]: false,
     [MODAL_CUSTOM_EXTENSION]: false,
     [MODAL_CCW_EXTENSION]: false,
     [MODAL_EXTENSION_IMPORT_METHOD]: false,
@@ -120,6 +124,12 @@ const openUsernameModal = function () {
 const openSettingsModal = function () {
     return openModal(MODAL_SETTINGS);
 };
+const open02EngineSettingsModal = function () {
+    return openModal(MODAL_02ENGINE_SETTINGS);
+};
+const openToolboxLayoutModal = function () {
+    return openModal(MODAL_TOOLBOX_LAYOUT);
+};
 const openCustomExtensionModal = function () {
     return openModal(MODAL_CUSTOM_EXTENSION);
 };
@@ -189,6 +199,12 @@ const closeUsernameModal = function () {
 const closeSettingsModal = function () {
     return closeModal(MODAL_SETTINGS);
 };
+const close02EngineSettingsModal = function () {
+    return closeModal(MODAL_02ENGINE_SETTINGS);
+};
+const closeToolboxLayoutModal = function () {
+    return closeModal(MODAL_TOOLBOX_LAYOUT);
+};
 const closeCustomExtensionModal = function () {
     return closeModal(MODAL_CUSTOM_EXTENSION);
 };
@@ -231,6 +247,8 @@ export {
     openConnectionModal,
     openUsernameModal,
     openSettingsModal,
+    open02EngineSettingsModal,
+    openToolboxLayoutModal,
     openCustomExtensionModal,
     openCCWExtensionModal,
     openExtensionImportMethodModal,
@@ -253,6 +271,8 @@ export {
     closeConnectionModal,
     closeUsernameModal,
     closeSettingsModal,
+    close02EngineSettingsModal,
+    closeToolboxLayoutModal,
     closeCustomExtensionModal,
     closeCCWExtensionModal,
     closeExtensionImportMethodModal,

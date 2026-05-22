@@ -10,6 +10,7 @@ import {
 
 const CUSTOM_UI_KEY = 'tw:customUI';
 const EDITOR_BACKGROUND_KEY = 'tw:editorBackground';
+const TOOLBOX_LAYOUT_KEY = 'tw:toolboxLayout';
 
 const getLocalStorageItem = key => {
     try {
@@ -75,6 +76,22 @@ const setPersistentEditorBackground = editorBackground => (
     )
 );
 
+const getPersistentToolboxLayout = (fallback = null) => {
+    const stored = getLocalStorageItem(TOOLBOX_LAYOUT_KEY);
+    if (stored === null) {
+        return fallback;
+    }
+    try {
+        return JSON.parse(stored);
+    } catch (e) {
+        return fallback;
+    }
+};
+
+const setPersistentToolboxLayout = toolboxLayout => (
+    setLocalStorageItem(TOOLBOX_LAYOUT_KEY, JSON.stringify(toolboxLayout || {}))
+);
+
 const hydratePersistentEditorBackground = async background => {
     const normalized = normalizeEditorBackground(background);
     if (normalized.imageStorage !== EDITOR_BACKGROUND_IMAGE_STORAGE.INDEXED_DB) {
@@ -102,9 +119,12 @@ const hydratePersistentEditorBackground = async background => {
 export {
     CUSTOM_UI_KEY,
     EDITOR_BACKGROUND_KEY,
+    TOOLBOX_LAYOUT_KEY,
     getPersistentCustomUI,
     setPersistentCustomUI,
     getPersistentEditorBackground,
     hydratePersistentEditorBackground,
-    setPersistentEditorBackground
+    setPersistentEditorBackground,
+    getPersistentToolboxLayout,
+    setPersistentToolboxLayout
 };

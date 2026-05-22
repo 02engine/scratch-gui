@@ -8,6 +8,7 @@ import { intlShape, injectIntl, defineMessages } from 'react-intl';
 import VMScratchBlocks from '../lib/blocks';
 import VM from 'scratch-vm';
 import initializeBlockDisableExtension from '../lib/block-disable-extensions';
+import {applyCustomToolboxLayout} from '../lib/custom-toolbox-layout';
 
 import log from '../lib/log.js';
 import Prompt from './prompt.jsx';
@@ -302,6 +303,7 @@ class Blocks extends React.Component {
             this.props.locale !== nextProps.locale ||
             this.props.anyModalVisible !== nextProps.anyModalVisible ||
             this.props.layoutToken !== nextProps.layoutToken ||
+            this.props.toolboxLayout !== nextProps.toolboxLayout ||
             this.props.editingTargetId !== nextProps.editingTargetId ||
             this.props.stageSize !== nextProps.stageSize ||
             this.props.customStageSize !== nextProps.customStageSize
@@ -328,9 +330,13 @@ class Blocks extends React.Component {
             this.props.isVisible &&
             (
                 this.props.layoutToken !== prevProps.layoutToken ||
+                this.props.toolboxLayout !== prevProps.toolboxLayout ||
                 this.props.editingTargetId !== prevProps.editingTargetId
             )
         ) {
+            if (this.props.toolboxLayout !== prevProps.toolboxLayout) {
+                this.requestToolboxStateSync(true);
+            }
             if (this.props.editingTargetId !== prevProps.editingTargetId) {
                 this.flushWorkspaceMetrics();
                 this.props.vm.refreshWorkspace();
@@ -813,12 +819,13 @@ class Blocks extends React.Component {
                 this.props.vm.runtime.getBlocksXML(target),
                 this.props.theme
             );
-            return makeToolboxXML(false, target.isStage, target.id, dynamicBlocksXML,
+            const defaultToolboxXML = makeToolboxXML(false, target.isStage, target.id, dynamicBlocksXML,
                 targetCostumes[targetCostumes.length - 1].name,
                 stageCostumes[stageCostumes.length - 1].name,
                 targetSounds.length > 0 ? targetSounds[targetSounds.length - 1].name : '',
                 this.props.theme.getBlockColors()
             );
+            return applyCustomToolboxLayout(defaultToolboxXML, this.props.toolboxLayout);
         } catch {
             return null;
         }
@@ -1550,6 +1557,7 @@ Blocks.propTypes = {
     stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired,
     theme: PropTypes.instanceOf(Theme),
     toolboxXML: PropTypes.string,
+    toolboxLayout: PropTypes.shape({}),
     updateMetrics: PropTypes.func,
     updateToolboxState: PropTypes.func,
     useCatBlocks: PropTypes.bool,
@@ -1594,6 +1602,7 @@ const mapStateToProps = state => ({
     locale: state.locales.locale,
     messages: state.locales.messages,
     toolboxXML: state.scratchGui.toolbox.toolboxXML,
+    toolboxLayout: state.scratchGui.tw.toolboxLayout,
     customProceduresVisible: state.scratchGui.customProcedures.active,
     workspaceMetrics: state.scratchGui.workspaceMetrics,
     useCatBlocks: isTimeTravel2020(state)

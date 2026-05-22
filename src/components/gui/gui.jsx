@@ -36,7 +36,7 @@ import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
 import TelemetryModal from '../telemetry-modal/telemetry-modal.jsx';
 import TWUsernameModal from '../../containers/tw-username-modal.jsx';
-import TWSettingsModal from '../../containers/tw-settings-modal.jsx';
+import TWSettingsModal, {TW02EngineSettingsModal} from '../../containers/tw-settings-modal.jsx';
 import TWSecurityManager from '../../containers/tw-security-manager.jsx';
 import TWCustomExtensionModal from '../../containers/tw-custom-extension-modal.jsx';
 import TWCCWExtensionModal from '../../containers/tw-ccw-extension-modal.jsx';
@@ -46,6 +46,7 @@ import TWFontsModal from '../../containers/tw-fonts-modal.jsx';
 import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.jsx';
 import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx';
 import TWGitModal from '../../containers/tw-git-modal.jsx';
+import TWToolboxLayoutModal from '../../containers/tw-toolbox-layout-modal.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
 
 import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/layout-constants';
@@ -318,6 +319,8 @@ const GUIComponent = props => {
         tipsLibraryVisible,
         usernameModalVisible,
         settingsModalVisible,
+        engineSettingsModalVisible,
+        toolboxLayoutModalVisible,
         customExtensionModalVisible,
         ccwExtensionModalVisible,
         extensionImportMethodModalVisible,
@@ -1553,6 +1556,8 @@ const GUIComponent = props => {
                 <TWRestorePointManager />
                 {usernameModalVisible && <TWUsernameModal />}
                 {settingsModalVisible && <TWSettingsModal />}
+                {engineSettingsModalVisible && <TW02EngineSettingsModal />}
+                {toolboxLayoutModalVisible && <TWToolboxLayoutModal media={`${basePath}static/${theme.getBlocksMediaFolder()}/`} />}
                 {customExtensionModalVisible && <TWCustomExtensionModal />}
                 {ccwExtensionModalVisible && <TWCCWExtensionModal />}
                             {extensionImportMethodModalVisible && <TWExtensionImportModal vm={vm} />}
@@ -1916,6 +1921,8 @@ GUIComponent.propTypes = {
     tipsLibraryVisible: PropTypes.bool,
     usernameModalVisible: PropTypes.bool,
     settingsModalVisible: PropTypes.bool,
+    engineSettingsModalVisible: PropTypes.bool,
+    toolboxLayoutModalVisible: PropTypes.bool,
     customExtensionModalVisible: PropTypes.bool,
     ccwExtensionModalVisible: PropTypes.bool,
     extensionImportMethodModalVisible: PropTypes.bool,

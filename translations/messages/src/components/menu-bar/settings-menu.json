@@ -5,6 +5,11 @@
     "defaultMessage": "Settings"
   },
   {
+    "id": "tw.menuBar.02engineSettings",
+    "description": "Menu bar item for 02engine settings",
+    "defaultMessage": "02engine Settings"
+  },
+  {
     "id": "gui.menuBar.setDefaultProject",
     "description": "Menu item to set current project as default",
     "defaultMessage": "Set as default project"
