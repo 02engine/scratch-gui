@@ -186,6 +186,7 @@ const mapStateToProps = state => {
         usernameModalVisible: state.scratchGui.modals.usernameModal,
         settingsModalVisible: state.scratchGui.modals.settingsModal,
         customExtensionModalVisible: state.scratchGui.modals.customExtensionModal,
+        ccwExtensionModalVisible: state.scratchGui.modals.ccwExtensionModal,
             extensionImportMethodModalVisible: state.scratchGui.modals.extensionImportMethodModal,
             fontsModalVisible: state.scratchGui.modals.fontsModal,        unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,
         invalidProjectModalVisible: state.scratchGui.modals.invalidProjectModal,

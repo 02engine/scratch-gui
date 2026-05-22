@@ -10,7 +10,7 @@ import extensionLibraryContent, {
     galleryMore
 } from '../lib/libraries/extensions/index.jsx';
 import LibraryComponent from '../components/library/library.jsx';
-import extensionIcon from '../components/action-menu/icon--sprite.svg';
+import ccwIcon from '../lib/libraries/extensions/custom/ccw.svg';
 import libraryStyles from '../components/library/library.css';
 import {APP_NAME} from '../lib/brand.js';
 import log from '../lib/log';
@@ -157,7 +157,7 @@ const messages = defineMessages({
         id: 'tw.extensionLibrary.badge.native'
     },
     openCustomLoader: {
-        defaultMessage: 'Open custom loader',
+        defaultMessage: '加载自定义扩展',
         description: 'Action hint for the custom extension item',
         id: 'tw.extensionLibrary.action.custom'
     },
@@ -175,6 +175,16 @@ const messages = defineMessages({
         defaultMessage: 'Click to import',
         description: 'Action hint for importing an extension',
         id: 'tw.extensionLibrary.action.import'
+    },
+    ccwName: {
+        defaultMessage: '加载CCW扩展',
+        description: 'Name of the CCW extension loader item',
+        id: 'tw.extensionLibrary.ccw.name'
+    },
+    ccwDescription: {
+        defaultMessage: '从共创世界加载扩展，可从 https://assets.ccw.site/extensions 获取。',
+        description: 'Description of the CCW extension loader item',
+        id: 'tw.extensionLibrary.ccw.description'
     }
 });
 
@@ -205,6 +215,7 @@ const SOURCE_NAV_ORDER = [
 ];
 
 const FAVORITES_STORAGE_KEY = 'tw:library-favorites:extensionLibrary';
+const CCW_EXTENSION_ID = 'ccw_extension_loader';
 
 const getItemSelectionKey = item => item.extensionURL || item.extensionId;
 const isBatchSelectableItem = item => {
@@ -552,6 +563,7 @@ class ExtensionLibrary extends React.PureComponent {
             'handleClearFilters',
             'handleClearQuery',
             'handleClearSelection',
+            'handleCustomExtensionOpen',
             'handleEnableProcedureReturns',
             'handleFavoritesChange',
             'handleItemSelect',
@@ -635,11 +647,22 @@ class ExtensionLibrary extends React.PureComponent {
         };
         return this.props.intl.formatMessage(sourceMessages[sourceKey] || messages.sourceOther);
     }
+    getCCWLoaderItem () {
+        return {
+            name: <FormattedMessage {...messages.ccwName} />,
+            extensionId: CCW_EXTENSION_ID,
+            iconURL: ccwIcon,
+            description: <FormattedMessage {...messages.ccwDescription} />,
+            featured: true,
+            tags: []
+        };
+    }
     getLibraryItems () {
         const locale = this.props.intl?.locale;
         const baseLibrary = extensionLibraryContent
             .map(toLibraryItem)
             .map(item => translateGalleryItem(item, locale));
+        baseLibrary.push(toLibraryItem(this.getCCWLoaderItem()));
         if (this.state.gallery) {
             return [
                 ...baseLibrary,
@@ -685,6 +708,8 @@ class ExtensionLibrary extends React.PureComponent {
                 let source = SOURCE_KEYS.OTHER;
                 if (extensionId === 'custom_extension') {
                     source = SOURCE_KEYS.CUSTOM;
+                } else if (extensionId === CCW_EXTENSION_ID) {
+                    source = SOURCE_KEYS.OTHER;
                 } else if (extensionId === 'procedures_enable_return') {
                     source = SOURCE_KEYS.SPECIAL;
                 } else if (item.tags && item.tags.includes('scratch')) {
@@ -704,8 +729,9 @@ class ExtensionLibrary extends React.PureComponent {
                 }
 
                 const isCustomLoad = extensionId === 'custom_extension';
+                const isCCWLoad = extensionId === CCW_EXTENSION_ID;
                 const isSpecialAction = extensionId === 'procedures_enable_return';
-                const isNative = Boolean(extensionId && !item.extensionURL && !item.href && !isCustomLoad && !isSpecialAction);
+                const isNative = Boolean(extensionId && !item.extensionURL && !item.href && !isCustomLoad && !isCCWLoad && !isSpecialAction);
                 const candidateValues = new Set([
                     normalizeMatchValue(extensionId),
                     normalizeMatchValue(getNameText(this.props.intl, item.name)),
@@ -756,6 +782,7 @@ class ExtensionLibrary extends React.PureComponent {
                     favoriteKey: item.extensionURL || item.extensionId,
                     isBatchSelectable: isBatchSelectableItem(item),
                     isCompatible: !item.incompatibleWithScratch,
+                    isCCWLoad,
                     isCustomLoad,
                     isInstalled,
                     isNative,
@@ -801,6 +828,11 @@ class ExtensionLibrary extends React.PureComponent {
 
         if (extensionId === 'custom_extension') {
             this.props.onOpenCustomExtensionModal();
+            return;
+        }
+
+        if (extensionId === CCW_EXTENSION_ID) {
+            this.props.onOpenCCWExtensionModal();
             return;
         }
 
@@ -910,6 +942,9 @@ class ExtensionLibrary extends React.PureComponent {
             },
             selectedSource: SOURCE_KEYS.ALL
         });
+    }
+    handleCustomExtensionOpen () {
+        this.props.onOpenCustomExtensionModal();
     }
     isItemSelectable (item) {
         return item.isBatchSelectable;
@@ -1039,6 +1074,9 @@ class ExtensionLibrary extends React.PureComponent {
         if (item.isCustomLoad) {
             return <FormattedMessage {...messages.openCustomLoader} />;
         }
+        if (item.isCCWLoad) {
+            return <FormattedMessage {...messages.importExtension} />;
+        }
         if (item.href) {
             return <FormattedMessage {...messages.openWebsite} />;
         }
@@ -1106,6 +1144,18 @@ class ExtensionLibrary extends React.PureComponent {
                             </span>
                         </button>
                     ))}
+                    <button
+                        type="button"
+                        className={[
+                            libraryStyles.sidebarButton,
+                            libraryStyles.sidebarActionButton
+                        ].join(' ')}
+                        onClick={this.handleCustomExtensionOpen}
+                    >
+                        <div className={libraryStyles.sidebarButtonLabel}>
+                            <FormattedMessage {...messages.openCustomLoader} />
+                        </div>
+                    </button>
                 </div>
             </React.Fragment>
         );
@@ -1157,53 +1207,53 @@ class ExtensionLibrary extends React.PureComponent {
 
         return (
             <LibraryComponent
-                contentKey={[
-                    this.state.query,
-                    this.state.selectedSource,
-                    ...Object.keys(this.state.quickFilters)
-                        .filter(key => this.state.quickFilters[key])
-                ].join(':')}
-                data={library}
-                emptyState={this.renderEmptyState()}
-                favorites={this.state.favorites}
-                filterQuery={this.state.query}
-                filterable
-                getItemProps={this.getCardProps}
-                headerAction={this.state.selectedItemKeys.length > 0 ? (
-                    <React.Fragment>
-                        <button
-                            type="button"
-                            className={libraryStyles.headerSecondaryButton}
-                            onClick={this.handleClearSelection}
-                        >
-                            <FormattedMessage {...messages.clearSelection} />
-                        </button>
-                        <button
-                            type="button"
-                            className={libraryStyles.headerActionButton}
-                            onClick={this.handleBatchImport}
-                        >
-                            <FormattedMessage
-                                {...messages.batchImport}
-                                values={{count: this.state.selectedItemKeys.length}}
-                            />
-                        </button>
-                    </React.Fragment>
-                ) : null}
-                id="extensionLibrary"
-                isItemSelectable={this.isItemSelectable}
-                isItemSelected={this.isItemSelected}
-                persistableKey="favoriteKey"
-                quickFilters={this.getQuickFilterButtons()}
-                sections={library ? sections : []}
-                sidebar={this.getSidebar(counts)}
-                title={this.props.intl.formatMessage(messages.extensionTitle)}
-                visible={this.props.visible}
-                onFavoritesChange={this.handleFavoritesChange}
-                onFilterQueryChange={this.handleQueryChange}
-                onFilterQueryClear={this.handleClearQuery}
-                onItemSelectionToggle={this.handleSelectionToggle}
-                onItemSelected={this.handleItemSelect}
+                    contentKey={[
+                        this.state.query,
+                        this.state.selectedSource,
+                        ...Object.keys(this.state.quickFilters)
+                            .filter(key => this.state.quickFilters[key])
+                    ].join(':')}
+                    data={library}
+                    emptyState={this.renderEmptyState()}
+                    favorites={this.state.favorites}
+                    filterQuery={this.state.query}
+                    filterable
+                    getItemProps={this.getCardProps}
+                    headerAction={this.state.selectedItemKeys.length > 0 ? (
+                        <React.Fragment>
+                            <button
+                                type="button"
+                                className={libraryStyles.headerSecondaryButton}
+                                onClick={this.handleClearSelection}
+                            >
+                                <FormattedMessage {...messages.clearSelection} />
+                            </button>
+                            <button
+                                type="button"
+                                className={libraryStyles.headerActionButton}
+                                onClick={this.handleBatchImport}
+                            >
+                                <FormattedMessage
+                                    {...messages.batchImport}
+                                    values={{count: this.state.selectedItemKeys.length}}
+                                />
+                            </button>
+                        </React.Fragment>
+                    ) : null}
+                    id="extensionLibrary"
+                    isItemSelectable={this.isItemSelectable}
+                    isItemSelected={this.isItemSelected}
+                    persistableKey="favoriteKey"
+                    quickFilters={this.getQuickFilterButtons()}
+                    sections={library ? sections : []}
+                    sidebar={this.getSidebar(counts)}
+                    title={this.props.intl.formatMessage(messages.extensionTitle)}
+                    visible={this.props.visible}
+                    onFavoritesChange={this.handleFavoritesChange}
+                    onFilterQueryChange={this.handleQueryChange}
+                    onFilterQueryClear={this.handleClearQuery}
+                    onItemSelectionToggle={this.handleSelectionToggle}
+                    onItemSelected={this.handleItemSelect}
                 onRequestClose={this.props.onRequestClose}
             />
         );
@@ -1214,6 +1264,7 @@ ExtensionLibrary.propTypes = {
     intl: intlShape.isRequired,
     onCategorySelected: PropTypes.func,
     onEnableProcedureReturns: PropTypes.func,
+    onOpenCCWExtensionModal: PropTypes.func,
     onOpenCustomExtensionModal: PropTypes.func,
     onOpenExtensionImportMethodModal: PropTypes.func,
     onRequestClose: PropTypes.func,

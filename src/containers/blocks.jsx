@@ -30,6 +30,7 @@ import {
     closeExtensionLibrary,
     openSoundRecorder,
     openConnectionModal,
+    openCCWExtensionModal,
     openCustomExtensionModal,
     openExtensionImportMethodModal,
     setSelectedExtension,
@@ -1430,6 +1431,7 @@ class Blocks extends React.Component {
             isRtl,
             isVisible,
             onActivateColorPicker,
+            onOpenCCWExtensionModal,
             onOpenConnectionModal,
             onOpenSoundRecorder,
             onOpenCustomExtensionModal,
@@ -1482,6 +1484,7 @@ class Blocks extends React.Component {
                         onCategorySelected={this.handleCategorySelected}
                         onEnableProcedureReturns={this.handleEnableProcedureReturns}
                         onRequestClose={onRequestCloseExtensionLibrary}
+                        onOpenCCWExtensionModal={onOpenCCWExtensionModal}
                         onOpenCustomExtensionModal={onOpenCustomExtensionModal || reduxOnOpenCustomExtensionModal}
                         onOpenExtensionImportMethodModal={onOpenExtensionImportMethodModal}
                         onSetSelectedExtension={onSetSelectedExtension}
@@ -1523,6 +1526,7 @@ Blocks.propTypes = {
     locale: PropTypes.string.isRequired,
     messages: PropTypes.objectOf(PropTypes.string),
     onActivateColorPicker: PropTypes.func,
+    onOpenCCWExtensionModal: PropTypes.func,
     onActivateCustomProcedures: PropTypes.func,
     onOpenConnectionModal: PropTypes.func,
     onOpenSoundRecorder: PropTypes.func,
@@ -1602,6 +1606,7 @@ const mapDispatchToProps = dispatch => ({
         dispatch(setConnectionModalExtensionId(id));
         dispatch(openConnectionModal());
     },
+    onOpenCCWExtensionModal: () => dispatch(openCCWExtensionModal()),
     onOpenSoundRecorder: () => {
         dispatch(activateTab(SOUNDS_TAB_INDEX));
         dispatch(openSoundRecorder());

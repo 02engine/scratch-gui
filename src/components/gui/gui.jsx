@@ -39,6 +39,7 @@ import TWUsernameModal from '../../containers/tw-username-modal.jsx';
 import TWSettingsModal from '../../containers/tw-settings-modal.jsx';
 import TWSecurityManager from '../../containers/tw-security-manager.jsx';
 import TWCustomExtensionModal from '../../containers/tw-custom-extension-modal.jsx';
+import TWCCWExtensionModal from '../../containers/tw-ccw-extension-modal.jsx';
 import TWExtensionImportModal from '../../containers/tw-extension-import-modal.jsx';
 import TWRestorePointManager from '../../containers/tw-restore-point-manager.jsx';
 import TWFontsModal from '../../containers/tw-fonts-modal.jsx';
@@ -318,6 +319,7 @@ const GUIComponent = props => {
         usernameModalVisible,
         settingsModalVisible,
         customExtensionModalVisible,
+        ccwExtensionModalVisible,
         extensionImportMethodModalVisible,
         fontsModalVisible,
         unknownPlatformModalVisible,
@@ -1552,6 +1554,7 @@ const GUIComponent = props => {
                 {usernameModalVisible && <TWUsernameModal />}
                 {settingsModalVisible && <TWSettingsModal />}
                 {customExtensionModalVisible && <TWCustomExtensionModal />}
+                {ccwExtensionModalVisible && <TWCCWExtensionModal />}
                             {extensionImportMethodModalVisible && <TWExtensionImportModal vm={vm} />}
                             {fontsModalVisible && <TWFontsModal />}                {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
                 {invalidProjectModalVisible && <TWInvalidProjectModal />}
@@ -1914,6 +1917,7 @@ GUIComponent.propTypes = {
     usernameModalVisible: PropTypes.bool,
     settingsModalVisible: PropTypes.bool,
     customExtensionModalVisible: PropTypes.bool,
+    ccwExtensionModalVisible: PropTypes.bool,
     extensionImportMethodModalVisible: PropTypes.bool,
     fontsModalVisible: PropTypes.bool,
     unknownPlatformModalVisible: PropTypes.bool,

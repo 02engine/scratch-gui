@@ -189,6 +189,18 @@
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
+.sidebar-action-button {
+    margin-top: 0.45rem;
+    background: $motion-primary;
+    color: $ui-white;
+    font-weight: bold;
+}
+
+.sidebar-action-button:hover {
+    background: $motion-primary;
+    filter: brightness(0.96);
+}
+
 .sidebar-button-label {
     font-weight: bold;
     display: flex;
