@@ -25,6 +25,7 @@ const MonitorList = props => (
                 .map(monitorData => (
                     <Monitor
                         draggable={props.draggable}
+                        dragScale={props.stageSize.scale || 1}
                         height={monitorData.height}
                         id={monitorData.id}
                         isDiscrete={monitorData.isDiscrete}
@@ -55,7 +56,8 @@ MonitorList.propTypes = {
         width: PropTypes.number,
         height: PropTypes.number,
         widthDefault: PropTypes.number,
-        heightDefault: PropTypes.number
+        heightDefault: PropTypes.number,
+        scale: PropTypes.number
     }).isRequired
 };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import Draggable from 'react-draggable';
+import classNames from 'classnames';
 import {FormattedMessage} from 'react-intl';
 import {ContextMenuTrigger} from 'react-contextmenu';
 import {BorderedMenuItem, ContextMenu, MenuItem} from '../context-menu/context-menu.jsx';
@@ -13,6 +14,8 @@ import ListMonitor from '../../containers/list-monitor.jsx';
 import {Theme} from '../../lib/themes/index.js';
 
 import styles from './monitor.css';
+
+const DraggableCore = Draggable.DraggableCore;
 
 // Map category name to color name used in scratch-blocks Blockly.Colours
 const categoryColorMap = {
@@ -32,6 +35,95 @@ const modes = {
     list: ListMonitor
 };
 
+class ScaledMonitorDraggable extends React.Component {
+    constructor (props) {
+        super(props);
+        this.position = {x: 0, y: 0};
+        this.state = {dragging: false, x: 0, y: 0};
+    }
+    setElement = node => {
+        this.node = node;
+        const childRef = React.Children.only(this.props.children).props.componentRef;
+        if (childRef) childRef(node);
+    };
+    getScale () {
+        const scale = this.props.scale || 1;
+        return isFinite(scale) && scale > 0 ? scale : 1;
+    }
+    getBoundPosition (x, y) {
+        if (!this.node) return {x, y};
+
+        const boundsNode = this.node.ownerDocument.querySelector(this.props.bounds);
+        if (!boundsNode) return {x, y};
+
+        const scale = this.getScale();
+        const boundsRect = boundsNode.getBoundingClientRect();
+        const boundsWidth = boundsRect.width / scale;
+        const boundsHeight = boundsRect.height / scale;
+        const left = -this.node.offsetLeft;
+        const top = -this.node.offsetTop;
+        const right = boundsWidth - this.node.offsetWidth - this.node.offsetLeft;
+        const bottom = boundsHeight - this.node.offsetHeight - this.node.offsetTop;
+
+        return {
+            x: Math.max(left, Math.min(x, right)),
+            y: Math.max(top, Math.min(y, bottom))
+        };
+    }
+    handleDragStart = () => {
+        this.setState({dragging: true});
+    };
+    handleDrag = (e, data) => {
+        const scale = this.getScale();
+        this.position = this.getBoundPosition(
+            this.position.x + (data.deltaX / scale),
+            this.position.y + (data.deltaY / scale)
+        );
+        this.setState(this.position);
+    };
+    handleDragStop = (e, data) => {
+        this.setState(Object.assign({dragging: false}, this.position));
+        this.props.onStop(e, this.position);
+    };
+    render () {
+        const child = React.Children.only(this.props.children);
+        return (
+            <DraggableCore
+                cancel={this.props.cancel}
+                disabled={this.props.disabled}
+                enableUserSelectHack={false}
+                onDrag={this.handleDrag}
+                onStart={this.handleDragStart}
+                onStop={this.handleDragStop}
+            >
+                {React.cloneElement(child, {
+                    className: classNames(child.props.className, {
+                        [this.props.defaultClassNameDragging]: this.state.dragging
+                    }),
+                    componentRef: this.setElement,
+                    style: Object.assign({}, child.props.style, {
+                        transform: `translate(${this.state.x}px,${this.state.y}px)`
+                    })
+                })}
+            </DraggableCore>
+        );
+    }
+}
+
+ScaledMonitorDraggable.propTypes = {
+    bounds: PropTypes.string.isRequired,
+    cancel: PropTypes.string,
+    children: PropTypes.node.isRequired,
+    defaultClassNameDragging: PropTypes.string,
+    disabled: PropTypes.bool,
+    onStop: PropTypes.func.isRequired,
+    scale: PropTypes.number
+};
+
+ScaledMonitorDraggable.defaultProps = {
+    scale: 1
+};
+
 const getCategoryColor = (theme, category) => {
     const colors = theme.getStageBlockColors();
     return {
@@ -47,11 +139,12 @@ const MonitorComponent = props => (
         holdToDisplay={props.mode === 'slider' ? -1 : 1000}
         id={`monitor-${props.label}`}
     >
-        <Draggable
+        <ScaledMonitorDraggable
             bounds=".monitor-overlay" // Class for monitor container
             cancel=".no-drag" // Class used for slider input to prevent drag
             defaultClassNameDragging={styles.dragging}
             disabled={!props.draggable}
+            scale={props.dragScale}
             onStop={props.onDragEnd}
 
             // https://github.com/TurboWarp/scratch-gui/issues/950
@@ -69,7 +162,7 @@ const MonitorComponent = props => (
                     ...props
                 })}
             </Box>
-        </Draggable>
+        </ScaledMonitorDraggable>
         {ReactDOM.createPortal((
             // Use a portal to render the context menu outside the flow to avoid
             // positioning conflicts between the monitors `transform: scale` and
@@ -144,6 +237,7 @@ MonitorComponent.propTypes = {
     category: PropTypes.oneOf(Object.keys(categoryColorMap)),
     componentRef: PropTypes.func.isRequired,
     draggable: PropTypes.bool.isRequired,
+    dragScale: PropTypes.number,
     id: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
     mode: PropTypes.oneOf(monitorModes),

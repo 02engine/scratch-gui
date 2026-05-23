@@ -383,6 +383,12 @@ const GUIComponent = props => {
         setStageWindowAutoFit(value => !value);
     }, []);
 
+    React.useEffect(() => {
+        windowStateStorage.saveWindowState('stage', {
+            autoFit: stageWindowAutoFit
+        });
+    }, [stageWindowAutoFit]);
+
     const handleMenuBarCollapseChange = React.useCallback(collapsed => {
         menuBarCollapsedRef.current = collapsed;
         setMenuBarCollapsed(collapsed);
