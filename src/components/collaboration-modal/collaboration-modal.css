@@ -143,19 +143,6 @@
     }
 }
 
-.alphaBanner {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.5rem;
-    background: $error-transparent;
-    border-bottom: 1px solid $error-primary;
-    color: $error-primary;
-    font-size: 0.875rem;
-    line-height: 1.4;
-}
-
 .bannerIcon {
     flex-shrink: 0;
     margin-top: 0.125rem;
@@ -182,13 +169,6 @@
     align-items: center;
     margin-bottom: 1rem;
     padding-left: 1rem;
-}
-
-.headerIcon {
-    width: 24px;
-    height: 24px;
-    margin-right: 0.75rem;
-    color: $text-primary;
 }
 
 .headerText {

@@ -494,18 +494,8 @@ class CollaborationModal extends Component {
     renderJoinStep () {
         return (
             <Box className={styles.content}>
-                <div className={styles.alphaBanner}>
-                    <div className={styles.bannerIcon}>
-                        {/* AlertTriangle 圖示已移除 */}
-                    </div>
-                    <div className={styles.bannerContent}>
-                        <strong>{'Alpha Warning:'}</strong>
-                        {'This feature is in early development. Your projects may get corrupted or broken. Use at your own risk.'}
-                    </div>
-                </div>
-
                 <div className={styles.header}>
-                    <div className={styles.headerIcon} />
+                    <div/>
                     <div className={styles.headerText}>
                         <FormattedMessage
                             defaultMessage="Live Collaboration"
@@ -610,14 +600,6 @@ class CollaborationModal extends Component {
     renderConnectingStep () {
         return (
             <Box className={styles.content}>
-                <div className={styles.alphaBanner}>
-                    <div className={styles.bannerIcon}>
-                        {/* AlertTriangle 圖示已移除 */}
-                    </div>
-                    <div className={styles.bannerContent}>
-                        <strong>Alpha Warning:</strong> This feature is in early development. Your projects may get corrupted or broken. Use at your own risk.
-                    </div>
-                </div>
                 <div className={styles.connecting}>
                     <div className={styles.spinner} />
                     <FormattedMessage
@@ -649,17 +631,8 @@ class CollaborationModal extends Component {
 
         return (
             <Box className={styles.content}>
-                <div className={styles.alphaBanner}>
-                    <div className={styles.bannerIcon}>
-                        {/* AlertTriangle 圖示已移除 */}
-                    </div>
-                    <div className={styles.bannerContent}>
-                        <strong>Alpha Warning:</strong> This feature is in early development. Your projects may get corrupted or broken. Use at your own risk.
-                    </div>
-                </div>
-
                 <div className={styles.header}>
-                    <div className={styles.headerIcon} />
+                    <div/>
                     <div className={styles.headerText}>
                         <FormattedMessage
                             defaultMessage="Room: {roomId}"
@@ -916,16 +889,8 @@ class CollaborationModal extends Component {
     renderPendingApprovalStep () {
         return (
             <Box className={styles.content}>
-                <div className={styles.alphaBanner}>
-                    <div className={styles.bannerIcon}>
-                        {/* AlertTriangle 圖示已移除 */}
-                    </div>
-                    <div className={styles.bannerContent}>
-                        <strong>Alpha Warning:</strong> This feature is in early development. Your projects may get corrupted or broken. Use at your own risk.
-                    </div>
-                </div>
                 <div className={styles.header}>
-                    <div className={styles.headerIcon} />
+                    <div/>
                     <div className={styles.headerText}>
                         <FormattedMessage
                             defaultMessage="Waiting for Host Approval"

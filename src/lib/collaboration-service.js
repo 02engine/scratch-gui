@@ -128,7 +128,8 @@ class CollaborationService {
         }, 30000);
 
         this.peerConfig = {
-            host: 'peer.deepsealab.dpdns.org',
+            host: 'collab.bilup.org',
+            key: 'bilup',
             port: 443,
             path: '/',
             secure: true,
