@@ -14,6 +14,7 @@ import styles from './sprite-selector.css';
 import fileUploadIcon from '../action-menu/icon--file-upload.svg';
 import paintIcon from '../action-menu/icon--paint.svg';
 import spriteIcon from '../action-menu/icon--sprite.svg';
+import layersIcon from '../action-menu/icon--layers.svg';
 import surpriseIcon from '../action-menu/icon--surprise.svg';
 import searchIcon from '../action-menu/icon--search.svg';
 
@@ -37,6 +38,11 @@ const messages = defineMessages({
         id: 'gui.spriteSelector.addSpriteFromFile',
         description: 'Button to add a sprite in the target pane from file',
         defaultMessage: 'Upload Sprite'
+    },
+    manageSpriteLayers: {
+        id: 'gui.spriteSelector.manageSpriteLayers',
+        description: 'Button to manage sprite layer order',
+        defaultMessage: 'Manage sprite layers'
     }
 });
 
@@ -58,6 +64,7 @@ const SpriteSelectorComponent = function (props) {
         onExportSprite,
         onFileUploadClick,
         onNewSpriteClick,
+        onManageSpriteLayersClick,
         onPaintSpriteClick,
         onSelectSprite,
         onSpriteUpload,
@@ -113,6 +120,13 @@ const SpriteSelectorComponent = function (props) {
                 onSelectSprite={onSelectSprite}
             />
             <ActionMenu
+                className={styles.layerButton}
+                img={layersIcon}
+                title={intl.formatMessage(messages.manageSpriteLayers)}
+                tooltipPlace={isRtl(intl.locale) ? 'right' : 'left'}
+                onClick={onManageSpriteLayersClick}
+            />
+            <ActionMenu
                 className={styles.addButton}
                 img={spriteIcon}
                 moreButtons={[
@@ -165,6 +179,7 @@ SpriteSelectorComponent.propTypes = {
     onDuplicateSprite: PropTypes.func,
     onExportSprite: PropTypes.func,
     onFileUploadClick: PropTypes.func,
+    onManageSpriteLayersClick: PropTypes.func,
     onNewSpriteClick: PropTypes.func,
     onPaintSpriteClick: PropTypes.func,
     onSelectSprite: PropTypes.func,

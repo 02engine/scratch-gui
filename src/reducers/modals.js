@@ -17,6 +17,7 @@ const MODAL_USERNAME = 'usernameModal';
 const MODAL_SETTINGS = 'settingsModal';
 const MODAL_02ENGINE_SETTINGS = '02engineSettingsModal';
 const MODAL_TOOLBOX_LAYOUT = 'toolboxLayoutModal';
+const MODAL_SPRITE_LAYER = 'spriteLayerModal';
 const MODAL_CUSTOM_EXTENSION = 'customExtensionModal';
 const MODAL_CCW_EXTENSION = 'ccwExtensionModal';
 const MODAL_EXTENSION_IMPORT_METHOD = 'extensionImportMethodModal';
@@ -41,6 +42,7 @@ const initialState = {
     [MODAL_SETTINGS]: false,
     [MODAL_02ENGINE_SETTINGS]: false,
     [MODAL_TOOLBOX_LAYOUT]: false,
+    [MODAL_SPRITE_LAYER]: false,
     [MODAL_CUSTOM_EXTENSION]: false,
     [MODAL_CCW_EXTENSION]: false,
     [MODAL_EXTENSION_IMPORT_METHOD]: false,
@@ -130,6 +132,9 @@ const open02EngineSettingsModal = function () {
 const openToolboxLayoutModal = function () {
     return openModal(MODAL_TOOLBOX_LAYOUT);
 };
+const openSpriteLayerModal = function () {
+    return openModal(MODAL_SPRITE_LAYER);
+};
 const openCustomExtensionModal = function () {
     return openModal(MODAL_CUSTOM_EXTENSION);
 };
@@ -205,6 +210,9 @@ const close02EngineSettingsModal = function () {
 const closeToolboxLayoutModal = function () {
     return closeModal(MODAL_TOOLBOX_LAYOUT);
 };
+const closeSpriteLayerModal = function () {
+    return closeModal(MODAL_SPRITE_LAYER);
+};
 const closeCustomExtensionModal = function () {
     return closeModal(MODAL_CUSTOM_EXTENSION);
 };
@@ -249,6 +257,7 @@ export {
     openSettingsModal,
     open02EngineSettingsModal,
     openToolboxLayoutModal,
+    openSpriteLayerModal,
     openCustomExtensionModal,
     openCCWExtensionModal,
     openExtensionImportMethodModal,
@@ -273,6 +282,7 @@ export {
     closeSettingsModal,
     close02EngineSettingsModal,
     closeToolboxLayoutModal,
+    closeSpriteLayerModal,
     closeCustomExtensionModal,
     closeCCWExtensionModal,
     closeExtensionImportMethodModal,

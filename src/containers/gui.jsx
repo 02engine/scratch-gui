@@ -187,6 +187,7 @@ const mapStateToProps = state => {
         settingsModalVisible: state.scratchGui.modals.settingsModal,
         engineSettingsModalVisible: state.scratchGui.modals['02engineSettingsModal'],
         toolboxLayoutModalVisible: state.scratchGui.modals.toolboxLayoutModal,
+        spriteLayerModalVisible: state.scratchGui.modals.spriteLayerModal,
         customExtensionModalVisible: state.scratchGui.modals.customExtensionModal,
         ccwExtensionModalVisible: state.scratchGui.modals.ccwExtensionModal,
             extensionImportMethodModalVisible: state.scratchGui.modals.extensionImportMethodModal,

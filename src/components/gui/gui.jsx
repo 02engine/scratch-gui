@@ -47,6 +47,7 @@ import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.j
 import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx';
 import TWGitModal from '../../containers/tw-git-modal.jsx';
 import TWToolboxLayoutModal from '../../containers/tw-toolbox-layout-modal.jsx';
+import SpriteLayerModal from '../../containers/sprite-layer-modal.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
 
 import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/layout-constants';
@@ -321,6 +322,7 @@ const GUIComponent = props => {
         settingsModalVisible,
         engineSettingsModalVisible,
         toolboxLayoutModalVisible,
+        spriteLayerModalVisible,
         customExtensionModalVisible,
         ccwExtensionModalVisible,
         extensionImportMethodModalVisible,
@@ -1558,6 +1560,7 @@ const GUIComponent = props => {
                 {settingsModalVisible && <TWSettingsModal />}
                 {engineSettingsModalVisible && <TW02EngineSettingsModal />}
                 {toolboxLayoutModalVisible && <TWToolboxLayoutModal media={`${basePath}static/${theme.getBlocksMediaFolder()}/`} />}
+                {spriteLayerModalVisible && <SpriteLayerModal />}
                 {customExtensionModalVisible && <TWCustomExtensionModal />}
                 {ccwExtensionModalVisible && <TWCCWExtensionModal />}
                             {extensionImportMethodModalVisible && <TWExtensionImportModal vm={vm} />}
@@ -1923,6 +1926,7 @@ GUIComponent.propTypes = {
     settingsModalVisible: PropTypes.bool,
     engineSettingsModalVisible: PropTypes.bool,
     toolboxLayoutModalVisible: PropTypes.bool,
+    spriteLayerModalVisible: PropTypes.bool,
     customExtensionModalVisible: PropTypes.bool,
     ccwExtensionModalVisible: PropTypes.bool,
     extensionImportMethodModalVisible: PropTypes.bool,

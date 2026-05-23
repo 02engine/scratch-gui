@@ -6,7 +6,8 @@ import {intlShape, injectIntl} from 'react-intl';
 
 import {
     openSpriteLibrary,
-    closeSpriteLibrary
+    closeSpriteLibrary,
+    openSpriteLayerModal
 } from '../reducers/modals';
 import {activateTab, COSTUMES_TAB_INDEX, BLOCKS_TAB_INDEX} from '../reducers/editor-tab';
 import {setReceivedBlocks} from '../reducers/hovered-target';
@@ -305,6 +306,10 @@ const mapDispatchToProps = dispatch => ({
     onNewSpriteClick: e => {
         e.preventDefault();
         dispatch(openSpriteLibrary());
+    },
+    onManageSpriteLayersClick: e => {
+        e.preventDefault();
+        dispatch(openSpriteLayerModal());
     },
     onRequestCloseSpriteLibrary: () => {
         dispatch(closeSpriteLibrary());

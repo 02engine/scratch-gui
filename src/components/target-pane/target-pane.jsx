@@ -34,6 +34,7 @@ const TargetPane = ({
     onDuplicateSprite,
     onExportSprite,
     onFileUploadClick,
+    onManageSpriteLayersClick,
     onNewSpriteClick,
     onPaintSpriteClick,
     onRequestCloseSpriteLibrary,
@@ -72,6 +73,7 @@ const TargetPane = ({
             onDuplicateSprite={onDuplicateSprite}
             onExportSprite={onExportSprite}
             onFileUploadClick={onFileUploadClick}
+            onManageSpriteLayersClick={onManageSpriteLayersClick}
             onNewSpriteClick={onNewSpriteClick}
             onPaintSpriteClick={onPaintSpriteClick}
             onSelectSprite={onSelectSprite}
@@ -146,6 +148,7 @@ TargetPane.propTypes = {
     onDuplicateSprite: PropTypes.func,
     onExportSprite: PropTypes.func,
     onFileUploadClick: PropTypes.func,
+    onManageSpriteLayersClick: PropTypes.func,
     onNewSpriteClick: PropTypes.func,
     onPaintSpriteClick: PropTypes.func,
     onRequestCloseExtensionLibrary: PropTypes.func,

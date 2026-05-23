@@ -108,6 +108,7 @@ class ActionMenu extends React.Component {
             tooltipPlace,
             onClick
         } = this.props;
+        const hasMoreButtons = moreButtons && moreButtons.length;
 
         return (
             <div
@@ -139,52 +140,54 @@ class ActionMenu extends React.Component {
                     id={this.mainTooltipId}
                     place={tooltipPlace || 'left'}
                 />
-                <div className={styles.moreButtonsOuter}>
-                    <div className={styles.moreButtons}>
-                        {(moreButtons || []).map(({img, title, onClick: handleClick,
-                            fileAccept, fileChange, fileInput, fileMultiple}, keyId) => {
-                            const isComingSoon = !handleClick;
-                            const hasFileInput = fileInput;
-                            const tooltipId = `${this.mainTooltipId}-${title}`;
-                            return (
-                                <div key={`${tooltipId}-${keyId}`}>
-                                    <button
-                                        aria-label={title}
-                                        className={classNames(styles.button, styles.moreButton, {
-                                            [styles.comingSoon]: isComingSoon
-                                        })}
-                                        data-for={tooltipId}
-                                        data-tip={title}
-                                        onClick={hasFileInput ? handleClick : this.clickDelayer(handleClick)}
-                                    >
-                                        <img
-                                            className={styles.moreIcon}
-                                            draggable={false}
-                                            src={img}
+                {hasMoreButtons ? (
+                    <div className={styles.moreButtonsOuter}>
+                        <div className={styles.moreButtons}>
+                            {moreButtons.map(({img, title, onClick: handleClick,
+                                fileAccept, fileChange, fileInput, fileMultiple}, keyId) => {
+                                const isComingSoon = !handleClick;
+                                const hasFileInput = fileInput;
+                                const tooltipId = `${this.mainTooltipId}-${title}`;
+                                return (
+                                    <div key={`${tooltipId}-${keyId}`}>
+                                        <button
+                                            aria-label={title}
+                                            className={classNames(styles.button, styles.moreButton, {
+                                                [styles.comingSoon]: isComingSoon
+                                            })}
+                                            data-for={tooltipId}
+                                            data-tip={title}
+                                            onClick={hasFileInput ? handleClick : this.clickDelayer(handleClick)}
+                                        >
+                                            <img
+                                                className={styles.moreIcon}
+                                                draggable={false}
+                                                src={img}
+                                            />
+                                            {hasFileInput ? (
+                                                <input
+                                                    accept={fileAccept}
+                                                    className={styles.fileInput}
+                                                    multiple={fileMultiple}
+                                                    ref={fileInput}
+                                                    type="file"
+                                                    onChange={fileChange}
+                                                />) : null}
+                                        </button>
+                                        <ReactTooltip
+                                            className={classNames(styles.tooltip, {
+                                                [styles.comingSoonTooltip]: isComingSoon
+                                            })}
+                                            effect="solid"
+                                            id={tooltipId}
+                                            place={tooltipPlace || 'left'}
                                         />
-                                        {hasFileInput ? (
-                                            <input
-                                                accept={fileAccept}
-                                                className={styles.fileInput}
-                                                multiple={fileMultiple}
-                                                ref={fileInput}
-                                                type="file"
-                                                onChange={fileChange}
-                                            />) : null}
-                                    </button>
-                                    <ReactTooltip
-                                        className={classNames(styles.tooltip, {
-                                            [styles.comingSoonTooltip]: isComingSoon
-                                        })}
-                                        effect="solid"
-                                        id={tooltipId}
-                                        place={tooltipPlace || 'left'}
-                                    />
-                                </div>
-                            );
-                        })}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
+                ) : null}
             </div>
         );
     }

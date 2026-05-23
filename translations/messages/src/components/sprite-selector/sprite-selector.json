@@ -18,5 +18,10 @@
     "id": "gui.spriteSelector.addSpriteFromFile",
     "description": "Button to add a sprite in the target pane from file",
     "defaultMessage": "Upload Sprite"
+  },
+  {
+    "id": "gui.spriteSelector.manageSpriteLayers",
+    "description": "Button to manage sprite layer order",
+    "defaultMessage": "Manage sprite layers"
   }
 ]
