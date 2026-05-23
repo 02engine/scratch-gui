@@ -21,6 +21,34 @@ const getDefaultBlocksForSprite = () => collectDefaultBlocks(makeToolboxXML(fals
 
 const createGroupId = () => `group-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
+const CONFIG_VERSION = 1;
+
+const downloadTextFile = (filename, text) => {
+    const blob = new Blob([text], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};
+
+const readFileAsText = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+});
+
+const getLayoutFromImport = data => {
+    if (!data || typeof data !== 'object') {
+        throw new Error('Imported file must contain a JSON object.');
+    }
+    return data.toolboxLayout || data.layout || data;
+};
+
 const PREVIEW_OPTIONS = {
     comments: false,
     collapse: false,
@@ -103,6 +131,8 @@ class ToolboxLayoutModal extends React.Component {
         this.handleUpdateGroup = this.handleUpdateGroup.bind(this);
         this.handleDeleteGroup = this.handleDeleteGroup.bind(this);
         this.handleToggleBlockInGroup = this.handleToggleBlockInGroup.bind(this);
+        this.handleExport = this.handleExport.bind(this);
+        this.handleImport = this.handleImport.bind(this);
         this.isBlockHidden = this.isBlockHidden.bind(this);
     }
     setLayout (layout) {
@@ -116,6 +146,27 @@ class ToolboxLayoutModal extends React.Component {
     handleReset () {
         this.setState({selectedGroupId: null});
         this.setLayout(DEFAULT_TOOLBOX_LAYOUT);
+    }
+    handleExport () {
+        const payload = {
+            version: CONFIG_VERSION,
+            exportedAt: new Date().toISOString(),
+            toolboxLayout: normalizeToolboxLayout(this.props.toolboxLayout)
+        };
+        downloadTextFile('02engine-toolbox-layout.json', `${JSON.stringify(payload, null, 2)}\n`);
+    }
+    async handleImport (file) {
+        if (!file) return;
+        try {
+            const text = await readFileAsText(file);
+            const data = JSON.parse(text);
+            const layout = normalizeToolboxLayout(getLayoutFromImport(data));
+            this.setState({selectedGroupId: layout.groups[0] && layout.groups[0].id});
+            this.setLayout(layout);
+        } catch (error) {
+            // eslint-disable-next-line no-alert
+            alert(`Failed to import toolbox layout: ${error.message || error}`);
+        }
     }
     handleToggleBlockHidden (block) {
         const layout = this.props.toolboxLayout;
@@ -230,6 +281,8 @@ class ToolboxLayoutModal extends React.Component {
                 onAddGroup={this.handleAddGroup}
                 onClose={this.props.onClose}
                 onDeleteGroup={this.handleDeleteGroup}
+                onExport={this.handleExport}
+                onImport={this.handleImport}
                 onToggleBlockInGroup={this.handleToggleBlockInGroup}
                 onToggleBlockHidden={this.handleToggleBlockHidden}
                 onReset={this.handleReset}

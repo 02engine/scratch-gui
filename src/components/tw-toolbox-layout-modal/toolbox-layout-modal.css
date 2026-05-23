@@ -25,6 +25,12 @@
     justify-content: space-between;
 }
 
+.top-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .enable-row {
     display: flex;
     align-items: center;
@@ -266,6 +272,7 @@
 
 .primary-button,
 .secondary-button,
+.secondary-button-file,
 .danger-button,
 .remove-block-button {
     border: none;
@@ -277,6 +284,7 @@
 
 .primary-button,
 .secondary-button,
+.secondary-button-file,
 .danger-button {
     padding: 0.45rem 0.75rem;
 }
@@ -286,9 +294,19 @@
     color: $ui-white;
 }
 
-.secondary-button {
+.secondary-button,
+.secondary-button-file {
     background: $ui-tertiary;
     color: $text-primary-default;
+}
+
+.secondary-button-file {
+    display: inline-flex;
+    align-items: center;
+}
+
+.file-input {
+    display: none;
 }
 
 .danger-button,
