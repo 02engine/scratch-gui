@@ -16,6 +16,11 @@ const messages = defineMessages({
         defaultMessage: 'Custom Group',
         description: 'Default name for a custom toolbox group',
         id: 'tw.toolboxLayoutModal.newGroupName'
+    },
+    importError: {
+        defaultMessage: 'Import toolbox layout configuration',
+        description: 'Accessible label for importing toolbox layout configuration',
+        id: 'tw.toolboxLayoutModal.importConfigLabel'
     }
 });
 
@@ -46,17 +51,47 @@ const ToolboxLayoutModal = props => {
                             id="tw.toolboxLayoutModal.enable"
                         />
                     </label>
-                    <button
-                        className={styles.secondaryButton}
-                        type="button"
-                        onClick={props.onReset}
-                    >
-                        <FormattedMessage
-                            defaultMessage="Reset"
-                            description="Reset custom toolbox layout"
-                            id="tw.toolboxLayoutModal.reset"
-                        />
-                    </button>
+                    <div className={styles.topBarActions}>
+                        <label className={styles.secondaryButtonFile}>
+                            <FormattedMessage
+                                defaultMessage="Import"
+                                description="Import toolbox layout configuration button"
+                                id="tw.toolboxLayoutModal.importConfig"
+                            />
+                            <input
+                                accept=".json,application/json"
+                                aria-label={props.intl.formatMessage(messages.importError)}
+                                className={styles.fileInput}
+                                type="file"
+                                onChange={event => {
+                                    props.onImport(event.target.files && event.target.files[0]);
+                                    event.target.value = '';
+                                }}
+                            />
+                        </label>
+                        <button
+                            className={styles.secondaryButton}
+                            type="button"
+                            onClick={props.onExport}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Export"
+                                description="Export toolbox layout configuration button"
+                                id="tw.toolboxLayoutModal.exportConfig"
+                            />
+                        </button>
+                        <button
+                            className={styles.secondaryButton}
+                            type="button"
+                            onClick={props.onReset}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Reset"
+                                description="Reset custom toolbox layout"
+                                id="tw.toolboxLayoutModal.reset"
+                            />
+                        </button>
+                    </div>
                 </div>
                 <p className={styles.hint}>
                     <FormattedMessage
@@ -297,6 +332,8 @@ ToolboxLayoutModal.propTypes = {
     onAddGroup: PropTypes.func,
     onClose: PropTypes.func,
     onDeleteGroup: PropTypes.func,
+    onExport: PropTypes.func,
+    onImport: PropTypes.func,
     onReset: PropTypes.func,
     onSelectGroup: PropTypes.func,
     onToggleBlockInGroup: PropTypes.func,

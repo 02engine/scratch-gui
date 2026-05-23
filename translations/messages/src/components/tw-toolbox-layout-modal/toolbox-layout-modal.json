@@ -10,9 +10,24 @@
     "defaultMessage": "Custom Group"
   },
   {
+    "id": "tw.toolboxLayoutModal.importConfigLabel",
+    "description": "Accessible label for importing toolbox layout configuration",
+    "defaultMessage": "Import toolbox layout configuration"
+  },
+  {
     "id": "tw.toolboxLayoutModal.enable",
     "description": "Toggle custom toolbox layout",
     "defaultMessage": "Enable custom toolbox"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.importConfig",
+    "description": "Import toolbox layout configuration button",
+    "defaultMessage": "Import"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.exportConfig",
+    "description": "Export toolbox layout configuration button",
+    "defaultMessage": "Export"
   },
   {
     "id": "tw.toolboxLayoutModal.reset",
