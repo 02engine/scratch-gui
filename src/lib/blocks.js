@@ -9,6 +9,7 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
     const workspaceProto = ScratchBlocks.WorkspaceSvg && ScratchBlocks.WorkspaceSvg.prototype;
     const draggerProto = ScratchBlocks.WorkspaceDragger && ScratchBlocks.WorkspaceDragger.prototype;
     const blockProto = ScratchBlocks.BlockSvg && ScratchBlocks.BlockSvg.prototype;
+    const deferredIntersectionCheckDelay = ScratchBlocks.__twOffscreenCullingScreenMargin ? 0 : 120;
 
     const clearIntersectionObserver = workspace => {
         const observer = workspace && workspace.intersectionObserver;
@@ -196,7 +197,7 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                 if (typeof originalQueueIntersectionCheck === 'function') {
                     originalQueueIntersectionCheck.call(this);
                 }
-            }, 120);
+            }, deferredIntersectionCheckDelay);
         };
 
         workspaceProto.onMouseWheel_ = function (e) {
