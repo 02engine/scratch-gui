@@ -60,21 +60,26 @@ const SpriteSelectorItem = props => {
         </ContextMenu>
     ) : null;
 
+    const attributes = {
+        className: classNames(props.className, styles.spriteSelectorItem, {
+            [styles.isSelected]: props.selected
+        }),
+        onClick: props.onClick,
+        onContextMenu: props.onContextMenu,
+        onMouseEnter: props.onMouseEnter,
+        onMouseLeave: props.onMouseLeave,
+        onMouseDown: props.onMouseDown,
+        onTouchStart: props.onMouseDown
+    };
+    attributes['data-sa-context-menu-id'] = menuId;
+    if (typeof props.id === 'string') {
+        attributes['data-block-drop-target-id'] = props.id;
+    }
+
     return (
         <React.Fragment>
             <ContextMenuTrigger
-                attributes={{
-                    className: classNames(props.className, styles.spriteSelectorItem, {
-                        [styles.isSelected]: props.selected
-                    }),
-                    'data-sa-context-menu-id': menuId,
-                    onClick: props.onClick,
-                    onContextMenu: props.onContextMenu,
-                    onMouseEnter: props.onMouseEnter,
-                    onMouseLeave: props.onMouseLeave,
-                    onMouseDown: props.onMouseDown,
-                    onTouchStart: props.onMouseDown
-                }}
+                attributes={attributes}
                 disable={props.preventContextMenu || props.disableContextMenu}
                 id={menuId}
                 ref={props.componentRef}
@@ -118,6 +123,8 @@ SpriteSelectorItem.propTypes = {
     costumeURL: PropTypes.string,
     details: PropTypes.string,
     disableContextMenu: PropTypes.bool,
+    // eslint-disable-next-line react/forbid-prop-types
+    id: PropTypes.any,
     // eslint-disable-next-line react/forbid-prop-types
     name: PropTypes.any,
     number: PropTypes.number,

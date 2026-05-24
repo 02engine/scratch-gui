@@ -81,7 +81,7 @@ class ScaledMonitorDraggable extends React.Component {
         );
         this.setState(this.position);
     };
-    handleDragStop = (e, data) => {
+    handleDragStop = e => {
         this.setState(Object.assign({dragging: false}, this.position));
         this.props.onStop(e, this.position);
     };
@@ -146,9 +146,6 @@ const MonitorComponent = props => (
             disabled={!props.draggable}
             scale={props.dragScale}
             onStop={props.onDragEnd}
-
-            // https://github.com/TurboWarp/scratch-gui/issues/950
-            enableUserSelectHack={false}
         >
             <Box
                 className={styles.monitorContainer}

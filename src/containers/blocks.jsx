@@ -99,6 +99,7 @@ const DroppableBlocks = DropAreaHOC([
 
 const WORKSPACE_METRICS_IDLE_MS = 500;
 const OFFSCREEN_CULLING_BLOCK_THRESHOLD = 1000;
+const BLOCK_DRAG_PORTAL_Z_INDEX = 1000;
 class Blocks extends React.Component {
     constructor(props) {
         super(props);
@@ -147,6 +148,9 @@ class Blocks extends React.Component {
             'flushToolboxStateSync',
             'syncWorkspaceCullingState',
             'updateToolboxStateIfNeeded',
+            'installBlockDragPortal',
+            'installBlockDropTargetOutsideCheck',
+            'restoreBlockDragPortal',
             'setBlocks',
             'setLocale',
             'handleEnableProcedureReturns'
@@ -183,6 +187,8 @@ class Blocks extends React.Component {
         this.pendingProcedureReturnsToolboxXML = null;
         this.monitorCheckboxStates = new Map();
         this.isLargeWorkspace = false;
+        this.blockDragPortal = null;
+        this.restoreBlockDropTargetOutsideCheck = null;
     }
     componentDidMount() {
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
@@ -216,6 +222,8 @@ class Blocks extends React.Component {
         );
         this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
         AddonHooks.blocklyWorkspace = this.workspace;
+        this.installBlockDropTargetOutsideCheck();
+        this.installBlockDragPortal();
         this.syncWorkspaceCullingState();
         window.__twEnableProcedureReturns = () => {
             this.handleEnableProcedureReturns();
@@ -412,6 +420,11 @@ class Blocks extends React.Component {
         if (window.__twEnableProcedureReturns) {
             delete window.__twEnableProcedureReturns;
         }
+        this.restoreBlockDragPortal();
+        if (this.restoreBlockDropTargetOutsideCheck) {
+            this.restoreBlockDropTargetOutsideCheck();
+            this.restoreBlockDropTargetOutsideCheck = null;
+        }
         this.workspace.dispose();
 
         // Clear the flyout blocks so that they can be recreated on mount.
@@ -433,6 +446,97 @@ class Blocks extends React.Component {
         }
 
         AddonHooks.blocklyWorkspace = null;
+    }
+    installBlockDropTargetOutsideCheck() {
+        if (!this.workspace || !this.workspace.isInsideBlocksArea || this.restoreBlockDropTargetOutsideCheck) {
+            return;
+        }
+        const workspace = this.workspace;
+        const originalIsInsideBlocksArea = workspace.isInsideBlocksArea;
+        workspace.isInsideBlocksArea = function (event) {
+            if (event && typeof document.elementsFromPoint === 'function') {
+                const elements = document.elementsFromPoint(event.clientX, event.clientY);
+                for (let i = 0; i < elements.length; i++) {
+                    if (elements[i].closest && elements[i].closest('[data-block-drop-target-id]')) {
+                        return false;
+                    }
+                }
+            }
+            return originalIsInsideBlocksArea.call(this, event);
+        };
+        this.restoreBlockDropTargetOutsideCheck = () => {
+            workspace.isInsideBlocksArea = originalIsInsideBlocksArea;
+        };
+    }
+    installBlockDragPortal() {
+        const dragSurface = this.workspace && this.workspace.getBlockDragSurface && this.workspace.getBlockDragSurface();
+        if (!dragSurface || !dragSurface.SVG_ || this.blockDragPortal) {
+            return;
+        }
+
+        const surface = dragSurface.SVG_;
+        this.blockDragPortal = {
+            surface,
+            originalParent: surface.parentNode,
+            originalNextSibling: surface.nextSibling,
+            originalStyle: surface.getAttribute('style'),
+            setBlocksAndShow: dragSurface.setBlocksAndShow,
+            clearAndHide: dragSurface.clearAndHide
+        };
+
+        const restoreSurfaceParent = () => {
+            if (!this.blockDragPortal || !surface.parentNode) {
+                return;
+            }
+            const {originalParent, originalNextSibling, originalStyle} = this.blockDragPortal;
+            if (originalParent && surface.parentNode !== originalParent) {
+                if (originalNextSibling && originalNextSibling.parentNode === originalParent) {
+                    originalParent.insertBefore(surface, originalNextSibling);
+                } else {
+                    originalParent.appendChild(surface);
+                }
+            }
+            if (originalStyle === null) {
+                surface.removeAttribute('style');
+            } else {
+                surface.setAttribute('style', originalStyle);
+            }
+        };
+
+        dragSurface.setBlocksAndShow = blocks => {
+            this.blockDragPortal.setBlocksAndShow.call(dragSurface, blocks);
+            const rect = this.blocks.getBoundingClientRect();
+            document.body.appendChild(surface);
+            surface.style.position = 'fixed';
+            surface.style.left = `${rect.left}px`;
+            surface.style.top = `${rect.top}px`;
+            surface.style.right = 'auto';
+            surface.style.bottom = 'auto';
+            surface.style.width = `${rect.width}px`;
+            surface.style.height = `${rect.height}px`;
+            surface.style.zIndex = BLOCK_DRAG_PORTAL_Z_INDEX;
+            surface.style.pointerEvents = 'none';
+        };
+
+        dragSurface.clearAndHide = optNewSurface => {
+            this.blockDragPortal.clearAndHide.call(dragSurface, optNewSurface);
+            restoreSurfaceParent();
+        };
+
+        this.blockDragPortal.restoreSurfaceParent = restoreSurfaceParent;
+        this.blockDragPortal.dragSurface = dragSurface;
+    }
+    restoreBlockDragPortal() {
+        if (!this.blockDragPortal) {
+            return;
+        }
+        const {dragSurface, setBlocksAndShow, clearAndHide, restoreSurfaceParent} = this.blockDragPortal;
+        if (dragSurface) {
+            dragSurface.setBlocksAndShow = setBlocksAndShow;
+            dragSurface.clearAndHide = clearAndHide;
+        }
+        restoreSurfaceParent();
+        this.blockDragPortal = null;
     }
     requestToolboxUpdate() {
         if (!this.props.isVisible) {

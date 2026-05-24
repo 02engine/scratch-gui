@@ -66,6 +66,7 @@ const StageSelector = props => {
                 [styles.receivedBlocks]: receivedBlocks
             })}
             componentRef={containerRef}
+            data-block-drop-target-id={props.id}
             onClick={onClick}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
@@ -135,6 +136,7 @@ StageSelector.propTypes = {
     containerRef: PropTypes.func,
     dragOver: PropTypes.bool,
     fileInputRef: PropTypes.func,
+    id: PropTypes.string,
     intl: intlShape.isRequired,
     onBackdropFileUpload: PropTypes.func,
     onBackdropFileUploadClick: PropTypes.func,

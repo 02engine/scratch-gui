@@ -233,7 +233,7 @@ const targetId = vm.runtime.getEditingTarget().id;
     }
     render () {
         const componentProps = omit(this.props, [
-            'asset', 'dispatchSetHoveredSprite', 'id', 'intl',
+            'asset', 'dispatchSetHoveredSprite', 'intl',
             'onActivateTab', 'onSelect', 'onShowImporting', 'onCloseImporting',
             'isRtl', 'workspaceMetrics'
         ]);
