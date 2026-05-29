@@ -89,9 +89,10 @@ class SoundTab extends React.Component {
     }
 
     handleDeleteSound (soundIndex) {
-        const restoreFun = this.props.vm.deleteSound(soundIndex);
-        if (soundIndex >= this.state.selectedSoundIndex) {
-            this.setState({selectedSoundIndex: Math.max(0, soundIndex - 1)});
+        const index = typeof soundIndex === 'number' ? soundIndex : this.state.selectedSoundIndex;
+        const restoreFun = this.props.vm.deleteSound(index);
+        if (index >= this.state.selectedSoundIndex) {
+            this.setState({selectedSoundIndex: Math.max(0, index - 1)});
         }
         this.props.dispatchUpdateRestore({restoreFun, deletedItem: 'Sound'});
     }

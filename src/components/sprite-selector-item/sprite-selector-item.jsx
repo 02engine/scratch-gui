@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 
 import DeleteButton from '../delete-button/delete-button.jsx';
 import styles from './sprite-selector-item.css';
-import {ContextMenuTrigger} from 'react-contextmenu';
+import {ContextMenuTrigger, hideMenu} from 'react-contextmenu';
 import {DangerousMenuItem, ContextMenu, MenuItem} from '../context-menu/context-menu.jsx';
 import {FormattedMessage} from 'react-intl';
 
@@ -19,10 +19,23 @@ const SpriteSelectorItem = props => {
     }
     const menuId = contextMenuIdRef.current;
 
+    const handleMenuMouseDown = onClick => event => {
+        if (event.button !== 0) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        onClick(event);
+        hideMenu();
+    };
+
     const menu = props.onDuplicateButtonClick || props.onDeleteButtonClick || props.onExportButtonClick ? (
         <ContextMenu id={menuId}>
             {props.onDuplicateButtonClick ? (
-                <MenuItem onClick={props.onDuplicateButtonClick}>
+                <MenuItem
+                    onClick={null}
+                    onMouseDown={handleMenuMouseDown(props.onDuplicateButtonClick)}
+                >
                     <FormattedMessage
                         defaultMessage="duplicate"
                         description="Menu item to duplicate in the right click menu"
@@ -31,7 +44,10 @@ const SpriteSelectorItem = props => {
                 </MenuItem>
             ) : null}
             {props.onExportButtonClick ? (
-                <MenuItem onClick={props.onExportButtonClick}>
+                <MenuItem
+                    onClick={null}
+                    onMouseDown={handleMenuMouseDown(props.onExportButtonClick)}
+                >
                     <FormattedMessage
                         defaultMessage="export"
                         description="Menu item to export the selected item"
@@ -40,7 +56,10 @@ const SpriteSelectorItem = props => {
                 </MenuItem>
             ) : null }
             {props.onRenameButtonClick ? (
-                <MenuItem onClick={props.onRenameButtonClick}>
+                <MenuItem
+                    onClick={null}
+                    onMouseDown={handleMenuMouseDown(props.onRenameButtonClick)}
+                >
                     <FormattedMessage
                         defaultMessage="rename"
                         description="Menu item to rename an item"
@@ -49,7 +68,10 @@ const SpriteSelectorItem = props => {
                 </MenuItem>
             ) : null}
             {props.onDeleteButtonClick ? (
-                <DangerousMenuItem onClick={props.onDeleteButtonClick}>
+                <DangerousMenuItem
+                    onClick={null}
+                    onMouseDown={handleMenuMouseDown(props.onDeleteButtonClick)}
+                >
                     <FormattedMessage
                         defaultMessage="delete"
                         description="Menu item to delete in the right click menu"
@@ -112,7 +134,7 @@ const SpriteSelectorItem = props => {
                     />
                 ) : null }
             </ContextMenuTrigger>
-            {menu && typeof document !== 'undefined' ? ReactDOM.createPortal(menu, document.body) : menu}
+            {menu && typeof document !== 'undefined' ? ReactDOM.createPortal(menu, document.body) : null}
         </React.Fragment>
     );
 };
@@ -123,6 +145,7 @@ SpriteSelectorItem.propTypes = {
     costumeURL: PropTypes.string,
     details: PropTypes.string,
     disableContextMenu: PropTypes.bool,
+    dragType: PropTypes.string,
     // eslint-disable-next-line react/forbid-prop-types
     id: PropTypes.any,
     // eslint-disable-next-line react/forbid-prop-types

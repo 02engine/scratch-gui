@@ -138,6 +138,21 @@ export default async function ({ addon, console, msg }) {
     return null;
   };
 
+  const getSpriteSelectorComponent = (element) => {
+    const candidates = [element, element && element.querySelector && element.querySelector(".react-contextmenu-wrapper")];
+    for (const candidate of candidates) {
+      let fiber = candidate && candidate[addon.tab.traps.getInternalKey(candidate)];
+      while (fiber) {
+        const component = fiber.stateNode;
+        if (component && component.props && component.props.dragType) {
+          return component;
+        }
+        fiber = fiber.return;
+      }
+    }
+    return null;
+  };
+
   const openFolderAsset = {
     assetId: "&__sa_folders_folder",
     encodeDataURI() {
@@ -747,7 +762,8 @@ export default async function ({ addon, console, msg }) {
   await addon.tab.scratchClassReady();
   addon.tab.createEditorContextMenu((ctxType, ctx) => {
     if (ctxType !== "sprite" && ctxType !== "costume" && ctxType !== "sound") return;
-    const component = ctx.target[addon.tab.traps.getInternalKey(ctx.target)].return.return.return.stateNode;
+    const component = getSpriteSelectorComponent(ctx.target);
+    if (!component) return;
     const data = getItemData(component.props);
     if (!data) return;
     if (typeof data.folder === "string") {
@@ -872,6 +888,11 @@ export default async function ({ addon, console, msg }) {
   });
 
   const patchSpriteSelectorItem = (SpriteSelectorItem) => {
+    if (SpriteSelectorItem.prototype.saFoldersPatched) {
+      return;
+    }
+    SpriteSelectorItem.prototype.saFoldersPatched = true;
+
     for (const method of ["handleDelete", "handleDuplicate", "handleExport"]) {
       const original = SpriteSelectorItem.prototype[method];
       SpriteSelectorItem.prototype[method] = function (...args) {
@@ -1351,7 +1372,11 @@ export default async function ({ addon, console, msg }) {
       reduxCondition: (state) => state.scratchGui.editorTab.activeTabIndex !== 0 && !state.scratchGui.mode.isPlayerOnly,
     });
     const sortableHOCInstance = getSortableHOCFromElement(selectorListItem);
+    const spriteSelectorItemInstance = getSpriteSelectorComponent(selectorListItem);
     verifySortableHOC(sortableHOCInstance);
+    if (spriteSelectorItemInstance) {
+      patchSpriteSelectorItem(spriteSelectorItemInstance.constructor);
+    }
     patchSortableHOC(sortableHOCInstance.constructor, TYPE_ASSETS);
     sortableHOCInstance.saInitialSetup();
   }
