@@ -63,5 +63,10 @@
     "id": "paint.modeTools.cornerRadius",
     "description": "Label for the corner radius input",
     "defaultMessage": "Corner Radius"
+  },
+  {
+    "id": "paint.modeTools.g2Smoothing",
+    "description": "Label for the G2 smoothing factor input",
+    "defaultMessage": "G2 Smoothing"
   }
 ]
