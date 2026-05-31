@@ -99,6 +99,36 @@
     border-left: 1px solid $ui-black-transparent;
 }
 
+.flyout-resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 0.5rem;
+    cursor: col-resize;
+    z-index: 45;
+    touch-action: none;
+}
+
+.flyout-resize-handle:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: transparent;
+    transition: background 0.12s ease;
+}
+
+.flyout-resize-handle:hover:after {
+    background: $ui-black-transparent;
+}
+
+:global(body.blocks-flyout-resizing) {
+    cursor: col-resize;
+    user-select: none;
+}
+
 
 .blocks :global(.blocklyBlockDragSurface) {
     /*

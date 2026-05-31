@@ -51,6 +51,10 @@ import LoadScratchBlocksHOC from '../lib/tw-load-scratch-blocks-hoc.jsx';
 import { findTopBlock } from '../lib/backpack/code-payload.js';
 import { gentlyRequestPersistentStorage } from '../lib/tw-persistent-storage.js';
 import {
+    getPersistentBlockFlyoutWidth,
+    setPersistentBlockFlyoutWidth
+} from '../lib/tw-persistent-settings';
+import {
     EDITOR_BACKGROUND_TARGETS,
     getEditorBackgroundStyle,
     hasEditorBackgroundTarget
@@ -100,6 +104,9 @@ const DroppableBlocks = DropAreaHOC([
 const WORKSPACE_METRICS_IDLE_MS = 500;
 const OFFSCREEN_CULLING_BLOCK_THRESHOLD = 1000;
 const BLOCK_DRAG_PORTAL_Z_INDEX = 1000;
+const DEFAULT_FLYOUT_WIDTH = 250;
+const DEFAULT_FLYOUT_CATEGORY_WIDTH = 60;
+const MIN_FLYOUT_WIDTH = 180;
 class Blocks extends React.Component {
     constructor(props) {
         super(props);
@@ -144,6 +151,11 @@ class Blocks extends React.Component {
             'flushWorkspaceChromeRefresh',
             'scheduleProcedureReturnsToolboxRefresh',
             'flushProcedureReturnsToolboxRefresh',
+            'patchFlyoutWidthSupport',
+            'applyFlyoutWidth',
+            'startFlyoutResize',
+            'handleFlyoutResizeMove',
+            'stopFlyoutResize',
             'requestToolboxStateSync',
             'flushToolboxStateSync',
             'syncWorkspaceCullingState',
@@ -189,12 +201,16 @@ class Blocks extends React.Component {
         this.isLargeWorkspace = false;
         this.blockDragPortal = null;
         this.restoreBlockDropTargetOutsideCheck = null;
+        this.flyoutWidth = this.clampFlyoutWidth(getPersistentBlockFlyoutWidth(DEFAULT_FLYOUT_WIDTH));
+        this.flyoutCategoryWidth = DEFAULT_FLYOUT_CATEGORY_WIDTH;
+        this.flyoutResizeStart = null;
     }
     componentDidMount() {
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
         this.ScratchBlocks.prompt = this.handlePromptStart;
         this.ScratchBlocks.statusButtonCallback = this.handleConnectionModalStart;
         this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
+        this.patchFlyoutWidthSupport();
 
         this.ScratchBlocks.FieldColourSlider.activateEyedropper_ = this.props.onActivateColorPicker;
         this.ScratchBlocks.Procedures.externalProcedureDefCallback = this.props.onActivateCustomProcedures;
@@ -222,6 +238,7 @@ class Blocks extends React.Component {
         );
         this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
         AddonHooks.blocklyWorkspace = this.workspace;
+        this.applyFlyoutWidth(this.flyoutWidth, false);
         this.installBlockDropTargetOutsideCheck();
         this.installBlockDragPortal();
         this.syncWorkspaceCullingState();
@@ -330,6 +347,10 @@ class Blocks extends React.Component {
             this.requestToolboxUpdate();
         }
 
+        if (this.workspace && this.props.isVisible && this.flyoutWidth !== (this.workspace.getFlyout && this.workspace.getFlyout() ? this.workspace.getFlyout().getWidth() : this.flyoutWidth)) {
+            this.applyFlyoutWidth(this.flyoutWidth, false);
+        }
+
         if (this.pendingProcedureReturnsToolboxRefresh && this.props.isVisible) {
             this.scheduleProcedureReturnsToolboxRefresh();
         }
@@ -417,6 +438,7 @@ class Blocks extends React.Component {
             cancelAnimationFrame(this.procedureReturnsRefreshFrame);
             this.procedureReturnsRefreshFrame = null;
         }
+        this.stopFlyoutResize();
         if (window.__twEnableProcedureReturns) {
             delete window.__twEnableProcedureReturns;
         }
@@ -697,6 +719,105 @@ class Blocks extends React.Component {
             this.pendingProcedureReturnsToolboxRefresh = false;
             this.pendingProcedureReturnsToolboxXML = null;
         }
+    }
+    clampFlyoutWidth(width) {
+        return Math.max(MIN_FLYOUT_WIDTH, width);
+    }
+    patchFlyoutWidthSupport() {
+        const ScratchBlocks = this.ScratchBlocks;
+        if (!ScratchBlocks || !ScratchBlocks.Flyout || !ScratchBlocks.Toolbox) {
+            return;
+        }
+        if (!ScratchBlocks.Flyout.prototype.setWidth) {
+            const originalGetWidth = ScratchBlocks.Flyout.prototype.getWidth;
+            ScratchBlocks.Flyout.prototype.getWidth = function () {
+                return typeof this.customWidth_ === 'number' ? this.customWidth_ : originalGetWidth.call(this);
+            };
+            ScratchBlocks.Flyout.prototype.setWidth = function (width) {
+                this.customWidth_ = width;
+            };
+        }
+        if (!ScratchBlocks.Toolbox.prototype.setWidth) {
+            ScratchBlocks.Toolbox.prototype.setWidth = function (width) {
+                this.width = width;
+            };
+        }
+    }
+    getFlyoutResizeClientX(event) {
+        if (event.touches && event.touches.length) {
+            return event.touches[0].clientX;
+        }
+        if (event.changedTouches && event.changedTouches.length) {
+            return event.changedTouches[0].clientX;
+        }
+        return event.clientX;
+    }
+    applyFlyoutWidth(width, persist = true) {
+        if (!this.workspace) {
+            return;
+        }
+        const toolbox = this.workspace.getToolbox ? this.workspace.getToolbox() : this.workspace.toolbox_;
+        const flyout = this.workspace.getFlyout ? this.workspace.getFlyout() : this.workspace.flyout_;
+        if (!toolbox || !flyout || typeof flyout.setWidth !== 'function' || typeof toolbox.setWidth !== 'function') {
+            return;
+        }
+
+        const nextWidth = this.clampFlyoutWidth(width);
+        if (this.flyoutCategoryWidth === DEFAULT_FLYOUT_CATEGORY_WIDTH) {
+            this.flyoutCategoryWidth = toolbox.getWidth() - flyout.getWidth();
+        }
+
+        flyout.setWidth(nextWidth);
+        toolbox.setWidth(this.flyoutCategoryWidth + nextWidth);
+        this.flyoutWidth = nextWidth;
+
+        if (persist) {
+            setPersistentBlockFlyoutWidth(nextWidth);
+        }
+
+        this.forceUpdate();
+        this.scheduleWorkspaceChromeRefresh();
+    }
+    startFlyoutResize(event) {
+        if (event.button !== undefined && event.button !== 0) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+
+        this.flyoutResizeStart = {
+            clientX: this.getFlyoutResizeClientX(event),
+            width: this.flyoutWidth
+        };
+        document.body.classList.add('blocks-flyout-resizing');
+        document.addEventListener('mousemove', this.handleFlyoutResizeMove);
+        document.addEventListener('mouseup', this.stopFlyoutResize);
+        document.addEventListener('touchmove', this.handleFlyoutResizeMove, {passive: false});
+        document.addEventListener('touchend', this.stopFlyoutResize);
+        document.addEventListener('touchcancel', this.stopFlyoutResize);
+    }
+    handleFlyoutResizeMove(event) {
+        if (!this.flyoutResizeStart) {
+            return;
+        }
+        event.preventDefault();
+        const clientX = this.getFlyoutResizeClientX(event);
+        const delta = this.props.isRtl ?
+            this.flyoutResizeStart.clientX - clientX :
+            clientX - this.flyoutResizeStart.clientX;
+        this.applyFlyoutWidth(this.flyoutResizeStart.width + delta);
+    }
+    stopFlyoutResize() {
+        if (!this.flyoutResizeStart) {
+            return;
+        }
+        this.flyoutResizeStart = null;
+        document.body.classList.remove('blocks-flyout-resizing');
+        document.removeEventListener('mousemove', this.handleFlyoutResizeMove);
+        document.removeEventListener('mouseup', this.stopFlyoutResize);
+        document.removeEventListener('touchmove', this.handleFlyoutResizeMove);
+        document.removeEventListener('touchend', this.stopFlyoutResize);
+        document.removeEventListener('touchcancel', this.stopFlyoutResize);
     }
     syncWorkspaceCullingState() {
         if (!this.workspace || !this.workspace.setOffscreenTopBlockCullingEnabled) {
@@ -1566,13 +1687,20 @@ class Blocks extends React.Component {
             editorBackground,
             EDITOR_BACKGROUND_TARGETS.BLOCKS
         );
+        const flyoutResizeHandleStyle = this.props.isRtl ? {
+            right: this.flyoutCategoryWidth + this.flyoutWidth - 4
+        } : {
+            left: this.flyoutCategoryWidth + this.flyoutWidth - 4
+        };
         return (
             <React.Fragment>
                 <DroppableBlocks
                     componentRef={this.setBlocks}
                     editorBackgroundActive={editorBackgroundActive}
                     editorBackgroundStyle={editorBackgroundActive ? getEditorBackgroundStyle(editorBackground) : null}
+                    flyoutResizeHandleStyle={flyoutResizeHandleStyle}
                     onDrop={this.handleDrop}
+                    onFlyoutResizeMouseDown={this.startFlyoutResize}
                     {...props}
                 />
                 {this.state.prompt ? (

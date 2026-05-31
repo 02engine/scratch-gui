@@ -11,6 +11,7 @@ import {
 const CUSTOM_UI_KEY = 'tw:customUI';
 const EDITOR_BACKGROUND_KEY = 'tw:editorBackground';
 const TOOLBOX_LAYOUT_KEY = 'tw:toolboxLayout';
+const BLOCK_FLYOUT_WIDTH_KEY = 'tw:blockFlyoutWidth';
 
 const getLocalStorageItem = key => {
     try {
@@ -92,6 +93,19 @@ const setPersistentToolboxLayout = toolboxLayout => (
     setLocalStorageItem(TOOLBOX_LAYOUT_KEY, JSON.stringify(toolboxLayout || {}))
 );
 
+const getPersistentBlockFlyoutWidth = (fallback = null) => {
+    const stored = getLocalStorageItem(BLOCK_FLYOUT_WIDTH_KEY);
+    if (stored === null) {
+        return fallback;
+    }
+    const width = Number(stored);
+    return Number.isFinite(width) ? width : fallback;
+};
+
+const setPersistentBlockFlyoutWidth = width => (
+    setLocalStorageItem(BLOCK_FLYOUT_WIDTH_KEY, String(width))
+);
+
 const hydratePersistentEditorBackground = async background => {
     const normalized = normalizeEditorBackground(background);
     if (normalized.imageStorage !== EDITOR_BACKGROUND_IMAGE_STORAGE.INDEXED_DB) {
@@ -120,11 +134,14 @@ export {
     CUSTOM_UI_KEY,
     EDITOR_BACKGROUND_KEY,
     TOOLBOX_LAYOUT_KEY,
+    BLOCK_FLYOUT_WIDTH_KEY,
     getPersistentCustomUI,
     setPersistentCustomUI,
     getPersistentEditorBackground,
     hydratePersistentEditorBackground,
     setPersistentEditorBackground,
     getPersistentToolboxLayout,
-    setPersistentToolboxLayout
+    setPersistentToolboxLayout,
+    getPersistentBlockFlyoutWidth,
+    setPersistentBlockFlyoutWidth
 };

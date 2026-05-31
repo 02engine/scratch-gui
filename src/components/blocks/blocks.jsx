@@ -10,6 +10,8 @@ const BlocksComponent = props => {
         dragOver,
         editorBackgroundActive,
         editorBackgroundStyle,
+        flyoutResizeHandleStyle,
+        onFlyoutResizeMouseDown,
         style,
         ...componentProps
     } = props;
@@ -22,7 +24,16 @@ const BlocksComponent = props => {
             {...componentProps}
             componentRef={containerRef}
             style={Object.assign({}, style, editorBackgroundStyle)}
-        />
+        >
+            {onFlyoutResizeMouseDown ? (
+                <div
+                    className={styles.flyoutResizeHandle}
+                    style={flyoutResizeHandleStyle}
+                    onMouseDown={onFlyoutResizeMouseDown}
+                    onTouchStart={onFlyoutResizeMouseDown}
+                />
+            ) : null}
+        </Box>
     );
 };
 BlocksComponent.propTypes = {
@@ -30,6 +41,8 @@ BlocksComponent.propTypes = {
     dragOver: PropTypes.bool,
     editorBackgroundActive: PropTypes.bool,
     editorBackgroundStyle: PropTypes.shape({}),
+    flyoutResizeHandleStyle: PropTypes.shape({}),
+    onFlyoutResizeMouseDown: PropTypes.func,
     style: PropTypes.shape({})
 };
 export default BlocksComponent;
