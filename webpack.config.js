@@ -282,6 +282,10 @@ module.exports = [
                     {
                         from: 'static',
                         to: ''
+                    },
+                    {
+                        from: 'static/extensions',
+                        to: 'static/extensions'
                     }
                 ]
             }),
@@ -345,6 +349,10 @@ module.exports = [
                             from: 'src/lib/libraries/*.json',
                             to: 'libraries',
                             flatten: true
+                        },
+                        {
+                            from: 'static/extensions',
+                            to: 'static/extensions'
                         }
                     ]
                 })

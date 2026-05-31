@@ -1852,7 +1852,7 @@ const mapDispatchToProps = dispatch => ({
         dispatch(activateTab(SOUNDS_TAB_INDEX));
         dispatch(openSoundRecorder());
     },
-    reduxOnOpenCustomExtensionModal: () => dispatch(openCustomExtensionModal()),
+    reduxOnOpenCustomExtensionModal: data => dispatch(openCustomExtensionModal(data)),
     onOpenExtensionImportMethodModal: () => dispatch(openExtensionImportMethodModal()),
     onSetSelectedExtension: extension => dispatch(setSelectedExtension(extension)),
     onSetSelectedExtensions: extensions => dispatch(setSelectedExtensions(extensions)),

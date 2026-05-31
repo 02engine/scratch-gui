@@ -52,7 +52,8 @@ const initialState = {
     [MODAL_INVALID_PROJECT]: false,
     [MODAL_GIT]: false,
     selectedExtension: null,
-    selectedExtensions: []
+    selectedExtensions: [],
+    customExtensionModalData: null
 };
 
 const reducer = function (state, action) {
@@ -60,11 +61,17 @@ const reducer = function (state, action) {
     switch (action.type) {
     case OPEN_MODAL:
         return Object.assign({}, state, {
-            [action.modal]: true
+            [action.modal]: true,
+            ...(action.modal === MODAL_CUSTOM_EXTENSION ? {
+                customExtensionModalData: action.data || null
+            } : {})
         });
     case CLOSE_MODAL:
         return Object.assign({}, state, {
-            [action.modal]: false
+            [action.modal]: false,
+            ...(action.modal === MODAL_CUSTOM_EXTENSION ? {
+                customExtensionModalData: null
+            } : {})
         });
     case SET_SELECTED_EXTENSION:
         return Object.assign({}, state, {
@@ -78,10 +85,11 @@ const reducer = function (state, action) {
         return state;
     }
 };
-const openModal = function (modal) {
+const openModal = function (modal, data) {
     return {
         type: OPEN_MODAL,
-        modal: modal
+        modal: modal,
+        data
     };
 };
 const closeModal = function (modal) {
@@ -135,8 +143,8 @@ const openToolboxLayoutModal = function () {
 const openSpriteLayerModal = function () {
     return openModal(MODAL_SPRITE_LAYER);
 };
-const openCustomExtensionModal = function () {
-    return openModal(MODAL_CUSTOM_EXTENSION);
+const openCustomExtensionModal = function (data) {
+    return openModal(MODAL_CUSTOM_EXTENSION, data);
 };
 const openCCWExtensionModal = function () {
     return openModal(MODAL_CCW_EXTENSION);
