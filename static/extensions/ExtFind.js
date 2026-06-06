@@ -29,11 +29,33 @@
   const pickLatest = (versions) => versions.find((version) => version.isLatest) || versions[0];
   const pickPrimaryFile = (version) => version?.files?.find((file) => file.isPrimary) || version?.files?.[0];
 
-  const loadExtensionUrl = async (url) => {
+  const fetchExtensionSource = async (url) => {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`文件下载失败：${response.status}`);
-    const code = await response.text();
-    Function('Scratch', `${code}\n//# sourceURL=${url}`)(Scratch);
+    return response.text();
+  };
+
+  const toDataURL = (code, sourceURL) => {
+    const source = `${code}\n//# sourceURL=${sourceURL}`;
+    const bytes = new TextEncoder().encode(source);
+    let binary = '';
+    bytes.forEach(byte => {
+      binary += String.fromCharCode(byte);
+    });
+    return `data:application/javascript;base64,${btoa(binary)}`;
+  };
+
+  const loadExtensionUrl = async (url, extensionId) => {
+    const extensionManager = Scratch.vm?.extensionManager;
+    if (extensionId && extensionManager?.isExtensionLoaded?.(extensionId)) {
+      return;
+    }
+
+    const code = await fetchExtensionSource(url);
+    if (extensionManager?.loadExtensionURL) {
+      return extensionManager.loadExtensionURL(toDataURL(code, url));
+    }
+    throw new Error('无法访问 Scratch VM 扩展加载器。');
   };
 
   const createDialog = () => {
@@ -147,7 +169,7 @@
       const file = files.find((item) => item.id === fileSelect.value) || pickPrimaryFile(version);
       if (!file) throw new Error(`版本 ${version.version} 没有文件。`);
       setStatus(`正在加载 ${extensionData.name} ${version.version} / ${file.displayName || file.originalName || '文件'}...`);
-      await loadExtensionUrl(`${API_BASE}/files/${encodeURIComponent(file.id)}/download`);
+      await loadExtensionUrl(`${API_BASE}/files/${encodeURIComponent(file.id)}/load.js`, extensionData.extensionId);
       setStatus(`已加载 ${extensionData.name} ${version.version} / ${file.displayName || file.originalName || '文件'}`);
       setTimeout(() => dialog.remove(), 600);
     };
@@ -162,5 +184,30 @@
     input.focus();
   };
 
-  openLoader();
+  class ExtFindLoader {
+    getInfo () {
+      return {
+        id: 'extfind',
+        name: 'ExtFind',
+        color1: '#00baad',
+        color2: '#00998f',
+        color3: '#006d66',
+        blocks: [
+          {
+            blockType: Scratch.BlockType.BUTTON,
+            text: '打开 ExtFind 扩展加载器',
+            func: 'openLoader'
+          }
+        ]
+      };
+    }
+
+    openLoader () {
+      openLoader();
+    }
+  }
+
+  Scratch.extensions.register(new ExtFindLoader());
+
+  setTimeout(openLoader, 0);
 })(Scratch);

@@ -281,33 +281,13 @@ const getURLStem = value => {
     }
 };
 
-const runRawScriptFromURL = async extensionURL => {
+const loadExtensionAsText = async (vm, extensionURL) => {
     const response = await fetch(extensionURL);
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const source = await response.text();
-    const vm = window.vm;
-    const Scratch = {
-        vm,
-        runtime: vm?.runtime,
-        renderer: vm?.runtime?.renderer,
-        extensions: {
-            unsandboxed: true,
-            register: () => {}
-        }
-    };
-    const previousScratch = window.Scratch;
-    window.Scratch = Scratch;
-    try {
-        Function('Scratch', `${source}\n//# sourceURL=${extensionURL}`)(Scratch);
-    } finally {
-        if (previousScratch === undefined) {
-            delete window.Scratch;
-        } else {
-            window.Scratch = previousScratch;
-        }
-    }
+    const text = await response.text();
+    await vm.extensionManager.loadExtensionURL(`data:application/javascript,${encodeURIComponent(text)}`);
 };
 
 const getNameText = (intl, value) => {
@@ -865,22 +845,25 @@ class ExtensionLibrary extends React.PureComponent {
             return;
         }
 
-        if (extensionId === 'extfind') {
-            runRawScriptFromURL(extensionURL)
-                .catch(err => {
-                    log.error(err);
-                    // eslint-disable-next-line no-alert
-                    alert(err);
-                });
-            return;
-        }
-
         if (extensionId === 'procedures_enable_return') {
             this.handleEnableProcedureReturns();
             return;
         }
 
         if (item.disabled) {
+            return;
+        }
+
+        if (extensionId === 'extfind') {
+            loadExtensionAsText(this.props.vm, extensionURL)
+                .then(() => {
+                    this.props.onCategorySelected(extensionId);
+                })
+                .catch(err => {
+                    log.error(err);
+                    // eslint-disable-next-line no-alert
+                    alert(err);
+                });
             return;
         }
 
