@@ -159,6 +159,7 @@ class Blocks extends React.Component {
             'requestToolboxStateSync',
             'flushToolboxStateSync',
             'syncWorkspaceCullingState',
+            'syncFlyoutCullingState',
             'updateToolboxStateIfNeeded',
             'installBlockDragPortal',
             'installBlockDropTargetOutsideCheck',
@@ -242,6 +243,7 @@ class Blocks extends React.Component {
         this.installBlockDropTargetOutsideCheck();
         this.installBlockDragPortal();
         this.syncWorkspaceCullingState();
+        this.syncFlyoutCullingState();
         window.__twEnableProcedureReturns = () => {
             this.handleEnableProcedureReturns();
             this.handleCategorySelected('myBlocks');
@@ -663,6 +665,7 @@ class Blocks extends React.Component {
                     // Ignore transient flyout scrollbar resize errors.
                 }
             }
+            this.syncFlyoutCullingState();
         }
     }
     scheduleProcedureReturnsToolboxRefresh() {
@@ -827,6 +830,20 @@ class Blocks extends React.Component {
         this.isLargeWorkspace = blocks.length >= OFFSCREEN_CULLING_BLOCK_THRESHOLD;
         this.workspace.setOffscreenTopBlockCullingEnabled(this.isLargeWorkspace);
     }
+    syncFlyoutCullingState() {
+        const flyout = this.workspace && this.workspace.getFlyout ? this.workspace.getFlyout() : null;
+        const flyoutWorkspace = flyout && flyout.getWorkspace ? flyout.getWorkspace() : this.flyoutWorkspace;
+        if (!flyoutWorkspace || !flyoutWorkspace.setOffscreenTopBlockCullingEnabled) {
+            return;
+        }
+        flyoutWorkspace.setOffscreenTopBlockCullingEnabled(true);
+        if (typeof flyoutWorkspace.renderVisibleTopBlocks === 'function') {
+            flyoutWorkspace.renderVisibleTopBlocks();
+        }
+        if (typeof flyoutWorkspace.queueIntersectionCheck === 'function') {
+            flyoutWorkspace.queueIntersectionCheck();
+        }
+    }
     setLocale() {
         this.ScratchBlocks.ScratchMsgs.setLocale(this.props.locale);
         this.props.vm.setLocale(this.props.locale, this.props.messages)
@@ -870,6 +887,7 @@ class Blocks extends React.Component {
         } else {
             this.workspace.toolbox_.setFlyoutScrollPos(currentCategoryPos);
         }
+        this.syncFlyoutCullingState();
 
         queue.forEach(fn => fn());
     }
@@ -899,6 +917,7 @@ class Blocks extends React.Component {
         this.flyoutWorkspace = this.workspace
             .getFlyout()
             .getWorkspace();
+        this.syncFlyoutCullingState();
         this.flyoutWorkspace.addChangeListener(this.props.vm.flyoutBlockListener);
         this.flyoutWorkspace.addChangeListener(this.props.vm.monitorBlockListener);
         this.props.vm.addListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);

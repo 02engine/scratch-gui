@@ -9,6 +9,7 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
     const workspaceProto = ScratchBlocks.WorkspaceSvg && ScratchBlocks.WorkspaceSvg.prototype;
     const draggerProto = ScratchBlocks.WorkspaceDragger && ScratchBlocks.WorkspaceDragger.prototype;
     const blockProto = ScratchBlocks.BlockSvg && ScratchBlocks.BlockSvg.prototype;
+    const flyoutProto = ScratchBlocks.Flyout && ScratchBlocks.Flyout.prototype;
     const deferredIntersectionCheckDelay = ScratchBlocks.__twOffscreenCullingScreenMargin ? 0 : 120;
 
     const clearIntersectionObserver = workspace => {
@@ -201,15 +202,12 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         };
 
         workspaceProto.onMouseWheel_ = function (e) {
-            if (this.isFlyout && typeof originalOnMouseWheel === 'function') {
-                return originalOnMouseWheel.call(this, e);
-            }
             if (this.currentGesture_) {
                 this.currentGesture_.cancel();
             }
 
             const multiplier = e.deltaMode === 0x1 ? ScratchBlocks.LINE_SCROLL_MULTIPLIER : 1;
-            if (e.ctrlKey) {
+            if (e.ctrlKey && !this.isFlyout) {
                 const delta = (-e.deltaY / 50) * multiplier;
                 const position = ScratchBlocks.utils.mouseToSvg(
                     e,
@@ -293,6 +291,36 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             originalWorkspaceDispose.call(this);
         };
 
+    }
+
+    if (flyoutProto) {
+        const originalFlyoutShow = flyoutProto.show;
+        flyoutProto.show = function (xmlList) {
+            const workspace = this.workspace_;
+            const restoreCulling = !!(
+                workspace &&
+                workspace.offscreenTopBlockCullingEnabled_ &&
+                typeof workspace.setOffscreenTopBlockCullingEnabled === 'function'
+            );
+
+            if (restoreCulling) {
+                workspace.setOffscreenTopBlockCullingEnabled(false);
+            }
+
+            try {
+                return originalFlyoutShow.call(this, xmlList);
+            } finally {
+                if (restoreCulling && workspace) {
+                    workspace.setOffscreenTopBlockCullingEnabled(true);
+                    if (typeof workspace.renderVisibleTopBlocks === 'function') {
+                        workspace.renderVisibleTopBlocks();
+                    }
+                    if (typeof workspace.queueIntersectionCheck === 'function') {
+                        workspace.queueIntersectionCheck();
+                    }
+                }
+            }
+        };
     }
 
     if (draggerProto) {
