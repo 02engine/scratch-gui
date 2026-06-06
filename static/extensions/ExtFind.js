@@ -45,6 +45,21 @@
     return `data:application/javascript;base64,${btoa(binary)}`;
   };
 
+  const loadUnsandboxedExtensionURL = async (extensionManager, dataURL) => {
+    const securityManager = extensionManager.securityManager;
+    const originalGetSandboxMode = securityManager?.getSandboxMode;
+    if (securityManager && typeof originalGetSandboxMode === 'function') {
+      securityManager.getSandboxMode = (url) => (url === dataURL ? 'unsandboxed' : originalGetSandboxMode.call(securityManager, url));
+    }
+    try {
+      return await extensionManager.loadExtensionURL(dataURL);
+    } finally {
+      if (securityManager && typeof originalGetSandboxMode === 'function') {
+        securityManager.getSandboxMode = originalGetSandboxMode;
+      }
+    }
+  };
+
   const loadExtensionUrl = async (url, extensionId) => {
     const extensionManager = Scratch.vm?.extensionManager;
     if (extensionId && extensionManager?.isExtensionLoaded?.(extensionId)) {
@@ -53,7 +68,7 @@
 
     const code = await fetchExtensionSource(url);
     if (extensionManager?.loadExtensionURL) {
-      return extensionManager.loadExtensionURL(toDataURL(code, url));
+      return loadUnsandboxedExtensionURL(extensionManager, toDataURL(code, url));
     }
     throw new Error('无法访问 Scratch VM 扩展加载器。');
   };
