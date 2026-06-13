@@ -137,6 +137,7 @@ class Blocks extends React.Component {
             'handleMonitorsUpdate',
             'handleExtensionAdded',
             'handleBlocksInfoUpdate',
+            'handleScratchBlocksReady',
             'injectExtensionContextMenu',
             'checkExtensionUsage',
             'handleDeleteExtension',
@@ -238,6 +239,22 @@ class Blocks extends React.Component {
             Blocks.defaultOptions
         );
         this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
+        // Keep a post-inject fallback for environments that bypass src/lib/blocks.js.
+        if (this.props.vm && this.props.vm.runtime && !this.props.vm.runtime.scratchBlocks) {
+            const sb = this.ScratchBlocks;
+            if (!sb.VERSION) {
+                sb.VERSION = '0.1.0';
+            }
+            if (typeof this.props.vm.runtime.attachBlocks === 'function') {
+                this.props.vm.runtime.attachBlocks(sb);
+            } else {
+                this.props.vm.runtime.scratchBlocks = sb;
+            }
+            this.props.vm.runtime.scratchBlocksVersion = sb.VERSION;
+        }
+        if (this.props.vm && this.props.vm.runtime) {
+            this.props.vm.runtime.emit('SCRATCH_BLOCKS_READY', this.ScratchBlocks);
+        }
         AddonHooks.blocklyWorkspace = this.workspace;
         this.applyFlyoutWidth(this.flyoutWidth, false);
         this.installBlockDropTargetOutsideCheck();
@@ -930,6 +947,7 @@ class Blocks extends React.Component {
         this.props.vm.addListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
         this.props.vm.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
         this.props.vm.addListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
+        this.props.vm.addListener('SCRATCH_BLOCKS_READY', this.handleScratchBlocksReady);
         this.props.vm.addListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
         this.props.vm.addListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
     }
@@ -944,8 +962,24 @@ class Blocks extends React.Component {
         this.props.vm.removeListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
         this.props.vm.removeListener('EXTENSION_ADDED', this.handleExtensionAdded);
         this.props.vm.removeListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
+        this.props.vm.removeListener('SCRATCH_BLOCKS_READY', this.handleScratchBlocksReady);
         this.props.vm.removeListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
         this.props.vm.removeListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
+    }
+
+    handleScratchBlocksReady() {
+        if (!this.props.vm || !this.props.vm.extensionManager) {
+            return;
+        }
+        this.props.vm.extensionManager.refreshBlocks()
+            .then(() => {
+                if (!this.unmounted) {
+                    this.toolboxDirty = true;
+                    this.requestToolboxStateSync(true);
+                    this.requestToolboxUpdate();
+                }
+            })
+            .catch(() => {});
     }
 
     updateToolboxBlockValue(id, value) {
@@ -1038,7 +1072,8 @@ class Blocks extends React.Component {
     onVisualReport(data) {
         if (this.isLargeWorkspace) return;
         if (!this.workspace.getBlockById(data.id)) return;
-        this.workspace.reportValue(data.id, data.value);
+        const value = data && Object.prototype.hasOwnProperty.call(data, 'value') ? data.value : '';
+        this.workspace.reportValue(data.id, value);
     }
     updateToolboxStateIfNeeded(toolboxXML, force = false) {
         if (!toolboxXML || (!force && toolboxXML === this.lastToolboxXML)) {
@@ -1101,8 +1136,8 @@ class Blocks extends React.Component {
         const targetChanged = editingTargetId !== this.lastEditingTargetId;
         const workspaceChanged = targetChanged || data.xml !== this.lastAppliedWorkspaceXML;
 
-        if (targetChanged || this.toolboxDirty) {
-            this.requestToolboxStateSync(targetChanged);
+        if (targetChanged || this.toolboxDirty || workspaceChanged) {
+            this.requestToolboxStateSync(targetChanged || workspaceChanged);
         }
 
         if (editingTarget && !this.props.workspaceMetrics.targets[editingTarget.id]) {

@@ -485,6 +485,17 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
 export default function (vm) {
     const ScratchBlocks = LazyScratchBlocks.get();
     applyScratchBlocksPerformancePatches(ScratchBlocks);
+    if (vm && vm.runtime) {
+        if (!ScratchBlocks.VERSION) {
+            ScratchBlocks.VERSION = '0.1.0';
+        }
+        if (typeof vm.runtime.attachBlocks === 'function') {
+            vm.runtime.attachBlocks(ScratchBlocks);
+        } else if (!vm.runtime.scratchBlocks) {
+            vm.runtime.scratchBlocks = ScratchBlocks;
+        }
+        vm.runtime.scratchBlocksVersion = ScratchBlocks.VERSION;
+    }
     const jsonForMenuBlock = function (name, menuOptionsFn, colors, start) {
         return {
             message0: '%1',
