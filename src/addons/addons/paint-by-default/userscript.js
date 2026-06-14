@@ -77,6 +77,25 @@ export default async function ({ addon, console }) {
     }
     return addon.settings.get(id);
   };
+  const isSupportedMainButton = (mainButton) => {
+    if (!mainButton) {
+      return false;
+    }
+    const assetPanelWrapper = mainButton.closest("[class*=asset-panel_wrapper_]");
+    const stageSelector = mainButton.closest('[class*="target-pane_stage-selector-wrapper"]');
+    if (assetPanelWrapper || stageSelector) {
+      return true;
+    }
+
+    const spriteSelector = mainButton.closest('[class*="sprite-selector"]');
+    if (!spriteSelector) {
+      return false;
+    }
+
+    const moreButtonsElement = mainButton.parentElement &&
+      mainButton.parentElement.querySelector('[class*="action-menu_more-buttons_"]');
+    return Boolean(moreButtonsElement && moreButtonsElement.children && moreButtonsElement.children.length >= 4);
+  };
   const getButtonToClick = (mainButton) => {
     const assetPanelWrapper = mainButton.closest("[class*=asset-panel_wrapper_]");
     if (assetPanelWrapper) {
@@ -101,13 +120,25 @@ export default async function ({ addon, console }) {
       if (!mainButton) {
         return;
       }
+      if (!isSupportedMainButton(mainButton)) {
+        return;
+      }
       e.stopPropagation();
       const moreButtonsElement = mainButton.parentElement.querySelector('[class*="action-menu_more-buttons_"]');
+      if (!moreButtonsElement || !moreButtonsElement.children || moreButtonsElement.children.length < 4) {
+        return;
+      }
       const moreButtons = moreButtonsElement.children;
       const { index } = getButtonToClick(mainButton);
       // better-img-uploads can add a button at the start, so search "from the end" for compatibility
       const buttonToClick = moreButtons[moreButtons.length - (4 - index)];
+      if (!buttonToClick) {
+        return;
+      }
       const elementToClick = buttonToClick.querySelector("button");
+      if (!elementToClick) {
+        return;
+      }
       elementToClick.click();
     },
     {
@@ -121,7 +152,13 @@ export default async function ({ addon, console }) {
       if (!mainButton) {
         return;
       }
+      if (!isSupportedMainButton(mainButton)) {
+        return;
+      }
       const tooltipElement = mainButton.parentElement.querySelector(".__react_component_tooltip");
+      if (!tooltipElement) {
+        return;
+      }
       const { tooltip } = getButtonToClick(mainButton);
       const translatedTooltip = addon.tab.redux.state.locales.messages[tooltip];
       const needToFixTooltipText = translatedTooltip && tooltipElement.textContent !== translatedTooltip;
