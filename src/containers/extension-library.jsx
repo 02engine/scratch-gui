@@ -10,7 +10,6 @@ import extensionLibraryContent, {
     galleryMore
 } from '../lib/libraries/extensions/index.jsx';
 import LibraryComponent from '../components/library/library.jsx';
-import ccwIcon from '../lib/libraries/extensions/custom/ccw.svg';
 import libraryStyles from '../components/library/library.css';
 import {APP_NAME} from '../lib/brand.js';
 import log from '../lib/log';
@@ -625,6 +624,7 @@ class ExtensionLibrary extends React.PureComponent {
             'getActionLabel',
             'getBatchSelectableItems',
             'getCardProps',
+            'getCCWSortControl',
             'getLibraryItems',
             'getNormalizedItems',
             'getQuickFilterButtons',
@@ -633,6 +633,7 @@ class ExtensionLibrary extends React.PureComponent {
             'getSourceLabel',
             'getSections',
             'handleBatchImport',
+            'handleCCWSortChange',
             'handleClearFilters',
             'handleClearQuery',
             'handleClearSelection',
@@ -660,6 +661,7 @@ class ExtensionLibrary extends React.PureComponent {
             galleryTimedOut: false,
             ccwItems: [],
             ccwLoading: false,
+            ccwSortField: 'updatedAt',
             query: '',
             quickFilters: {
                 favorites: false,
@@ -1041,13 +1043,18 @@ class ExtensionLibrary extends React.PureComponent {
             favorites
         });
     }
+    handleCCWSortChange (event) {
+        const sortField = event.target.value;
+        this.setState({ccwSortField: sortField});
+        this.fetchAndSetCCWItems(this.state.query, sortField);
+    }
     handleSourceSelect (selectedSource) {
         this.setState({
             selectedSource
         });
         // 切换到CCW时触发实时搜索
         if (selectedSource === SOURCE_KEYS.CCW || selectedSource === SOURCE_KEYS.ALL) {
-            this.fetchAndSetCCWItems(this.state.query, 'updatedAt');
+            this.fetchAndSetCCWItems(this.state.query, this.state.ccwSortField);
         }
     }
     handleQueryChange (query) {
@@ -1059,7 +1066,7 @@ class ExtensionLibrary extends React.PureComponent {
             clearTimeout(this._queryTimeout);
         }
         this._queryTimeout = setTimeout(() => {
-            this.fetchAndSetCCWItems(query, 'updatedAt');
+            this.fetchAndSetCCWItems(query, this.state.ccwSortField);
         }, 500);
     }
     handleToggleQuickFilter (filterKey) {
@@ -1272,6 +1279,52 @@ class ExtensionLibrary extends React.PureComponent {
             sourceTone: sourceToneMap[item.source] || 'Other'
         };
     }
+    getCCWSortControl () {
+        return (
+            <div style={{marginTop: '0.75rem'}}>
+                <div className={libraryStyles.sidebarTitle} style={{marginBottom: '0.5rem', opacity: 0.6, fontSize: '0.75rem'}}>
+                    排序方式
+                </div>
+                <button
+                    type="button"
+                    className={[
+                        libraryStyles.sidebarButton,
+                        libraryStyles.sidebarActionButton
+                    ].join(' ')}
+                    style={{cursor: 'default', background: '#00baad'}}
+                >
+                    <div className={libraryStyles.sidebarButtonLabel}>
+                        <select
+                            value={this.state.ccwSortField}
+                            onChange={this.handleCCWSortChange}
+                            style={{
+                                width: '100%',
+                                appearance: 'none',
+                                WebkitAppearance: 'none',
+                                MozAppearance: 'none',
+                                padding: 0,
+                                border: 'none',
+                                borderRadius: 0,
+                                fontSize: 'inherit',
+                                fontWeight: 'inherit',
+                                color: 'inherit',
+                                outline: 'none',
+                                backgroundColor: 'transparent',
+                                cursor: 'pointer',
+                                fontFamily: 'inherit',
+                                textAlign: 'left'
+                            }}
+                        >
+                            <option value="updatedAt">最近更新</option>
+                            <option value="likeCount">最多喜欢</option>
+                            <option value="donateCount">最多投币</option>
+                            <option value="createdAt">最新创建</option>
+                        </select>
+                    </div>
+                </button>
+            </div>
+        );
+    }
     getSidebar (counts) {
         return (
             <React.Fragment>
@@ -1310,6 +1363,7 @@ class ExtensionLibrary extends React.PureComponent {
                         </div>
                     </button>
                 </div>
+                {this.state.selectedSource === SOURCE_KEYS.CCW && this.getCCWSortControl()}
             </React.Fragment>
         );
     }
