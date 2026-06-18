@@ -76,6 +76,11 @@ const messages = defineMessages({
         description: 'Label for the SharkPool source filter in the extension library',
         id: 'tw.extensionLibrary.source.sharkpool'
     },
+    sourceCCW: {
+        defaultMessage: 'CCW',
+        description: 'Label for the CCW source filter in the extension library',
+        id: 'tw.extensionLibrary.source.ccw'
+    },
     sourceOther: {
         defaultMessage: 'Other',
         description: 'Label for the Other source filter in the extension library',
@@ -175,16 +180,6 @@ const messages = defineMessages({
         defaultMessage: 'Click to import',
         description: 'Action hint for importing an extension',
         id: 'tw.extensionLibrary.action.import'
-    },
-    ccwName: {
-        defaultMessage: '加载CCW扩展',
-        description: 'Name of the CCW extension loader item',
-        id: 'tw.extensionLibrary.ccw.name'
-    },
-    ccwDescription: {
-        defaultMessage: '从共创世界加载扩展，可从 https://assets.ccw.site/extensions 获取。',
-        description: 'Description of the CCW extension loader item',
-        id: 'tw.extensionLibrary.ccw.description'
     }
 });
 
@@ -197,6 +192,7 @@ const SOURCE_KEYS = {
     PM: 'pm',
     MIST: 'mist',
     SHARKPOOL: 'sharkpool',
+    CCW: 'ccw',
     OTHER: 'other',
     CUSTOM: 'custom',
     SPECIAL: 'special'
@@ -211,11 +207,78 @@ const SOURCE_NAV_ORDER = [
     SOURCE_KEYS.MIST,
     SOURCE_KEYS.SHARKPOOL,
     SOURCE_KEYS.ASTRA,
+    SOURCE_KEYS.CCW,
     SOURCE_KEYS.OTHER
 ];
 
 const FAVORITES_STORAGE_KEY = 'tw:library-favorites:extensionLibrary';
-const CCW_EXTENSION_ID = 'ccw_extension_loader';
+const CCW_EXTENSION_API_BASE = 'https://bfs-web.ccw.site/extensions';
+
+const CCW_METADATA_CACHE = {};
+
+const fetchCCWItemMetadata = async (eid) => {
+    if (CCW_METADATA_CACHE[eid]) {
+        return CCW_METADATA_CACHE[eid];
+    }
+    const response = await fetch(`${CCW_EXTENSION_API_BASE}/${encodeURIComponent(eid)}`);
+    if (!response.ok) {
+        throw new Error(`CCW metadata HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    const metadata = data?.body || data;
+    if (!metadata || !Array.isArray(metadata.versions) || !metadata.versions.length) {
+        throw new Error('No versions found for this CCW extension.');
+    }
+    if (!metadata.versions[0]?.assetUri) {
+        throw new Error('The latest version does not include an asset URL.');
+    }
+    CCW_METADATA_CACHE[eid] = metadata;
+    return metadata;
+};
+
+// 实时调用CCW API进行搜索/排序，完全参考ccw-ext.html的请求构建逻辑
+const fetchCCWExtensions = async (name, sortField, page, perPage) => {
+    let requestUrl = `${CCW_EXTENSION_API_BASE}?page=${page || 1}&perPage=${perPage || 30}&sortField=${sortField || 'updatedAt'}&sortType=DESC`;
+    if (name) {
+        requestUrl += `&name=${encodeURIComponent(name)}`;
+    }
+    const response = await fetch(requestUrl);
+    if (!response.ok) {
+        throw new Error(`CCW API HTTP error! status: ${response.status}`);
+    }
+    const json = await response.json();
+    if (json?.body?.data) {
+        return json.body.data;
+    }
+    throw new Error('CCW API response format unexpected');
+};
+
+// 映射CCW API数据为内部扩展格式，不带标签
+const toCCWGalleryItem = (item) => ({
+    name: item.name || item.eid || '未知扩展',
+    nameTranslations: {},
+    description: item.description || '暂无描述',
+    descriptionTranslations: {},
+    extensionId: `ccw_${item.eid || item.id}`,
+    extensionURL: null, // 点击时才通过fetchCCWItemMetadata获取assetUri
+    iconURL: item.cover || 'https://placehold.co/600x310/f5f5f5/111111?text=No+Cover',
+    tags: ['ccw'],
+    credits: [],
+    docsURI: null,
+    samples: null,
+    incompatibleWithScratch: false,
+    featured: true,
+    _ccwMeta: {
+        eid: item.eid,
+        id: item.id,
+        publisher: item.publisher,
+        stats: item.stats,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        versions: item.versions,
+        activeVersionId: item.activeVersionId
+    }
+});
 
 const getItemSelectionKey = item => item.extensionURL || item.extensionId;
 const isBatchSelectableItem = item => {
@@ -558,6 +621,7 @@ class ExtensionLibrary extends React.PureComponent {
         super(props);
         bindAll(this, [
             'executeItemAction',
+            'fetchAndSetCCWItems',
             'getActionLabel',
             'getBatchSelectableItems',
             'getCardProps',
@@ -594,6 +658,8 @@ class ExtensionLibrary extends React.PureComponent {
             gallery: cachedGallery,
             galleryError: null,
             galleryTimedOut: false,
+            ccwItems: [],
+            ccwLoading: false,
             query: '',
             quickFilters: {
                 favorites: false,
@@ -605,6 +671,7 @@ class ExtensionLibrary extends React.PureComponent {
             selectedItemKeys: [],
             selectedSource: SOURCE_KEYS.ALL
         };
+        this._queryTimeout = null;
     }
     componentDidMount () {
         if (!this.state.gallery) {
@@ -630,6 +697,19 @@ class ExtensionLibrary extends React.PureComponent {
                     clearTimeout(timeout);
                 });
         }
+        // 初始加载CCW扩展
+        this.fetchAndSetCCWItems('', 'updatedAt');
+    }
+    async fetchAndSetCCWItems (name, sortField) {
+        this.setState({ccwLoading: true});
+        try {
+            const rawItems = await fetchCCWExtensions(name, sortField);
+            const ccwItems = rawItems.map(item => toCCWGalleryItem(item));
+            this.setState({ccwItems, ccwLoading: false});
+        } catch (err) {
+            log.error(err);
+            this.setState({ccwItems: [], ccwLoading: false});
+        }
     }
     readFavoritesFromStorage () {
         let data;
@@ -650,35 +730,27 @@ class ExtensionLibrary extends React.PureComponent {
             [SOURCE_KEYS.PM]: messages.sourcePenguinMod,
             [SOURCE_KEYS.MIST]: messages.sourceMist,
             [SOURCE_KEYS.SHARKPOOL]: messages.sourceSharkPool,
+            [SOURCE_KEYS.CCW]: messages.sourceCCW,
             [SOURCE_KEYS.OTHER]: messages.sourceOther,
             [SOURCE_KEYS.CUSTOM]: messages.sourceCustom,
             [SOURCE_KEYS.SPECIAL]: messages.sourceBuiltIn
         };
         return this.props.intl.formatMessage(sourceMessages[sourceKey] || messages.sourceOther);
     }
-    getCCWLoaderItem () {
-        return {
-            name: <FormattedMessage {...messages.ccwName} />,
-            extensionId: CCW_EXTENSION_ID,
-            iconURL: ccwIcon,
-            description: <FormattedMessage {...messages.ccwDescription} />,
-            featured: true,
-            tags: []
-        };
-    }
     getLibraryItems () {
         const locale = this.props.intl?.locale;
         const baseLibrary = extensionLibraryContent
             .map(toLibraryItem)
             .map(item => translateGalleryItem(item, locale));
-        baseLibrary.push(toLibraryItem(this.getCCWLoaderItem()));
         if (this.state.gallery) {
+            const ccwItems = this.state.ccwItems.map(toLibraryItem);
             return [
                 ...baseLibrary,
                 toLibraryItem(galleryMore),
                 ...this.state.gallery
                     .map(toLibraryItem)
-                    .map(item => translateGalleryItem(item, locale))
+                    .map(item => translateGalleryItem(item, locale)),
+                ...ccwItems
             ];
         }
         if (this.state.galleryError) {
@@ -717,8 +789,8 @@ class ExtensionLibrary extends React.PureComponent {
                 let source = SOURCE_KEYS.OTHER;
                 if (extensionId === 'custom_extension') {
                     source = SOURCE_KEYS.CUSTOM;
-                } else if (extensionId === CCW_EXTENSION_ID) {
-                    source = SOURCE_KEYS.OTHER;
+                } else if (extensionId.startsWith('ccw_')) {
+                    source = SOURCE_KEYS.CCW;
                 } else if (extensionId === 'procedures_enable_return') {
                     source = SOURCE_KEYS.SPECIAL;
                 } else if (item.tags && item.tags.includes('scratch')) {
@@ -735,10 +807,12 @@ class ExtensionLibrary extends React.PureComponent {
                     source = SOURCE_KEYS.SHARKPOOL;
                 } else if (item.tags && item.tags.includes('tw')) {
                     source = SOURCE_KEYS.TW;
+                } else if (item.tags && item.tags.includes('ccw')) {
+                    source = SOURCE_KEYS.CCW;
                 }
 
                 const isCustomLoad = extensionId === 'custom_extension';
-                const isCCWLoad = extensionId === CCW_EXTENSION_ID;
+                const isCCWLoad = source === SOURCE_KEYS.CCW;
                 const isSpecialAction = extensionId === 'procedures_enable_return';
                 const isNative = Boolean(extensionId && !item.extensionURL && !item.href && !isCustomLoad && !isCCWLoad && !isSpecialAction);
                 const candidateValues = new Set([
@@ -840,17 +914,55 @@ class ExtensionLibrary extends React.PureComponent {
             return;
         }
 
-        if (extensionId === CCW_EXTENSION_ID) {
-            this.props.onOpenCCWExtensionModal();
-            return;
-        }
-
         if (extensionId === 'procedures_enable_return') {
             this.handleEnableProcedureReturns();
             return;
         }
 
         if (item.disabled) {
+            return;
+        }
+
+        // Handle CCW gallery items: fetch metadata and load extension
+        if (item._ccwMeta && item._ccwMeta.eid) {
+            const ccwEid = item._ccwMeta.eid;
+            fetchCCWItemMetadata(ccwEid)
+                .then(metadata => {
+                    const versions = Array.isArray(metadata.versions) ? metadata.versions : [];
+                    const selectedVersion = versions[0];
+                    if (!selectedVersion?.assetUri) {
+                        throw new Error('No valid asset URL found for this CCW extension.');
+                    }
+                    const assetUri = selectedVersion.assetUri;
+                    if (this.props.onSetSelectedExtension && this.props.onOpenExtensionImportMethodModal) {
+                        if (this.props.onSetSelectedExtensions) {
+                            this.props.onSetSelectedExtensions([]);
+                        }
+                        this.props.onSetSelectedExtension({
+                            extensionId: ccwEid,
+                            extensionURL: assetUri,
+                            _ccwMeta: metadata
+                        });
+                        this.props.onOpenExtensionImportMethodModal();
+                    } else {
+                        this.props.vm.extensionManager.loadExtensionURL(assetUri)
+                            .then(() => {
+                                if (this.props.onCategorySelected) {
+                                    this.props.onCategorySelected(ccwEid);
+                                }
+                            })
+                            .catch(err => {
+                                log.error(err);
+                                // eslint-disable-next-line no-alert
+                                alert(err);
+                            });
+                    }
+                })
+                .catch(err => {
+                    log.error(err);
+                    // eslint-disable-next-line no-alert
+                    alert(err || String(err));
+                });
             return;
         }
 
@@ -933,11 +1045,22 @@ class ExtensionLibrary extends React.PureComponent {
         this.setState({
             selectedSource
         });
+        // 切换到CCW时触发实时搜索
+        if (selectedSource === SOURCE_KEYS.CCW || selectedSource === SOURCE_KEYS.ALL) {
+            this.fetchAndSetCCWItems(this.state.query, 'updatedAt');
+        }
     }
     handleQueryChange (query) {
         this.setState({
             query
         });
+        // 防抖：用户停止输入500ms后触发CCW搜索
+        if (this._queryTimeout) {
+            clearTimeout(this._queryTimeout);
+        }
+        this._queryTimeout = setTimeout(() => {
+            this.fetchAndSetCCWItems(query, 'updatedAt');
+        }, 500);
     }
     handleToggleQuickFilter (filterKey) {
         this.setState(prevState => ({
@@ -951,6 +1074,7 @@ class ExtensionLibrary extends React.PureComponent {
         this.setState({
             query: ''
         });
+        this.fetchAndSetCCWItems('', 'updatedAt');
     }
     handleClearFilters () {
         this.setState({
@@ -964,6 +1088,7 @@ class ExtensionLibrary extends React.PureComponent {
             },
             selectedSource: SOURCE_KEYS.ALL
         });
+        this.fetchAndSetCCWItems('', 'updatedAt');
     }
     handleCustomExtensionOpen () {
         this.props.onOpenCustomExtensionModal();
@@ -975,8 +1100,12 @@ class ExtensionLibrary extends React.PureComponent {
         return this.state.selectedItemKeys.includes(getItemSelectionKey(item));
     }
     matchesSource (item, sourceKey) {
+        // CCW 扩展只在选中 "CCW" 分类时显示，不出现在 "All" 或 "Other" 中
+        if (sourceKey === SOURCE_KEYS.CCW) {
+            return item.source === SOURCE_KEYS.CCW;
+        }
         if (sourceKey === SOURCE_KEYS.ALL) {
-            return true;
+            return item.source !== SOURCE_KEYS.CCW;
         }
         if (sourceKey === SOURCE_KEYS.OTHER) {
             return ![
@@ -986,7 +1115,8 @@ class ExtensionLibrary extends React.PureComponent {
                 SOURCE_KEYS.ASTRA,
                 SOURCE_KEYS.PM,
                 SOURCE_KEYS.MIST,
-                SOURCE_KEYS.SHARKPOOL
+                SOURCE_KEYS.SHARKPOOL,
+                SOURCE_KEYS.CCW
             ].includes(item.source);
         }
         return item.source === sourceKey;
@@ -1030,6 +1160,7 @@ class ExtensionLibrary extends React.PureComponent {
             [SOURCE_KEYS.PM]: 0,
             [SOURCE_KEYS.MIST]: 0,
             [SOURCE_KEYS.SHARKPOOL]: 0,
+            [SOURCE_KEYS.CCW]: this.state.ccwItems.length,
             [SOURCE_KEYS.OTHER]: 0
         };
         for (const item of items) {
@@ -1286,7 +1417,6 @@ ExtensionLibrary.propTypes = {
     intl: intlShape.isRequired,
     onCategorySelected: PropTypes.func,
     onEnableProcedureReturns: PropTypes.func,
-    onOpenCCWExtensionModal: PropTypes.func,
     onOpenCustomExtensionModal: PropTypes.func,
     onOpenExtensionImportMethodModal: PropTypes.func,
     onRequestClose: PropTypes.func,

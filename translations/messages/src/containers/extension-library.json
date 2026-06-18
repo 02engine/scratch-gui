@@ -60,6 +60,11 @@
     "defaultMessage": "SharkPool"
   },
   {
+    "id": "tw.extensionLibrary.source.ccw",
+    "description": "Label for the CCW source filter in the extension library",
+    "defaultMessage": "CCW"
+  },
+  {
     "id": "tw.extensionLibrary.source.other",
     "description": "Label for the Other source filter in the extension library",
     "defaultMessage": "Other"
@@ -158,15 +163,5 @@
     "id": "tw.extensionLibrary.action.import",
     "description": "Action hint for importing an extension",
     "defaultMessage": "Click to import"
-  },
-  {
-    "id": "tw.extensionLibrary.ccw.name",
-    "description": "Name of the CCW extension loader item",
-    "defaultMessage": "加载CCW扩展"
-  },
-  {
-    "id": "tw.extensionLibrary.ccw.description",
-    "description": "Description of the CCW extension loader item",
-    "defaultMessage": "从共创世界加载扩展，可从 https://assets.ccw.site/extensions 获取。"
   }
 ]
