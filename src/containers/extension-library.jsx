@@ -253,31 +253,39 @@ const fetchCCWExtensions = async (name, sortField, page, perPage) => {
 };
 
 // 映射CCW API数据为内部扩展格式，不带标签
-const toCCWGalleryItem = (item) => ({
-    name: item.name || item.eid || '未知扩展',
-    nameTranslations: {},
-    description: item.description || '暂无描述',
-    descriptionTranslations: {},
-    extensionId: `ccw_${item.eid || item.id}`,
-    extensionURL: null, // 点击时才通过fetchCCWItemMetadata获取assetUri
-    iconURL: item.cover || 'https://placehold.co/600x310/f5f5f5/111111?text=No+Cover',
-    tags: ['ccw'],
-    credits: [],
-    docsURI: null,
-    samples: null,
-    incompatibleWithScratch: false,
-    featured: true,
-    _ccwMeta: {
-        eid: item.eid,
-        id: item.id,
-        publisher: item.publisher,
-        stats: item.stats,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-        versions: item.versions,
-        activeVersionId: item.activeVersionId
+const toCCWGalleryItem = (item) => {
+    const credits = [];
+    if (item.publisher) {
+        if (item.publisher.nickname) {
+            credits.push(item.publisher.nickname);
+        }
     }
-});
+    return {
+        name: item.name || item.eid || '未知扩展',
+        nameTranslations: {},
+        description: item.description || '暂无描述',
+        descriptionTranslations: {},
+        extensionId: `ccw_${item.eid || item.id}`,
+        extensionURL: null, // 点击时才通过fetchCCWItemMetadata获取assetUri
+        iconURL: item.cover || 'https://placehold.co/600x310/f5f5f5/111111?text=No+Cover',
+        tags: ['ccw'],
+        credits,
+        docsURI: null,
+        samples: null,
+        incompatibleWithScratch: false,
+        featured: true,
+        _ccwMeta: {
+            eid: item.eid,
+            id: item.id,
+            publisher: item.publisher,
+            stats: item.stats,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            versions: item.versions,
+            activeVersionId: item.activeVersionId
+        }
+    };
+};
 
 const getItemSelectionKey = item => item.extensionURL || item.extensionId;
 const isBatchSelectableItem = item => {

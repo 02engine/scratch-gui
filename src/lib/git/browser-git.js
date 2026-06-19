@@ -9,7 +9,7 @@ import {
     writeProjectToWorkingTree
 } from './project-working-tree.js';
 
-const FS_NAME = 'bilup-git';
+const FS_NAME = '02engine-git';
 
 // Global formatter function and intl object (can be set by calling code)
 let globalFormatMessage = null;
