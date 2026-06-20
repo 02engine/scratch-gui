@@ -49,6 +49,7 @@ import TWGitModal from '../../containers/tw-git-modal.jsx';
 import TWToolboxLayoutModal from '../../containers/tw-toolbox-layout-modal.jsx';
 import SpriteLayerModal from '../../containers/sprite-layer-modal.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
+import DebugWindow from '../../containers/debug-window.jsx';
 
 import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/layout-constants';
 import {resolveStageSize} from '../../lib/screen-utils';
@@ -354,6 +355,10 @@ const GUIComponent = props => {
     const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({width: 485, height: 447});
     const [targetPaneWindowMinimized, setTargetPaneWindowMinimized] = React.useState(false);
     const [menuBarCollapsed, setMenuBarCollapsed] = React.useState(false);
+    const [debugWindowVisible, setDebugWindowVisible] = React.useState(false);
+    const handleToggleDebugWindow = React.useCallback(() => {
+        setDebugWindowVisible(prev => !prev);
+    }, []);
     const [editorWindowSessions, setEditorWindowSessions] = React.useState([]);
     const [activeEditorWindowId, setActiveEditorWindowId] = React.useState(null);
     const editorWindowSessionsRef = React.useRef(editorWindowSessions);
@@ -1577,6 +1582,10 @@ const GUIComponent = props => {
                     vm={vm}
                     visible={collaborationModalVisible}
                     onRequestClose={onRequestCloseCollaborationModal}
+                />
+                <DebugWindow
+                    visible={debugWindowVisible}
+                    onToggleDebugWindow={handleToggleDebugWindow}
                 />
             </React.Fragment>
         );
