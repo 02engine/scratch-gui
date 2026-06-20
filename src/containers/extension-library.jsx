@@ -257,7 +257,16 @@ const toCCWGalleryItem = (item) => {
     const credits = [];
     if (item.publisher) {
         if (item.publisher.nickname) {
-            credits.push(item.publisher.nickname);
+            const oid = item.publisher.oid || item.publisher._id || item.publisher.id || '';
+            if (oid) {
+                credits.push(
+                    <a href={`https://www.ccw.site/student/${oid}`} target="_blank" rel="noreferrer" key={oid}>
+                        {item.publisher.nickname}
+                    </a>
+                );
+            } else {
+                credits.push(item.publisher.nickname);
+            }
         }
     }
     return {
