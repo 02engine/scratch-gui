@@ -132,6 +132,8 @@ class DebugWindow extends React.Component {
 
                 putRequest.onsuccess = () => {
                     this.setState({success: '成功：数据已存入，且符合 keyPath 要求！'});
+                    // 触发书包刷新事件
+                    window.dispatchEvent(new CustomEvent('backpack-refresh'));
                 };
                 putRequest.onerror = (e) => {
                     this.setState({error: `写入失败: ${e.target.error}`});

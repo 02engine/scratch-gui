@@ -51,7 +51,8 @@ class Backpack extends React.Component {
             'handleMouseLeave',
             'handleBlockDragEnd',
             'handleBlockDragUpdate',
-            'handleMore'
+            'handleMore',
+            'handleBackpackRefresh'
         ]);
         this.state = {
             // While the DroppableHOC manages drop interactions for asset tiles,
@@ -85,6 +86,7 @@ class Backpack extends React.Component {
         document.addEventListener('keydown', this.handleGlobalKeyDown);
         window.addEventListener('resize', this.handleCloseContextMenu);
         window.addEventListener('scroll', this.handleCloseContextMenu, true);
+        window.addEventListener('backpack-refresh', this.handleBackpackRefresh);
     }
     componentWillUnmount () {
         this.props.vm.removeListener('BLOCK_DRAG_END', this.handleBlockDragEnd);
@@ -93,6 +95,7 @@ class Backpack extends React.Component {
         document.removeEventListener('keydown', this.handleGlobalKeyDown);
         window.removeEventListener('resize', this.handleCloseContextMenu);
         window.removeEventListener('scroll', this.handleCloseContextMenu, true);
+        window.removeEventListener('backpack-refresh', this.handleBackpackRefresh);
     }
     getBackpackAssetURL (asset) {
         return `${this.props.host}/${asset.assetId}.${asset.dataFormat}`;
@@ -305,6 +308,15 @@ class Backpack extends React.Component {
             this.handleCloseContextMenu();
         }
     }
+    handleBackpackRefresh () {
+        // 当调试窗口写入数据后，刷新书包内容
+        if (this.state.expanded) {
+            this.setState({contents: []}, () => {
+                this.getContents();
+            });
+        }
+    }
+
     setContextMenuRef (ref) {
         this.contextMenuRef = ref;
     }
