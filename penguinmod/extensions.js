@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-06-20T11:11:32.609Z
+// Synced at: 2026-06-21T13:14:50.436Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -72,9 +72,9 @@ export default [
     },
     {
         name: "GPU.sb3",
-        description: "Use WebGPU compute shaders to accelerate your projects.",
+        description: "Use WebGPU compute shaders to accelerate your projects. Use Pen+ for rendering, not this.",
         code: "derpygamer2142/gpusb3.js",
-        banner: "derpygamer2142/gpusb3.svg",
+        banner: "derpygamer2142/gpusb3.png",
         creator: "insanetaco2000",
         creatorAlias: "derpygamer2142",
         isGitHub: false,
