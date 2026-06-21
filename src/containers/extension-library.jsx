@@ -247,7 +247,13 @@ const fetchCCWExtensions = async (name, sortField, page, perPage) => {
     }
     const json = await response.json();
     if (json?.body?.data) {
-        return json.body.data;
+        const body = json.body;
+        return {
+            items: body.data,
+            total: body.total || body.totalCount || body.count || null,
+            page: body.page || page || 1,
+            perPage: body.perPage || perPage || 30
+        };
     }
     throw new Error('CCW API response format unexpected');
 };
@@ -638,6 +644,7 @@ class ExtensionLibrary extends React.PureComponent {
         bindAll(this, [
             'executeItemAction',
             'fetchAndSetCCWItems',
+            'getCCWRecommendationButtons',
             'getActionLabel',
             'getBatchSelectableItems',
             'getCardProps',
@@ -651,6 +658,8 @@ class ExtensionLibrary extends React.PureComponent {
             'getSections',
             'handleBatchImport',
             'handleCCWSortChange',
+            'handleCCWPageChange',
+            'handleCCWRecommendationSelect',
             'handleClearFilters',
             'handleClearQuery',
             'handleClearSelection',
@@ -678,7 +687,11 @@ class ExtensionLibrary extends React.PureComponent {
             galleryTimedOut: false,
             ccwItems: [],
             ccwLoading: false,
-            ccwSortField: 'updatedAt',
+            ccwSortField: 'likeCount',
+            ccwPage: 1,
+            ccwPerPage: 30,
+            ccwHasMore: false,
+            ccwTotal: null,
             query: '',
             quickFilters: {
                 favorites: false,
@@ -717,17 +730,27 @@ class ExtensionLibrary extends React.PureComponent {
                 });
         }
         // 初始加载CCW扩展
-        this.fetchAndSetCCWItems('', 'updatedAt');
+        this.fetchAndSetCCWItems('', 'likeCount', 1);
     }
-    async fetchAndSetCCWItems (name, sortField) {
+    async fetchAndSetCCWItems (name, sortField, page = 1) {
         this.setState({ccwLoading: true});
         try {
-            const rawItems = await fetchCCWExtensions(name, sortField);
+            const result = await fetchCCWExtensions(name, sortField, page, this.state.ccwPerPage);
+            const rawItems = Array.isArray(result.items) ? result.items : [];
             const ccwItems = rawItems.map(item => toCCWGalleryItem(item));
-            this.setState({ccwItems, ccwLoading: false});
+            const hasMore = typeof result.total === 'number' ?
+                (page * result.perPage) < result.total :
+                rawItems.length >= result.perPage;
+            this.setState({
+                ccwItems,
+                ccwLoading: false,
+                ccwPage: page,
+                ccwHasMore: hasMore,
+                ccwTotal: result.total
+            });
         } catch (err) {
             log.error(err);
-            this.setState({ccwItems: [], ccwLoading: false});
+            this.setState({ccwItems: [], ccwLoading: false, ccwHasMore: false, ccwTotal: null});
         }
     }
     readFavoritesFromStorage () {
@@ -1062,8 +1085,22 @@ class ExtensionLibrary extends React.PureComponent {
     }
     handleCCWSortChange (event) {
         const sortField = event.target.value;
-        this.setState({ccwSortField: sortField});
-        this.fetchAndSetCCWItems(this.state.query, sortField);
+        this.setState({ccwSortField: sortField, ccwPage: 1});
+        this.fetchAndSetCCWItems(this.state.query, sortField, 1);
+    }
+    handleCCWRecommendationSelect (sortField) {
+        this.setState({ccwSortField: sortField, ccwPage: 1});
+        this.fetchAndSetCCWItems(this.state.query, sortField, 1);
+    }
+    handleCCWPageChange (delta) {
+        const nextPage = Math.max(1, this.state.ccwPage + delta);
+        if (nextPage === this.state.ccwPage) {
+            return;
+        }
+        if (delta > 0 && !this.state.ccwHasMore) {
+            return;
+        }
+        this.fetchAndSetCCWItems(this.state.query, this.state.ccwSortField, nextPage);
     }
     handleSourceSelect (selectedSource) {
         this.setState({
@@ -1071,7 +1108,7 @@ class ExtensionLibrary extends React.PureComponent {
         });
         // 切换到CCW时触发实时搜索
         if (selectedSource === SOURCE_KEYS.CCW || selectedSource === SOURCE_KEYS.ALL) {
-            this.fetchAndSetCCWItems(this.state.query, this.state.ccwSortField);
+            this.fetchAndSetCCWItems(this.state.query, this.state.ccwSortField, 1);
         }
     }
     handleQueryChange (query) {
@@ -1083,7 +1120,7 @@ class ExtensionLibrary extends React.PureComponent {
             clearTimeout(this._queryTimeout);
         }
         this._queryTimeout = setTimeout(() => {
-            this.fetchAndSetCCWItems(query, this.state.ccwSortField);
+            this.fetchAndSetCCWItems(query, this.state.ccwSortField, 1);
         }, 500);
     }
     handleToggleQuickFilter (filterKey) {
@@ -1098,7 +1135,7 @@ class ExtensionLibrary extends React.PureComponent {
         this.setState({
             query: ''
         });
-        this.fetchAndSetCCWItems('', 'updatedAt');
+        this.fetchAndSetCCWItems('', this.state.ccwSortField, 1);
     }
     handleClearFilters () {
         this.setState({
@@ -1110,9 +1147,10 @@ class ExtensionLibrary extends React.PureComponent {
                 native: false,
                 custom: false
             },
-            selectedSource: SOURCE_KEYS.ALL
+            selectedSource: SOURCE_KEYS.ALL,
+            ccwPage: 1
         });
-        this.fetchAndSetCCWItems('', 'updatedAt');
+        this.fetchAndSetCCWItems('', this.state.ccwSortField, 1);
     }
     handleCustomExtensionOpen () {
         this.props.onOpenCustomExtensionModal();
@@ -1296,49 +1334,57 @@ class ExtensionLibrary extends React.PureComponent {
             sourceTone: sourceToneMap[item.source] || 'Other'
         };
     }
+    getCCWRecommendationButtons () {
+        const options = [
+            ['likeCount', '最多喜欢'],
+            ['updatedAt', '最近更新'],
+            ['createdAt', '最新创建'],
+            ['donateCount', '最多投币']
+        ];
+        return options.map(([value, label]) => (
+            <button
+                key={value}
+                type="button"
+                className={[
+                    libraryStyles.quickFilterButton,
+                    this.state.ccwSortField === value ? libraryStyles.quickFilterButtonActive : ''
+                ].join(' ')}
+                onClick={() => this.handleCCWRecommendationSelect(value)}
+            >
+                {label}
+            </button>
+        ));
+    }
     getCCWSortControl () {
         return (
             <div style={{marginTop: '0.75rem'}}>
                 <div className={libraryStyles.sidebarTitle} style={{marginBottom: '0.5rem', opacity: 0.6, fontSize: '0.75rem'}}>
-                    排序方式
+                    推荐方式
                 </div>
-                <button
-                    type="button"
-                    className={[
-                        libraryStyles.sidebarButton,
-                        libraryStyles.sidebarActionButton
-                    ].join(' ')}
-                    style={{cursor: 'default', background: '#00baad'}}
-                >
-                    <div className={libraryStyles.sidebarButtonLabel}>
-                        <select
-                            value={this.state.ccwSortField}
-                            onChange={this.handleCCWSortChange}
-                            style={{
-                                width: '100%',
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                                padding: 0,
-                                border: 'none',
-                                borderRadius: 0,
-                                fontSize: 'inherit',
-                                fontWeight: 'inherit',
-                                color: 'inherit',
-                                outline: 'none',
-                                backgroundColor: 'transparent',
-                                cursor: 'pointer',
-                                fontFamily: 'inherit',
-                                textAlign: 'left'
-                            }}
-                        >
-                            <option value="updatedAt">最近更新</option>
-                            <option value="likeCount">最多喜欢</option>
-                            <option value="donateCount">最多投币</option>
-                            <option value="createdAt">最新创建</option>
-                        </select>
-                    </div>
-                </button>
+                <div className={libraryStyles.quickFilters}>
+                    {this.getCCWRecommendationButtons()}
+                </div>
+                <div className={libraryStyles.sidebarTitle} style={{marginTop: '0.75rem', marginBottom: '0.5rem', opacity: 0.6, fontSize: '0.75rem'}}>
+                    第 {this.state.ccwPage} 页{typeof this.state.ccwTotal === 'number' ? ` / 共 ${this.state.ccwTotal} 个` : ''}
+                </div>
+                <div className={libraryStyles.quickFilters}>
+                    <button
+                        type="button"
+                        className={libraryStyles.quickFilterButton}
+                        disabled={this.state.ccwPage <= 1 || this.state.ccwLoading}
+                        onClick={() => this.handleCCWPageChange(-1)}
+                    >
+                        上一页
+                    </button>
+                    <button
+                        type="button"
+                        className={libraryStyles.quickFilterButton}
+                        disabled={!this.state.ccwHasMore || this.state.ccwLoading}
+                        onClick={() => this.handleCCWPageChange(1)}
+                    >
+                        下一页
+                    </button>
+                </div>
             </div>
         );
     }
