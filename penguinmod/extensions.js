@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-06-21T14:40:26.808Z
+// Synced at: 2026-06-23T09:46:07.517Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -265,7 +265,8 @@ export default [
         code: "ddededodediamante/dateFormatV2.js",
         banner: "ddededodediamante/dateFormat.svg",
         creator: "ddededodediamante",
-        tags: ["customtype", "utility", "small", "data", "time"],
+        documentation: "DateFormatV2",
+        tags: ["customtype", "utility", "small", "data", "time", "text"],
         isGitHub: true,
     },
     {
