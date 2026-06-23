@@ -44,7 +44,7 @@ class LibraryItemComponent extends React.PureComponent {
         const selectionMessage = this.props.intl.formatMessage(
             this.props.isSelected ? messages.unselect : messages.select
         );
-        const favorite = (
+        const favorite = this.props.hideFavorite ? null : (
             <button
                 className={classNames(styles.favoriteContainer, {[styles.active]: this.props.favorite})}
                 onClick={this.props.onFavorite}
@@ -340,6 +340,7 @@ LibraryItemComponent.propTypes = {
         text: PropTypes.string
     })),
     favorite: PropTypes.bool,
+    hideFavorite: PropTypes.bool,
     onFavorite: PropTypes.func,
     onBlur: PropTypes.func.isRequired,
     onClick: PropTypes.func.isRequired,

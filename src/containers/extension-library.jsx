@@ -1330,6 +1330,7 @@ class ExtensionLibrary extends React.PureComponent {
         return {
             actionLabel: this.getActionLabel(item),
             badges,
+            hideFavorite: item.isCCWLoad,
             sourceLabel: item.sourceLabel,
             sourceTone: sourceToneMap[item.source] || 'Other'
         };

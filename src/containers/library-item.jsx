@@ -171,6 +171,7 @@ class LibraryItem extends React.PureComponent {
                 docsURI={this.props.docsURI}
                 samples={this.props.samples}
                 favorite={this.props.favorite}
+                hideFavorite={this.props.hideFavorite}
                 onFavorite={this.handleFavorite}
                 actionLabel={this.props.actionLabel}
                 badges={this.props.badges}
@@ -244,6 +245,7 @@ LibraryItem.propTypes = {
         text: PropTypes.string
     })),
     favorite: PropTypes.bool,
+    hideFavorite: PropTypes.bool,
     onFavorite: PropTypes.func,
     onMouseEnter: PropTypes.func.isRequired,
     onMouseLeave: PropTypes.func.isRequired,
