@@ -1,7 +1,22 @@
+import {
+    defaultEditorBackground,
+    normalizeEditorBackground
+} from '../lib/editor-background';
+import {
+    getPersistentCustomUI,
+    setPersistentCustomUI,
+    getPersistentEditorBackground,
+    setPersistentEditorBackground,
+    getPersistentToolboxLayout,
+    setPersistentToolboxLayout
+} from '../lib/tw-persistent-settings';
+
 const SET_FRAMERATE = 'tw/SET_FRAMERATE';
 const SET_OPSPERFRAME = 'tw/SET_OPSPERFRAME';
 const SET_INTERPOLATION = 'tw/SET_INTERPOLATION';
 const SET_CUSTOM_UI = 'tw/SET_CUSTOM_UI';
+const SET_EDITOR_BACKGROUND = 'tw/SET_EDITOR_BACKGROUND';
+const SET_TOOLBOX_LAYOUT = 'tw/SET_TOOLBOX_LAYOUT';
 const SET_COMPILER_OPTIONS = 'tw/SET_COMPILER_OPTIONS';
 const SET_RUNTIME_OPTIONS = 'tw/SET_RUNTIME_OPTIONS';
 const SET_USERNAME = 'tw/SET_USERNAME';
@@ -24,7 +39,13 @@ export const initialState = {
     framerate: 30,
     opsPerFrame: 1,
     interpolation: false,
-    customUI: true,
+    customUI: getPersistentCustomUI(true),
+    editorBackground: getPersistentEditorBackground(defaultEditorBackground),
+    toolboxLayout: getPersistentToolboxLayout({
+        enabled: false,
+        hiddenBlocks: {},
+        groups: []
+    }),
     cloud: true,
     username: '',
     highQualityPen: false,
@@ -35,7 +56,8 @@ export const initialState = {
     runtimeOptions: {
         maxClones: 300,
         miscLimits: true,
-        fencing: true
+        fencing: true,
+        offscreenDrawableCulling: false
     },
     isWindowFullScreen: false,
     dimensions: [0, 0],
@@ -73,6 +95,14 @@ const reducer = function (state, action) {
     case SET_CUSTOM_UI:
         return Object.assign({}, state, {
             customUI: action.customUI
+        });
+    case SET_EDITOR_BACKGROUND:
+        return Object.assign({}, state, {
+            editorBackground: normalizeEditorBackground(action.editorBackground)
+        });
+    case SET_TOOLBOX_LAYOUT:
+        return Object.assign({}, state, {
+            toolboxLayout: action.toolboxLayout
         });
     case SET_INTERPOLATION:
         return Object.assign({}, state, {
@@ -172,9 +202,26 @@ const setOpsPerFrameState = function (opsPerFrame) {
 };
 
 const setCustomUIState = function (customUI) {
+    setPersistentCustomUI(customUI);
     return {
         type: SET_CUSTOM_UI,
         customUI: customUI
+    };
+};
+
+const setEditorBackgroundState = function (editorBackground) {
+    setPersistentEditorBackground(editorBackground);
+    return {
+        type: SET_EDITOR_BACKGROUND,
+        editorBackground
+    };
+};
+
+const setToolboxLayoutState = function (toolboxLayout) {
+    setPersistentToolboxLayout(toolboxLayout);
+    return {
+        type: SET_TOOLBOX_LAYOUT,
+        toolboxLayout
     };
 };
 
@@ -310,6 +357,8 @@ export {
     setFramerateState,
     setOpsPerFrameState,
     setCustomUIState,
+    setEditorBackgroundState,
+    setToolboxLayoutState,
     setInterpolationState,
     setCompilerOptionsState,
     setRuntimeOptionsState,

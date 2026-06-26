@@ -14,21 +14,30 @@ const StyledContextMenu = props => (
 const StyledMenuItem = props => (
     <MenuItem
         {...props}
-        attributes={{className: styles.menuItem}}
+        attributes={{
+            className: styles.menuItem,
+            onMouseDown: props.onMouseDown
+        }}
     />
 );
 
 const BorderedMenuItem = props => (
     <MenuItem
         {...props}
-        attributes={{className: classNames(styles.menuItem, styles.menuItemBordered)}}
+        attributes={{
+            className: classNames(styles.menuItem, styles.menuItemBordered),
+            onMouseDown: props.onMouseDown
+        }}
     />
 );
 
 const DangerousMenuItem = props => (
     <MenuItem
         {...props}
-        attributes={{className: classNames(styles.menuItem, styles.menuItemBordered, styles.menuItemDanger)}}
+        attributes={{
+            className: classNames(styles.menuItem, styles.menuItemBordered, styles.menuItemDanger),
+            onMouseDown: props.onMouseDown
+        }}
     />
 );
 

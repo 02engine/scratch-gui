@@ -73,9 +73,14 @@ class SoundTab extends React.Component {
 
         // If switching editing targets, reset the sound index
         if (prevProps.editingTarget !== editingTarget) {
-            this.setState({selectedSoundIndex: 0});
-        } else if (this.state.selectedSoundIndex > target.sounds.length - 1) {
-            this.setState({selectedSoundIndex: Math.max(target.sounds.length - 1, 0)});
+            if (this.state.selectedSoundIndex !== 0) {
+                this.setState({selectedSoundIndex: 0});
+            }
+        } else {
+            const maxSoundIndex = Math.max(target.sounds.length - 1, 0);
+            if (this.state.selectedSoundIndex > maxSoundIndex) {
+                this.setState({selectedSoundIndex: maxSoundIndex});
+            }
         }
     }
 
@@ -84,9 +89,10 @@ class SoundTab extends React.Component {
     }
 
     handleDeleteSound (soundIndex) {
-        const restoreFun = this.props.vm.deleteSound(soundIndex);
-        if (soundIndex >= this.state.selectedSoundIndex) {
-            this.setState({selectedSoundIndex: Math.max(0, soundIndex - 1)});
+        const index = typeof soundIndex === 'number' ? soundIndex : this.state.selectedSoundIndex;
+        const restoreFun = this.props.vm.deleteSound(index);
+        if (index >= this.state.selectedSoundIndex) {
+            this.setState({selectedSoundIndex: Math.max(0, index - 1)});
         }
         this.props.dispatchUpdateRestore({restoreFun, deletedItem: 'Sound'});
     }

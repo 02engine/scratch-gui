@@ -1,3 +1,5 @@
+@import "../../css/units.css";
+
 .draggableWindow {
     position: absolute;
     background-color: var(--ui-secondary);
@@ -13,14 +15,15 @@
 .windowHeader {
     background-color: #00BAAD;
     color: white;
-    padding: 4px 8px;
+    padding: 2px 7px;
     cursor: move;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 12px;
     border-bottom: 1px solid #ddd;
     display: flex;
     align-items: center;
-    min-height: 24px;
+    min-height: 22px;
+    line-height: 1.1;
 }
 
 .windowHeader:hover {
@@ -29,12 +32,22 @@
 
 .windowTitle {
     flex: 1;
+    min-width: 0;
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    margin-right: 0.2rem;
 }
 
 .windowContent {
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
     position: relative;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
 }
 
 .resizeHandleE,
@@ -76,7 +89,7 @@
 
 .windowControls {
     display: flex;
-    gap: 4px;
+    gap: 3px;
 }
 
 .controlButton {
@@ -84,41 +97,42 @@
     border: none;
     color: white;
     cursor: pointer;
-    font-size: 12px;
-    width: 18px;
-    height: 18px;
-    border-radius: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .controlButton:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.controlGlyph {
+    line-height: 1;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 
 .minimizedBar {
     position: fixed;
-    top: 12px;
-    right: 18px;
-    width: auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: flex-end;
-    gap: 8px;
+    inset: 0;
     padding: 0;
     background: none;
     box-shadow: none;
-    z-index: 9999;
+    z-index: 479;
     pointer-events: none;
     overflow: visible;
 }
 
 .minimizedWindow {
-    position: static;
+    position: fixed;
     width: 32px;
     height: 32px;
     min-width: 32px;
@@ -140,6 +154,7 @@
     padding: 0;
     transition: box-shadow 0.2s, transform 0.2s;
     pointer-events: auto;
+    touch-action: none;
     overflow: hidden;
     gap: 0;
     flex-shrink: 0;
@@ -148,6 +163,12 @@
 .minimizedWindow:hover {
     background: #00998d;
     box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    transform: scale(1.08);
+}
+
+.minimizedWindowDragging {
+    cursor: grabbing;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.22);
     transform: scale(1.08);
 }
 

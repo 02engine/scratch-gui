@@ -6,10 +6,11 @@ import {intlShape, injectIntl} from 'react-intl';
 
 import {
     openSpriteLibrary,
-    closeSpriteLibrary
+    closeSpriteLibrary,
+    openSpriteLayerModal
 } from '../reducers/modals';
 import {activateTab, COSTUMES_TAB_INDEX, BLOCKS_TAB_INDEX} from '../reducers/editor-tab';
-import {setReceivedBlocks} from '../reducers/hovered-target';
+import {setHoveredSprite, setReceivedBlocks} from '../reducers/hovered-target';
 import {showStandardAlert, closeAlertWithId} from '../reducers/alerts';
 import {setRestore} from '../reducers/restore-deletion';
 import DragConstants from '../lib/drag-constants';
@@ -24,6 +25,7 @@ import randomizeSpritePosition from '../lib/randomize-sprite-position';
 import downloadBlob from '../lib/download-blob';
 import log from '../lib/log';
 import {placeInViewport} from '../lib/backpack/code-payload.js';
+import {getEventXY} from '../lib/touch-utils';
 
 
 class TargetPane extends React.Component {
@@ -32,6 +34,7 @@ class TargetPane extends React.Component {
         bindAll(this, [
             'handleActivateBlocksTab',
             'handleBlockDragEnd',
+            'handleBlockDragUpdate',
             'handleChangeSpriteRotationStyle',
             'handleChangeSpriteDirection',
             'handleChangeSpriteName',
@@ -49,14 +52,22 @@ class TargetPane extends React.Component {
             'handlePaintSpriteClick',
             'handleFileUploadClick',
             'handleSpriteUpload',
+            'handleGlobalBlockDragMove',
             'setFileInput'
         ]);
+        this.blockDragPoint = null;
+        this.blockDragTargetId = null;
+        this.blockDragListenersAttached = false;
+        this.blockDragActive = false;
     }
     componentDidMount () {
+        this.props.vm.addListener('BLOCK_DRAG_UPDATE', this.handleBlockDragUpdate);
         this.props.vm.addListener('BLOCK_DRAG_END', this.handleBlockDragEnd);
     }
     componentWillUnmount () {
+        this.props.vm.removeListener('BLOCK_DRAG_UPDATE', this.handleBlockDragUpdate);
         this.props.vm.removeListener('BLOCK_DRAG_END', this.handleBlockDragEnd);
+        this.detachBlockDragListeners();
     }
     handleChangeSpriteDirection (direction) {
         this.props.vm.postSpriteInfo({direction});
@@ -102,7 +113,11 @@ class TargetPane extends React.Component {
         });
     }
     handleSelectSprite (id) {
-        this.props.vm.setEditingTarget(id);
+        if (this.props.onRequestSelectTarget) {
+            this.props.onRequestSelectTarget(id);
+        } else {
+            this.props.vm.setEditingTarget(id);
+        }
         if (this.props.stage && id !== this.props.stage.id) {
             this.props.onHighlightTarget(id);
         }
@@ -181,11 +196,76 @@ function base64ToUint8Array(base64String) {
     setFileInput (input) {
         this.fileInput = input;
     }
+    attachBlockDragListeners () {
+        if (this.blockDragListenersAttached) {
+            return;
+        }
+        document.addEventListener('mousemove', this.handleGlobalBlockDragMove, true);
+        document.addEventListener('touchmove', this.handleGlobalBlockDragMove, true);
+        this.blockDragListenersAttached = true;
+    }
+    detachBlockDragListeners () {
+        if (!this.blockDragListenersAttached) {
+            return;
+        }
+        document.removeEventListener('mousemove', this.handleGlobalBlockDragMove, true);
+        document.removeEventListener('touchmove', this.handleGlobalBlockDragMove, true);
+        this.blockDragListenersAttached = false;
+    }
+    resetBlockDragState () {
+        this.blockDragPoint = null;
+        this.blockDragTargetId = null;
+        this.blockDragActive = false;
+    }
+    getBlockDropTargetFromPoint (x, y) {
+        if (typeof document.elementsFromPoint !== 'function') {
+            return null;
+        }
+        const elements = document.elementsFromPoint(x, y);
+        for (let i = 0; i < elements.length; i++) {
+            const target = elements[i].closest && elements[i].closest('[data-block-drop-target-id]');
+            if (target) {
+                return target.getAttribute('data-block-drop-target-id');
+            }
+        }
+        return null;
+    }
+    updateBlockDragTargetFromPoint (x, y) {
+        this.blockDragPoint = {x, y};
+        const targetId = this.getBlockDropTargetFromPoint(x, y);
+        if (targetId !== this.blockDragTargetId) {
+            this.blockDragTargetId = targetId;
+            this.props.dispatchSetHoveredSprite(targetId);
+        }
+        return targetId;
+    }
+    handleGlobalBlockDragMove (e) {
+        const {x, y} = getEventXY(e);
+        this.updateBlockDragTargetFromPoint(x, y);
+    }
+    handleBlockDragUpdate (areBlocksOverGui) {
+        if (areBlocksOverGui) {
+            this.blockDragActive = true;
+            this.attachBlockDragListeners();
+        } else if (!this.blockDragActive) {
+            this.detachBlockDragListeners();
+            this.props.dispatchSetHoveredSprite(null);
+        }
+    }
     handleBlockDragEnd (blocks) {
-        if (this.props.hoveredTarget.sprite && this.props.hoveredTarget.sprite !== this.props.editingTarget) {
-            this.shareBlocks(blocks, this.props.hoveredTarget.sprite, this.props.editingTarget);
+        const targetId = this.blockDragPoint ?
+            this.updateBlockDragTargetFromPoint(this.blockDragPoint.x, this.blockDragPoint.y) :
+            this.getHoveredTargetId();
+        this.detachBlockDragListeners();
+        if (targetId && targetId !== this.props.editingTarget) {
+            this.shareBlocks(blocks, targetId, this.props.editingTarget);
             this.props.onReceivedBlocks(true);
         }
+        this.resetBlockDragState();
+    }
+    getHoveredTargetId () {
+        const targetId = this.props.hoveredTarget.sprite;
+        return typeof targetId === 'string' ? targetId : null;
     }
     shareBlocks (payload, targetId, optFromTargetId) {
         // Position the top-level block based on the scroll position.
@@ -193,7 +273,7 @@ function base64ToUint8Array(base64String) {
         return this.props.vm.shareBlocksToTarget(centered, targetId, optFromTargetId);
     }
     handleDrop (dragInfo) {
-        const {sprite: targetId} = this.props.hoveredTarget;
+        const targetId = this.getHoveredTargetId();
         if (dragInfo.dragType === DragConstants.SPRITE) {
             // Add one to both new and target index because we are not counting/moving the stage
             this.props.vm.reorderTarget(dragInfo.index + 1, dragInfo.newIndex + 1);
@@ -236,6 +316,7 @@ function base64ToUint8Array(base64String) {
         /* eslint-disable no-unused-vars */
         const {
             dispatchUpdateRestore,
+            dispatchSetHoveredSprite,
             isRtl,
             onActivateTab,
             onCloseImporting,
@@ -281,7 +362,9 @@ const {
 TargetPane.propTypes = {
     intl: intlShape.isRequired,
     onCloseImporting: PropTypes.func,
+    onRequestSelectTarget: PropTypes.func,
     onShowImporting: PropTypes.func,
+    dispatchSetHoveredSprite: PropTypes.func.isRequired,
     ...targetPaneProps
 };
 
@@ -301,6 +384,10 @@ const mapDispatchToProps = dispatch => ({
         e.preventDefault();
         dispatch(openSpriteLibrary());
     },
+    onManageSpriteLayersClick: e => {
+        e.preventDefault();
+        dispatch(openSpriteLayerModal());
+    },
     onRequestCloseSpriteLibrary: () => {
         dispatch(closeSpriteLibrary());
     },
@@ -315,6 +402,9 @@ const mapDispatchToProps = dispatch => ({
     },
     onHighlightTarget: id => {
         dispatch(highlightTarget(id));
+    },
+    dispatchSetHoveredSprite: spriteId => {
+        dispatch(setHoveredSprite(spriteId));
     },
     onCloseImporting: () => dispatch(closeAlertWithId('importingAsset')),
     onShowImporting: () => dispatch(showStandardAlert('importingAsset'))

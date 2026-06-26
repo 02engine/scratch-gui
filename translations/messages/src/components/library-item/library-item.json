@@ -10,6 +10,16 @@
     "defaultMessage": "Unfavorite"
   },
   {
+    "id": "tw.libraryItem.select",
+    "description": "Tooltip for selecting a library item for batch actions.",
+    "defaultMessage": "Select"
+  },
+  {
+    "id": "tw.libraryItem.unselect",
+    "description": "Tooltip for removing a library item from batch selection.",
+    "defaultMessage": "Cancel selection"
+  },
+  {
     "id": "gui.extensionLibrary.comingSoon",
     "description": "Label for extensions that are not yet implemented",
     "defaultMessage": "Coming Soon"

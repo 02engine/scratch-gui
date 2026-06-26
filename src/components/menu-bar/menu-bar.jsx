@@ -35,7 +35,14 @@ import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 
-import {openTipsLibrary, openSettingsModal, openRestorePointModal} from '../../reducers/modals';
+import {
+    open02EngineSettingsModal,
+    openTipsLibrary,
+    openSettingsModal,
+    openRestorePointModal,
+    openGitModal
+} from '../../reducers/modals';
+import {openCollaborationModal} from '../../reducers/collaboration';
 import {setPlayer} from '../../reducers/mode';
 import {
     isTimeTravel220022BC,
@@ -78,9 +85,7 @@ import {
     closeSettingsMenu,
     errorsMenuOpen,
     openErrorsMenu,
-    closeErrorsMenu,
-    openGitMenu,
-    closeGitMenu
+    closeErrorsMenu
 } from '../../reducers/menus';
 import {setFileHandle} from '../../reducers/tw.js';
 
@@ -104,17 +109,12 @@ import ninetiesLogo from './nineties_logo.svg';
 import catLogo from './cat_logo.svg';
 import prehistoricLogo from './prehistoric-logo.svg';
 import oldtimeyLogo from './oldtimey-logo.svg';
-import gitIcon from './icon--git.svg';
-
 
 import sharedMessages from '../../lib/shared-messages';
 
 import SeeInsideButton from './tw-see-inside.jsx';
 import {notScratchDesktop} from '../../lib/isScratchDesktop.js';
 import {APP_NAME} from '../../lib/brand.js';
-
-import FlarumLogin from '../flarum-login/flarum-login.jsx';
-import FlarumComposer from '../flarum-composer/flarum-composer.jsx';
 
 const ariaMessages = defineMessages({
     tutorials: {
@@ -129,6 +129,16 @@ const twMessages = defineMessages({
         id: 'tw.menuBar.compileError',
         defaultMessage: '{sprite}: {error}',
         description: 'Error message in error menu'
+    },
+    collapseMenuBar: {
+        id: 'tw.menuBar.collapseMenuBar',
+        defaultMessage: 'Collapse menu bar',
+        description: 'Tooltip for the button that collapses the menu bar'
+    },
+    expandMenuBar: {
+        id: 'tw.menuBar.expandMenuBar',
+        defaultMessage: 'Expand menu bar',
+        description: 'Tooltip for the button that expands the menu bar'
     }
 });
 
@@ -231,7 +241,6 @@ class MenuBar extends React.Component {
             'handleClickRestorePoints',
             'handleClickSeeCommunity',
             'handleClickShare',
-            'handleClickGitCommit',
             'handleSetMode',
             'handleKeyPress',
             'handleRestoreOption',
@@ -239,19 +248,29 @@ class MenuBar extends React.Component {
             'restoreOptionMessage',
             'handleSetDefaultProject',
             'handleRestoreDefaultProject',
-            'handleOpenFlarumComposer',
-            'handleCloseFlarumComposer'
+            'handleToggleMenuBarCollapsed'
         ]);
         this.state = {
-            showComposer: false,
-            flarumToken: null
+            menuBarCollapsed: false
         };
     }
     componentDidMount () {
         document.addEventListener('keydown', this.handleKeyPress);
     }
+    componentDidUpdate (prevProps) {
+        if (prevProps.canCollapseMenuBar && !this.props.canCollapseMenuBar && this.state.menuBarCollapsed) {
+            this.setState({menuBarCollapsed: false}, () => {
+                if (this.props.onMenuBarCollapseChange) {
+                    this.props.onMenuBarCollapseChange(false);
+                }
+            });
+        }
+    }
     componentWillUnmount () {
         document.removeEventListener('keydown', this.handleKeyPress);
+        if (this.state.menuBarCollapsed && this.props.onMenuBarCollapseChange) {
+            this.props.onMenuBarCollapseChange(false);
+        }
     }
     handleClickNew () {
         // if the project is dirty, and user owns the project, we will autosave.
@@ -407,9 +426,6 @@ class MenuBar extends React.Component {
     handleClickSeeInside () {
         this.props.onClickSeeInside();
     }
-    handleClickGitCommit () {
-        this.props.onClickGitCommit && this.props.onClickGitCommit();
-    }
     async handleSetDefaultProject () {
         // Save current project as default
         if (!this.props.vm) {
@@ -503,11 +519,34 @@ class MenuBar extends React.Component {
             this.props.onRestoreDefaultProject();
         }
     }
-    handleOpenFlarumComposer () {
-        this.setState({showComposer: true});
-    }
-    handleCloseFlarumComposer () {
-        this.setState({showComposer: false});
+    handleToggleMenuBarCollapsed () {
+        if (!this.props.canCollapseMenuBar) {
+            return;
+        }
+        const nextCollapsed = !this.state.menuBarCollapsed;
+        if (nextCollapsed) {
+            [
+                this.props.onRequestCloseAbout,
+                this.props.onRequestCloseAccount,
+                this.props.onRequestCloseEdit,
+                this.props.onRequestCloseErrors,
+                this.props.onRequestCloseFile,
+                this.props.onRequestCloseLogin,
+                this.props.onRequestCloseMode,
+                this.props.onRequestCloseSettings
+            ].forEach(closeMenu => {
+                if (typeof closeMenu === 'function') {
+                    closeMenu();
+                }
+            });
+        }
+        this.setState({
+            menuBarCollapsed: nextCollapsed
+        }, () => {
+            if (this.props.onMenuBarCollapseChange) {
+                this.props.onMenuBarCollapseChange(nextCollapsed);
+            }
+        });
     }
     buildAboutMenu (onClickAbout) {
         if (!onClickAbout) {
@@ -602,13 +641,41 @@ class MenuBar extends React.Component {
         );
         // Show the About button only if we have a handler for it (like in the desktop app)
         const aboutButton = this.buildAboutMenu(this.props.onClickAbout);
+        const canCollapseMenuBar = this.props.canCollapseMenuBar;
+        const collapseButtonLabel = canCollapseMenuBar ? this.props.intl.formatMessage(
+            this.state.menuBarCollapsed ? twMessages.expandMenuBar : twMessages.collapseMenuBar
+        ) : '';
+        const collapseButton = canCollapseMenuBar ? (
+            <button
+                aria-expanded={!this.state.menuBarCollapsed}
+                aria-label={collapseButtonLabel}
+                className={classNames(styles.menuBarCollapseButton, {
+                    [styles.menuBarCollapseButtonCollapsed]: this.state.menuBarCollapsed
+                })}
+                title={collapseButtonLabel}
+                type="button"
+                onClick={this.handleToggleMenuBarCollapsed}
+            >
+                <span
+                    className={classNames(styles.collapseIcon, {
+                        [styles.collapseIconCollapsed]: this.state.menuBarCollapsed,
+                        [styles.collapseIconExpanded]: !this.state.menuBarCollapsed
+                    })}
+                />
+            </button>
+        ) : null;
         return (
             <Box
                 className={classNames(
                     this.props.className,
-                    styles.menuBar
+                    styles.menuBar,
+                    styles.menuBarExpanded,
+                    {
+                        [styles.menuBarCollapsed]: canCollapseMenuBar && this.state.menuBarCollapsed
+                    }
                 )}
             >
+                <div className={styles.menuBarContent}>
                 <div className={styles.mainMenu}>
                     <div className={styles.fileGroup}>
                         {this.props.errors.length > 0 && <div>
@@ -676,6 +743,7 @@ class MenuBar extends React.Component {
                                 this.props.onClickAddonSettings &&
                                 this.props.onClickAddonSettings.bind(null, 'editor-theme3')
                             }
+                            onOpen02EngineSettings={this.props.onClick02EngineSettingsModal}
                             onRequestClose={this.props.onRequestCloseSettings}
                             onRequestOpen={this.props.onClickSettings}
                             onSetDefaultProject={this.handleSetDefaultProject}
@@ -950,6 +1018,20 @@ class MenuBar extends React.Component {
                                             )}
                                         </MenuItem>
                                     )}</CloudVariablesToggler>
+                                    <MenuItem onClick={this.props.onClickGitModal}>
+                                        <FormattedMessage
+                                            defaultMessage="Git"
+                                            description="Menu bar item for Git version control"
+                                            id="tw.menuBar.git"
+                                        />
+                                    </MenuItem>
+                                    <MenuItem onClick={this.props.onClickCollaborationModal}>
+                                        <FormattedMessage
+                                            defaultMessage="Collaboration"
+                                            description="Menu bar item for real-time collaboration"
+                                            id="tw.menuBar.collaboration"
+                                        />
+                                    </MenuItem>
                                 </MenuSection>
                                 <MenuSection>
                                     <MenuItem onClick={this.props.onClickSettingsModal}>
@@ -1176,52 +1258,6 @@ class MenuBar extends React.Component {
                             </Button>
                         </a>
                     </div>}
-                    <div
-                        className={classNames(styles.menuBarItem, styles.hoverable, styles.withShadow)}
-                        onClick={this.props.onClickGitCommit}
-                    >
-                        <img
-                            src={gitIcon}
-                            draggable={false}
-                            width={20}
-                            height={20}
-                        />
-                        <span className={styles.collapsibleLabel}>
-                            <FormattedMessage
-                                defaultMessage="Git"
-                                description="Button to open Git menu"
-                                id="gui.menuBar.git"
-                            />
-                        </span>
-                    </div>
-                    {/* Git 快捷按钮 */}
-                    {this.props.vm && this.props.vm.runtime && this.props.vm.runtime.platform &&
-                     this.props.vm.runtime.platform.git && this.props.vm.runtime.platform.git.repository &&
-                     this.props.vm.runtime.platform.git.repository.trim().length > 0 && this.props.showGitQuickButtons && (
-                        <div className={styles.gitQuickButtonsGroup}>
-                            <button
-                                className={styles.gitQuickButton}
-                                onClick={() => this.props.onGitQuickAction && this.props.onGitQuickAction('commit')}
-                                title="Quick Commit"
-                            >
-                                Commit
-                            </button>
-                            <button
-                                className={styles.gitQuickButton}
-                                onClick={() => this.props.onGitQuickAction && this.props.onGitQuickAction('fetch')}
-                                title="Fetch from GitHub"
-                            >
-                                Fetch
-                            </button>
-                            <button
-                                className={styles.gitQuickButton}
-                                onClick={() => this.props.onGitQuickAction && this.props.onGitQuickAction('pullrequest')}
-                                title="Create Pull Request"
-                            >
-                                PR
-                            </button>
-                        </div>
-                    )}
                 </div>
 
                 <div className={styles.accountInfoGroup}>
@@ -1230,34 +1266,16 @@ class MenuBar extends React.Component {
                     />
                 </div>
 
-                {/* Flarum 登录按钮放在右上角，关于按钮左边 - 已隐藏 */}
-                {/* <div
-                    className={classNames(styles.menuBarItem, !this.state.flarumToken && styles.hoverable, styles.withShadow)}
-                    style={!this.props.onClickAbout ? {marginRight: '8px'} : {}}
-                >
-                    <FlarumLogin
-                        isRtl={this.props.isRtl}
-                        onTokenUpdate={(token) => this.setState({flarumToken: token})}
-                        onOpenComposer={this.handleOpenFlarumComposer}
-                    />
-                </div> */}
-
                 {aboutButton}
-                {/* {this.state.showComposer && (
-                    <FlarumComposer
-                        vm={this.props.vm}
-                        projectName={this.props.projectTitle}
-                        token={this.state.flarumToken}
-                        onRequestClose={this.handleCloseFlarumComposer}
-                        onDone={this.handleCloseFlarumComposer}
-                    />
-                )} */}
+                </div>
+                {collapseButton}
             </Box>
         );
     }
 }
 
 MenuBar.propTypes = {
+    canCollapseMenuBar: PropTypes.bool,
     enableSeeInside: PropTypes.bool,
     onClickSeeInside: PropTypes.func,
     aboutMenuOpen: PropTypes.bool,
@@ -1323,9 +1341,6 @@ MenuBar.propTypes = {
     onClickRestorePoints: PropTypes.func,
     onClickEdit: PropTypes.func,
     onClickFile: PropTypes.func,
-    onClickGitCommit: PropTypes.func,
-    onGitQuickAction: PropTypes.func,
-    showGitQuickButtons: PropTypes.bool,
     onClickLogin: PropTypes.func,
     onClickMode: PropTypes.func,
     onClickNew: PropTypes.func,
@@ -1334,8 +1349,10 @@ MenuBar.propTypes = {
     onClickSave: PropTypes.func,
     onClickSaveAsCopy: PropTypes.func,
     onClickSettings: PropTypes.func,
+    onClick02EngineSettingsModal: PropTypes.func,
     onClickSettingsModal: PropTypes.func,
     onLogOut: PropTypes.func,
+    onMenuBarCollapseChange: PropTypes.func,
     onOpenRegistration: PropTypes.func,
     onOpenTipLibrary: PropTypes.func,
     onProjectTelemetryEvent: PropTypes.func,
@@ -1366,6 +1383,7 @@ MenuBar.propTypes = {
 };
 
 MenuBar.defaultProps = {
+    canCollapseMenuBar: false,
     onShare: () => {}
 };
 
@@ -1425,8 +1443,14 @@ const mapDispatchToProps = dispatch => ({
     onRequestCloseAbout: () => dispatch(closeAboutMenu()),
     onClickRestorePoints: () => dispatch(openRestorePointModal()),
     onClickSettings: () => dispatch(openSettingsMenu()),
+    onClick02EngineSettingsModal: () => {
+        dispatch(closeEditMenu());
+        dispatch(closeSettingsMenu());
+        dispatch(open02EngineSettingsModal());
+    },
     onClickSettingsModal: () => {
         dispatch(closeEditMenu());
+        dispatch(closeSettingsMenu());
         dispatch(openSettingsModal());
     },
     onRequestCloseSettings: () => dispatch(closeSettingsMenu()),
@@ -1438,7 +1462,9 @@ const mapDispatchToProps = dispatch => ({
     onClickSave: () => dispatch(manualUpdateProject()),
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy()),
     onSeeCommunity: () => dispatch(setPlayer(true)),
-    onSetTimeTravelMode: mode => dispatch(setTimeTravel(mode))
+    onSetTimeTravelMode: mode => dispatch(setTimeTravel(mode)),
+    onClickGitModal: () => dispatch(openGitModal()),
+    onClickCollaborationModal: () => dispatch(openCollaborationModal())
 });
 
 export default compose(

@@ -1,6 +1,7 @@
 const defaultsDeep = require('lodash.defaultsdeep');
 const path = require('path');
 const webpack = require('webpack');
+const fs = require('fs'); // 引入文件系统模块
 
 // Plugins
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -19,13 +20,14 @@ if (root.length > 0 && !root.endsWith('/')) {
     throw new Error('If ROOT is defined, it must have a trailing slash.');
 }
 
+const FILE_TO_PRINT = path.resolve(__dirname, 'static/02engine-asciilogo.txt'); 
+
 const htmlWebpackPluginCommon = {
     root: root,
     meta: JSON.parse(process.env.EXTRA_META || '{}'),
     APP_NAME
 };
 
-// When this changes, the path for all JS files will change, bypassing any HTTP caches
 const CACHE_EPOCH = 'pentapod';
 
 const base = {
@@ -37,7 +39,6 @@ const base = {
         disableHostCheck: true,
         compress: true,
         port: process.env.PORT || 8601,
-        // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
             rewrites: [
                 {from: /^\/\d+\/?$/, to: '/indexold.html'},
@@ -60,7 +61,12 @@ const base = {
     },
     resolve: {
         symlinks: false,
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
         alias: {
+            'assets': path.resolve(__dirname, 'src/addons/addons/02agent/assets'),
+            'components': path.resolve(__dirname, 'src/addons/addons/02agent/shims/components'),
+            'hooks': path.resolve(__dirname, 'src/addons/addons/02agent/shims/hooks'),
+            'utils': path.resolve(__dirname, 'src/addons/addons/02agent/shims/utils'),
             'text-encoding$': path.resolve(__dirname, 'src/lib/tw-text-encoder'),
             'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts')
         }
@@ -76,14 +82,27 @@ const base = {
                 /node_modules[\\/]@vernier[\\/]godirect/
             ],
             options: {
-                // Explicitly disable babelrc so we don't catch various config
-                // in much lower dependencies.
                 babelrc: false,
                 plugins: [
                     ['react-intl', {
                         messagesDir: './translations/messages/'
                     }]],
                 presets: ['@babel/preset-env', '@babel/preset-react']
+            }
+        },
+        {
+            test: /\.tsx?$/,
+            loader: 'babel-loader',
+            include: [
+                path.resolve(__dirname, 'src')
+            ],
+            options: {
+                babelrc: false,
+                plugins: [
+                    ['react-intl', {
+                        messagesDir: './translations/messages/'
+                    }]],
+                presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript']
             }
         },
         {
@@ -111,9 +130,43 @@ const base = {
                     }
                 }
             }]
-        }]
+        },
+        {
+            test: /\.less$/,
+            use: [{
+                loader: 'style-loader'
+            }, {
+                loader: 'css-loader',
+                options: {
+                    modules: true,
+                    importLoaders: 1,
+                    localIdentName: '[name]_[local]_[hash:base64:5]',
+                    camelCase: true
+                }
+            }, {
+                loader: 'less-loader'
+            }]
+        }],
     },
     plugins: [
+        // 自定义打印插件
+        {
+            apply: (compiler) => {
+                const printFileContent = (comp, callback) => {
+                    if (fs.existsSync(FILE_TO_PRINT)) {
+                        const content = fs.readFileSync(FILE_TO_PRINT, 'utf8');
+                        console.log(content);
+                        console.log('\x1b[32m%s\x1b[0m', 'Welcome to 02Engine Development......Good Luck!\n');
+                    } else {
+                    }
+                    if (callback) callback();
+                };
+                // 监听普通构建
+                compiler.hooks.beforeRun.tapAsync('LogFilePlugin', printFileContent);
+                // 监听开发预览模式（Watch 模式）
+                compiler.hooks.watchRun.tapAsync('LogFilePlugin', printFileContent);
+            }
+        },
         new CopyWebpackPlugin({
             patterns: [
                 {
@@ -139,7 +192,7 @@ if (!process.env.CI) {
 }
 
 module.exports = [
-    // to run editor examples
+    // 1. Playground 配置
     defaultsDeep({}, base, {
         entry: {
             'editor': './src/playground/editor.jsx',
@@ -231,8 +284,8 @@ module.exports = [
                         to: ''
                     },
                     {
-                        from: 'flarum.config.json',
-                        to: ''
+                        from: 'static/extensions',
+                        to: 'static/extensions'
                     }
                 ]
             }),
@@ -249,7 +302,7 @@ module.exports = [
     })
 ].concat(
     process.env.NODE_ENV === 'production' || process.env.BUILD_MODE === 'dist' ? (
-        // export as library
+        // 2. Library (dist) 配置
         defaultsDeep({}, base, {
             target: 'web',
             entry: {
@@ -290,13 +343,16 @@ module.exports = [
                         }
                     ]
                 }),
-                // Include library JSON files for scratch-desktop to use for downloading
                 new CopyWebpackPlugin({
                     patterns: [
                         {
                             from: 'src/lib/libraries/*.json',
                             to: 'libraries',
                             flatten: true
+                        },
+                        {
+                            from: 'static/extensions',
+                            to: 'static/extensions'
                         }
                     ]
                 })

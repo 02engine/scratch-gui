@@ -15,12 +15,17 @@ const MODAL_CONNECTION = 'connectionModal';
 const MODAL_TIPS_LIBRARY = 'tipsLibrary';
 const MODAL_USERNAME = 'usernameModal';
 const MODAL_SETTINGS = 'settingsModal';
+const MODAL_02ENGINE_SETTINGS = '02engineSettingsModal';
+const MODAL_TOOLBOX_LAYOUT = 'toolboxLayoutModal';
+const MODAL_SPRITE_LAYER = 'spriteLayerModal';
 const MODAL_CUSTOM_EXTENSION = 'customExtensionModal';
+const MODAL_CCW_EXTENSION = 'ccwExtensionModal';
 const MODAL_EXTENSION_IMPORT_METHOD = 'extensionImportMethodModal';
 const MODAL_RESTORE_POINTS = 'restorePointModal';
 const MODAL_FONTS = 'fontsModal';
 const MODAL_UNKNOWN_PLATFORM = 'unknownPlatformModal';
 const MODAL_INVALID_PROJECT = 'invalidProjectModal';
+const MODAL_GIT = 'gitModal';
 
 const initialState = {
     [MODAL_BACKDROP_LIBRARY]: false,
@@ -35,14 +40,20 @@ const initialState = {
     [MODAL_TIPS_LIBRARY]: false,
     [MODAL_USERNAME]: false,
     [MODAL_SETTINGS]: false,
+    [MODAL_02ENGINE_SETTINGS]: false,
+    [MODAL_TOOLBOX_LAYOUT]: false,
+    [MODAL_SPRITE_LAYER]: false,
     [MODAL_CUSTOM_EXTENSION]: false,
+    [MODAL_CCW_EXTENSION]: false,
     [MODAL_EXTENSION_IMPORT_METHOD]: false,
     [MODAL_RESTORE_POINTS]: false,
     [MODAL_FONTS]: false,
     [MODAL_UNKNOWN_PLATFORM]: false,
     [MODAL_INVALID_PROJECT]: false,
+    [MODAL_GIT]: false,
     selectedExtension: null,
-    selectedExtensions: []
+    selectedExtensions: [],
+    customExtensionModalData: null
 };
 
 const reducer = function (state, action) {
@@ -50,11 +61,17 @@ const reducer = function (state, action) {
     switch (action.type) {
     case OPEN_MODAL:
         return Object.assign({}, state, {
-            [action.modal]: true
+            [action.modal]: true,
+            ...(action.modal === MODAL_CUSTOM_EXTENSION ? {
+                customExtensionModalData: action.data || null
+            } : {})
         });
     case CLOSE_MODAL:
         return Object.assign({}, state, {
-            [action.modal]: false
+            [action.modal]: false,
+            ...(action.modal === MODAL_CUSTOM_EXTENSION ? {
+                customExtensionModalData: null
+            } : {})
         });
     case SET_SELECTED_EXTENSION:
         return Object.assign({}, state, {
@@ -68,10 +85,11 @@ const reducer = function (state, action) {
         return state;
     }
 };
-const openModal = function (modal) {
+const openModal = function (modal, data) {
     return {
         type: OPEN_MODAL,
-        modal: modal
+        modal: modal,
+        data
     };
 };
 const closeModal = function (modal) {
@@ -116,8 +134,20 @@ const openUsernameModal = function () {
 const openSettingsModal = function () {
     return openModal(MODAL_SETTINGS);
 };
-const openCustomExtensionModal = function () {
-    return openModal(MODAL_CUSTOM_EXTENSION);
+const open02EngineSettingsModal = function () {
+    return openModal(MODAL_02ENGINE_SETTINGS);
+};
+const openToolboxLayoutModal = function () {
+    return openModal(MODAL_TOOLBOX_LAYOUT);
+};
+const openSpriteLayerModal = function () {
+    return openModal(MODAL_SPRITE_LAYER);
+};
+const openCustomExtensionModal = function (data) {
+    return openModal(MODAL_CUSTOM_EXTENSION, data);
+};
+const openCCWExtensionModal = function () {
+    return openModal(MODAL_CCW_EXTENSION);
 };
 const openExtensionImportMethodModal = function () {
     return openModal(MODAL_EXTENSION_IMPORT_METHOD);
@@ -182,8 +212,20 @@ const closeUsernameModal = function () {
 const closeSettingsModal = function () {
     return closeModal(MODAL_SETTINGS);
 };
+const close02EngineSettingsModal = function () {
+    return closeModal(MODAL_02ENGINE_SETTINGS);
+};
+const closeToolboxLayoutModal = function () {
+    return closeModal(MODAL_TOOLBOX_LAYOUT);
+};
+const closeSpriteLayerModal = function () {
+    return closeModal(MODAL_SPRITE_LAYER);
+};
 const closeCustomExtensionModal = function () {
     return closeModal(MODAL_CUSTOM_EXTENSION);
+};
+const closeCCWExtensionModal = function () {
+    return closeModal(MODAL_CCW_EXTENSION);
 };
 const closeExtensionImportMethodModal = function () {
     return closeModal(MODAL_EXTENSION_IMPORT_METHOD);
@@ -200,6 +242,12 @@ const closeUnknownPlatformModal = function () {
 const closeInvalidProjectModal = function () {
     return closeModal(MODAL_INVALID_PROJECT);
 };
+const openGitModal = function () {
+    return openModal(MODAL_GIT);
+};
+const closeGitModal = function () {
+    return closeModal(MODAL_GIT);
+};
 export {
     reducer as default,
     initialState as modalsInitialState,
@@ -215,7 +263,11 @@ export {
     openConnectionModal,
     openUsernameModal,
     openSettingsModal,
+    open02EngineSettingsModal,
+    openToolboxLayoutModal,
+    openSpriteLayerModal,
     openCustomExtensionModal,
+    openCCWExtensionModal,
     openExtensionImportMethodModal,
     openRestorePointModal,
     setSelectedExtension,
@@ -223,6 +275,7 @@ export {
     openFontsModal,
     openUnknownPlatformModal,
     openInvalidProjectModal,
+    openGitModal,
     closeBackdropLibrary,
     closeCostumeLibrary,
     closeExtensionLibrary,
@@ -235,10 +288,15 @@ export {
     closeConnectionModal,
     closeUsernameModal,
     closeSettingsModal,
+    close02EngineSettingsModal,
+    closeToolboxLayoutModal,
+    closeSpriteLayerModal,
     closeCustomExtensionModal,
+    closeCCWExtensionModal,
     closeExtensionImportMethodModal,
     closeRestorePointModal,
     closeFontsModal,
     closeUnknownPlatformModal,
-    closeInvalidProjectModal
+    closeInvalidProjectModal,
+    closeGitModal
 };

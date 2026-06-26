@@ -138,6 +138,21 @@ export default async function ({ addon, console, msg }) {
     return null;
   };
 
+  const getSpriteSelectorComponent = (element) => {
+    const candidates = [element, element && element.querySelector && element.querySelector(".react-contextmenu-wrapper")];
+    for (const candidate of candidates) {
+      let fiber = candidate && candidate[addon.tab.traps.getInternalKey(candidate)];
+      while (fiber) {
+        const component = fiber.stateNode;
+        if (component && component.props && component.props.dragType) {
+          return component;
+        }
+        fiber = fiber.return;
+      }
+    }
+    return null;
+  };
+
   const openFolderAsset = {
     assetId: "&__sa_folders_folder",
     encodeDataURI() {
@@ -262,7 +277,8 @@ export default async function ({ addon, console, msg }) {
       (typeof sortableHOCInstance.props.selectedId === "string" ||
         typeof sortableHOCInstance.props.selectedItemIndex === "number") &&
       typeof sortableHOCInstance.containerBox !== "undefined" &&
-      typeof SortableHOC.prototype.componentDidUpdate === "function" &&
+      typeof SortableHOC.prototype.componentDidMount === "undefined" &&
+      typeof SortableHOC.prototype.componentDidUpdate === "undefined" &&
       typeof SortableHOC.prototype.handleAddSortable === "function" &&
       typeof SortableHOC.prototype.handleRemoveSortable === "function" &&
       typeof SortableHOC.prototype.setRef === "function"
@@ -707,49 +723,52 @@ export default async function ({ addon, console, msg }) {
     });
   };
 
+  const renameFolderItems = (component, folderName, newName) => {
+    const isOpen = isFolderOpen(component, folderName);
+    setFolderOpen(component, folderName, false);
+    if (isOpen && typeof newName === "string") {
+      setFolderOpen(component, newName, true);
+    }
+
+    if (component.props.dragType === "SPRITE") {
+      for (const target of vm.runtime.targets) {
+        if (target.isOriginal) {
+          if (getFolderFromName(target.getName()) === folderName) {
+            vm.renameSprite(target.id, ensureNotReserved(setFolderOfName(target.getName(), newName)));
+          }
+        }
+      }
+      vm.emitWorkspaceUpdate();
+      fixTargetOrder();
+    } else if (component.props.dragType === "COSTUME") {
+      for (let i = 0; i < vm.editingTarget.sprite.costumes.length; i++) {
+        const costume = vm.editingTarget.sprite.costumes[i];
+        if (getFolderFromName(costume.name) === folderName) {
+          vm.renameCostume(i, setFolderOfName(costume.name, newName));
+        }
+      }
+      fixCostumeOrder();
+    } else if (component.props.dragType === "SOUND") {
+      for (let i = 0; i < vm.editingTarget.sprite.sounds.length; i++) {
+        const sound = vm.editingTarget.sprite.sounds[i];
+        if (getFolderFromName(sound.name) === folderName) {
+          vm.renameSound(i, setFolderOfName(sound.name, newName));
+        }
+      }
+      fixSoundOrder();
+    }
+  };
+
   await addon.tab.scratchClassReady();
   addon.tab.createEditorContextMenu((ctxType, ctx) => {
     if (ctxType !== "sprite" && ctxType !== "costume" && ctxType !== "sound") return;
-    const component = ctx.target[addon.tab.traps.getInternalKey(ctx.target)].return.return.return.stateNode;
+    const component = getSpriteSelectorComponent(ctx.target);
+    if (!component) return;
     const data = getItemData(component.props);
     if (!data) return;
     if (typeof data.folder === "string") {
       ctx.target.setAttribute("sa-folders-context-type", "folder");
 
-      const renameItems = (newName) => {
-        const isOpen = isFolderOpen(component, data.folder);
-        setFolderOpen(component, data.folder, false);
-        if (isOpen && typeof newName === "string") {
-          setFolderOpen(component, newName, true);
-        }
-        if (component.props.dragType === "SPRITE") {
-          for (const target of vm.runtime.targets) {
-            if (target.isOriginal) {
-              if (getFolderFromName(target.getName()) === data.folder) {
-                vm.renameSprite(target.id, ensureNotReserved(setFolderOfName(target.getName(), newName)));
-              }
-            }
-          }
-          vm.emitWorkspaceUpdate();
-          fixTargetOrder();
-        } else if (component.props.dragType === "COSTUME") {
-          for (let i = 0; i < vm.editingTarget.sprite.costumes.length; i++) {
-            const costume = vm.editingTarget.sprite.costumes[i];
-            if (getFolderFromName(costume.name) === data.folder) {
-              vm.renameCostume(i, setFolderOfName(costume.name, newName));
-            }
-          }
-          fixCostumeOrder();
-        } else if (component.props.dragType === "SOUND") {
-          for (let i = 0; i < vm.editingTarget.sprite.sounds.length; i++) {
-            const sound = vm.editingTarget.sprite.sounds[i];
-            if (getFolderFromName(sound.name) === data.folder) {
-              vm.renameSound(i, setFolderOfName(sound.name, newName));
-            }
-          }
-          fixSoundOrder();
-        }
-      };
       const renameFolder = async () => {
         let newName = await addon.tab.prompt(
           msg("rename-folder-prompt-title"),
@@ -769,11 +788,11 @@ export default async function ({ addon, console, msg }) {
         if (!newName) {
           newName = null;
         }
-        renameItems(newName);
+        renameFolderItems(component, data.folder, newName);
       };
 
       const removeFolder = () => {
-        renameItems(null);
+        renameFolderItems(component, data.folder, null);
       };
       return [
         {
@@ -869,6 +888,11 @@ export default async function ({ addon, console, msg }) {
   });
 
   const patchSpriteSelectorItem = (SpriteSelectorItem) => {
+    if (SpriteSelectorItem.prototype.saFoldersPatched) {
+      return;
+    }
+    SpriteSelectorItem.prototype.saFoldersPatched = true;
+
     for (const method of ["handleDelete", "handleDuplicate", "handleExport"]) {
       const original = SpriteSelectorItem.prototype[method];
       SpriteSelectorItem.prototype[method] = function (...args) {
@@ -937,6 +961,23 @@ export default async function ({ addon, console, msg }) {
         }
       }
       return originalHandleClick.call(this, ...args);
+    };
+
+    const originalHandleDelete = SpriteSelectorItem.prototype.handleDelete;
+    SpriteSelectorItem.prototype.handleDelete = function (...args) {
+      const itemData = getItemData(this.props);
+      if (itemData && typeof itemData.folder === "string") {
+        const event = args[0];
+        if (event && typeof event.preventDefault === "function") {
+          event.preventDefault();
+        }
+        if (event && typeof event.stopPropagation === "function") {
+          event.stopPropagation();
+        }
+        renameFolderItems(this, itemData.folder, null);
+        return;
+      }
+      return originalHandleDelete.call(this, ...args);
     };
 
     const originalRender = SpriteSelectorItem.prototype.render;
@@ -1331,7 +1372,11 @@ export default async function ({ addon, console, msg }) {
       reduxCondition: (state) => state.scratchGui.editorTab.activeTabIndex !== 0 && !state.scratchGui.mode.isPlayerOnly,
     });
     const sortableHOCInstance = getSortableHOCFromElement(selectorListItem);
+    const spriteSelectorItemInstance = getSpriteSelectorComponent(selectorListItem);
     verifySortableHOC(sortableHOCInstance);
+    if (spriteSelectorItemInstance) {
+      patchSpriteSelectorItem(spriteSelectorItemInstance.constructor);
+    }
     patchSortableHOC(sortableHOCInstance.constructor, TYPE_ASSETS);
     sortableHOCInstance.saInitialSetup();
   }

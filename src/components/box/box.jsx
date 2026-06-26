@@ -100,7 +100,10 @@ Box.propTypes = {
      * A callback function whose first parameter is the underlying dom elements.
      * This call back will be executed immediately after the component is mounted or unmounted
      */
-    componentRef: PropTypes.func,
+    componentRef: PropTypes.oneOfType([
+        PropTypes.func,
+        PropTypes.shape({current: PropTypes.any})
+    ]),
     /** https://developer.mozilla.org/en-US/docs/Web/CSS/flex-direction */
     direction: PropTypes.oneOf([
         'row', 'row-reverse', 'column', 'column-reverse'

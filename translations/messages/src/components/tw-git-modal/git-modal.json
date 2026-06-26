@@ -1,0 +1,152 @@
+[
+  {
+    "id": "tw.gitModal.title",
+    "description": "Title of the git window",
+    "defaultMessage": "Git"
+  },
+  {
+    "id": "tw.gitModal.branchesLabel",
+    "description": "Label for branch list",
+    "defaultMessage": "Branches"
+  },
+  {
+    "id": "tw.gitModal.newBranchPlaceholder",
+    "defaultMessage": "new-branch"
+  },
+  {
+    "id": "tw.gitModal.authorNamePlaceholder",
+    "defaultMessage": "Name"
+  },
+  {
+    "id": "tw.gitModal.authorEmailPlaceholder",
+    "defaultMessage": "email@example.com"
+  },
+  {
+    "id": "tw.gitModal.remoteNamePlaceholder",
+    "defaultMessage": "Remote name (e.g., origin)"
+  },
+  {
+    "id": "tw.gitModal.remoteUrlPlaceholder",
+    "defaultMessage": "https://github.com/user/repo.git"
+  },
+  {
+    "id": "tw.gitModal.usernamePlaceholder",
+    "defaultMessage": "Username"
+  },
+  {
+    "id": "tw.gitModal.tokenPlaceholder",
+    "defaultMessage": "Personal Access Token / Password"
+  },
+  {
+    "id": "tw.gitModal.selectRemotePlaceholder",
+    "defaultMessage": "Select remote"
+  },
+  {
+    "id": "tw.gitModal.selectBranchPlaceholder",
+    "defaultMessage": "Select branch"
+  },
+  {
+    "id": "tw.gitModal.branch",
+    "defaultMessage": "Branch"
+  },
+  {
+    "id": "tw.gitModal.refresh",
+    "defaultMessage": "Refresh"
+  },
+  {
+    "id": "tw.gitModal.deleteRepo",
+    "defaultMessage": "Delete repo"
+  },
+  {
+    "id": "tw.gitModal.createBranch",
+    "defaultMessage": "Create branch"
+  },
+  {
+    "id": "tw.gitModal.deleteBranch",
+    "defaultMessage": "Delete branch"
+  },
+  {
+    "id": "tw.gitModal.author",
+    "defaultMessage": "Author"
+  },
+  {
+    "id": "tw.gitModal.commit",
+    "defaultMessage": "Commit"
+  },
+  {
+    "id": "tw.gitModal.commitButton",
+    "defaultMessage": "Commit"
+  },
+  {
+    "id": "tw.gitModal.undoCommit",
+    "defaultMessage": "Undo commit"
+  },
+  {
+    "id": "tw.gitModal.recent",
+    "defaultMessage": "Recent commits"
+  },
+  {
+    "id": "tw.gitModal.restoreCommit",
+    "defaultMessage": "Restore"
+  },
+  {
+    "id": "tw.gitModal.downloadCommit",
+    "defaultMessage": "Download"
+  },
+  {
+    "id": "tw.gitModal.noCommits",
+    "defaultMessage": "No commits yet."
+  },
+  {
+    "id": "tw.gitModal.remotes",
+    "defaultMessage": "Remotes"
+  },
+  {
+    "id": "tw.gitModal.addRemote",
+    "defaultMessage": "Add"
+  },
+  {
+    "id": "tw.gitModal.deleteRemote",
+    "defaultMessage": "Delete"
+  },
+  {
+    "id": "tw.gitModal.push",
+    "defaultMessage": "Pull / Push"
+  },
+  {
+    "id": "tw.gitModal.authHelp",
+    "defaultMessage": "Note: GitHub requires a Personal Access Token."
+  },
+  {
+    "id": "tw.gitModal.disableCorsProxy",
+    "defaultMessage": "Disable CORS proxy"
+  },
+  {
+    "id": "tw.gitModal.pullButton",
+    "defaultMessage": "Pull"
+  },
+  {
+    "id": "tw.gitModal.pushButton",
+    "defaultMessage": "Push"
+  },
+  {
+    "id": "tw.gitModal.repo",
+    "defaultMessage": "Repository"
+  },
+  {
+    "id": "tw.gitModal.repo.notInitialized",
+    "defaultMessage": "Not initialized"
+  },
+  {
+    "id": "tw.gitModal.init",
+    "defaultMessage": "Initialize"
+  },
+  {
+    "id": "gui.prompt.cancel",
+    "defaultMessage": "Cancel"
+  },
+  {
+    "id": "tw.gitModal.confirmDelete",
+    "defaultMessage": "Delete"
+  }
+]

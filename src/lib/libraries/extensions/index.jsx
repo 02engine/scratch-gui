@@ -50,6 +50,7 @@ import twIcon from './tw/tw.svg';
 import customExtensionIcon from './custom/custom.svg';
 import returnIcon from './custom/return.svg';
 import galleryIcon from './gallery/gallery.svg';
+import extfindIconURL from '../../../../static/extensions/ExtFind.svg';
 import {APP_NAME} from '../../brand';
 
 export default [
@@ -401,6 +402,17 @@ export default [
         tags: ['tw'],
         featured: true
         // Not marked as incompatible with Scratch so that clicking on it doesn't show a prompt
+    },
+    {
+        name: '加载ExtFind扩展',
+        extensionId: 'extfind',
+        extensionURL: `${process.env.ROOT}static/extensions/ExtFind.js`,
+        iconURL: extfindIconURL,
+        description: '从 ExtFind 加载扩展，可以从 https://extfind.0pen.top/ 获取。',
+        tags: [],
+        featured: true,
+        incompatibleWithScratch: false,
+        internetConnectionRequired: true
     }
 ];
 

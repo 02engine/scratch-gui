@@ -85,6 +85,25 @@ const getScratchClassNames = () => {
     return _scratchClassNames;
 };
 
+const getActiveEditorRoot = () => (
+    window.__scratchGuiActiveEditorRoot ||
+    document.querySelector('[data-sa-active-editor-root="true"]')
+);
+
+const isElementInEditorSnapshot = element => Boolean(
+    element &&
+    element.closest &&
+    element.closest('[data-editor-window-snapshot="true"]')
+);
+
+const queryFromActiveEditor = selector => {
+    const activeEditorRoot = getActiveEditorRoot();
+    if (activeEditorRoot) {
+        return activeEditorRoot.querySelector(selector);
+    }
+    return document.querySelector(selector);
+};
+
 let _mutationObserver;
 let _mutationObserverCallbacks = [];
 const runMutationObserverCallbacks = () => {
@@ -316,6 +335,7 @@ class Tab extends EventTargetShim {
         if (evaluateCondition()) {
             const firstQuery = document.querySelectorAll(selector);
             for (const element of firstQuery) {
+                if (isElementInEditorSnapshot(element)) continue;
                 if (this._seenElements.has(element)) continue;
                 if (markAsSeen) this._seenElements.add(element);
                 return Promise.resolve(element);
@@ -344,6 +364,7 @@ class Tab extends EventTargetShim {
                 }
                 const elements = document.querySelectorAll(selector);
                 for (const element of elements) {
+                    if (isElementInEditorSnapshot(element)) continue;
                     if (this._seenElements.has(element)) continue;
                     resolve(element);
                     removeMutationObserverCallback(callback);
@@ -399,10 +420,16 @@ class Tab extends EventTargetShim {
                 until: () => []
             },
             afterSoundTab: {
-                element: () => q("[class^='react-tabs_react-tabs__tab-list']"),
-                from: () => [q("[class^='react-tabs_react-tabs__tab-list']").children[2]],
+                element: () => queryFromActiveEditor("[class^='react-tabs_react-tabs__tab-list']"),
+                from: () => {
+                    const tabList = queryFromActiveEditor("[class^='react-tabs_react-tabs__tab-list']");
+                    return tabList && tabList.children[2] ? [tabList.children[2]] : [];
+                },
                 // Element used in find-bar addon
-                until: () => [q('.sa-find-bar')]
+                until: () => {
+                    const findBar = queryFromActiveEditor('.sa-find-bar');
+                    return findBar ? [findBar] : [];
+                }
             },
             assetContextMenuAfterExport: {
                 element: () => scope,
@@ -1098,18 +1125,15 @@ window.addonAPI = {
 
     refreshAfterDomRemount () {
         this.pruneDisconnectedSeenElements();
-        notifyAddonWaitersForDomRemount();
         const triggerCallbacks = () => {
+            this.pruneDisconnectedSeenElements();
+            notifyAddonWaitersForDomRemount();
             runMutationObserverCallbacks();
         };
         if (window.requestAnimationFrame) {
-            window.requestAnimationFrame(() => {
-                triggerCallbacks();
-                window.requestAnimationFrame(triggerCallbacks);
-            });
+            window.requestAnimationFrame(triggerCallbacks);
         } else {
             queueMicrotask(triggerCallbacks);
-            setTimeout(triggerCallbacks, 0);
         }
     },
 

@@ -4,11 +4,25 @@
 
 .page-wrapper {
     height: 100%;
+    position: relative;
 }
 
 .body-wrapper {
     height: calc(100% - $menu-bar-height);
     background-color: $ui-primary;
+}
+
+.body-wrapper-custom-ui.body-wrapper-custom-ui {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: auto;
+}
+
+.body-wrapper-menu-collapsed {
+    height: 100%;
 }
 
 .body-wrapper * {
@@ -17,6 +31,7 @@
 
 .flex-wrapper {
     display: flex;
+    position: relative;
 
     /*
         Make 2 columns:
@@ -32,6 +47,210 @@
         TW: and also fix double horizontal scrollbar at some screen sizes in paint editor
     */
     overflow: hidden;
+}
+
+.window-background-layer {
+    position: absolute;
+    top: calc(-1 * var(--tw-editor-background-blur, 0px));
+    right: calc(-1 * var(--tw-editor-background-blur, 0px));
+    bottom: calc(-1 * var(--tw-editor-background-blur, 0px));
+    left: calc(-1 * var(--tw-editor-background-blur, 0px));
+    background-image: var(--tw-editor-background-image);
+    background-size: cover;
+    background-position: center;
+    filter: blur(var(--tw-editor-background-blur, 0px));
+    pointer-events: none;
+    z-index: 0;
+}
+
+.editor-desktop {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.editor-desktop-custom-ui.editor-desktop-custom-ui {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.editor-desktop-backpack {
+    position: absolute;
+    left: calc($space * 2);
+    right: auto;
+    bottom: $space;
+    width: 28rem;
+    z-index: 110;
+}
+
+.editor-draggable-window {
+    min-width: 0;
+}
+
+.editor-window-body {
+    height: 100%;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.editor-window-body > .editor-wrapper {
+    width: 100%;
+    height: 100%;
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.editor-window-body .tabs {
+    height: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+.editor-window-body .tab-list {
+    width: 100%;
+}
+
+.editor-window-body .tab-panel {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+.editor-window-body .blocks-wrapper {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+.editor-window-preview {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.96);
+}
+
+.editor-window-snapshot {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+    background: $ui-primary;
+}
+
+.editor-window-snapshot-content {
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+    overflow: hidden;
+}
+
+.editor-window-preview-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    width: 100%;
+}
+
+.editor-window-preview-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $text-primary;
+    text-align: center;
+}
+
+.editor-window-preview-subtitle {
+    font-size: 0.95rem;
+    color: $text-primary;
+    text-align: center;
+}
+
+.editor-window-preview-hint {
+    font-size: 0.82rem;
+    color: $text-primary-transparent;
+    text-align: center;
+}
+
+.editor-window-preview-image-frame {
+    width: min(100%, 16rem);
+    height: 12rem;
+    border-radius: 0.85rem;
+    border: 1px solid $ui-black-transparent;
+    background: $ui-white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.editor-window-preview-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.editor-window-preview-empty {
+    padding: 0 1rem;
+    text-align: center;
+    color: $text-primary-transparent;
+}
+
+.editor-window-preview-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.editor-window-title-text {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.editor-window-header-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    padding: 0;
+    border: none;
+    border-radius: 0.35rem;
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.editor-window-header-button:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.editor-window-header-button-active {
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
 }
 
 .editor-wrapper {
@@ -58,7 +277,7 @@
     height: $stage-menu-height;
     width: 250px; /* Match width of the toolbox */
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     flex-shrink: 0;
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -179,12 +398,16 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    min-height: 0;
 }
 
 .tab-panel {
     position: relative;
     flex-grow: 1;
     display: none;
+    min-width: 0;
+    min-height: 0;
 }
 
 .tab-panel.is-selected {
@@ -194,6 +417,8 @@
 .blocks-wrapper {
     flex-grow: 1;
     position: relative;
+    min-width: 0;
+    min-height: 0;
 }
 
 .stage-and-target-wrapper {
@@ -214,8 +439,9 @@
     /* this will only ever be as wide as the stage */
     flex-basis: 0;
     
-    /* Center the stage and target wrapper */
-    align-items: center;
+    /* Align stage and target wrapper to fill the width */
+    align-items: stretch;
+    margin-top: -10px;
 }
 
 .target-wrapper {
@@ -225,13 +451,6 @@
 
     padding-top: $space;
     min-height: 0; /* this makes it work in Firefox */
-
-    /*
-        For making the sprite-selector a scrollable pane
-        @todo: Not working in Safari
-    */
-    /* TODO this also breaks the thermometer menu */
-    /* overflow: hidden; */
 }
 
 .extension-button-container {
@@ -305,6 +524,14 @@ $fade-out-distance: 15px;
     position: relative;
     z-index: $z-index-menu-bar;
 }
+
+.menu-bar-position-custom-ui.menu-bar-position-custom-ui {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+}
+
 /* Alerts */
 
 .alerts-container {
@@ -315,6 +542,10 @@ $fade-out-distance: 15px;
     position: absolute;
     margin-top: 53px;
     pointer-events: none;
+}
+
+.alerts-container-hidden {
+    display: none;
 }
 
 /*

@@ -22,6 +22,27 @@ const getContextMenuRegistrationKey = (callback, opts) => {
   return `${optsKey}::${callback.toString()}`;
 };
 
+const findBodyContextMenuById = (tab, menuId) => {
+  if (!menuId) return null;
+  return Array.prototype.find.call(
+    document.querySelectorAll("body > nav.react-contextmenu"),
+    (candidate) => candidate[tab.traps.getInternalKey(candidate)]?.return?.stateNode?.props?.id === menuId
+  ) || null;
+};
+
+const getSpriteSelectorProps = (tab, element) => {
+  const candidates = [element, element && element.querySelector && element.querySelector(".react-contextmenu-wrapper")];
+  for (const candidate of candidates) {
+    let fiber = candidate && candidate[tab.traps.getInternalKey(candidate)];
+    while (fiber) {
+      const props = fiber.stateNode && fiber.stateNode.props;
+      if (props && props.dragType) return props;
+      fiber = fiber.return;
+    }
+  }
+  return null;
+};
+
 const onReactContextMenu = function (e) {
   if (!e.target) return;
   const ctxTarget = e.target.closest(".react-contextmenu-wrapper");
@@ -47,16 +68,20 @@ const onReactContextMenu = function (e) {
     extra.itemId = props.id;
     extra.targetId = props.targetId;
     type = `monitor_${props.mode}`;
-  } else if (ctxTarget[this.traps.getInternalKey(ctxTarget)]?.return?.return?.return?.stateNode?.props?.dragType) {
+  } else if (getSpriteSelectorProps(this, ctxTarget)) {
     // SpriteSelectorItem which despite its name is used for costumes, sounds, backpacked script etc
-    const props = ctxTarget[this.traps.getInternalKey(ctxTarget)].return.return.return.stateNode.props;
+    const props = getSpriteSelectorProps(this, ctxTarget);
     type = props.dragType.toLowerCase();
     extra.name = props.name;
     extra.itemId = props.id;
     extra.index = props.index;
+    if (!ctxMenu) {
+      ctxMenu = findBodyContextMenuById(this, ctxTarget.dataset.saContextMenuId);
+    }
   } else {
     return;
   }
+  if (!ctxMenu) return;
   const ctx = {
     menuItem: ctxMenu,
     target: ctxTarget,
@@ -86,7 +111,9 @@ const onReactContextMenu = function (e) {
       display: "block",
     });
 
-    itemElem.addEventListener("click", (e) => {
+    const activateItem = (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
       e.stopPropagation();
       window.dispatchEvent(
         new CustomEvent("REACT_CONTEXTMENU_HIDE", {
@@ -96,6 +123,14 @@ const onReactContextMenu = function (e) {
         })
       );
       item.callback(ctx);
+    };
+
+    itemElem.addEventListener("mousedown", activateItem);
+    itemElem.addEventListener("click", (e) => {
+      if (e.detail !== 0) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     });
 
     this.appendToSharedSpace({

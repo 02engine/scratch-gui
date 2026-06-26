@@ -6,7 +6,7 @@
 
 .stage-header-wrapper {
     position: absolute;
-    top: 0;
+    top: 10px;
 }
 [dir="ltr"] .stage-header-wrapper {
     left: 0;

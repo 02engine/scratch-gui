@@ -40,13 +40,19 @@ class Backpack extends React.Component {
             'handleToggle',
             'handleDelete',
             'handleRename',
+            'handleItemContextMenu',
+            'handleCloseContextMenu',
+            'handleGlobalPointerDown',
+            'handleGlobalKeyDown',
+            'setContextMenuRef',
             'getBackpackAssetURL',
             'getContents',
             'handleMouseEnter',
             'handleMouseLeave',
             'handleBlockDragEnd',
             'handleBlockDragUpdate',
-            'handleMore'
+            'handleMore',
+            'handleBackpackRefresh'
         ]);
         this.state = {
             // While the DroppableHOC manages drop interactions for asset tiles,
@@ -59,7 +65,8 @@ class Backpack extends React.Component {
             moreToLoad: false,
             loading: false,
             expanded: false,
-            contents: []
+            contents: [],
+            contextMenu: null
         };
 
         // If a host is given, add it as a web source to the storage module
@@ -75,10 +82,20 @@ class Backpack extends React.Component {
     componentDidMount () {
         this.props.vm.addListener('BLOCK_DRAG_END', this.handleBlockDragEnd);
         this.props.vm.addListener('BLOCK_DRAG_UPDATE', this.handleBlockDragUpdate);
+        document.addEventListener('pointerdown', this.handleGlobalPointerDown);
+        document.addEventListener('keydown', this.handleGlobalKeyDown);
+        window.addEventListener('resize', this.handleCloseContextMenu);
+        window.addEventListener('scroll', this.handleCloseContextMenu, true);
+        window.addEventListener('backpack-refresh', this.handleBackpackRefresh);
     }
     componentWillUnmount () {
         this.props.vm.removeListener('BLOCK_DRAG_END', this.handleBlockDragEnd);
         this.props.vm.removeListener('BLOCK_DRAG_UPDATE', this.handleBlockDragUpdate);
+        document.removeEventListener('pointerdown', this.handleGlobalPointerDown);
+        document.removeEventListener('keydown', this.handleGlobalKeyDown);
+        window.removeEventListener('resize', this.handleCloseContextMenu);
+        window.removeEventListener('scroll', this.handleCloseContextMenu, true);
+        window.removeEventListener('backpack-refresh', this.handleBackpackRefresh);
     }
     getBackpackAssetURL (asset) {
         return `${this.props.host}/${asset.assetId}.${asset.dataFormat}`;
@@ -156,7 +173,10 @@ class Backpack extends React.Component {
         });
     }
     handleDelete (id) {
-        this.setState({loading: true}, () => {
+        this.setState({
+            loading: true,
+            contextMenu: null
+        }, () => {
             deleteBackpackObject({
                 host: this.props.host,
                 token: this.props.token,
@@ -179,6 +199,7 @@ class Backpack extends React.Component {
     }
     async handleRename (id) {
         const item = this.findItemById(id);
+        this.handleCloseContextMenu();
         // prompt() returns Promise in desktop app
         // eslint-disable-next-line no-alert
         const newName = await prompt(this.props.intl.formatMessage(messages.rename), item.name);
@@ -260,14 +281,57 @@ class Backpack extends React.Component {
     handleMore () {
         this.getContents();
     }
+    handleItemContextMenu (item, e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({
+            contextMenu: {
+                id: item.id,
+                type: item.type,
+                x: e.clientX,
+                y: e.clientY
+            }
+        });
+    }
+    handleCloseContextMenu () {
+        if (!this.state.contextMenu) return;
+        this.setState({contextMenu: null});
+    }
+    handleGlobalPointerDown (e) {
+        if (!this.state.contextMenu) return;
+        if (e.target && e.target.closest && e.target.closest('[data-backpack-context-menu]')) return;
+        if (this.contextMenuRef && this.contextMenuRef.contains(e.target)) return;
+        this.handleCloseContextMenu();
+    }
+    handleGlobalKeyDown (e) {
+        if (e.key === 'Escape') {
+            this.handleCloseContextMenu();
+        }
+    }
+    handleBackpackRefresh () {
+        // 当调试窗口写入数据后，刷新书包内容
+        if (this.state.expanded) {
+            this.setState({contents: []}, () => {
+                this.getContents();
+            });
+        }
+    }
+
+    setContextMenuRef (ref) {
+        this.contextMenuRef = ref;
+    }
     render () {
         return (
             <DroppableBackpack
                 blockDragOver={this.state.blockDragOverBackpack}
                 contents={this.state.contents}
+                contextMenu={this.state.contextMenu}
                 error={this.state.error}
                 expanded={this.state.expanded}
                 loading={this.state.loading}
+                onCloseContextMenu={this.handleCloseContextMenu}
+                onContextMenu={this.handleItemContextMenu}
+                onContextMenuRef={this.setContextMenuRef}
                 showMore={this.state.moreToLoad}
                 onDelete={this.handleDelete}
                 onRename={this.handleRename}

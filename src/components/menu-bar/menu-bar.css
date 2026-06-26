@@ -31,6 +31,66 @@
     background-color: $menu-bar-background;
     background-image: $menu-bar-background-image;
     color: $menu-bar-foreground;
+    transition:
+        width 0.18s ease,
+        min-width 0.18s ease,
+        max-width 0.18s ease,
+        height 0.18s ease,
+        box-shadow 0.18s ease;
+    overflow: visible;
+}
+
+.menu-bar-expanded {
+    width: 100%;
+    min-width: 100%;
+}
+
+.menu-bar-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 0.5rem;
+    opacity: 1;
+    transform: translateX(0);
+    transition:
+        opacity 0.15s ease,
+        transform 0.18s ease,
+        visibility 0s linear 0s;
+}
+
+.menu-bar-collapsed {
+    width: 0;
+    min-width: 0;
+    max-width: 0;
+    height: $menu-bar-height;
+    gap: 0;
+    background: transparent;
+    background-image: none;
+    box-shadow: none;
+    z-index: $z-index-menu-bar;
+}
+
+.menu-bar-collapsed .menu-bar-content {
+    width: 0;
+    min-width: 0;
+    flex: 0 0 auto;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transform: translateX(-1.5rem);
+    visibility: hidden;
+    transition:
+        opacity 0.15s ease,
+        transform 0.18s ease,
+        visibility 0s linear 0.18s;
+}
+
+[dir="rtl"] .menu-bar-collapsed .menu-bar-content {
+    transform: translateX(1.5rem);
 }
 
 .main-menu {
@@ -72,6 +132,85 @@
 .menu-bar-item.active,
 .menu-bar-item.hoverable:hover {
     background-color: $ui-black-transparent;
+}
+
+.menu-bar-collapse-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    margin: 0 0.25rem 0 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0.55rem;
+    background: transparent;
+    color: $menu-bar-foreground;
+    cursor: pointer;
+    transition:
+        background 0.16s ease,
+        box-shadow 0.16s ease,
+        transform 0.16s ease;
+}
+
+.menu-bar-collapse-button:hover {
+    background: $ui-black-transparent;
+}
+
+.menu-bar-collapse-button:active {
+    transform: translateY(1px);
+}
+
+.menu-bar-collapse-button:focus-visible {
+    outline: 2px solid $menu-bar-foreground;
+    outline-offset: -2px;
+}
+
+.menu-bar-collapse-button-collapsed {
+    position: absolute;
+    top: 0.425rem;
+    left: 0.35rem;
+    margin: 0;
+    background-color: $menu-bar-background;
+    background-image: $menu-bar-background-image;
+}
+
+.menu-bar-collapse-button-collapsed:hover {
+    background-color: $menu-bar-background;
+    background-image: $menu-bar-background-image;
+    filter: brightness(0.94);
+}
+
+[dir="rtl"] .menu-bar-collapse-button-collapsed {
+    right: 0.35rem;
+    left: auto;
+}
+
+.collapse-icon {
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 0.4rem solid transparent;
+    border-bottom: 0.4rem solid transparent;
+}
+
+.collapse-icon-expanded {
+    border-right: 0.55rem solid currentColor;
+}
+
+.collapse-icon-collapsed {
+    border-left: 0.55rem solid currentColor;
+}
+
+[dir="rtl"] .collapse-icon-expanded {
+    border-right: 0;
+    border-left: 0.55rem solid currentColor;
+}
+
+[dir="rtl"] .collapse-icon-collapsed {
+    border-left: 0;
+    border-right: 0.55rem solid currentColor;
 }
 
 /* Git和Flarum按钮悬浮时显示左右阴影间隔 */

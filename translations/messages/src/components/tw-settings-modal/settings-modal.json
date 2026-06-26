@@ -5,6 +5,11 @@
     "defaultMessage": "Advanced Settings"
   },
   {
+    "id": "tw.settingsModal.02engineTitle",
+    "description": "Title of 02engine settings modal",
+    "defaultMessage": "02engine Settings"
+  },
+  {
     "id": "tw.settingsModal.help",
     "description": "Hover text of help icon in settings",
     "defaultMessage": "Click for help"
@@ -64,6 +69,41 @@
     "defaultMessage": "Switches between the custom separated-window stage/targets UI and the original single-window UI."
   },
   {
+    "id": "tw.settingsModal.backgroundEditor",
+    "description": "Custom editor background setting title",
+    "defaultMessage": "Editor Background"
+  },
+  {
+    "id": "tw.settingsModal.backgroundSettingsHelp",
+    "description": "Help text for custom editor background settings",
+    "defaultMessage": "Choose a custom image for the blocks workspace background or for the area underneath NewUI windows. The image and blur amount are saved on this device."
+  },
+  {
+    "id": "tw.settingsModal.backgroundUpload",
+    "description": "Button to upload a custom editor background image",
+    "defaultMessage": "Upload Image"
+  },
+  {
+    "id": "tw.settingsModal.backgroundClear",
+    "description": "Button to clear the custom editor background image",
+    "defaultMessage": "Clear"
+  },
+  {
+    "id": "tw.settingsModal.backgroundTarget",
+    "description": "Label for choosing where the custom editor background is applied",
+    "defaultMessage": "Apply to"
+  },
+  {
+    "id": "tw.settingsModal.backgroundBlur",
+    "description": "Label for custom editor background blur",
+    "defaultMessage": "Blur"
+  },
+  {
+    "id": "tw.settingsModal.backgroundEmpty",
+    "description": "Placeholder shown when there is no custom editor background image",
+    "defaultMessage": "No background image selected"
+  },
+  {
     "id": "tw.settingsModal.interpolation",
     "description": "Interpolation setting",
     "defaultMessage": "Interpolation"
@@ -102,6 +142,16 @@
     "id": "tw.settingsModal.removeMiscLimitsHelp",
     "description": "Remove Miscellaneous Limits setting help",
     "defaultMessage": "Removes sound effect limits and pen size limits."
+  },
+  {
+    "id": "tw.settingsModal.offscreenDrawableCulling",
+    "description": "Offscreen drawable culling setting",
+    "defaultMessage": "Skip Offscreen Sprite Rendering"
+  },
+  {
+    "id": "tw.settingsModal.offscreenDrawableCullingHelp",
+    "description": "Offscreen drawable culling setting help",
+    "defaultMessage": "Skips drawing sprites and clones that are fully outside the stage during the normal stage render pass. Touching blocks, color picking, stamping, screenshots, and other renderer queries still use the original behavior."
   },
   {
     "id": "tw.settingsModal.warpTimer",
@@ -159,6 +209,16 @@
     "defaultMessage": "Resets all draggable window positions and sizes to their default values. This will restore the stage and sprites windows to their initial layout."
   },
   {
+    "id": "tw.settingsModal.customizeToolbox",
+    "description": "Button in 02engine settings modal to customize toolbox categories",
+    "defaultMessage": "Customize Toolbox"
+  },
+  {
+    "id": "tw.settingsModal.customizeToolboxHelp",
+    "description": "Help text for customize toolbox button",
+    "defaultMessage": "Choose which default blocks appear in the toolbox and create your own colored groups."
+  },
+  {
     "id": "tw.settingsModal.extensionDebuggingServer",
     "description": "Extension debugging server status",
     "defaultMessage": "02Engine VScode Toolbox Server"
@@ -199,8 +259,18 @@
     "defaultMessage": "Danger Zone"
   },
   {
+    "id": "tw.settingsModal.02engine",
+    "description": "02engine settings modal section",
+    "defaultMessage": "02engine"
+  },
+  {
     "id": "tw.settingsModal.extensionDebugging",
     "description": "Settings modal section",
     "defaultMessage": "02Engine VScode Toolbox"
+  },
+  {
+    "id": "tw.settingsModal.backgroundSettings",
+    "description": "Settings modal section for custom editor backgrounds",
+    "defaultMessage": "Background Settings"
   }
 ]

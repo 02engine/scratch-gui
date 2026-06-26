@@ -1,0 +1,118 @@
+@import "../../css/colors.css";
+
+.modal-content {
+    max-width: 550px;
+    margin-top: 50px;
+}
+
+.body {
+    background: $ui-white;
+    padding: 1.5rem 2.25rem;
+}
+
+.body p,
+.url-input,
+.version-select {
+    margin: 1rem 0;
+    display: block;
+}
+
+.title {
+    margin: 0 0 1rem;
+}
+
+.input-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.url-input,
+.version-select {
+    width: 100%;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    font-size: inherit;
+    height: 3rem;
+}
+
+.lookup-button,
+.load-button,
+.cancel-button {
+    font: inherit;
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid $ui-black-transparent;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.lookup-button,
+.load-button {
+    color: white;
+    background: $looks-secondary;
+}
+
+.cancel-button {
+    color: $text-primary;
+    background: $ui-white;
+}
+
+.lookup-button:disabled,
+.load-button:disabled,
+.cancel-button:disabled {
+    opacity: 0.8;
+    cursor: default;
+}
+
+.error-message {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    background-color: rgba(255, 81, 81, 0.25);
+    border: 1px solid red;
+    color: $text-primary;
+}
+
+.extension-info {
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 0.25rem;
+}
+
+.info-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cover {
+    width: 3rem;
+    height: 3rem;
+    object-fit: cover;
+    border-radius: 0.25rem;
+}
+
+.name {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.meta,
+.asset-uri {
+    color: $text-primary;
+    opacity: 0.8;
+}
+
+.asset-uri {
+    font-size: 0.75rem;
+    word-break: break-all;
+}
+
+.button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}

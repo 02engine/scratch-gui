@@ -37,7 +37,10 @@ const PackagerIntegrationHOC = function (WrappedComponent) {
                 return;
             }
 
-            const packagerData = e.data.p4;
+            const packagerData = e.data && typeof e.data === 'object' ? e.data.p4 : null;
+            if (!packagerData || typeof packagerData !== 'object') {
+                return;
+            }
             if (packagerData.type !== 'ready-for-import') {
                 return;
             }

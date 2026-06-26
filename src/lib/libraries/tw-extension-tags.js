@@ -7,5 +7,6 @@ export default [
     {tag: 'ztengine', intlLabel: '02Engine'},
     {tag: 'pm', intlLabel: 'PenguinMod'},
     {tag: 'mist', intlLabel: 'Mistium'},
-    {tag: 'sp', intlLabel: 'SharkPool'}
+    {tag: 'sp', intlLabel: 'SharkPool'},
+    {tag: 'astra', intlLabel: 'AstraEditor'}
 ];

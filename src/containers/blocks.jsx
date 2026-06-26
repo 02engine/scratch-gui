@@ -8,6 +8,7 @@ import { intlShape, injectIntl, defineMessages } from 'react-intl';
 import VMScratchBlocks from '../lib/blocks';
 import VM from 'scratch-vm';
 import initializeBlockDisableExtension from '../lib/block-disable-extensions';
+import {applyCustomToolboxLayout} from '../lib/custom-toolbox-layout';
 
 import log from '../lib/log.js';
 import Prompt from './prompt.jsx';
@@ -30,6 +31,7 @@ import {
     closeExtensionLibrary,
     openSoundRecorder,
     openConnectionModal,
+    openCCWExtensionModal,
     openCustomExtensionModal,
     openExtensionImportMethodModal,
     setSelectedExtension,
@@ -48,6 +50,15 @@ import AddonHooks from '../addons/hooks.js';
 import LoadScratchBlocksHOC from '../lib/tw-load-scratch-blocks-hoc.jsx';
 import { findTopBlock } from '../lib/backpack/code-payload.js';
 import { gentlyRequestPersistentStorage } from '../lib/tw-persistent-storage.js';
+import {
+    getPersistentBlockFlyoutWidth,
+    setPersistentBlockFlyoutWidth
+} from '../lib/tw-persistent-settings';
+import {
+    EDITOR_BACKGROUND_TARGETS,
+    getEditorBackgroundStyle,
+    hasEditorBackgroundTarget
+} from '../lib/editor-background';
 
 // TW: Strings we add to scratch-blocks are localized here
 const messages = defineMessages({
@@ -90,9 +101,12 @@ const DroppableBlocks = DropAreaHOC([
     DragConstants.BACKPACK_CODE
 ])(BlocksComponent);
 
-const WORKSPACE_METRICS_DEBOUNCE_MS = 120;
-const LARGE_WORKSPACE_BLOCK_COUNT = 1000;
-
+const WORKSPACE_METRICS_IDLE_MS = 500;
+const OFFSCREEN_CULLING_BLOCK_THRESHOLD = 1000;
+const BLOCK_DRAG_PORTAL_Z_INDEX = 1000;
+const DEFAULT_FLYOUT_WIDTH = 250;
+const DEFAULT_FLYOUT_CATEGORY_WIDTH = 60;
+const MIN_FLYOUT_WIDTH = 180;
 class Blocks extends React.Component {
     constructor(props) {
         super(props);
@@ -123,6 +137,7 @@ class Blocks extends React.Component {
             'handleMonitorsUpdate',
             'handleExtensionAdded',
             'handleBlocksInfoUpdate',
+            'handleScratchBlocksReady',
             'injectExtensionContextMenu',
             'checkExtensionUsage',
             'handleDeleteExtension',
@@ -133,10 +148,23 @@ class Blocks extends React.Component {
             'onWorkspaceMetricsChange',
             'flushWorkspaceMetrics',
             'flushMonitorUpdate',
+            'scheduleWorkspaceChromeRefresh',
+            'flushWorkspaceChromeRefresh',
+            'scheduleProcedureReturnsToolboxRefresh',
+            'flushProcedureReturnsToolboxRefresh',
+            'patchFlyoutWidthSupport',
+            'applyFlyoutWidth',
+            'startFlyoutResize',
+            'handleFlyoutResizeMove',
+            'stopFlyoutResize',
             'requestToolboxStateSync',
             'flushToolboxStateSync',
             'syncWorkspaceCullingState',
+            'syncFlyoutCullingState',
             'updateToolboxStateIfNeeded',
+            'installBlockDragPortal',
+            'installBlockDropTargetOutsideCheck',
+            'restoreBlockDragPortal',
             'setBlocks',
             'setLocale',
             'handleEnableProcedureReturns'
@@ -149,7 +177,7 @@ class Blocks extends React.Component {
             prompt: null
         };
         this.onTargetsUpdate = debounce(this.onTargetsUpdate, 100);
-        this.flushWorkspaceMetrics = debounce(this.flushWorkspaceMetrics, WORKSPACE_METRICS_DEBOUNCE_MS);
+        this.flushWorkspaceMetricsDebounced = debounce(this.flushWorkspaceMetrics, WORKSPACE_METRICS_IDLE_MS);
         this.toolboxUpdateQueue = [];
         this.toolboxDirty = true;
         this.lastEditingTargetId = null;
@@ -157,21 +185,34 @@ class Blocks extends React.Component {
         this.lastToolboxXML = props.toolboxXML || null;
         this.pendingWorkspaceData = null;
         this.pendingWorkspaceMetricsTargetId = null;
+        this.workspaceMetricsFrame = null;
+        this.lastWorkspaceMetrics = null;
+        this.lastWorkspaceMetricsTargetId = null;
         this.pendingMonitorState = null;
         this.workspaceUpdateFrame = null;
         this.toolboxUpdateFrame = null;
         this.monitorUpdateFrame = null;
+        this.workspaceChromeRefreshFrame = null;
         this.toolboxStateSyncFrame = null;
+        this.procedureReturnsRefreshFrame = null;
         this.pendingToolboxStateSyncForce = false;
         this.toolboxUpdateScheduled = false;
+        this.pendingProcedureReturnsToolboxRefresh = false;
+        this.pendingProcedureReturnsToolboxXML = null;
         this.monitorCheckboxStates = new Map();
         this.isLargeWorkspace = false;
+        this.blockDragPortal = null;
+        this.restoreBlockDropTargetOutsideCheck = null;
+        this.flyoutWidth = this.clampFlyoutWidth(getPersistentBlockFlyoutWidth(DEFAULT_FLYOUT_WIDTH));
+        this.flyoutCategoryWidth = DEFAULT_FLYOUT_CATEGORY_WIDTH;
+        this.flyoutResizeStart = null;
     }
     componentDidMount() {
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
         this.ScratchBlocks.prompt = this.handlePromptStart;
         this.ScratchBlocks.statusButtonCallback = this.handleConnectionModalStart;
         this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
+        this.patchFlyoutWidthSupport();
 
         this.ScratchBlocks.FieldColourSlider.activateEyedropper_ = this.props.onActivateColorPicker;
         this.ScratchBlocks.Procedures.externalProcedureDefCallback = this.props.onActivateCustomProcedures;
@@ -198,8 +239,28 @@ class Blocks extends React.Component {
             Blocks.defaultOptions
         );
         this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
+        // Keep a post-inject fallback for environments that bypass src/lib/blocks.js.
+        if (this.props.vm && this.props.vm.runtime && !this.props.vm.runtime.scratchBlocks) {
+            const sb = this.ScratchBlocks;
+            if (!sb.VERSION) {
+                sb.VERSION = '0.1.0';
+            }
+            if (typeof this.props.vm.runtime.attachBlocks === 'function') {
+                this.props.vm.runtime.attachBlocks(sb);
+            } else {
+                this.props.vm.runtime.scratchBlocks = sb;
+            }
+            this.props.vm.runtime.scratchBlocksVersion = sb.VERSION;
+        }
+        if (this.props.vm && this.props.vm.runtime) {
+            this.props.vm.runtime.emit('SCRATCH_BLOCKS_READY', this.ScratchBlocks);
+        }
         AddonHooks.blocklyWorkspace = this.workspace;
+        this.applyFlyoutWidth(this.flyoutWidth, false);
+        this.installBlockDropTargetOutsideCheck();
+        this.installBlockDragPortal();
         this.syncWorkspaceCullingState();
+        this.syncFlyoutCullingState();
         window.__twEnableProcedureReturns = () => {
             this.handleEnableProcedureReturns();
             this.handleCategorySelected('myBlocks');
@@ -285,6 +346,9 @@ class Blocks extends React.Component {
             this.props.customProceduresVisible !== nextProps.customProceduresVisible ||
             this.props.locale !== nextProps.locale ||
             this.props.anyModalVisible !== nextProps.anyModalVisible ||
+            this.props.layoutToken !== nextProps.layoutToken ||
+            this.props.toolboxLayout !== nextProps.toolboxLayout ||
+            this.props.editingTargetId !== nextProps.editingTargetId ||
             this.props.stageSize !== nextProps.stageSize ||
             this.props.customStageSize !== nextProps.customStageSize
         );
@@ -302,6 +366,33 @@ class Blocks extends React.Component {
             this.requestToolboxUpdate();
         }
 
+        if (this.workspace && this.props.isVisible && this.flyoutWidth !== (this.workspace.getFlyout && this.workspace.getFlyout() ? this.workspace.getFlyout().getWidth() : this.flyoutWidth)) {
+            this.applyFlyoutWidth(this.flyoutWidth, false);
+        }
+
+        if (this.pendingProcedureReturnsToolboxRefresh && this.props.isVisible) {
+            this.scheduleProcedureReturnsToolboxRefresh();
+        }
+
+        if (
+            this.props.isVisible &&
+            (
+                this.props.layoutToken !== prevProps.layoutToken ||
+                this.props.toolboxLayout !== prevProps.toolboxLayout ||
+                this.props.editingTargetId !== prevProps.editingTargetId
+            )
+        ) {
+            if (this.props.toolboxLayout !== prevProps.toolboxLayout) {
+                this.requestToolboxStateSync(true);
+            }
+            if (this.props.editingTargetId !== prevProps.editingTargetId) {
+                this.flushWorkspaceMetrics();
+                this.props.vm.refreshWorkspace();
+                this.requestToolboxStateSync(true);
+            }
+            this.scheduleWorkspaceChromeRefresh();
+        }
+
         if (this.props.isVisible === prevProps.isVisible) {
             if (
                 this.props.stageSize !== prevProps.stageSize ||
@@ -309,6 +400,7 @@ class Blocks extends React.Component {
             ) {
                 // force workspace to redraw for the new stage size
                 window.dispatchEvent(new Event('resize'));
+                this.scheduleWorkspaceChromeRefresh();
             }
             return;
         }
@@ -326,6 +418,7 @@ class Blocks extends React.Component {
             }
 
             window.dispatchEvent(new Event('resize'));
+            this.scheduleWorkspaceChromeRefresh();
             this.syncWorkspaceCullingState();
         } else {
             this.workspace.setVisible(false);
@@ -334,7 +427,12 @@ class Blocks extends React.Component {
     componentWillUnmount() {
         this.detachVM();
         this.unmounted = true;
-        this.flushWorkspaceMetrics.cancel();
+        this.flushWorkspaceMetrics();
+        this.flushWorkspaceMetricsDebounced.cancel();
+        if (this.workspaceMetricsFrame) {
+            cancelAnimationFrame(this.workspaceMetricsFrame);
+            this.workspaceMetricsFrame = null;
+        }
         if (this.workspaceUpdateFrame) {
             cancelAnimationFrame(this.workspaceUpdateFrame);
             this.workspaceUpdateFrame = null;
@@ -347,12 +445,26 @@ class Blocks extends React.Component {
             cancelAnimationFrame(this.monitorUpdateFrame);
             this.monitorUpdateFrame = null;
         }
+        if (this.workspaceChromeRefreshFrame) {
+            cancelAnimationFrame(this.workspaceChromeRefreshFrame);
+            this.workspaceChromeRefreshFrame = null;
+        }
         if (this.toolboxStateSyncFrame) {
             cancelAnimationFrame(this.toolboxStateSyncFrame);
             this.toolboxStateSyncFrame = null;
         }
+        if (this.procedureReturnsRefreshFrame) {
+            cancelAnimationFrame(this.procedureReturnsRefreshFrame);
+            this.procedureReturnsRefreshFrame = null;
+        }
+        this.stopFlyoutResize();
         if (window.__twEnableProcedureReturns) {
             delete window.__twEnableProcedureReturns;
+        }
+        this.restoreBlockDragPortal();
+        if (this.restoreBlockDropTargetOutsideCheck) {
+            this.restoreBlockDropTargetOutsideCheck();
+            this.restoreBlockDropTargetOutsideCheck = null;
         }
         this.workspace.dispose();
 
@@ -375,6 +487,97 @@ class Blocks extends React.Component {
         }
 
         AddonHooks.blocklyWorkspace = null;
+    }
+    installBlockDropTargetOutsideCheck() {
+        if (!this.workspace || !this.workspace.isInsideBlocksArea || this.restoreBlockDropTargetOutsideCheck) {
+            return;
+        }
+        const workspace = this.workspace;
+        const originalIsInsideBlocksArea = workspace.isInsideBlocksArea;
+        workspace.isInsideBlocksArea = function (event) {
+            if (event && typeof document.elementsFromPoint === 'function') {
+                const elements = document.elementsFromPoint(event.clientX, event.clientY);
+                for (let i = 0; i < elements.length; i++) {
+                    if (elements[i].closest && elements[i].closest('[data-block-drop-target-id]')) {
+                        return false;
+                    }
+                }
+            }
+            return originalIsInsideBlocksArea.call(this, event);
+        };
+        this.restoreBlockDropTargetOutsideCheck = () => {
+            workspace.isInsideBlocksArea = originalIsInsideBlocksArea;
+        };
+    }
+    installBlockDragPortal() {
+        const dragSurface = this.workspace && this.workspace.getBlockDragSurface && this.workspace.getBlockDragSurface();
+        if (!dragSurface || !dragSurface.SVG_ || this.blockDragPortal) {
+            return;
+        }
+
+        const surface = dragSurface.SVG_;
+        this.blockDragPortal = {
+            surface,
+            originalParent: surface.parentNode,
+            originalNextSibling: surface.nextSibling,
+            originalStyle: surface.getAttribute('style'),
+            setBlocksAndShow: dragSurface.setBlocksAndShow,
+            clearAndHide: dragSurface.clearAndHide
+        };
+
+        const restoreSurfaceParent = () => {
+            if (!this.blockDragPortal || !surface.parentNode) {
+                return;
+            }
+            const {originalParent, originalNextSibling, originalStyle} = this.blockDragPortal;
+            if (originalParent && surface.parentNode !== originalParent) {
+                if (originalNextSibling && originalNextSibling.parentNode === originalParent) {
+                    originalParent.insertBefore(surface, originalNextSibling);
+                } else {
+                    originalParent.appendChild(surface);
+                }
+            }
+            if (originalStyle === null) {
+                surface.removeAttribute('style');
+            } else {
+                surface.setAttribute('style', originalStyle);
+            }
+        };
+
+        dragSurface.setBlocksAndShow = blocks => {
+            this.blockDragPortal.setBlocksAndShow.call(dragSurface, blocks);
+            const rect = this.blocks.getBoundingClientRect();
+            document.body.appendChild(surface);
+            surface.style.position = 'fixed';
+            surface.style.left = `${rect.left}px`;
+            surface.style.top = `${rect.top}px`;
+            surface.style.right = 'auto';
+            surface.style.bottom = 'auto';
+            surface.style.width = `${rect.width}px`;
+            surface.style.height = `${rect.height}px`;
+            surface.style.zIndex = BLOCK_DRAG_PORTAL_Z_INDEX;
+            surface.style.pointerEvents = 'none';
+        };
+
+        dragSurface.clearAndHide = optNewSurface => {
+            this.blockDragPortal.clearAndHide.call(dragSurface, optNewSurface);
+            restoreSurfaceParent();
+        };
+
+        this.blockDragPortal.restoreSurfaceParent = restoreSurfaceParent;
+        this.blockDragPortal.dragSurface = dragSurface;
+    }
+    restoreBlockDragPortal() {
+        if (!this.blockDragPortal) {
+            return;
+        }
+        const {dragSurface, setBlocksAndShow, clearAndHide, restoreSurfaceParent} = this.blockDragPortal;
+        if (dragSurface) {
+            dragSurface.setBlocksAndShow = setBlocksAndShow;
+            dragSurface.clearAndHide = clearAndHide;
+        }
+        restoreSurfaceParent();
+        this.blockDragPortal = null;
     }
     requestToolboxUpdate() {
         if (!this.props.isVisible) {
@@ -411,11 +614,252 @@ class Blocks extends React.Component {
             this.toolboxDirty = false;
         }
     }
+    scheduleWorkspaceChromeRefresh() {
+        if (!this.props.isVisible || !this.workspace) {
+            return;
+        }
+        if (this.workspaceChromeRefreshFrame) {
+            cancelAnimationFrame(this.workspaceChromeRefreshFrame);
+        }
+        this.workspaceChromeRefreshFrame = requestAnimationFrame(() => {
+            this.workspaceChromeRefreshFrame = requestAnimationFrame(this.flushWorkspaceChromeRefresh);
+        });
+    }
+    flushWorkspaceChromeRefresh() {
+        this.workspaceChromeRefreshFrame = null;
+        if (!this.workspace || !this.props.isVisible) {
+            return;
+        }
+
+        const toolbox = this.workspace.getToolbox ? this.workspace.getToolbox() : this.workspace.toolbox_;
+        const flyout = this.workspace.getFlyout ? this.workspace.getFlyout() : this.workspace.flyout_;
+
+        try {
+            this.ScratchBlocks.svgResize(this.workspace);
+        } catch (error) {
+            // Ignore transient resize errors during window switches.
+        }
+
+        try {
+            this.workspace.resize();
+            this.workspace.resizeContents();
+        } catch (error) {
+            // Ignore transient workspace resize errors during window switches.
+        }
+
+        if (toolbox) {
+            try {
+                toolbox.position();
+            } catch (error) {
+                // Ignore transient toolbox positioning errors.
+            }
+            if (typeof toolbox.refreshSelection === 'function') {
+                try {
+                    toolbox.refreshSelection();
+                } catch (error) {
+                    // Ignore transient toolbox refresh errors.
+                }
+            }
+        }
+
+        if (flyout) {
+            try {
+                flyout.position();
+            } catch (error) {
+                // Ignore transient flyout positioning errors.
+            }
+            if (typeof flyout.reflow === 'function') {
+                try {
+                    flyout.reflow();
+                } catch (error) {
+                    // Ignore transient flyout reflow errors.
+                }
+            }
+            if (flyout.scrollbar_ && typeof flyout.scrollbar_.resize === 'function') {
+                try {
+                    flyout.scrollbar_.resize();
+                } catch (error) {
+                    // Ignore transient flyout scrollbar resize errors.
+                }
+            }
+            this.syncFlyoutCullingState();
+        }
+    }
+    scheduleProcedureReturnsToolboxRefresh() {
+        if (!this.pendingProcedureReturnsToolboxRefresh || !this.props.isVisible) {
+            return;
+        }
+        if (this.procedureReturnsRefreshFrame) {
+            cancelAnimationFrame(this.procedureReturnsRefreshFrame);
+        }
+        this.procedureReturnsRefreshFrame = requestAnimationFrame(() => {
+            this.procedureReturnsRefreshFrame = null;
+            this.flushProcedureReturnsToolboxRefresh();
+        });
+    }
+    flushProcedureReturnsToolboxRefresh() {
+        if (!this.pendingProcedureReturnsToolboxRefresh || !this.workspace || !this.workspace.toolbox_) {
+            return;
+        }
+
+        const expectedToolboxXML = this.pendingProcedureReturnsToolboxXML;
+        const renderedMatches = !expectedToolboxXML || this._renderedToolboxXML === expectedToolboxXML;
+        const propsMatch = !expectedToolboxXML || this.props.toolboxXML === expectedToolboxXML;
+
+        if (this.toolboxUpdateScheduled || !renderedMatches || !propsMatch) {
+            this.requestToolboxUpdate();
+            this.scheduleProcedureReturnsToolboxRefresh();
+            return;
+        }
+
+        const workspace = this.workspace;
+        const toolbox = workspace.getToolbox ? workspace.getToolbox() : workspace.toolbox_;
+        const flyout = workspace.getFlyout ? workspace.getFlyout() : workspace.flyout_;
+
+        try {
+            if (toolbox && toolbox.setSelectedCategoryById) {
+                toolbox.setSelectedCategoryById('myBlocks');
+            }
+            if (workspace.refreshToolboxSelection_) {
+                workspace.refreshToolboxSelection_();
+            }
+            if (toolbox && toolbox.refreshSelection) {
+                toolbox.refreshSelection();
+            }
+            if (toolbox && toolbox.scrollToCategoryById) {
+                toolbox.scrollToCategoryById('myBlocks');
+            }
+            if (flyout && flyout.reflow) {
+                flyout.reflow();
+            }
+            if (flyout && flyout.scrollbar_ && flyout.scrollbar_.resize) {
+                flyout.scrollbar_.resize();
+            }
+        } finally {
+            this.pendingProcedureReturnsToolboxRefresh = false;
+            this.pendingProcedureReturnsToolboxXML = null;
+        }
+    }
+    clampFlyoutWidth(width) {
+        return Math.max(MIN_FLYOUT_WIDTH, width);
+    }
+    patchFlyoutWidthSupport() {
+        const ScratchBlocks = this.ScratchBlocks;
+        if (!ScratchBlocks || !ScratchBlocks.Flyout || !ScratchBlocks.Toolbox) {
+            return;
+        }
+        if (!ScratchBlocks.Flyout.prototype.setWidth) {
+            const originalGetWidth = ScratchBlocks.Flyout.prototype.getWidth;
+            ScratchBlocks.Flyout.prototype.getWidth = function () {
+                return typeof this.customWidth_ === 'number' ? this.customWidth_ : originalGetWidth.call(this);
+            };
+            ScratchBlocks.Flyout.prototype.setWidth = function (width) {
+                this.customWidth_ = width;
+            };
+        }
+        if (!ScratchBlocks.Toolbox.prototype.setWidth) {
+            ScratchBlocks.Toolbox.prototype.setWidth = function (width) {
+                this.width = width;
+            };
+        }
+    }
+    getFlyoutResizeClientX(event) {
+        if (event.touches && event.touches.length) {
+            return event.touches[0].clientX;
+        }
+        if (event.changedTouches && event.changedTouches.length) {
+            return event.changedTouches[0].clientX;
+        }
+        return event.clientX;
+    }
+    applyFlyoutWidth(width, persist = true) {
+        if (!this.workspace) {
+            return;
+        }
+        const toolbox = this.workspace.getToolbox ? this.workspace.getToolbox() : this.workspace.toolbox_;
+        const flyout = this.workspace.getFlyout ? this.workspace.getFlyout() : this.workspace.flyout_;
+        if (!toolbox || !flyout || typeof flyout.setWidth !== 'function' || typeof toolbox.setWidth !== 'function') {
+            return;
+        }
+
+        const nextWidth = this.clampFlyoutWidth(width);
+        if (this.flyoutCategoryWidth === DEFAULT_FLYOUT_CATEGORY_WIDTH) {
+            this.flyoutCategoryWidth = toolbox.getWidth() - flyout.getWidth();
+        }
+
+        flyout.setWidth(nextWidth);
+        toolbox.setWidth(this.flyoutCategoryWidth + nextWidth);
+        this.flyoutWidth = nextWidth;
+
+        if (persist) {
+            setPersistentBlockFlyoutWidth(nextWidth);
+        }
+
+        this.forceUpdate();
+        this.scheduleWorkspaceChromeRefresh();
+    }
+    startFlyoutResize(event) {
+        if (event.button !== undefined && event.button !== 0) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+
+        this.flyoutResizeStart = {
+            clientX: this.getFlyoutResizeClientX(event),
+            width: this.flyoutWidth
+        };
+        document.body.classList.add('blocks-flyout-resizing');
+        document.addEventListener('mousemove', this.handleFlyoutResizeMove);
+        document.addEventListener('mouseup', this.stopFlyoutResize);
+        document.addEventListener('touchmove', this.handleFlyoutResizeMove, {passive: false});
+        document.addEventListener('touchend', this.stopFlyoutResize);
+        document.addEventListener('touchcancel', this.stopFlyoutResize);
+    }
+    handleFlyoutResizeMove(event) {
+        if (!this.flyoutResizeStart) {
+            return;
+        }
+        event.preventDefault();
+        const clientX = this.getFlyoutResizeClientX(event);
+        const delta = this.props.isRtl ?
+            this.flyoutResizeStart.clientX - clientX :
+            clientX - this.flyoutResizeStart.clientX;
+        this.applyFlyoutWidth(this.flyoutResizeStart.width + delta);
+    }
+    stopFlyoutResize() {
+        if (!this.flyoutResizeStart) {
+            return;
+        }
+        this.flyoutResizeStart = null;
+        document.body.classList.remove('blocks-flyout-resizing');
+        document.removeEventListener('mousemove', this.handleFlyoutResizeMove);
+        document.removeEventListener('mouseup', this.stopFlyoutResize);
+        document.removeEventListener('touchmove', this.handleFlyoutResizeMove);
+        document.removeEventListener('touchend', this.stopFlyoutResize);
+        document.removeEventListener('touchcancel', this.stopFlyoutResize);
+    }
     syncWorkspaceCullingState() {
         if (!this.workspace || !this.workspace.setOffscreenTopBlockCullingEnabled) {
             return;
         }
+        const blocks = this.workspace.getAllBlocks ? this.workspace.getAllBlocks(false) : [];
+        this.isLargeWorkspace = blocks.length >= OFFSCREEN_CULLING_BLOCK_THRESHOLD;
         this.workspace.setOffscreenTopBlockCullingEnabled(this.isLargeWorkspace);
+    }
+    syncFlyoutCullingState() {
+        const flyout = this.workspace && this.workspace.getFlyout ? this.workspace.getFlyout() : null;
+        const flyoutWorkspace = flyout && flyout.getWorkspace ? flyout.getWorkspace() : this.flyoutWorkspace;
+        if (!flyoutWorkspace || !flyoutWorkspace.setOffscreenTopBlockCullingEnabled) {
+            return;
+        }
+        flyoutWorkspace.setOffscreenTopBlockCullingEnabled(true);
+        if (typeof flyoutWorkspace.renderVisibleTopBlocks === 'function') {
+            flyoutWorkspace.renderVisibleTopBlocks();
+        }
+        if (typeof flyoutWorkspace.queueIntersectionCheck === 'function') {
+            flyoutWorkspace.queueIntersectionCheck();
+        }
     }
     setLocale() {
         this.ScratchBlocks.ScratchMsgs.setLocale(this.props.locale);
@@ -460,6 +904,7 @@ class Blocks extends React.Component {
         } else {
             this.workspace.toolbox_.setFlyoutScrollPos(currentCategoryPos);
         }
+        this.syncFlyoutCullingState();
 
         queue.forEach(fn => fn());
     }
@@ -489,6 +934,7 @@ class Blocks extends React.Component {
         this.flyoutWorkspace = this.workspace
             .getFlyout()
             .getWorkspace();
+        this.syncFlyoutCullingState();
         this.flyoutWorkspace.addChangeListener(this.props.vm.flyoutBlockListener);
         this.flyoutWorkspace.addChangeListener(this.props.vm.monitorBlockListener);
         this.props.vm.addListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
@@ -501,6 +947,7 @@ class Blocks extends React.Component {
         this.props.vm.addListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
         this.props.vm.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
         this.props.vm.addListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
+        this.props.vm.addListener('SCRATCH_BLOCKS_READY', this.handleScratchBlocksReady);
         this.props.vm.addListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
         this.props.vm.addListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
     }
@@ -515,8 +962,24 @@ class Blocks extends React.Component {
         this.props.vm.removeListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
         this.props.vm.removeListener('EXTENSION_ADDED', this.handleExtensionAdded);
         this.props.vm.removeListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
+        this.props.vm.removeListener('SCRATCH_BLOCKS_READY', this.handleScratchBlocksReady);
         this.props.vm.removeListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
         this.props.vm.removeListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
+    }
+
+    handleScratchBlocksReady() {
+        if (!this.props.vm || !this.props.vm.extensionManager) {
+            return;
+        }
+        this.props.vm.extensionManager.refreshBlocks()
+            .then(() => {
+                if (!this.unmounted) {
+                    this.toolboxDirty = true;
+                    this.requestToolboxStateSync(true);
+                    this.requestToolboxUpdate();
+                }
+            })
+            .catch(() => {});
     }
 
     updateToolboxBlockValue(id, value) {
@@ -542,41 +1005,75 @@ class Blocks extends React.Component {
     onWorkspaceMetricsChange() {
         const target = this.props.vm.editingTarget;
         if (target && target.id) {
-            this.pendingWorkspaceMetricsTargetId = target.id;
-            this.flushWorkspaceMetrics();
+            this.updateWorkspaceMetricsCache(target.id);
+            if (this.workspaceMetricsFrame) {
+                return;
+            }
+            this.workspaceMetricsFrame = requestAnimationFrame(() => {
+                this.workspaceMetricsFrame = null;
+                this.flushWorkspaceMetricsDebounced();
+            });
         }
+    }
+    updateWorkspaceMetricsCache(targetId) {
+        if (!this.workspace || !targetId) return null;
+        const nextMetrics = {
+            targetID: targetId,
+            scrollX: this.workspace.scrollX,
+            scrollY: this.workspace.scrollY,
+            scale: this.workspace.scale
+        };
+        this.lastWorkspaceMetrics = nextMetrics;
+        this.lastWorkspaceMetricsTargetId = targetId;
+        this.pendingWorkspaceMetricsTargetId = targetId;
+        return nextMetrics;
     }
     flushWorkspaceMetrics() {
         const targetId = this.pendingWorkspaceMetricsTargetId ||
             (this.props.vm.editingTarget && this.props.vm.editingTarget.id);
         if (!this.workspace || !targetId) return;
-        this.props.updateMetrics({
-            targetID: targetId,
-            scrollX: this.workspace.scrollX,
-            scrollY: this.workspace.scrollY,
-            scale: this.workspace.scale
-        });
+        const nextMetrics = this.lastWorkspaceMetricsTargetId === targetId && this.lastWorkspaceMetrics ?
+            this.lastWorkspaceMetrics :
+            this.updateWorkspaceMetricsCache(targetId);
+        if (!nextMetrics) return;
+        const savedMetrics = this.props.workspaceMetrics.targets[targetId];
+        if (
+            savedMetrics &&
+            savedMetrics.scrollX === nextMetrics.scrollX &&
+            savedMetrics.scrollY === nextMetrics.scrollY &&
+            savedMetrics.scale === nextMetrics.scale
+        ) {
+            this.pendingWorkspaceMetricsTargetId = null;
+            return;
+        }
+        this.props.updateMetrics(nextMetrics);
         this.pendingWorkspaceMetricsTargetId = null;
     }
     onScriptGlowOn(data) {
         if (this.isLargeWorkspace) return;
+        if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.glowStack(data.id, true);
     }
     onScriptGlowOff(data) {
         if (this.isLargeWorkspace) return;
+        if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.glowStack(data.id, false);
     }
     onBlockGlowOn(data) {
         if (this.isLargeWorkspace) return;
+        if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.glowBlock(data.id, true);
     }
     onBlockGlowOff(data) {
         if (this.isLargeWorkspace) return;
+        if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.glowBlock(data.id, false);
     }
     onVisualReport(data) {
         if (this.isLargeWorkspace) return;
-        this.workspace.reportValue(data.id, data.value);
+        if (!this.workspace.getBlockById(data.id)) return;
+        const value = data && Object.prototype.hasOwnProperty.call(data, 'value') ? data.value : '';
+        this.workspace.reportValue(data.id, value);
     }
     updateToolboxStateIfNeeded(toolboxXML, force = false) {
         if (!toolboxXML || (!force && toolboxXML === this.lastToolboxXML)) {
@@ -601,12 +1098,13 @@ class Blocks extends React.Component {
                 this.props.vm.runtime.getBlocksXML(target),
                 this.props.theme
             );
-            return makeToolboxXML(false, target.isStage, target.id, dynamicBlocksXML,
+            const defaultToolboxXML = makeToolboxXML(false, target.isStage, target.id, dynamicBlocksXML,
                 targetCostumes[targetCostumes.length - 1].name,
                 stageCostumes[stageCostumes.length - 1].name,
                 targetSounds.length > 0 ? targetSounds[targetSounds.length - 1].name : '',
                 this.props.theme.getBlockColors()
             );
+            return applyCustomToolboxLayout(defaultToolboxXML, this.props.toolboxLayout);
         } catch {
             return null;
         }
@@ -636,14 +1134,15 @@ class Blocks extends React.Component {
         const editingTarget = this.props.vm.editingTarget;
         const editingTargetId = editingTarget ? editingTarget.id : null;
         const targetChanged = editingTargetId !== this.lastEditingTargetId;
-        const workspaceChanged = data.xml !== this.lastAppliedWorkspaceXML;
+        const workspaceChanged = targetChanged || data.xml !== this.lastAppliedWorkspaceXML;
 
-        if (targetChanged || this.toolboxDirty) {
-            this.requestToolboxStateSync(targetChanged);
+        if (targetChanged || this.toolboxDirty || workspaceChanged) {
+            this.requestToolboxStateSync(targetChanged || workspaceChanged);
         }
 
         if (editingTarget && !this.props.workspaceMetrics.targets[editingTarget.id]) {
-            this.onWorkspaceMetricsChange();
+            this.updateWorkspaceMetricsCache(editingTarget.id);
+            this.flushWorkspaceMetrics();
         }
 
         if (!workspaceChanged) {
@@ -659,7 +1158,7 @@ class Blocks extends React.Component {
         try {
             this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
             this.lastAppliedWorkspaceXML = data.xml;
-            this.isLargeWorkspace = this.workspace.getAllBlocks(false).length >= LARGE_WORKSPACE_BLOCK_COUNT;
+            this.isLargeWorkspace = false;
             this.syncWorkspaceCullingState();
         } catch (error) {
             // The workspace is likely incomplete. What did update should be
@@ -805,7 +1304,11 @@ class Blocks extends React.Component {
 
             // Method 2: Try to find by class name
             if (!toolboxElement) {
-                toolboxElement = document.querySelector('.blocklyToolboxDiv');
+                const activeEditorRoot = window.__scratchGuiActiveEditorRoot ||
+                    document.querySelector('[data-sa-active-editor-root="true"]');
+                toolboxElement = activeEditorRoot ?
+                    activeEditorRoot.querySelector('.blocklyToolboxDiv') :
+                    document.querySelector('.blocklyToolboxDiv');
             }
 
             if (!toolboxElement) {
@@ -1190,8 +1693,15 @@ class Blocks extends React.Component {
     handleEnableProcedureReturns() {
         this.toolboxDirty = true;
         this.workspace.enableProcedureReturns();
+        const toolboxXML = this.getToolboxXML();
+        this.pendingProcedureReturnsToolboxRefresh = true;
+        this.pendingProcedureReturnsToolboxXML = toolboxXML;
+        if (toolboxXML) {
+            this.updateToolboxStateIfNeeded(toolboxXML, true);
+        }
         this.requestToolboxStateSync(true);
         this.requestToolboxUpdate();
+        this.scheduleProcedureReturnsToolboxRefresh();
     }
     render() {
         /* eslint-disable no-unused-vars */
@@ -1207,6 +1717,7 @@ class Blocks extends React.Component {
             isRtl,
             isVisible,
             onActivateColorPicker,
+            onOpenCCWExtensionModal,
             onOpenConnectionModal,
             onOpenSoundRecorder,
             onOpenCustomExtensionModal,
@@ -1222,14 +1733,28 @@ class Blocks extends React.Component {
             updateMetrics: updateMetricsProp,
             useCatBlocks,
             workspaceMetrics,
+            editorBackground,
             ...props
         } = this.props;
         /* eslint-enable no-unused-vars */
+        const editorBackgroundActive = hasEditorBackgroundTarget(
+            editorBackground,
+            EDITOR_BACKGROUND_TARGETS.BLOCKS
+        );
+        const flyoutResizeHandleStyle = this.props.isRtl ? {
+            right: this.flyoutCategoryWidth + this.flyoutWidth - 4
+        } : {
+            left: this.flyoutCategoryWidth + this.flyoutWidth - 4
+        };
         return (
             <React.Fragment>
                 <DroppableBlocks
                     componentRef={this.setBlocks}
+                    editorBackgroundActive={editorBackgroundActive}
+                    editorBackgroundStyle={editorBackgroundActive ? getEditorBackgroundStyle(editorBackground) : null}
+                    flyoutResizeHandleStyle={flyoutResizeHandleStyle}
                     onDrop={this.handleDrop}
+                    onFlyoutResizeMouseDown={this.startFlyoutResize}
                     {...props}
                 />
                 {this.state.prompt ? (
@@ -1252,6 +1777,7 @@ class Blocks extends React.Component {
                         onCategorySelected={this.handleCategorySelected}
                         onEnableProcedureReturns={this.handleEnableProcedureReturns}
                         onRequestClose={onRequestCloseExtensionLibrary}
+                        onOpenCCWExtensionModal={onOpenCCWExtensionModal}
                         onOpenCustomExtensionModal={onOpenCustomExtensionModal || reduxOnOpenCustomExtensionModal}
                         onOpenExtensionImportMethodModal={onOpenExtensionImportMethodModal}
                         onSetSelectedExtension={onSetSelectedExtension}
@@ -1281,11 +1807,19 @@ Blocks.propTypes = {
     }),
     customProceduresVisible: PropTypes.bool,
     extensionLibraryVisible: PropTypes.bool,
+    editingTargetId: PropTypes.string,
+    editorBackground: PropTypes.shape({
+        image: PropTypes.string,
+        blur: PropTypes.number,
+        target: PropTypes.string
+    }),
     isRtl: PropTypes.bool,
     isVisible: PropTypes.bool,
+    layoutToken: PropTypes.string,
     locale: PropTypes.string.isRequired,
     messages: PropTypes.objectOf(PropTypes.string),
     onActivateColorPicker: PropTypes.func,
+    onOpenCCWExtensionModal: PropTypes.func,
     onActivateCustomProcedures: PropTypes.func,
     onOpenConnectionModal: PropTypes.func,
     onOpenSoundRecorder: PropTypes.func,
@@ -1309,6 +1843,7 @@ Blocks.propTypes = {
     stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired,
     theme: PropTypes.instanceOf(Theme),
     toolboxXML: PropTypes.string,
+    toolboxLayout: PropTypes.shape({}),
     updateMetrics: PropTypes.func,
     updateToolboxState: PropTypes.func,
     useCatBlocks: PropTypes.bool,
@@ -1346,11 +1881,14 @@ const mapStateToProps = state => ({
         state.scratchGui.mode.isFullScreen
     ),
     customStageSize: state.scratchGui.customStageSize,
+    editorBackground: state.scratchGui.tw.editorBackground,
+    editingTargetId: state.scratchGui.targets.editingTarget,
     extensionLibraryVisible: state.scratchGui.modals.extensionLibrary,
     isRtl: state.locales.isRtl,
     locale: state.locales.locale,
     messages: state.locales.messages,
     toolboxXML: state.scratchGui.toolbox.toolboxXML,
+    toolboxLayout: state.scratchGui.tw.toolboxLayout,
     customProceduresVisible: state.scratchGui.customProcedures.active,
     workspaceMetrics: state.scratchGui.workspaceMetrics,
     useCatBlocks: isTimeTravel2020(state)
@@ -1363,11 +1901,12 @@ const mapDispatchToProps = dispatch => ({
         dispatch(setConnectionModalExtensionId(id));
         dispatch(openConnectionModal());
     },
+    onOpenCCWExtensionModal: () => dispatch(openCCWExtensionModal()),
     onOpenSoundRecorder: () => {
         dispatch(activateTab(SOUNDS_TAB_INDEX));
         dispatch(openSoundRecorder());
     },
-    reduxOnOpenCustomExtensionModal: () => dispatch(openCustomExtensionModal()),
+    reduxOnOpenCustomExtensionModal: data => dispatch(openCustomExtensionModal(data)),
     onOpenExtensionImportMethodModal: () => dispatch(openExtensionImportMethodModal()),
     onSetSelectedExtension: extension => dispatch(setSelectedExtension(extension)),
     onSetSelectedExtensions: extensions => dispatch(setSelectedExtensions(extensions)),

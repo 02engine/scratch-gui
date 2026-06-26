@@ -133,7 +133,8 @@ class CostumeTab extends React.Component {
         this.setState({selectedCostumeIndex: costumeIndex});
     }
     handleDeleteCostume (costumeIndex) {
-        const restoreCostumeFun = this.props.vm.deleteCostume(costumeIndex);
+        const index = typeof costumeIndex === 'number' ? costumeIndex : this.state.selectedCostumeIndex;
+        const restoreCostumeFun = this.props.vm.deleteCostume(index);
         this.props.dispatchUpdateRestore({
             restoreFun: restoreCostumeFun,
             deletedItem: 'Costume'

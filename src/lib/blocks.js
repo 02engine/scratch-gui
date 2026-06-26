@@ -8,91 +8,89 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
 
     const workspaceProto = ScratchBlocks.WorkspaceSvg && ScratchBlocks.WorkspaceSvg.prototype;
     const draggerProto = ScratchBlocks.WorkspaceDragger && ScratchBlocks.WorkspaceDragger.prototype;
-    const intersectionProto = ScratchBlocks.IntersectionObserver && ScratchBlocks.IntersectionObserver.prototype;
     const blockProto = ScratchBlocks.BlockSvg && ScratchBlocks.BlockSvg.prototype;
+    const flyoutProto = ScratchBlocks.Flyout && ScratchBlocks.Flyout.prototype;
+    const deferredIntersectionCheckDelay = ScratchBlocks.__twOffscreenCullingScreenMargin ? 0 : 120;
+
+    const clearIntersectionObserver = workspace => {
+        const observer = workspace && workspace.intersectionObserver;
+        if (!observer) return;
+        if (observer.intersectionCheckFrame_ !== null && observer.intersectionCheckFrame_ !== undefined) {
+            cancelAnimationFrame(observer.intersectionCheckFrame_);
+            observer.intersectionCheckFrame_ = null;
+        }
+        observer.intersectionCheckQueued = false;
+        observer.observing = [];
+        workspace.intersectionCheckPendingAfterDrag_ = false;
+    };
+
+    const observeTopBlocks = workspace => {
+        if (!workspace || !workspace.intersectionObserver || typeof workspace.getTopBlocks !== 'function') return;
+        const topBlocks = workspace.getTopBlocks(false);
+        for (let i = 0; i < topBlocks.length; i++) {
+            const block = topBlocks[i];
+            if (block && typeof block.updateIntersectionObserver === 'function') {
+                block.updateIntersectionObserver();
+            }
+        }
+    };
 
     if (workspaceProto) {
-        workspaceProto.offscreenTopBlockCullingEnabled_ = false;
-        workspaceProto.deferBlockRendering_ = false;
-        workspaceProto.intersectionCheckPendingAfterDrag_ = false;
         workspaceProto.pendingWheelFrame_ = null;
         workspaceProto.pendingWheelScrollDelta_ = null;
         workspaceProto.pendingWheelZoomDelta_ = 0;
         workspaceProto.pendingWheelZoomPosition_ = null;
         workspaceProto.pendingGridUpdateTimer_ = null;
+        workspaceProto.pendingScrollbarResizeTimer_ = null;
+        workspaceProto.pendingFlyoutReflowTimer_ = null;
+        workspaceProto.pendingIntersectionCheckTimer_ = null;
         workspaceProto.deferGridUpdate_ = false;
+        workspaceProto.deferIntersectionChecks_ = false;
+
+        const originalTranslate = workspaceProto.translate;
+        const originalOnMouseWheel = workspaceProto.onMouseWheel_;
+        const originalSetScale = workspaceProto.setScale;
+        const originalQueueIntersectionCheck = workspaceProto.queueIntersectionCheck;
+        const originalSetOffscreenTopBlockCullingEnabled = workspaceProto.setOffscreenTopBlockCullingEnabled;
+        workspaceProto.queueIntersectionCheck = function () {
+            if (!this.offscreenTopBlockCullingEnabled_) {
+                return;
+            }
+            if (this.deferIntersectionChecks_) {
+                this.scheduleDeferredIntersectionCheck_();
+                return;
+            }
+            if (typeof originalQueueIntersectionCheck === 'function') {
+                return originalQueueIntersectionCheck.call(this);
+            }
+        };
 
         workspaceProto.setOffscreenTopBlockCullingEnabled = function (enabled) {
-            if (this.offscreenTopBlockCullingEnabled_ === enabled) {
-                if (enabled) this.queueIntersectionCheck();
-                return;
+            if (typeof originalSetOffscreenTopBlockCullingEnabled === 'function') {
+                originalSetOffscreenTopBlockCullingEnabled.call(this, enabled);
+            } else {
+                this.offscreenTopBlockCullingEnabled_ = enabled;
             }
-            this.offscreenTopBlockCullingEnabled_ = enabled;
 
-            const topBlocks = this.getTopBlocks(false);
-            let needsFullRender = false;
-            for (const block of topBlocks) {
-                if (block.setIntersects) block.setIntersects(true);
-                if (!enabled && block.deferredRenderPending_) {
-                    needsFullRender = true;
+            if (!enabled) {
+                clearIntersectionObserver(this);
+                const topBlocks = typeof this.getTopBlocks === 'function' ? this.getTopBlocks(false) : [];
+                for (let i = 0; i < topBlocks.length; i++) {
+                    const block = topBlocks[i];
+                    if (block && block.intersects_ === false && typeof block.setIntersects === 'function') {
+                        block.setIntersects(true);
+                    }
                 }
-            }
-
-            if (!enabled && needsFullRender) {
-                this.render();
-                if (!this.isFlyout) {
-                    setTimeout(() => {
-                        for (const block of topBlocks) {
-                            if (block.workspace) {
-                                block.setConnectionsHidden(false);
-                                block.deferredRenderPending_ = false;
-                            }
-                        }
-                    }, 1);
-                }
-            }
-
-            this.queueIntersectionCheck();
-        };
-
-        workspaceProto.ensureTopBlockRendered_ = function (block) {
-            if (block.deferredRenderPending_) {
-                block.render(false);
-                block.deferredRenderPending_ = false;
-                this.resizeContents();
-                if (!this.isFlyout) {
-                    setTimeout(() => {
-                        if (block.workspace) {
-                            block.setConnectionsHidden(false);
-                        }
-                    }, 1);
-                }
-                return;
-            }
-            if (!block.rendered) {
-                block.render(false);
+            } else {
+                observeTopBlocks(this);
+                this.queueIntersectionCheck();
             }
         };
 
-        workspaceProto.renderVisibleTopBlocks = function () {
-            for (const block of this.getTopBlocks(false)) {
-                if (this.isBlockInViewport_ && this.isBlockInViewport_(block)) {
-                    this.ensureTopBlockRendered_(block);
-                }
-            }
-        };
-
-        workspaceProto.queueIntersectionCheck = function () {
-            if (!this.offscreenTopBlockCullingEnabled_) return;
-            if (this.isDragSurfaceActive_ || (this.isDragging && this.isDragging())) {
-                this.intersectionCheckPendingAfterDrag_ = true;
-                return;
-            }
-            if (this.renderVisibleTopBlocks) {
-                this.renderVisibleTopBlocks();
-            }
-            if (this.intersectionObserver) {
-                this.intersectionObserver.queueIntersectionCheck();
+        workspaceProto.translate = function (x, y) {
+            originalTranslate.call(this, x, y);
+            if (!this.isFlyout && this.grid_) {
+                this.grid_.moveTo(x, y);
             }
         };
 
@@ -120,22 +118,29 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         };
 
         workspaceProto.flushWheelUpdate_ = function () {
-            if (this.pendingWheelZoomDelta_ && this.pendingWheelZoomPosition_) {
-                const zoomDelta = this.pendingWheelZoomDelta_;
-                const zoomPosition = this.pendingWheelZoomPosition_;
-                this.pendingWheelZoomDelta_ = 0;
-                this.pendingWheelZoomPosition_ = null;
-                this.deferGridUpdate_ = true;
-                this.zoom(zoomPosition.x, zoomPosition.y, zoomDelta);
-                this.deferGridUpdate_ = false;
-                this.scheduleDeferredGridUpdate_();
-            }
+            this.deferIntersectionChecks_ = true;
+            try {
+                if (this.pendingWheelZoomDelta_ && this.pendingWheelZoomPosition_) {
+                    const zoomDelta = this.pendingWheelZoomDelta_;
+                    const zoomPosition = this.pendingWheelZoomPosition_;
+                    this.pendingWheelZoomDelta_ = 0;
+                    this.pendingWheelZoomPosition_ = null;
+                    this.deferGridUpdate_ = true;
+                    this.zoom(zoomPosition.x, zoomPosition.y, zoomDelta);
+                    this.deferGridUpdate_ = false;
+                    this.scheduleDeferredGridUpdate_();
+                }
 
-            if (this.pendingWheelScrollDelta_) {
-                const scrollDelta = this.pendingWheelScrollDelta_;
-                this.pendingWheelScrollDelta_ = null;
-                this.startDragMetrics = this.getMetrics();
-                this.scroll(this.scrollX - scrollDelta.x, this.scrollY - scrollDelta.y);
+                if (this.pendingWheelScrollDelta_) {
+                    const scrollDelta = this.pendingWheelScrollDelta_;
+                    this.pendingWheelScrollDelta_ = null;
+                    this.startDragMetrics = this.getMetrics();
+                    this.scroll(this.scrollX - scrollDelta.x, this.scrollY - scrollDelta.y);
+                }
+            } finally {
+                this.deferGridUpdate_ = false;
+                this.deferIntersectionChecks_ = false;
+                this.scheduleDeferredIntersectionCheck_();
             }
         };
 
@@ -148,8 +153,52 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                 this.pendingGridUpdateTimer_ = null;
                 if (this.grid_) {
                     this.grid_.update(this.scale);
+                    const metrics = this.getMetrics ? this.getMetrics() : null;
+                    const absoluteLeft = metrics && typeof metrics.absoluteLeft === 'number' ? metrics.absoluteLeft : 0;
+                    const absoluteTop = metrics && typeof metrics.absoluteTop === 'number' ? metrics.absoluteTop : 0;
+                    this.grid_.moveTo((this.scrollX || 0) + absoluteLeft, (this.scrollY || 0) + absoluteTop);
                 }
             }, 80);
+        };
+
+        workspaceProto.scheduleDeferredScrollbarResize_ = function () {
+            if (!this.scrollbar) return;
+            if (this.pendingScrollbarResizeTimer_ !== null) {
+                clearTimeout(this.pendingScrollbarResizeTimer_);
+            }
+            this.pendingScrollbarResizeTimer_ = setTimeout(() => {
+                this.pendingScrollbarResizeTimer_ = null;
+                if (this.scrollbar) {
+                    this.scrollbar.resize();
+                }
+            }, 80);
+        };
+
+        workspaceProto.scheduleDeferredFlyoutReflow_ = function () {
+            if (!this.flyout_) return;
+            if (this.pendingFlyoutReflowTimer_ !== null) {
+                clearTimeout(this.pendingFlyoutReflowTimer_);
+            }
+            this.pendingFlyoutReflowTimer_ = setTimeout(() => {
+                this.pendingFlyoutReflowTimer_ = null;
+                if (this.flyout_) {
+                    this.flyout_.reflow();
+                }
+            }, 80);
+        };
+
+        workspaceProto.scheduleDeferredIntersectionCheck_ = function () {
+            if (!this.offscreenTopBlockCullingEnabled_) return;
+            if (this.pendingIntersectionCheckTimer_ !== null) {
+                clearTimeout(this.pendingIntersectionCheckTimer_);
+            }
+            this.pendingIntersectionCheckTimer_ = setTimeout(() => {
+                this.pendingIntersectionCheckTimer_ = null;
+                if (!this.offscreenTopBlockCullingEnabled_) return;
+                if (typeof originalQueueIntersectionCheck === 'function') {
+                    originalQueueIntersectionCheck.call(this);
+                }
+            }, deferredIntersectionCheckDelay);
         };
 
         workspaceProto.onMouseWheel_ = function (e) {
@@ -158,7 +207,7 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             }
 
             const multiplier = e.deltaMode === 0x1 ? ScratchBlocks.LINE_SCROLL_MULTIPLIER : 1;
-            if (e.ctrlKey) {
+            if (e.ctrlKey && !this.isFlyout) {
                 const delta = (-e.deltaY / 50) * multiplier;
                 const position = ScratchBlocks.utils.mouseToSvg(
                     e,
@@ -182,6 +231,9 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         };
 
         workspaceProto.setScale = function (newScale) {
+            if (this.isFlyout && typeof originalSetScale === 'function') {
+                return originalSetScale.call(this, newScale);
+            }
             if (this.options.zoomOptions.maxScale && newScale > this.options.zoomOptions.maxScale) {
                 newScale = this.options.zoomOptions.maxScale;
             } else if (this.options.zoomOptions.minScale && newScale < this.options.zoomOptions.minScale) {
@@ -196,15 +248,22 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                 }
             }
             if (this.scrollbar) {
-                this.scrollbar.resize();
+                if (this.deferGridUpdate_) {
+                    this.scheduleDeferredScrollbarResize_();
+                } else {
+                    this.scrollbar.resize();
+                }
             } else {
                 this.translate(this.scrollX, this.scrollY);
             }
             ScratchBlocks.hideChaff(false);
             if (this.flyout_) {
-                this.flyout_.reflow();
+                if (this.deferGridUpdate_) {
+                    this.scheduleDeferredFlyoutReflow_();
+                } else {
+                    this.flyout_.reflow();
+                }
             }
-            this.queueIntersectionCheck();
         };
 
         const originalWorkspaceDispose = workspaceProto.dispose;
@@ -217,44 +276,50 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                 clearTimeout(this.pendingGridUpdateTimer_);
                 this.pendingGridUpdateTimer_ = null;
             }
+            if (this.pendingScrollbarResizeTimer_ !== null) {
+                clearTimeout(this.pendingScrollbarResizeTimer_);
+                this.pendingScrollbarResizeTimer_ = null;
+            }
+            if (this.pendingFlyoutReflowTimer_ !== null) {
+                clearTimeout(this.pendingFlyoutReflowTimer_);
+                this.pendingFlyoutReflowTimer_ = null;
+            }
+            if (this.pendingIntersectionCheckTimer_ !== null) {
+                clearTimeout(this.pendingIntersectionCheckTimer_);
+                this.pendingIntersectionCheckTimer_ = null;
+            }
             originalWorkspaceDispose.call(this);
         };
 
-        const originalResetDragSurface = workspaceProto.resetDragSurface;
-        workspaceProto.resetDragSurface = function () {
-            originalResetDragSurface.call(this);
-            if (this.intersectionCheckPendingAfterDrag_) {
-                this.intersectionCheckPendingAfterDrag_ = false;
-                this.queueIntersectionCheck();
-            }
-        };
     }
 
-    if (intersectionProto) {
-        const originalIntersectionDispose = intersectionProto.dispose;
-        intersectionProto.dispose = function () {
-            if (this.intersectionCheckFrame_ !== null && this.intersectionCheckFrame_ !== undefined) {
-                cancelAnimationFrame(this.intersectionCheckFrame_);
-                this.intersectionCheckFrame_ = null;
-            }
-            originalIntersectionDispose.call(this);
-        };
+    if (flyoutProto) {
+        const originalFlyoutShow = flyoutProto.show;
+        flyoutProto.show = function (xmlList) {
+            const workspace = this.workspace_;
+            const restoreCulling = !!(
+                workspace &&
+                workspace.offscreenTopBlockCullingEnabled_ &&
+                typeof workspace.setOffscreenTopBlockCullingEnabled === 'function'
+            );
 
-        intersectionProto.queueIntersectionCheck = function () {
-            if (this.intersectionCheckQueued) return;
-            this.intersectionCheckQueued = true;
-            if (window.requestAnimationFrame) {
-                this.intersectionCheckFrame_ = window.requestAnimationFrame(this.checkForIntersections);
-            } else {
-                this.intersectionCheckFrame_ = setTimeout(this.checkForIntersections, 16);
+            if (restoreCulling) {
+                workspace.setOffscreenTopBlockCullingEnabled(false);
             }
-        };
 
-        const originalIntersectionCheck = intersectionProto.checkForIntersections;
-        intersectionProto.checkForIntersections = function () {
-            this.intersectionCheckQueued = false;
-            this.intersectionCheckFrame_ = null;
-            originalIntersectionCheck.call(this);
+            try {
+                return originalFlyoutShow.call(this, xmlList);
+            } finally {
+                if (restoreCulling && workspace) {
+                    workspace.setOffscreenTopBlockCullingEnabled(true);
+                    if (typeof workspace.renderVisibleTopBlocks === 'function') {
+                        workspace.renderVisibleTopBlocks();
+                    }
+                    if (typeof workspace.queueIntersectionCheck === 'function') {
+                        workspace.queueIntersectionCheck();
+                    }
+                }
+            }
         };
     }
 
@@ -295,29 +360,42 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             this.pendingScrollUpdate_ = null;
             this.pendingDragFrame_ = null;
 
-            workspace.scrollX = -update.x - metrics.contentLeft;
-            workspace.scrollY = -update.y - metrics.contentTop;
+            workspace.deferIntersectionChecks_ = true;
+            try {
+                workspace.scrollX = -update.x - metrics.contentLeft;
+                workspace.scrollY = -update.y - metrics.contentTop;
 
-            const translatedX = workspace.scrollX + metrics.absoluteLeft;
-            const translatedY = workspace.scrollY + metrics.absoluteTop;
-            workspace.translate(translatedX, translatedY);
-            if (workspace.grid_) {
-                workspace.grid_.moveTo(translatedX, translatedY);
-            }
+                const translatedX = workspace.scrollX + metrics.absoluteLeft;
+                const translatedY = workspace.scrollY + metrics.absoluteTop;
+                workspace.translate(translatedX, translatedY);
+                if (workspace.grid_) {
+                    workspace.grid_.moveTo(translatedX, translatedY);
+                }
 
-            if (workspace.scrollbar) {
-                workspace.scrollbar.hScroll.setHandlePosition(update.x * workspace.scrollbar.hScroll.ratio_);
-                workspace.scrollbar.vScroll.setHandlePosition(update.y * workspace.scrollbar.vScroll.ratio_);
+                if (workspace.scrollbar) {
+                    workspace.scrollbar.hScroll.setHandlePosition(update.x * workspace.scrollbar.hScroll.ratio_);
+                    workspace.scrollbar.vScroll.setHandlePosition(update.y * workspace.scrollbar.vScroll.ratio_);
+                }
+            } finally {
+                workspace.deferIntersectionChecks_ = false;
+                if (workspace.scheduleDeferredIntersectionCheck_) {
+                    workspace.scheduleDeferredIntersectionCheck_();
+                }
             }
         };
     }
 
     if (blockProto) {
-        const originalInitSvg = blockProto.initSvg;
-        blockProto.initSvg = function () {
-            originalInitSvg.call(this);
-            if (this.updateIntersectionObserver) {
-                this.updateIntersectionObserver();
+        const originalUpdateIntersectionObserver = blockProto.updateIntersectionObserver;
+        blockProto.updateIntersectionObserver = function () {
+            if (!this.workspace || !this.workspace.offscreenTopBlockCullingEnabled_) {
+                if (this.intersects_ === false && typeof this.setIntersects === 'function') {
+                    this.setIntersects(true);
+                }
+                return;
+            }
+            if (typeof originalUpdateIntersectionObserver === 'function') {
+                return originalUpdateIntersectionObserver.call(this);
             }
         };
     }
@@ -407,6 +485,17 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
 export default function (vm) {
     const ScratchBlocks = LazyScratchBlocks.get();
     applyScratchBlocksPerformancePatches(ScratchBlocks);
+    if (vm && vm.runtime) {
+        if (!ScratchBlocks.VERSION) {
+            ScratchBlocks.VERSION = '0.1.0';
+        }
+        if (typeof vm.runtime.attachBlocks === 'function') {
+            vm.runtime.attachBlocks(ScratchBlocks);
+        } else if (!vm.runtime.scratchBlocks) {
+            vm.runtime.scratchBlocks = ScratchBlocks;
+        }
+        vm.runtime.scratchBlocksVersion = ScratchBlocks.VERSION;
+    }
     const jsonForMenuBlock = function (name, menuOptionsFn, colors, start) {
         return {
             message0: '%1',

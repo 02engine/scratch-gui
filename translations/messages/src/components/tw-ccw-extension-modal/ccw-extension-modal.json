@@ -1,0 +1,52 @@
+[
+  {
+    "id": "tw.ccwExtensionModal.title",
+    "description": "Title of CCW extension loader modal",
+    "defaultMessage": "加载CCW扩展"
+  },
+  {
+    "id": "tw.ccwExtensionModal.description",
+    "description": "Description of CCW extension loader modal",
+    "defaultMessage": "从共创世界加载扩展，可从 https://assets.ccw.site/extensions 获取。"
+  },
+  {
+    "id": "tw.ccwExtensionModal.prompt",
+    "description": "Label that appears when loading a CCW extension by ID",
+    "defaultMessage": "输入CCW扩展ID："
+  },
+  {
+    "id": "tw.ccwExtensionModal.lookup",
+    "description": "Button to fetch CCW extension metadata",
+    "defaultMessage": "查询"
+  },
+  {
+    "id": "tw.ccwExtensionModal.publisher",
+    "description": "Publisher label in CCW extension loader",
+    "defaultMessage": "发布者：{publisher}"
+  },
+  {
+    "id": "tw.ccwExtensionModal.version",
+    "description": "Version selector label in CCW extension loader",
+    "defaultMessage": "版本："
+  },
+  {
+    "id": "tw.ccwExtensionModal.latest",
+    "description": "Latest version marker in CCW extension loader",
+    "defaultMessage": "最新"
+  },
+  {
+    "id": "tw.ccwExtensionModal.asset",
+    "description": "Asset URL label in CCW extension loader",
+    "defaultMessage": "资源：{asset}"
+  },
+  {
+    "id": "tw.ccwExtensionModal.cancel",
+    "description": "Button that cancels loading a CCW extension",
+    "defaultMessage": "取消"
+  },
+  {
+    "id": "tw.ccwExtensionModal.confirm",
+    "description": "Button that confirms loading a CCW extension",
+    "defaultMessage": "确认"
+  }
+]

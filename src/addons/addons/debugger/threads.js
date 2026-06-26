@@ -204,7 +204,12 @@ export default async function createThreadsTab({ debug, addon, console, msg }) {
     logView.queueUpdateContent();
   };
 
-  debug.addAfterStepCallback(() => {
+  let isVisible = false;
+
+  debug.addThrottledAfterStepCallback(() => {
+    if (!isVisible) {
+      return;
+    }
     updateContent();
 
     const runningThread = getRunningThread();
@@ -213,7 +218,7 @@ export default async function createThreadsTab({ debug, addon, console, msg }) {
     } else {
       highlighter.setGlowingThreads([]);
     }
-  });
+  }, 50);
 
   const stepButton = debug.createHeaderButton({
     text: msg("step"),
@@ -259,11 +264,14 @@ export default async function createThreadsTab({ debug, addon, console, msg }) {
   });
 
   const show = () => {
+    isVisible = true;
     logView.show();
     updateContent();
   };
   const hide = () => {
+    isVisible = false;
     logView.hide();
+    highlighter.setGlowingThreads([]);
   };
 
   return {

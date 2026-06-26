@@ -24,8 +24,12 @@ import {
     closeTelemetryModal,
     openExtensionLibrary,
     openExtensionImportMethodModal,
-    setSelectedExtension
+    setSelectedExtension,
+    closeGitModal
 } from '../reducers/modals';
+import {
+    closeCollaborationModal
+} from '../reducers/collaboration';
 
 import FontLoaderHOC from '../lib/font-loader-hoc.jsx';
 import LocalizationHOC from '../lib/localization-hoc.jsx';
@@ -181,10 +185,16 @@ const mapStateToProps = state => {
         tipsLibraryVisible: state.scratchGui.modals.tipsLibrary,
         usernameModalVisible: state.scratchGui.modals.usernameModal,
         settingsModalVisible: state.scratchGui.modals.settingsModal,
+        engineSettingsModalVisible: state.scratchGui.modals['02engineSettingsModal'],
+        toolboxLayoutModalVisible: state.scratchGui.modals.toolboxLayoutModal,
+        spriteLayerModalVisible: state.scratchGui.modals.spriteLayerModal,
         customExtensionModalVisible: state.scratchGui.modals.customExtensionModal,
+        ccwExtensionModalVisible: state.scratchGui.modals.ccwExtensionModal,
             extensionImportMethodModalVisible: state.scratchGui.modals.extensionImportMethodModal,
             fontsModalVisible: state.scratchGui.modals.fontsModal,        unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,
         invalidProjectModalVisible: state.scratchGui.modals.invalidProjectModal,
+        gitModalVisible: state.scratchGui.modals.gitModal,
+        collaborationModalVisible: state.scratchGui.collaboration.modalVisible,
         vm: state.scratchGui.vm
     };
 };
@@ -198,7 +208,9 @@ const mapDispatchToProps = dispatch => ({
     onRequestCloseCostumeLibrary: () => dispatch(closeCostumeLibrary()),
     onRequestCloseTelemetryModal: () => dispatch(closeTelemetryModal()),
     onOpenExtensionImportMethodModal: () => dispatch(openExtensionImportMethodModal()),
-    onSetSelectedExtension: extension => dispatch(setSelectedExtension(extension))
+    onSetSelectedExtension: extension => dispatch(setSelectedExtension(extension)),
+    onRequestCloseGitModal: () => dispatch(closeGitModal()),
+    onRequestCloseCollaborationModal: () => dispatch(closeCollaborationModal())
 });
 
 const ConnectedGUI = injectIntl(connect(

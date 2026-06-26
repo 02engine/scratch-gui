@@ -1,0 +1,609 @@
+.toolCallSummary {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-lg);
+  background: var(--ai-bg-surface);
+  animation: toolCardEnter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: 50% 0;
+}
+
+.toolCallSummaryRunning {
+  border-color: color-mix(in srgb, var(--ai-accent) 24%, var(--ai-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ai-accent) 8%, transparent);
+}
+
+.toolCallSummary > * {
+  position: relative;
+  z-index: 1;
+}
+
+.toolCallSummaryHeader,
+.toolCallItemHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--ai-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.toolCallSummaryHeader {
+  min-height: 38px;
+  padding: 8px 10px;
+  transition:
+    background var(--ai-transition),
+    color var(--ai-transition);
+}
+
+.toolCallSummaryHeader:hover,
+.toolCallItemHeader:hover {
+  background: var(--ai-bg-surface-hover);
+}
+
+.toolCallPulse {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: var(--ai-radius-pill);
+  background: var(--ai-success);
+}
+
+.toolCallPulseActive {
+  background: var(--ai-warning);
+  animation: toolPulse 1.2s ease-out infinite, toolOrbBreath 1.8s ease-in-out infinite;
+}
+
+.toolCallSummaryTitle,
+.toolCallName {
+  color: var(--ai-text-primary);
+  font-weight: 750;
+}
+
+.toolCallSummaryRunning .toolCallSummaryTitle,
+.toolCallSummaryRunning .toolCallSummaryMeta,
+.toolCallItemRunning .toolCallName,
+.toolCallItemRunning .toolCallSummaryLine {
+  background-image: linear-gradient(
+    105deg,
+    var(--ai-text-primary) 0%,
+    var(--ai-text-primary) 43%,
+    color-mix(in srgb, var(--ai-accent) 70%, var(--ai-text-primary)) 48%,
+    color-mix(in srgb, var(--ai-success) 48%, var(--ai-text-primary)) 51%,
+    var(--ai-text-primary) 57%,
+    var(--ai-text-primary) 100%
+  );
+  background-size: 360% 100%;
+  animation: toolTextShine 3s linear infinite;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .toolCallSummaryRunning .toolCallSummaryTitle,
+  .toolCallSummaryRunning .toolCallSummaryMeta,
+  .toolCallItemRunning .toolCallName,
+  .toolCallItemRunning .toolCallSummaryLine {
+    color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.toolCallSummaryMeta,
+.toolCallSummaryLine,
+.toolCallMuted,
+.toolCallChevron {
+  color: var(--ai-text-muted);
+  font-size: 11.5px;
+}
+
+.toolCallSummaryLine {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolCallChevron {
+  margin-left: auto;
+}
+
+.toolCallBody {
+  padding: 0;
+  border-top: 1px solid var(--ai-border);
+  background: var(--ai-bg-app);
+  animation: toolBodyReveal 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.toolRunSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid var(--ai-border-subtle);
+}
+
+.changedFilesPanel,
+.toolResultGrid {
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-md);
+  background: var(--ai-bg-elevated);
+  color: var(--ai-text-muted);
+}
+
+.changedFilesHeader,
+.changedFileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  font-family: var(--ai-font-mono);
+  font-size: 11.5px;
+}
+
+.changedFilesHeader {
+  border-bottom: 1px solid var(--ai-border);
+  color: var(--ai-text-primary);
+  font-family: var(--ai-font-sans);
+}
+
+.changedFileItem + .changedFileItem {
+  border-top: 1px solid var(--ai-border-subtle);
+}
+
+.changedFileList {
+  display: flex;
+  flex-direction: column;
+}
+
+.diagnosticPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.diagnosticPillError,
+.diagnosticPillWarn,
+.diagnosticPillOk {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: var(--ai-radius-pill);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.diagnosticPillError {
+  background: var(--ai-bg-danger);
+  color: var(--ai-danger);
+}
+
+.diagnosticPillWarn {
+  background: var(--ai-bg-warning);
+  color: var(--ai-warning);
+}
+
+.diagnosticPillOk {
+  background: var(--ai-bg-success);
+  color: var(--ai-success);
+}
+
+.toolCallList {
+  display: flex;
+  flex-direction: column;
+}
+
+.toolCallItem + .toolCallItem {
+  border-top: 1px solid var(--ai-border-subtle);
+}
+
+.toolCallItem {
+  animation: toolItemEnter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.toolCallItemRunning .toolCallName,
+.toolCallItemRunning .toolCallSummaryLine {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--ai-accent) 10%, transparent);
+}
+
+.toolCallItemHeader {
+  min-height: 38px;
+  padding: 8px 10px;
+  transition:
+    background var(--ai-transition),
+    transform var(--ai-transition-fast);
+}
+
+.toolCallItemHeader:hover {
+  transform: translateX(2px);
+}
+
+.toolCallGlyph {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ai-radius-pill);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.toolCallGlyphrunning {
+  border: 2px solid color-mix(in srgb, var(--ai-warning) 30%, transparent);
+  border-top-color: var(--ai-warning);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--ai-warning) 20%, transparent);
+  animation: spin 0.9s linear infinite, glyphGlow 1.4s ease-in-out infinite;
+}
+
+.toolCallGlyphsuccess {
+  background: var(--ai-bg-success);
+  color: var(--ai-success);
+}
+
+.toolCallGlypherror {
+  background: var(--ai-bg-danger);
+  color: var(--ai-danger);
+}
+
+.toolCallStatus {
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: var(--ai-radius-pill);
+  font-size: 10.5px;
+  font-weight: 750;
+}
+
+.toolCallStatusrunning {
+  background: var(--ai-bg-warning);
+  color: var(--ai-warning);
+}
+
+.toolCallStatussuccess {
+  background: var(--ai-bg-success);
+  color: var(--ai-success);
+}
+
+.toolCallStatuserror {
+  background: var(--ai-bg-danger);
+  color: var(--ai-danger);
+}
+
+.toolCallDetail {
+  padding: 8px;
+  border-top: 1px solid var(--ai-border-subtle);
+  background: var(--ai-bg-app);
+  animation: toolDetailReveal 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.toolCallSection + .toolCallSection {
+  margin-top: 8px;
+}
+
+.toolCallSectionTitle {
+  margin-bottom: 6px;
+  color: var(--ai-text-muted);
+  font-size: 11.5px;
+  font-weight: 750;
+}
+
+.toolCallRawGrid {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.rawToolDetails {
+  margin-top: 10px;
+  color: var(--ai-text-muted);
+  font-size: 12px;
+}
+
+.rawToolDetails summary {
+  cursor: pointer;
+}
+
+.toolCompactJson,
+.toolCallSection pre {
+  overflow: auto;
+  max-height: 260px;
+  margin: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-md);
+  background: var(--ai-bg-code);
+  color: var(--ai-text-secondary);
+  font-family: var(--ai-font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.toolErrorBox {
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, var(--ai-danger) 28%, transparent);
+  border-radius: var(--ai-radius-md);
+  background: var(--ai-bg-danger);
+  color: var(--ai-danger);
+  white-space: pre-wrap;
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.toolResultGrid {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 7px 12px;
+  padding: 9px 10px;
+  font-size: 11.5px;
+}
+
+.toolResultGrid strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ai-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diffStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.diffFile {
+  overflow: hidden;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-lg);
+  background: var(--ai-bg-code);
+  color: var(--ai-text-secondary);
+  animation: diffCardRise 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.diffFileHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  background: var(--ai-bg-surface);
+  color: var(--ai-text-primary);
+  font-size: 12px;
+  font-weight: 800;
+  list-style: none;
+}
+
+.diffFileHeader::-webkit-details-marker {
+  display: none;
+}
+
+.diffFilePath {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ai-font-mono);
+}
+
+.diffStats {
+  flex-shrink: 0;
+  display: inline-flex;
+  gap: 8px;
+  font-family: var(--ai-font-mono);
+}
+
+.diffAdded {
+  color: var(--ai-success-strong);
+}
+
+.diffDeleted {
+  color: var(--ai-danger-strong);
+}
+
+.diffBody {
+  max-height: 320px;
+  overflow: auto;
+  border-top: 1px solid var(--ai-border);
+}
+
+.diffLine {
+  display: grid;
+  grid-template-columns: 34px 34px 16px minmax(0, 1fr);
+  min-height: 19px;
+  font-family: var(--ai-font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.diffLine code {
+  padding-right: 12px;
+  overflow: visible;
+  white-space: pre;
+}
+
+.diffLineNumber {
+  padding: 0 8px;
+  color: var(--ai-text-faint);
+  text-align: right;
+  user-select: none;
+}
+
+.diffMarker {
+  color: var(--ai-text-muted);
+  text-align: center;
+  user-select: none;
+}
+
+.diffLineadd {
+  background: color-mix(in srgb, var(--ai-success-strong) 18%, transparent);
+}
+
+.diffLinedelete {
+  background: color-mix(in srgb, var(--ai-danger-strong) 16%, transparent);
+}
+
+.diffLinemeta {
+  background: var(--ai-bg-surface);
+  color: var(--ai-text-muted);
+}
+
+.diffLinecontext {
+  color: var(--ai-text-secondary);
+}
+
+.diffTruncated {
+  padding: 9px 12px;
+  color: var(--ai-text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+@keyframes toolPulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ai-warning) 35%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes toolCardEnter {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(10px) scale(0.988);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toolTextShine {
+  0% {
+    background-position: 160% 0;
+  }
+  100% {
+    background-position: -160% 0;
+  }
+}
+
+@keyframes toolBodyReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toolItemEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toolTextBreath {
+  0%,
+  100% {
+    color: var(--ai-text-muted);
+    text-shadow: 0 0 0 transparent;
+  }
+  50% {
+    color: var(--ai-text-primary);
+    text-shadow: 0 0 18px color-mix(in srgb, var(--ai-accent) 18%, transparent);
+  }
+}
+
+@keyframes toolOrbBreath {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.28);
+  }
+}
+
+@keyframes glyphGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 10px color-mix(in srgb, var(--ai-warning) 12%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 24px color-mix(in srgb, var(--ai-warning) 34%, transparent);
+  }
+}
+
+@keyframes toolDetailReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes diffCardRise {
+  from {
+    opacity: 0;
+    filter: blur(5px);
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolCallSummary,
+  .toolCallPulseActive,
+  .toolCallBody,
+  .toolCallItem,
+  .toolCallSummaryRunning .toolCallSummaryTitle,
+  .toolCallSummaryRunning .toolCallSummaryMeta,
+  .toolCallItemRunning .toolCallName,
+  .toolCallItemRunning .toolCallSummaryLine,
+  .toolCallGlyphrunning,
+  .toolCallDetail,
+  .diffFile {
+    animation: none;
+  }
+
+  .toolCallItemHeader:hover {
+    transform: none;
+  }
+}

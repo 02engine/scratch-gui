@@ -13,6 +13,12 @@ export default async function ({ addon, console, msg }) {
   const SVG_NS = "http://www.w3.org/2000/svg";
 
   const Blockly = await addon.tab.traps.getBlockly();
+  const getActiveEditorRoot = () =>
+    window.__scratchGuiActiveEditorRoot || document.querySelector('[data-sa-active-editor-root="true"]');
+  const queryActiveEditor = (selector) => {
+    const activeEditorRoot = getActiveEditorRoot();
+    return activeEditorRoot ? activeEditorRoot.querySelector(selector) : document.querySelector(selector);
+  };
 
   function getSpeedValue() {
     let data = {
@@ -65,7 +71,7 @@ export default async function ({ addon, console, msg }) {
     if (
       !e ||
       e.buttons === 0 ||
-      document.querySelector(".blocklyToolboxDiv").className.includes("blocklyToolboxDelete")
+      queryActiveEditor(".blocklyToolboxDiv")?.className.includes("blocklyToolboxDelete")
     ) {
       speed = typeof speed === "object" ? getSpeedValue() : speed;
       setTransition(speed);
@@ -233,9 +239,9 @@ export default async function ({ addon, console, msg }) {
       ],
       reduxCondition: (state) => !state.scratchGui.mode.isPlayerOnly,
     });
-    scrollBar = document.querySelector(".blocklyFlyoutScrollbar");
-    const blocksWrapper = document.querySelector('[class*="gui_blocks-wrapper_"]');
-    const injectionDiv = document.querySelector(".injectionDiv");
+    scrollBar = queryActiveEditor(".blocklyFlyoutScrollbar");
+    const blocksWrapper = queryActiveEditor('[class*="gui_blocks-wrapper_"]');
+    const injectionDiv = queryActiveEditor(".injectionDiv");
 
     // Code editor left border
     const borderElement1 = document.createElement("div");
@@ -275,8 +281,8 @@ export default async function ({ addon, console, msg }) {
     onmouseleave(null, 0);
     toggle = false;
 
-    const toolbox = document.querySelector(".blocklyToolboxDiv");
-    const addExtensionButton = document.querySelector("[class^=gui_extension-button-container_]");
+    const toolbox = queryActiveEditor(".blocklyToolboxDiv");
+    const addExtensionButton = queryActiveEditor("[class^=gui_extension-button-container_]");
 
     for (let element of [toolbox, addExtensionButton, flyOut, scrollBar]) {
       element.onmouseenter = (e) => {

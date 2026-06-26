@@ -9,7 +9,7 @@ import {defineMessages, intlShape, injectIntl} from 'react-intl';
 import {
     setUsername
 } from '../reducers/tw';
-import {setCustomUIState} from '../reducers/tw';
+import {setCustomUIState, setEditorBackgroundState} from '../reducers/tw';
 import {
     defaultProjectId,
     setProjectId
@@ -21,6 +21,12 @@ import {
 import {generateRandomUsername} from './tw-username';
 import {setSearchParams} from './tw-navigation-utils';
 import {defaultStageSize} from '../reducers/custom-stage-size';
+import {normalizeEditorBackground} from './editor-background';
+import {
+    getPersistentEditorBackground,
+    hydratePersistentEditorBackground,
+    setPersistentEditorBackground
+} from './tw-persistent-settings';
 
 /* eslint-disable no-alert */
 
@@ -276,6 +282,7 @@ const TWStateManager = function (WrappedComponent) {
     class StateManagerComponent extends React.Component {
         constructor (props) {
             super(props);
+            this._isMounted = false;
             bindAll(this, [
                 'handleHashChange',
                 'handlePopState',
@@ -285,6 +292,7 @@ const TWStateManager = function (WrappedComponent) {
             ]);
         }
         componentDidMount () {
+            this._isMounted = true;
             const urlParams = new URLSearchParams(location.search);
 
             if (urlParams.has('fps')) {
@@ -348,6 +356,18 @@ const TWStateManager = function (WrappedComponent) {
                     }
                 } catch (e) {
                     // ignore
+                }
+
+                if (this.props.setEditorBackground) {
+                    hydratePersistentEditorBackground(
+                        getPersistentEditorBackground(this.props.editorBackground)
+                    ).then(background => {
+                        if (this._isMounted) {
+                            this.props.setEditorBackground(background);
+                        }
+                    }).catch(() => {
+                        // ignore
+                    });
                 }
 
             if (urlParams.has('clones')) {
@@ -500,8 +520,17 @@ const TWStateManager = function (WrappedComponent) {
                     // ignore
                 }
             }
+
+            if (this.props.editorBackground !== prevProps.editorBackground) {
+                try {
+                    setPersistentEditorBackground(this.props.editorBackground);
+                } catch (e) {
+                    // ignore
+                }
+            }
         }
         componentWillUnmount () {
+            this._isMounted = false;
             window.removeEventListener('hashchange', this.handleHashChange);
             window.removeEventListener('popstate', this.handlePopState);
         }
@@ -553,7 +582,9 @@ const TWStateManager = function (WrappedComponent) {
                 username,
                 vm,
                 customUI,
+                editorBackground,
                 setCustomUI,
+                setEditorBackground,
                 /* eslint-enable no-unused-vars */
                 ...props
             } = this.props;
@@ -582,12 +613,18 @@ const TWStateManager = function (WrappedComponent) {
         runtimeOptions: PropTypes.shape({
             miscLimits: PropTypes.bool,
             fencing: PropTypes.bool,
-            maxClones: PropTypes.number
+            maxClones: PropTypes.number,
+            offscreenDrawableCulling: PropTypes.bool
         }),
         highQualityPen: PropTypes.bool,
         framerate: PropTypes.number,
         interpolation: PropTypes.bool,
-    customUI: PropTypes.bool,
+        customUI: PropTypes.bool,
+        editorBackground: PropTypes.shape({
+            image: PropTypes.string,
+            blur: PropTypes.number,
+            target: PropTypes.string
+        }),
         turbo: PropTypes.bool,
         onSetIsFullScreen: PropTypes.func,
         onSetIsPlayerOnly: PropTypes.func,
@@ -616,14 +653,16 @@ const TWStateManager = function (WrappedComponent) {
         customUI: state.scratchGui.tw.customUI,
         turbo: state.scratchGui.vmStatus.turbo,
         username: state.scratchGui.tw.username,
+        editorBackground: state.scratchGui.tw.editorBackground,
         vm: state.scratchGui.vm
     });
     const mapDispatchToProps = dispatch => ({
         onSetIsFullScreen: isFullScreen => dispatch(setFullScreen(isFullScreen)),
         onSetIsPlayerOnly: isPlayerOnly => dispatch(setPlayer(isPlayerOnly)),
         onSetProjectId: projectId => dispatch(setProjectId(projectId)),
-        onSetUsername: username => dispatch(setUsername(username))
-        ,setCustomUI: value => dispatch(setCustomUIState(value))
+        onSetUsername: username => dispatch(setUsername(username)),
+        setCustomUI: value => dispatch(setCustomUIState(value)),
+        setEditorBackground: value => dispatch(setEditorBackgroundState(value))
     });
     return injectIntl(connect(
         mapStateToProps,

@@ -91,26 +91,39 @@ class SpriteSelectorItem extends React.PureComponent {
         }
     }
     handleDelete (e) {
-        e.stopPropagation(); // To prevent from bubbling back to handleClick
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
+        if (e && e.stopPropagation) {
+            e.stopPropagation(); // To prevent from bubbling back to handleClick
+        }
         this.props.onDeleteButtonClick(this.props.id);
     }
     handleDuplicate (e) {
-        e.stopPropagation(); // To prevent from bubbling back to handleClick
+        if (e && e.stopPropagation) {
+            e.stopPropagation(); // To prevent from bubbling back to handleClick
+        }
         this.props.onDuplicateButtonClick(this.props.id);
     }
     handleExport (e) {
-        e.stopPropagation();
+        if (e && e.stopPropagation) {
+            e.stopPropagation();
+        }
         this.props.onExportButtonClick(this.props.id);
     }
     handleRename (e) {
-        e.stopPropagation();
+        if (e && e.stopPropagation) {
+            e.stopPropagation();
+        }
         this.props.onRenameButtonClick(this.props.id);
     }
     handleMouseLeave () {
         this.props.dispatchSetHoveredSprite(null);
     }
     handleMouseEnter () {
-        this.props.dispatchSetHoveredSprite(this.props.id);
+        if (typeof this.props.id === 'string') {
+            this.props.dispatchSetHoveredSprite(this.props.id);
+        }
     }
     setRef (component) {
         // Access the DOM node using .elem because it is going through ContextMenuTrigger
@@ -127,6 +140,7 @@ class SpriteSelectorItem extends React.PureComponent {
             onDuplicateButtonClick,
             onExportButtonClick,
             onRenameButtonClick,
+            onContextMenu,
             dragPayload,
             receivedBlocks,
             costumeURL,
@@ -138,6 +152,8 @@ class SpriteSelectorItem extends React.PureComponent {
             <SpriteSelectorItemComponent
                 componentRef={this.setRef}
                 costumeURL={this.getCostumeData()}
+                id={id}
+                onContextMenu={onContextMenu}
                 preventContextMenu={this.dragRecognizer.gestureInProgress()}
                 onClick={this.handleClick}
                 onDeleteButtonClick={onDeleteButtonClick ? this.handleDelete : null}
@@ -168,6 +184,7 @@ SpriteSelectorItem.propTypes = {
     // eslint-disable-next-line react/forbid-prop-types
     name: PropTypes.any,
     onClick: PropTypes.func,
+    onContextMenu: PropTypes.func,
     onDeleteButtonClick: PropTypes.func,
     onRenameButtonClick: PropTypes.func,
     onDrag: PropTypes.func.isRequired,

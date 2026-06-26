@@ -2,6 +2,7 @@ import { isPaused, setPaused, onPauseChanged, setup } from "./module.js";
 import createLogsTab from "./logs.js";
 import createThreadsTab from "./threads.js";
 import createPerformanceTab from "./performance.js";
+import createThreadPerformanceTab from "./thread-performance.js";
 import createVariablesTab from "./variables.js";
 import Utils from "../find-bar/blockly/Utils.js";
 import addSmallStageClass from "../../libraries/common/cs/small-stage.js";
@@ -105,6 +106,9 @@ export default async function ({ addon, console, msg }) {
   const tabContentContainer = Object.assign(document.createElement("div"), {
     className: "sa-debugger-tab-content",
   });
+  const resizeHandle = Object.assign(document.createElement("div"), {
+    className: "sa-debugger-resize-handle",
+  });
 
   const compilerWarning = document.createElement("a");
   compilerWarning.addEventListener("click", () => {
@@ -163,13 +167,39 @@ export default async function ({ addon, console, msg }) {
     e.preventDefault();
     moveInterface(e.clientX, e.clientY);
   };
+
+  let resizeStartX = 0;
+  let resizeStartY = 0;
+  let resizeStartWidth = 0;
+  let resizeStartHeight = 0;
+  const handleResizeMove = (e) => {
+    e.preventDefault();
+    const nextWidth = Math.max(420, resizeStartWidth + (e.clientX - resizeStartX));
+    const nextHeight = Math.max(220, resizeStartHeight + (e.clientY - resizeStartY));
+    interfaceContainer.style.width = `${nextWidth}px`;
+    interfaceContainer.style.height = `${nextHeight}px`;
+  };
+  const handleResizeStop = () => {
+    document.removeEventListener("mousemove", handleResizeMove);
+    document.removeEventListener("mouseup", handleResizeStop);
+  };
+  resizeHandle.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    resizeStartX = e.clientX;
+    resizeStartY = e.clientY;
+    resizeStartWidth = interfaceContainer.offsetWidth;
+    resizeStartHeight = interfaceContainer.offsetHeight;
+    document.addEventListener("mousemove", handleResizeMove);
+    document.addEventListener("mouseup", handleResizeStop);
+  });
   window.addEventListener("resize", () => {
     moveInterface(lastX, lastY);
   });
   interfaceHeader.addEventListener("mousedown", handleStartDrag);
 
   interfaceHeader.append(tabListElement, buttonContainerElement);
-  interfaceContainer.append(interfaceHeader, compilerWarning, tabContentContainer);
+  interfaceContainer.append(interfaceHeader, compilerWarning, tabContentContainer, resizeHandle);
   document.body.append(interfaceContainer);
 
   const createHeaderButton = ({ text, icon, description }) => {
@@ -234,15 +264,32 @@ export default async function ({ addon, console, msg }) {
 
   const originalStep = vm.runtime._step;
   const afterStepCallbacks = [];
+  const throttledAfterStepCallbacks = [];
   vm.runtime._step = function (...args) {
     const ret = originalStep.call(this, ...args);
-    for (const cb of afterStepCallbacks) {
-      cb();
+    if (isInterfaceVisible) {
+      for (const cb of afterStepCallbacks) {
+        cb();
+      }
+      const now = performance.now();
+      for (const item of throttledAfterStepCallbacks) {
+        if (now - item.lastCallTime >= item.interval) {
+          item.lastCallTime = now;
+          item.callback();
+        }
+      }
     }
     return ret;
   };
   const addAfterStepCallback = (cb) => {
     afterStepCallbacks.push(cb);
+  };
+  const addThrottledAfterStepCallback = (cb, interval = 50) => {
+    throttledAfterStepCallbacks.push({
+      callback: cb,
+      interval,
+      lastCallTime: 0,
+    });
   };
 
   const getBlock = (target, id) => target.blocks.getBlock(id) || vm.runtime.flyoutBlocks.getBlock(id);
@@ -509,6 +556,7 @@ export default async function ({ addon, console, msg }) {
       createHeaderTab,
       setHasUnreadMessage,
       addAfterStepCallback,
+      addThrottledAfterStepCallback,
       getBlock,
       getTargetInfoById,
       createBlockLink,
@@ -521,8 +569,9 @@ export default async function ({ addon, console, msg }) {
   logsTab = await createLogsTab(api);
   const threadsTab = await createThreadsTab(api);
   const performanceTab = await createPerformanceTab(api);
+  const threadPerformanceTab = await createThreadPerformanceTab(api);
   const variablesTab = await createVariablesTab(api);
-  const allTabs = [logsTab, threadsTab, performanceTab, variablesTab];
+  const allTabs = [logsTab, threadsTab, performanceTab, threadPerformanceTab, variablesTab];
 
   for (const message of messagesLoggedBeforeLogsTabLoaded) {
     logsTab.addLog(...message);

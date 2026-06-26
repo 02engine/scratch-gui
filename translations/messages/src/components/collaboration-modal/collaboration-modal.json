@@ -1,0 +1,157 @@
+[
+  {
+    "id": "gui.collaboration.title",
+    "description": "Title for collaboration modal",
+    "defaultMessage": "Live Collaboration"
+  },
+  {
+    "id": "gui.collaboration.currentUsername",
+    "description": "Shows current username",
+    "defaultMessage": "You will be known as: {username}"
+  },
+  {
+    "id": "gui.collaboration.joinTitle",
+    "description": "Join room section title",
+    "defaultMessage": "Join an Existing Room"
+  },
+  {
+    "id": "gui.collaboration.roomId",
+    "description": "Label for room ID input",
+    "defaultMessage": "Room ID"
+  },
+  {
+    "id": "gui.collaboration.joinRoom",
+    "description": "Button to join collaboration room",
+    "defaultMessage": "Join Room"
+  },
+  {
+    "id": "gui.collaboration.createTitle",
+    "description": "Create room section title",
+    "defaultMessage": "Create a New Room"
+  },
+  {
+    "id": "gui.collaboration.createDescription",
+    "description": "Create room description",
+    "defaultMessage": "Generate a new room ID to start collaborating with others. Share the room URL to invite people."
+  },
+  {
+    "id": "gui.collaboration.createRoom",
+    "description": "Button to create new collaboration room",
+    "defaultMessage": "Create New Room"
+  },
+  {
+    "id": "gui.collaboration.connecting",
+    "description": "Connecting message",
+    "defaultMessage": "Connecting to room..."
+  },
+  {
+    "id": "gui.collaboration.cancel",
+    "description": "Cancel connection button",
+    "defaultMessage": "Cancel"
+  },
+  {
+    "id": "gui.collaboration.connectedRoom",
+    "description": "Connected room title",
+    "defaultMessage": "Room: {roomId}"
+  },
+  {
+    "id": "gui.collaboration.status",
+    "description": "Connection status",
+    "defaultMessage": "Connected - {userCount} {userCount, plural, one {user} other {users}} online"
+  },
+  {
+    "id": "gui.collaboration.connectedUsers",
+    "description": "Users section title",
+    "defaultMessage": "Connected Users"
+  },
+  {
+    "id": "gui.collaboration.host",
+    "description": "Host badge",
+    "defaultMessage": "Host"
+  },
+  {
+    "id": "gui.collaboration.you",
+    "description": "You badge",
+    "defaultMessage": "You"
+  },
+  {
+    "id": "gui.collaboration.kick",
+    "description": "Kick user button",
+    "defaultMessage": "Kick"
+  },
+  {
+    "id": "gui.collaboration.pendingRequests",
+    "description": "Pending requests section title",
+    "defaultMessage": "Pending Join Requests ({count})"
+  },
+  {
+    "id": "gui.collaboration.approve",
+    "description": "Approve join request button",
+    "defaultMessage": "Approve"
+  },
+  {
+    "id": "gui.collaboration.deny",
+    "description": "Deny join request button",
+    "defaultMessage": "Deny"
+  },
+  {
+    "id": "gui.collaboration.roomPrivacySettings",
+    "description": "Room privacy section title",
+    "defaultMessage": "Room Privacy"
+  },
+  {
+    "id": "gui.collaboration.publicRoom",
+    "description": "Public room card title",
+    "defaultMessage": "Public Room"
+  },
+  {
+    "id": "gui.collaboration.publicRoomDesc",
+    "description": "Public room explanation",
+    "defaultMessage": "Anyone can join this room without approval"
+  },
+  {
+    "id": "gui.collaboration.privateRoom",
+    "description": "Private room card title",
+    "defaultMessage": "Private Room"
+  },
+  {
+    "id": "gui.collaboration.privateRoomDesc",
+    "description": "Private room explanation",
+    "defaultMessage": "Users must request approval to join this room"
+  },
+  {
+    "id": "gui.collaboration.makePublic",
+    "description": "Make public room option",
+    "defaultMessage": "Make Public"
+  },
+  {
+    "id": "gui.collaboration.makePrivate",
+    "description": "Make private room option",
+    "defaultMessage": "Make Private"
+  },
+  {
+    "id": "gui.collaboration.copyRoomUrl",
+    "description": "Button to copy room URL for sharing",
+    "defaultMessage": "Copy Room URL to Share"
+  },
+  {
+    "id": "gui.collaboration.leaveRoom",
+    "description": "Button to leave collaboration room",
+    "defaultMessage": "Leave Room"
+  },
+  {
+    "id": "gui.collaboration.waitingApproval",
+    "description": "Title for pending approval state",
+    "defaultMessage": "Waiting for Host Approval"
+  },
+  {
+    "id": "gui.collaboration.pendingApprovalDescription",
+    "description": "Description for pending approval",
+    "defaultMessage": "Your request to join this private room has been sent to the host. Please wait for approval."
+  },
+  {
+    "id": "gui.collaboration.cancelRequest",
+    "description": "Button to cancel join request",
+    "defaultMessage": "Cancel Request"
+  }
+]

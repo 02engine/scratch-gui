@@ -26,7 +26,8 @@ const StageWrapperComponent = function (props) {
         showAutoFitButton,
         stageSize,
         stageWindowAutoFit,
-        vm
+        vm,
+        ...stageProps
     } = props;
 
     let stageDimensionsOverride = null;
@@ -72,6 +73,7 @@ const StageWrapperComponent = function (props) {
                 {
                     isRendererSupported ?
                         <Stage
+                            {...stageProps}
                             stageDimensionsOverride={stageDimensionsOverride}
                             stageSize={stageSize}
                             vm={vm}

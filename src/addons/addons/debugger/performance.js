@@ -124,6 +124,9 @@ export default async function createPerformanceTab({ debug, addon, console, msg 
   let lastFpsTime = now() + 3000;
 
   debug.addAfterStepCallback(() => {
+    if (!isVisible) {
+      return;
+    }
     if (isPaused()) {
       return;
     }
@@ -147,10 +150,8 @@ export default async function createPerformanceTab({ debug, addon, console, msg 
       clonesData.shift();
       clonesData.push(vm.runtime._cloneCounter);
 
-      if (isVisible) {
-        fpsChart.update();
-        performanceClonesChart.update();
-      }
+      fpsChart.update();
+      performanceClonesChart.update();
     }
   });
 

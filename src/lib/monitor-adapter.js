@@ -48,5 +48,14 @@ export default function ({id, spriteName, opcode, params, value, vm}) {
         }
     }
 
+    const isListMonitor = opcode === 'data_listcontents';
+    if (isListMonitor && !Array.isArray(value)) {
+        if (typeof value === 'string' || typeof value === 'number') {
+            value = [value];
+        } else {
+            value = [];
+        }
+    }
+
     return {id, label, category, value};
 }

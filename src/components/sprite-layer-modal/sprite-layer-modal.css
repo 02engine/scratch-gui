@@ -1,0 +1,127 @@
+@import "../../css/colors.css";
+@import "../../css/units.css";
+@import "../../css/default-colors.css";
+
+.modal-content {
+    width: 620px;
+    max-width: calc(100vw - 2rem);
+}
+
+.body {
+    background: $ui-modal-background;
+    padding: 1.25rem 1.5rem;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+}
+
+.hint {
+    margin: 0 0 1rem;
+    color: $text-primary-transparent;
+    font-size: 0.875rem;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 2rem 3rem minmax(0, 1fr) 6.5rem;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 0.5rem;
+    background: $ui-white;
+}
+
+.row-dragging {
+    composes: row;
+    opacity: 0.45;
+}
+
+.drag-handle {
+    border: none;
+    background: transparent;
+    color: $text-primary-transparent;
+    cursor: grab;
+    font: inherit;
+    font-weight: bold;
+    padding: 0.25rem;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.thumbnail {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.35rem;
+    background: $ui-secondary;
+    object-fit: contain;
+}
+
+.name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: bold;
+    color: $text-primary-default;
+}
+
+.layer-field {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: $text-primary-transparent;
+    font-size: 0.8rem;
+}
+
+.layer-input {
+    width: 4rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 0.25rem;
+    padding: 0.3rem 0.4rem;
+    font: inherit;
+    color: $text-primary-default;
+    background: $ui-white;
+}
+
+.empty {
+    padding: 2rem;
+    border-radius: 0.5rem;
+    background: $ui-white;
+    color: $text-primary-transparent;
+    text-align: center;
+}
+
+.button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.button {
+    border: none;
+    border-radius: 0.35rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    padding: 0.55rem 1rem;
+}
+
+.cancel-button {
+    composes: button;
+    background: $ui-tertiary;
+    color: $text-primary-default;
+}
+
+.confirm-button {
+    composes: button;
+    background: $looks-secondary;
+    color: $ui-white;
+}

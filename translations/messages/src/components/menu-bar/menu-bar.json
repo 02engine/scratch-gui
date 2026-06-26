@@ -10,6 +10,16 @@
     "defaultMessage": "{sprite}: {error}"
   },
   {
+    "id": "tw.menuBar.collapseMenuBar",
+    "description": "Tooltip for the button that collapses the menu bar",
+    "defaultMessage": "Collapse menu bar"
+  },
+  {
+    "id": "tw.menuBar.expandMenuBar",
+    "description": "Tooltip for the button that expands the menu bar",
+    "defaultMessage": "Expand menu bar"
+  },
+  {
     "id": "gui.menuBar.restoreSprite",
     "description": "Menu bar item for restoring the last deleted sprite.",
     "defaultMessage": "Restore Sprite"
@@ -145,6 +155,16 @@
     "defaultMessage": "Cloud Variables are not Available"
   },
   {
+    "id": "tw.menuBar.git",
+    "description": "Menu bar item for Git version control",
+    "defaultMessage": "Git"
+  },
+  {
+    "id": "tw.menuBar.collaboration",
+    "description": "Menu bar item for real-time collaboration",
+    "defaultMessage": "Collaboration"
+  },
+  {
     "id": "tw.menuBar.moreSettings",
     "description": "Menu bar item for advanced settings",
     "defaultMessage": "Advanced Settings"
@@ -178,10 +198,5 @@
     "id": "zt.tools",
     "description": "Button to use 02tools in the menu bar",
     "defaultMessage": "Tools"
-  },
-  {
-    "id": "gui.menuBar.git",
-    "description": "Button to open Git menu",
-    "defaultMessage": "Git"
   }
 ]

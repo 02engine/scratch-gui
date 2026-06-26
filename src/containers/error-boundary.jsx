@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import CrashMessageComponent from '../components/crash-message/crash-message.jsx';
 import log from '../lib/log.js';
+import RestorePointAPI from '../lib/tw-restore-point-api.js';
 
 class ErrorBoundary extends React.Component {
     constructor (props) {
@@ -33,6 +34,9 @@ class ErrorBoundary extends React.Component {
             this.setState({
                 error,
                 errorInfo
+            }, () => {
+                // Create restore point after state is updated
+                this.createRestorePoint();
             });
         }
 
@@ -74,6 +78,32 @@ class ErrorBoundary extends React.Component {
         return message;
     }
 
+    async createRestorePoint () {
+        try {
+            // Try to get vm from props, fallback to window.scratchGui
+            let vm = this.props.vm;
+            if (!vm && window.scratchGui && window.scratchGui.vm) {
+                vm = window.scratchGui.vm;
+            }
+            
+            if (!vm || !vm.runtime) {
+                alert('VM instance or VM runtime not available - restore point could not be created');
+                console.error('VM instance or VM runtime not available');
+                return;
+            }
+            
+            const runtime = vm.runtime;
+            const metadata = runtime.metadata || {};
+            const title = metadata.name || 'Untitled';
+            
+            await RestorePointAPI.createRestorePoint(vm, title, RestorePointAPI.TYPE_MANUAL);
+            alert('Data has been saved to restore point');
+        } catch (error) {
+            alert('Failed to create restore point: ' + error.message);
+            console.error('Failed to create restore point:', error);
+        }
+    }
+
     render () {
         if (this.state.error) {
             return (
@@ -89,7 +119,8 @@ class ErrorBoundary extends React.Component {
 
 ErrorBoundary.propTypes = {
     action: PropTypes.string.isRequired, // Used for defining tracking action
-    children: PropTypes.node
+    children: PropTypes.node,
+    vm: PropTypes.object // Optional vm instance for creating restore points
 };
 
 export default ErrorBoundary;

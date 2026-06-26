@@ -72,7 +72,8 @@
     overflow: hidden;
 }
 
-.add-button {
+.add-button,
+.layer-button {
     position: absolute;
     bottom: 0.75rem;
 }
@@ -81,8 +82,16 @@
     right: 1rem;
 }
 
+[dir="ltr"] .layer-button {
+    right: 4.45rem;
+}
+
 [dir="rtl"] .add-button {
     left: 1rem;
+}
+
+[dir="rtl"] .layer-button {
+    left: 4.45rem;
 }
 
 .raised {

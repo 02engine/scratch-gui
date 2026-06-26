@@ -40,10 +40,10 @@ class CustomExtensionModal extends React.Component {
         ]);
 
         this.state = {
-            type: 'url',
+            type: props.initialType || 'url',
             url: '',
             files: null,
-            text: '',
+            text: props.initialText || '',
             unsandboxed: getPersistedUnsandboxed()
         };
     }
@@ -168,6 +168,15 @@ class CustomExtensionModal extends React.Component {
         });
     }
 
+    componentDidUpdate (prevProps) {
+        if (prevProps.initialText !== this.props.initialText || prevProps.initialType !== this.props.initialType) {
+            this.setState({
+                type: this.props.initialType || 'url',
+                text: this.props.initialText || ''
+            });
+        }
+    }
+
     handleDragOver (e) {
         if (e.dataTransfer.types.includes('Files')) {
             e.preventDefault();
@@ -236,6 +245,8 @@ class CustomExtensionModal extends React.Component {
 
 CustomExtensionModal.propTypes = {
     onClose: PropTypes.func,
+    initialType: PropTypes.oneOf(['url', 'file', 'text']),
+    initialText: PropTypes.string,
     vm: PropTypes.shape({
         extensionManager: PropTypes.shape({
             loadExtensionURL: PropTypes.func
@@ -244,6 +255,8 @@ CustomExtensionModal.propTypes = {
 };
 
 const mapStateToProps = state => ({
+    initialType: state.scratchGui.modals.customExtensionModalData?.initialType,
+    initialText: state.scratchGui.modals.customExtensionModalData?.initialText,
     vm: state.scratchGui.vm
 });
 

@@ -200,9 +200,14 @@ class Stage extends React.Component {
         if (drawableId === -1) return;
         const targetId = this.props.vm.getTargetIdForDrawableId(drawableId);
         if (targetId === null) return;
-        this.props.vm.setEditingTarget(targetId);
+        if (this.props.onRequestSelectTarget) {
+            this.props.onRequestSelectTarget(targetId);
+        } else {
+            this.props.vm.setEditingTarget(targetId);
+        }
     }
     onMouseMove (e) {
+        this.updateRect();
         const {x, y} = getEventXY(e);
         const mousePosition = [x - this.rect.left, y - this.rect.top];
 
@@ -245,6 +250,7 @@ class Stage extends React.Component {
         this.props.vm.postIOData('mouse', coordinates);
     }
     onMouseUp (e) {
+        this.updateRect();
         const {x, y} = getEventXY(e);
         const mousePosition = [x - this.rect.left, y - this.rect.top];
         this.cancelMouseDownTimeout();
@@ -469,6 +475,7 @@ class Stage extends React.Component {
 
 Stage.propTypes = {
     onHighQualityPenChanged: PropTypes.func,
+    onRequestSelectTarget: PropTypes.func,
     highQualityPen: PropTypes.bool,
     customStageSize: PropTypes.shape({
         width: PropTypes.number,

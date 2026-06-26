@@ -51,11 +51,6 @@ const messages = defineMessages({
         description: 'Appears when loading project assets from a project file on the user\'s computer',
         id: 'tw.loader.loadingAssets'
     },
-    madeByStudio: {
-        defaultMessage: 'Made by 0.2Studio',
-        description: 'Vertical copyright text',
-        id: 'tw.loader.madeByStudio'
-    },
     redefineExperience: {
         defaultMessage: 'Redefine the Designing Experience',
         description: 'Copyright slogan',
@@ -162,7 +157,7 @@ class LoaderComponent extends React.Component {
 
                     {/* Vertical Text */}
                     <div className={styles.verticalText}>
-                        <FormattedMessage {...messages.madeByStudio} />
+                        {'Made by 0.2Studio'}
                     </div>
 
                     {/* Progress Bar at bottom of background section */}

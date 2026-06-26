@@ -1,0 +1,92 @@
+[
+  {
+    "id": "tw.toolboxLayoutModal.title",
+    "description": "Title of toolbox layout customization modal",
+    "defaultMessage": "Customize Toolbox"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.newGroupName",
+    "description": "Default name for a custom toolbox group",
+    "defaultMessage": "Custom Group"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.importConfigLabel",
+    "description": "Accessible label for importing toolbox layout configuration",
+    "defaultMessage": "Import toolbox layout configuration"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.enable",
+    "description": "Toggle custom toolbox layout",
+    "defaultMessage": "Enable custom toolbox"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.importConfig",
+    "description": "Import toolbox layout configuration button",
+    "defaultMessage": "Import"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.exportConfig",
+    "description": "Export toolbox layout configuration button",
+    "defaultMessage": "Export"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.reset",
+    "description": "Reset custom toolbox layout",
+    "defaultMessage": "Reset"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.hint",
+    "description": "Help text for toolbox layout customization",
+    "defaultMessage": "Uncheck blocks to remove them from their default category, then add removed blocks to your own groups. Changes apply immediately."
+  },
+  {
+    "id": "tw.toolboxLayoutModal.defaultCategories",
+    "description": "Default toolbox categories panel title",
+    "defaultMessage": "Default Categories"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.customGroups",
+    "description": "Custom toolbox groups panel title",
+    "defaultMessage": "Custom Groups"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.addGroup",
+    "description": "Add custom toolbox group button",
+    "defaultMessage": "Add Group"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.editingGroup",
+    "description": "Label for the active custom toolbox group",
+    "defaultMessage": "Editing: {name}"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.deleteGroup",
+    "description": "Delete custom toolbox group button",
+    "defaultMessage": "Delete"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.addedBlocks",
+    "description": "Blocks already in selected custom group",
+    "defaultMessage": "Added blocks"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.noSelectedGroupBlocks",
+    "description": "Empty state for selected group blocks",
+    "defaultMessage": "No blocks in this group yet."
+  },
+  {
+    "id": "tw.toolboxLayoutModal.availableBlocks",
+    "description": "Blocks that can be added to selected custom group",
+    "defaultMessage": "Available blocks"
+  },
+  {
+    "id": "tw.toolboxLayoutModal.noAvailableBlocks",
+    "description": "Empty state for available blocks",
+    "defaultMessage": "No more blocks available."
+  },
+  {
+    "id": "tw.toolboxLayoutModal.noGroups",
+    "description": "No custom groups empty state",
+    "defaultMessage": "Create a group to start organizing blocks."
+  }
+]

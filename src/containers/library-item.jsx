@@ -171,8 +171,13 @@ class LibraryItem extends React.PureComponent {
                 docsURI={this.props.docsURI}
                 samples={this.props.samples}
                 favorite={this.props.favorite}
+                hideFavorite={this.props.hideFavorite}
                 onFavorite={this.handleFavorite}
+                actionLabel={this.props.actionLabel}
+                badges={this.props.badges}
                 showPlayButton={this.props.showPlayButton}
+                sourceLabel={this.props.sourceLabel}
+                sourceTone={this.props.sourceTone}
                 onBlur={this.handleBlur}
                 onClick={this.handleClick}
                 onFocus={this.handleFocus}
@@ -191,6 +196,17 @@ LibraryItem.propTypes = {
     intl: intlShape,
     bluetoothRequired: PropTypes.bool,
     collaborator: PropTypes.string,
+    actionLabel: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.node
+    ]),
+    badges: PropTypes.arrayOf(PropTypes.shape({
+        key: PropTypes.string,
+        label: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.node
+        ])
+    })),
     description: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.node
@@ -229,12 +245,18 @@ LibraryItem.propTypes = {
         text: PropTypes.string
     })),
     favorite: PropTypes.bool,
+    hideFavorite: PropTypes.bool,
     onFavorite: PropTypes.func,
     onMouseEnter: PropTypes.func.isRequired,
     onMouseLeave: PropTypes.func.isRequired,
     onSelect: PropTypes.func.isRequired,
     onSelectionToggle: PropTypes.func,
-    showPlayButton: PropTypes.bool
+    showPlayButton: PropTypes.bool,
+    sourceLabel: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.node
+    ]),
+    sourceTone: PropTypes.string
 };
 
 export default injectIntl(LibraryItem);

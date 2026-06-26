@@ -25,11 +25,6 @@
     "defaultMessage": "Loading assets ({complete}/{total}) …"
   },
   {
-    "id": "tw.loader.madeByStudio",
-    "description": "Vertical copyright text",
-    "defaultMessage": "Made by 0.2Studio"
-  },
-  {
     "id": "tw.loader.redefineExperience",
     "description": "Copyright slogan",
     "defaultMessage": "Redefine the Designing Experience"
