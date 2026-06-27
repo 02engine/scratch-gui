@@ -211,7 +211,7 @@ const SOURCE_NAV_ORDER = [
 ];
 
 const FAVORITES_STORAGE_KEY = 'tw:library-favorites:extensionLibrary';
-const CCW_EXTENSION_API_BASE = 'https://bfs-web.ccw.site/extensions';
+const CCW_EXTENSION_API_BASE = 'https://ccwbfs-proxy.netlify.app/extensions';
 
 const CCW_METADATA_CACHE = {};
 

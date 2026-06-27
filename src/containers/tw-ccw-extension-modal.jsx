@@ -11,7 +11,7 @@ import {
     setSelectedExtensions
 } from '../reducers/modals';
 
-const CCW_EXTENSION_METADATA_BASE = 'https://bfs-web.ccw.site/extensions/';
+const CCW_EXTENSION_METADATA_BASE = 'https://ccwbfs-proxy.netlify.app/extensions/';
 
 class CCWExtensionModal extends React.Component {
     constructor (props) {
