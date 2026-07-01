@@ -3,6 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import {intlShape, injectIntl} from 'react-intl';
+import JSZip from '@turbowarp/jszip';
 
 import {
     openSpriteLibrary,
@@ -18,7 +19,6 @@ import TargetPaneComponent from '../components/target-pane/target-pane.jsx';
 import {getSpriteLibrary} from '../lib/libraries/tw-async-libraries';
 import {handleFileUpload, spriteUpload} from '../lib/file-uploader.js';
 import sharedMessages from '../lib/shared-messages';
-import {emptySprite} from '../lib/empty-assets';
 import {highlightTarget} from '../reducers/targets';
 import {fetchSprite, fetchCode} from '../lib/backpack-api';
 import randomizeSpritePosition from '../lib/randomize-sprite-position';
@@ -27,6 +27,52 @@ import log from '../lib/log';
 import {placeInViewport} from '../lib/backpack/code-payload.js';
 import {getEventXY} from '../lib/touch-utils';
 
+const EMPTY_SPRITE_COSTUME_ASSET_ID = 'cd21514d0531fdffb22204e0ec5ed84a';
+const EMPTY_SPRITE_COSTUME_MD5 = `${EMPTY_SPRITE_COSTUME_ASSET_ID}.svg`;
+const EMPTY_SPRITE_COSTUME_SVG =
+    '<svg version="1.1" width="2" height="2" viewBox="-1 -1 2 2" ' +
+    'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n' +
+    '  <!-- Exported by Scratch - http://scratch.mit.edu/ -->\n' +
+    '</svg>\n';
+
+const createOfflinePaintSprite = (name, costumeName) => {
+    const zip = new JSZip();
+    zip.file('sprite.json', JSON.stringify({
+        isStage: false,
+        name,
+        variables: {},
+        lists: {},
+        broadcasts: {},
+        blocks: {},
+        comments: {},
+        currentCostume: 0,
+        costumes: [
+            {
+                assetId: EMPTY_SPRITE_COSTUME_ASSET_ID,
+                name: costumeName,
+                bitmapResolution: 1,
+                md5ext: EMPTY_SPRITE_COSTUME_MD5,
+                dataFormat: 'svg',
+                rotationCenterX: 0,
+                rotationCenterY: 0
+            }
+        ],
+        sounds: [],
+        volume: 100,
+        visible: true,
+        x: 0,
+        y: 0,
+        size: 100,
+        direction: 90,
+        draggable: false,
+        rotationStyle: 'all around'
+    }));
+    zip.file(EMPTY_SPRITE_COSTUME_MD5, EMPTY_SPRITE_COSTUME_SVG);
+    return zip.generateAsync({
+        type: 'uint8array',
+        compression: 'DEFLATE'
+    });
+};
 
 class TargetPane extends React.Component {
     constructor (props) {
@@ -133,37 +179,20 @@ class TargetPane extends React.Component {
             .then(this.handleActivateBlocksTab);
     }
     handlePaintSpriteClick () {
-
-
-function base64ToUint8Array(base64String) {
-　　　　const padding = '='.repeat((4 - base64String.length % 4) % 4);
-       const base64 = (base64String + padding)
-                    .replace(/\-/g, '+')
-                    .replace(/_/g, '/');
-
-       const rawData = window.atob(base64);
-       const outputArray = new Uint8Array(rawData.length);
-
-       for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-       }
-       return outputArray;
-}
-        /*
         const formatMessage = this.props.intl.formatMessage;
-        const emptyItem = emptySprite(
+        createOfflinePaintSprite(
             formatMessage(sharedMessages.sprite, {index: 1}),
-            formatMessage(sharedMessages.pop),
             formatMessage(sharedMessages.costume, {index: 1})
-        );
-        */
-        //this.props.vm.addSprite(JSON.stringify(emptyItem)).then(() => {
-        const empt="UEsDBAoAAAAIAPtDEFvpQGoKHgEAAMUBAAALAAAAc3ByaXRlLmpzb26NkcFKxDAQhl9F5lykbey67XVB8OpeFPEwadISTBtJ0rJrKXgVbz6AePPuOwnrWzjptog3b/NPvpl/ZjKAcluPtYSiQu1kBC02JODw8Xp4/kwggh6tQq6lg2IYI9DK+Tnk1qAo8VdrU97PcWmaRrbLS9lZS2pjnO9C+zgAU0zA7bCYfj+9f729BFOufIMPV9IZ3XllWiiSCAR6vDC2QU+s62vi0DnpLwVpxliOaZ4xZLxapZyvY5mdVVV2ngleSkFwIzK58/9gT4/NrfEYzDc0urTX09h/czeUG+8icKZrRViF4p5GDtskMeG9copuB4W3HR13BwVbRbCHIl1TlXpcOKGsLI+L5kFarGucCudvWXy3fh+ygFqfoA22MP4AUEsDBAoAAAAIAPtDEFtvxALBkgAAAMgAAAAkAAAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnbY5NDoIwFIT3nOL59v1BVxBgQeIJPIHShjYCJe2zrbcXwaWZzWTmS2aaEEfI87SEFg3RWguRUuLpwp0fxVlKKTYCD6TOk12e/8CyqiqxtwhR+2Dd0mLJS4RkFZkWJYLRdjS022h16l3ePOzCrgBoTozBNa/Ok1bweMNt8HcaDDD4DYYj4LMlrtVLAGNd0XwPdh9QSwECFAAKAAAACAD7QxBb6UBqCh4BAADFAQAACwAAAAAAAAAAAAAAAAAAAAAAc3ByaXRlLmpzb25QSwECFAAKAAAACAD7QxBbb8QCwZIAAADIAAAAJAAAAAAAAAAAAAAAAABHAQAAMzMzOWEyOTUzYTNiZjYyYmI4MGU1NGZmNTc1ZGJjZWQuc3ZnUEsFBgAAAAACAAIAiwAAABsCAAAAAA==";
-        this.props.vm.addSprite(base64ToUint8Array(empt)).then(() => {
-            setTimeout(() => { // Wait for targets update to propagate before tab switching
-                this.props.onActivateTab(COSTUMES_TAB_INDEX);
+        )
+            .then(sprite3Zip => this.props.vm.addSprite(sprite3Zip))
+            .then(() => {
+                setTimeout(() => { // Wait for targets update to propagate before tab switching
+                    this.props.onActivateTab(COSTUMES_TAB_INDEX);
+                });
+            })
+            .catch(err => {
+                log.error(err);
             });
-        });
     }
     handleActivateBlocksTab () {
         this.props.onActivateTab(BLOCKS_TAB_INDEX);

@@ -262,7 +262,7 @@ const spriteUpload = function (fileData, fileType, spriteName, vm, handleSprite,
             const newSprite = {
                 name: spriteName,
                 isStage: false,
-                x: 0, // x/y will be randomized below
+                x: 0,
                 y: 0,
                 visible: true,
                 size: 100,
