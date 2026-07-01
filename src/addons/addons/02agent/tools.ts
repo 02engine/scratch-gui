@@ -7,6 +7,7 @@ import {
   repairListVariableValues,
   replaceBlocksRangeByUCF,
   replaceScriptByUCF,
+  replaceTargetScriptsByUCFSections,
 } from "./workspaceRangeTools";
 import { setGetBlockInfoTool, setRuntime } from "./converter";
 import scratchBlocksCatalog from "./scratch_blocks.json";
@@ -1883,6 +1884,103 @@ export class AITools {
     return { errors, warnings };
   }
 
+  private _getScriptStructureFingerprint(section: VirtualScriptSection) {
+    const blocks = ucfToScratch(normalizeModelUCF(section.code), {
+      runtime: this.vm.runtime,
+      includeComments: true,
+    });
+    const opcodeCounts: Record<string, number> = {};
+    const definedProcedures: string[] = [];
+    const calledProcedures: string[] = [];
+
+    blocks.forEach((block: any) => {
+      const opcode = String(block?.opcode || "");
+      opcodeCounts[opcode] = (opcodeCounts[opcode] || 0) + 1;
+      const proccode = block?.mutation?.proccode;
+      if (opcode === "procedures_prototype" && proccode) {
+        definedProcedures.push(normalizeProcedureSignature(proccode));
+      } else if (opcode === "procedures_call" && proccode) {
+        calledProcedures.push(normalizeProcedureSignature(proccode));
+      }
+    });
+
+    return {
+      blockCount: blocks.length,
+      topOpcodes: blocks.filter((block: any) => block?.topLevel).map((block: any) => block.opcode).sort(),
+      opcodeCounts,
+      definedProcedures: definedProcedures.sort(),
+      calledProcedures: calledProcedures.sort(),
+    };
+  }
+
+  private _verifyTargetSyncResult(entry: VirtualFileEntry, expectedContent: string) {
+    const currentEntry = this._getVirtualFile(entry.path);
+    if (!currentEntry || currentEntry.kind !== "target") {
+      return {
+        success: false,
+        error: `Could not read back virtual target file after sync: ${entry.path}`,
+      };
+    }
+
+    const expectedSections = extractVirtualScriptSections(expectedContent);
+    const actualSections = extractVirtualScriptSections(currentEntry.content);
+    const expectedIds = expectedSections.map((section) => section.scriptId);
+    const actualIds = actualSections.map((section) => section.scriptId);
+    const missingScriptIds = expectedIds.filter((scriptId) => !actualIds.includes(scriptId));
+    const extraScriptIds = actualIds.filter((scriptId) => !expectedIds.includes(scriptId));
+
+    if (missingScriptIds.length || extraScriptIds.length || expectedSections.length !== actualSections.length) {
+      return {
+        success: false,
+        error: "VM readback script set does not match patched virtual file.",
+        expectedScriptIds: expectedIds,
+        actualScriptIds: actualIds,
+        missingScriptIds,
+        extraScriptIds,
+      };
+    }
+
+    const actualById = new Map(actualSections.map((section) => [section.scriptId, section]));
+    const mismatches: any[] = [];
+
+    expectedSections.forEach((expectedSection) => {
+      const actualSection = actualById.get(expectedSection.scriptId);
+      if (!actualSection) return;
+      if (expectedSection.normalizedCode === actualSection.normalizedCode) return;
+
+      try {
+        const expectedFingerprint = this._getScriptStructureFingerprint(expectedSection);
+        const actualFingerprint = this._getScriptStructureFingerprint(actualSection);
+        if (JSON.stringify(expectedFingerprint) !== JSON.stringify(actualFingerprint)) {
+          mismatches.push({
+            scriptId: expectedSection.scriptId,
+            expected: expectedFingerprint,
+            actual: actualFingerprint,
+          });
+        }
+      } catch (error) {
+        mismatches.push({
+          scriptId: expectedSection.scriptId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    });
+
+    if (mismatches.length) {
+      return {
+        success: false,
+        error: "VM readback script structure does not match patched virtual file.",
+        mismatches,
+      };
+    }
+
+    return {
+      success: true,
+      scriptCount: actualSections.length,
+      scriptIds: actualIds,
+    };
+  }
+
   private _validateVirtualTargetFile(entry: VirtualFileEntry, content: string) {
     const sections = extractVirtualScriptSections(content);
     const diagnostics: any = {
@@ -2133,6 +2231,38 @@ export class AITools {
       } else if (oldSection.normalizedCode !== newSection.normalizedCode) {
         operations.push({ type: "replace", oldSection, section: newSection });
       }
+    }
+
+    if (operations.length > 0) {
+      const result: any = await replaceTargetScriptsByUCFSections(
+        this.vm,
+        window.Blockly.getMainWorkspace() as Blockly.WorkspaceSvg,
+        entry.targetId || "",
+        newSections.map((section) => ({ scriptId: section.scriptId, code: section.code })),
+        {
+          includeComments: true,
+        },
+      );
+      if (!result.success) {
+        throw new Error(this._formatSyncFailure("Failed to sync target", entry.path, result));
+      }
+
+      const verification = this._verifyTargetSyncResult(entry, newContent);
+      if (!verification.success) {
+        throw new Error(`Target sync verification failed for ${entry.path}: ${verification.error} ${JSON.stringify(verification).slice(0, 1200)}`);
+      }
+
+      return {
+        path: entry.path,
+        targetId: entry.targetId,
+        operationCount: operations.length,
+        operations: operations.map((operation) => ({
+          type: operation.type,
+          scriptId: operation.section?.scriptId || operation.oldSection?.scriptId,
+          result,
+        })),
+        verification,
+      };
     }
 
     const results = [];
@@ -4834,6 +4964,12 @@ export class AITools {
     this._moveMenuInputsToFields(result);
     this._dedupeFieldAndInputNames(result);
     this._normalizeArgumentReporterInfo(resolvedOpcode, result);
+    if (!result.found) {
+      const triedText = resolvedOpcode !== requestedOpcode ? ` (also tried "${resolvedOpcode}")` : "";
+      throw new Error(
+        `Unknown Scratch block opcode "${requestedOpcode}"${triedText}. Use searchBlocks or getBlockHelp to find the exact DSL call/opcode before applying a patch.`,
+      );
+    }
 
     if (!result.found) {
       if (resolvedOpcode !== requestedOpcode) {

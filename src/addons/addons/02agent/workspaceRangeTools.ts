@@ -896,6 +896,100 @@ export const replaceScriptByUCF = async (
   };
 };
 
+export const replaceTargetScriptsByUCFSections = async (
+  vm: PluginContext["vm"],
+  _workspace: Blockly.WorkspaceSvg,
+  targetId: string,
+  sections: Array<{ scriptId: string; code: string }>,
+  options: { includeComments?: boolean } = {},
+) => {
+  const target = targetId ? vm.runtime.getTargetById(targetId) : vm.editingTarget;
+  if (!target) {
+    return buildFailureResult("Target not found", "resolve_target", { targetId });
+  }
+
+  const workspace = _workspace || (window.Blockly.getMainWorkspace() as Blockly.WorkspaceSvg);
+  const existingTopLevelIds = Object.values(target.blocks?._blocks || {})
+    .filter((block: any) => block?.topLevel && !block?.parent)
+    .map((block: any) => block.id);
+  const seenTopLevelIds = new Set<string>();
+  const parsedScripts: Array<{ scriptId: string; blocksState: any[]; topLevelBlockId: string }> = [];
+
+  try {
+    for (const section of sections) {
+      const blocksState = ucfToScratch(normalizeModelUCF(section.code), {
+        runtime: vm.runtime,
+        includeComments: options.includeComments === true,
+      });
+      if (!blocksState.length) {
+        return buildFailureResult("Script UCF produced no blocks", "parse_target_script", {
+          targetId: target.id,
+          scriptId: section.scriptId,
+        });
+      }
+
+      const topLevelBlocks = blocksState.filter((blockState) => blockState.topLevel);
+      if (topLevelBlocks.length !== 1) {
+        return buildFailureResult("Each script section must produce exactly one top-level stack", "validate_target_script_topology", {
+          targetId: target.id,
+          scriptId: section.scriptId,
+          topLevelBlockCount: topLevelBlocks.length,
+        });
+      }
+
+      const topLevelBlock = topLevelBlocks[0];
+      if (section.scriptId && topLevelBlock.id !== section.scriptId) {
+        const oldTopLevelId = topLevelBlock.id;
+        if (seenTopLevelIds.has(section.scriptId)) {
+          return buildFailureResult("Duplicate script id in target file", "validate_target_script_ids", {
+            targetId: target.id,
+            scriptId: section.scriptId,
+          });
+        }
+        topLevelBlock.id = section.scriptId;
+        blocksState.forEach((blockState) => {
+          if (blockState.next === oldTopLevelId) blockState.next = section.scriptId;
+          if (blockState.parent === oldTopLevelId) blockState.parent = section.scriptId;
+          Object.values(blockState.inputs || {}).forEach((input: any) => {
+            if (input.block === oldTopLevelId) input.block = section.scriptId;
+            if (input.shadow === oldTopLevelId) input.shadow = section.scriptId;
+          });
+        });
+      }
+
+      seenTopLevelIds.add(topLevelBlock.id);
+      resolveVariableReferences(vm, workspace, blocksState);
+      parsedScripts.push({ scriptId: section.scriptId, blocksState, topLevelBlockId: topLevelBlock.id });
+    }
+
+    setBlocklyEventGroup(true);
+    const removed = existingTopLevelIds.map((topBlockId) => removeRuntimeScriptBlocks(target, topBlockId));
+    const inserted = parsedScripts.map((script) => insertRuntimeBlocks(target, script.blocksState));
+    repairListVariableValues(vm, target.id);
+    const refreshError = await refreshWorkspaceAfterRuntimeWrite(vm, target);
+
+    return {
+      success: true,
+      syncMode: "vm-direct-target",
+      targetId: target.id,
+      scriptCount: parsedScripts.length,
+      removedScriptIds: existingTopLevelIds,
+      insertedScriptIds: parsedScripts.map((script) => script.topLevelBlockId),
+      removedBlockCount: removed.reduce((sum, item) => sum + item.removedBlockIds.length, 0),
+      insertedBlockCount: inserted.reduce((sum, item) => sum + item.insertedBlockIds.length, 0),
+      commentCount: inserted.reduce((sum, item) => sum + item.insertedCommentIds.length, 0),
+      workspaceRefreshWarning: refreshError || undefined,
+    };
+  } catch (error) {
+    return buildFailureResult(error instanceof Error ? error.message : "Failed to replace target scripts", "exception", {
+      targetId: target.id,
+      parsedScriptCount: parsedScripts.length,
+    });
+  } finally {
+    setBlocklyEventGroup(false);
+  }
+};
+
 export const insertScriptByUCF = async (
   vm: PluginContext["vm"],
   _workspace: Blockly.WorkspaceSvg,
