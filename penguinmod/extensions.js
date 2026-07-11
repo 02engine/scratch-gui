@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-07-01T14:59:21.728Z
+// Synced at: 2026-07-11T04:57:35.316Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -142,8 +142,8 @@ export default [
     {
         name: "Text To Speech: Redone",
         description: "A better alternitive to the base text to speech extension. Powered by the TTStool API",
-        code: "PuzzlingGGG/ttsr.js",
-        banner: "PuzzlingGGG/TTSR.avif",
+        code: "PuzzlingGGG/ttsrV2.js",
+        banner: "PuzzlingGGG/tts.avif",
         creator: "PuzzlingGGG",
         isGitHub: true,
     },
@@ -276,7 +276,7 @@ export default [
         banner: "Embin/embintranslation.avif",
         creator: "embinmc",
         isGitHub: true, 
-        tags: ["data", "utility", "text", "strings"],
+        tags: ["data", "utility", "text"],
         creatorAlias: "Embin",
     },
     {
@@ -286,7 +286,7 @@ export default [
         banner: "DogeisCut/YetAnotherStringExtension.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-        tags: ["strings", "builder", "small", "text", "utility"]
+        tags: ["builder", "small", "text", "utility"]
     },
     {
         name: "Regular Expressions",
@@ -295,7 +295,7 @@ export default [
         banner: "DogeisCut/dogeiscutRegularExpressions.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-        tags: ["customtype", "strings", "regex", "text", "utility"]
+        tags: ["customtype", "regex", "text", "utility"]
     },
     {
         name: "Sets",
@@ -432,7 +432,7 @@ export default [
         banner: "DogeisCut/BeepBoxPlayer.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-        tags: ["api", "music", "sounds", "ultrabox", "jummbox", "beepbox"]
+        tags: ["api", "music", "sounds"]
     },
     {
         name: "Update File (Direct Access)",
@@ -674,6 +674,16 @@ export default [
         isGitHub: true,
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
+    },
+
+        {
+        name: "Black Mold",
+        description: "mmmmm black mold",
+        code: "electricfuzzball_pm/blackMold.js",
+        banner: "electricfuzzball_pm/blackMold.svg",
+        creator: "FloppyDisk-OSC",
+        isGitHub: true,
+        creatorAlias: "ElectricFuzzball_PM"
     },
 ];
 
