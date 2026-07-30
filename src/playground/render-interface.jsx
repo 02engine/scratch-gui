@@ -14,67 +14,64 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import React from 'react';
-import {connect} from 'react-redux';
-import {compose} from 'redux';
-import {FormattedMessage, defineMessages, injectIntl, intlShape} from 'react-intl';
-import {getIsLoading} from '../reducers/project-state.js';
-import AppStateHOC from '../lib/app-state-hoc.jsx';
-import ErrorBoundaryHOC from '../lib/error-boundary-hoc.jsx';
-import TWProjectMetaFetcherHOC from '../lib/tw-project-meta-fetcher-hoc.jsx';
-import TWStateManagerHOC from '../lib/tw-state-manager-hoc.jsx';
-import SBFileUploaderHOC from '../lib/sb-file-uploader-hoc.jsx';
-import TWPackagerIntegrationHOC from '../lib/tw-packager-integration-hoc.jsx';
-import SettingsStore from '../addons/settings-store-singleton';
-import '../lib/tw-fix-history-api';
-import GUI from './render-gui.jsx';
-import MenuBar from '../components/menu-bar/menu-bar.jsx';
-import ProjectInput from '../components/tw-project-input/project-input.jsx';
-import FeaturedProjects from '../components/tw-featured-projects/featured-projects.jsx';
-import Description from '../components/tw-description/description.jsx';
-import BrowserModal from '../components/browser-modal/browser-modal.jsx';
-import CloudVariableBadge from '../containers/tw-cloud-variable-badge.jsx';
-import {isBrowserSupported} from '../lib/tw-environment-support-prober';
-import AddonChannels from '../addons/channels';
-import {loadServiceWorker} from './load-service-worker';
-import runAddons from '../addons/entry';
-import InvalidEmbed from '../components/tw-invalid-embed/invalid-embed.jsx';
-import {APP_NAME} from '../lib/brand.js';
-
-import styles from './interface.css';
+import classNames from "classnames";
+import PropTypes from "prop-types";
+import React from "react";
+import { connect } from "react-redux";
+import { compose } from "redux";
+import { FormattedMessage, defineMessages, injectIntl, intlShape } from "react-intl";
+import { getIsLoading } from "../reducers/project-state.js";
+import AppStateHOC from "../lib/app-state-hoc.jsx";
+import ErrorBoundaryHOC from "../lib/error-boundary-hoc.jsx";
+import TWProjectMetaFetcherHOC from "../lib/tw-project-meta-fetcher-hoc.jsx";
+import TWStateManagerHOC from "../lib/tw-state-manager-hoc.jsx";
+import SBFileUploaderHOC from "../lib/sb-file-uploader-hoc.jsx";
+import TWPackagerIntegrationHOC from "../lib/tw-packager-integration-hoc.jsx";
+import SettingsStore from "../addons/settings-store-singleton";
+import "../lib/tw-fix-history-api";
+import GUI from "./render-gui.jsx";
+import MenuBar from "../components/menu-bar/menu-bar.jsx";
+import ProjectInput from "../components/tw-project-input/project-input.jsx";
+import FeaturedProjects from "../components/tw-featured-projects/featured-projects.jsx";
+import Description from "../components/tw-description/description.jsx";
+import BrowserModal from "../components/browser-modal/browser-modal.jsx";
+import CloudVariableBadge from "../containers/tw-cloud-variable-badge.jsx";
+import { isBrowserSupported } from "../lib/tw-environment-support-prober";
+import AddonChannels from "../addons/channels";
+import { loadServiceWorker } from "./load-service-worker";
+import runAddons from "../addons/entry";
+import InvalidEmbed from "../components/tw-invalid-embed/invalid-embed.jsx";
+import { APP_NAME } from "../lib/brand.js";
+import { createPortal } from "react-dom";
+import styles from "./interface.css";
 
 const isInvalidEmbed = window.parent !== window;
 
-const handleClickAddonSettings = addonId => {
+const handleClickAddonSettings = (addonId) => {
     // addonId might be a string of the addon to focus on, undefined, or an event (treat like undefined)
-    const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
-    const url = `${process.env.ROOT}${path}${typeof addonId === 'string' ? `#${addonId}` : ''}`;
+    const path = process.env.ROUTING_STYLE === "wildcard" ? "addons" : "addons.html";
+    const url = `${process.env.ROOT}${path}${typeof addonId === "string" ? `#${addonId}` : ""}`;
     window.open(url);
 };
 
 const messages = defineMessages({
     defaultTitle: {
-        defaultMessage: 'Run Scratch projects faster',
-        description: 'Title of homepage',
-        id: 'tw.guiDefaultTitle'
-    }
+        defaultMessage: "Run Scratch projects faster",
+        description: "Title of homepage",
+        id: "tw.guiDefaultTitle",
+    },
 });
 
-const WrappedMenuBar = compose(
-    SBFileUploaderHOC,
-    TWPackagerIntegrationHOC
-)(MenuBar);
+const WrappedMenuBar = compose(SBFileUploaderHOC, TWPackagerIntegrationHOC)(MenuBar);
 
 if (AddonChannels.reloadChannel) {
-    AddonChannels.reloadChannel.addEventListener('message', () => {
+    AddonChannels.reloadChannel.addEventListener("message", () => {
         location.reload();
     });
 }
 
 if (AddonChannels.changeChannel) {
-    AddonChannels.changeChannel.addEventListener('message', e => {
+    AddonChannels.changeChannel.addEventListener("message", (e) => {
         SettingsStore.setStoreWithVersionCheck(e.data);
     });
 }
@@ -83,10 +80,10 @@ runAddons();
 
 const handleOpenInEditorFooter = (event) => {
     event.preventDefault();
-    const projectUrl = new URLSearchParams(location.search).get('project_url');
+    const projectUrl = new URLSearchParams(location.search).get("project_url");
     if (projectUrl) {
         const editorUrl = `${process.env.ROOT}editor?project_url=${encodeURIComponent(projectUrl)}`;
-        window.open(editorUrl, '_blank', 'noopener,noreferrer');
+        window.open(editorUrl, "_blank", "noopener,noreferrer");
     }
 };
 
@@ -100,7 +97,7 @@ const Footer = () => (
                     description="Disclaimer that 02Engine is not connected to Scratch"
                     id="tw.footer.disclaimer"
                     values={{
-                        APP_NAME
+                        APP_NAME,
                     }}
                 />
             </div>
@@ -113,19 +110,15 @@ const Footer = () => (
                     id="tw.footer.scratchDisclaimer"
                     values={{
                         scratchDotOrg: (
-                            <a
-                                href="https://scratch.org/"
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                {'https://scratch.org/'}
+                            <a href="https://scratch.org/" target="_blank" rel="noreferrer">
+                                {"https://scratch.org/"}
                             </a>
-                        )
+                        ),
                     }}
                 />
             </div>
 
-                <div className={styles.footerColumns}>
+            <div className={styles.footerColumns}>
                 <div className={styles.footerSection}>
                     <a href="credits.html">
                         <FormattedMessage
@@ -138,11 +131,11 @@ const Footer = () => (
                 <div className={styles.footerSection}>
                     <a href="https://02engine.02studio.xyz/">
                         {/* Do not translate */}
-                        {'02Engine Desktop'}
+                        {"02Engine Desktop"}
                     </a>
                     <a href="https://packager.02engine.org/">
                         {/* Do not translate */}
-                        {'02Engine Packager'}
+                        {"02Engine Packager"}
                     </a>
                     <a href="https://docs.02engine.org/embedding">
                         <FormattedMessage
@@ -165,9 +158,9 @@ const Footer = () => (
                             id="tw.footer.documentation"
                         />
                     </a>
-                    {isInvalidEmbed && new URLSearchParams(location.search).has('project_url') ? (
+                    {isInvalidEmbed && new URLSearchParams(location.search).has("project_url") ? (
                         <a
-                            href={`${process.env.ROOT}editor?project_url=${encodeURIComponent(new URLSearchParams(location.search).get('project_url'))}`}
+                            href={`${process.env.ROOT}editor?project_url=${encodeURIComponent(new URLSearchParams(location.search).get("project_url"))}`}
                             onClick={handleOpenInEditorFooter}
                         >
                             <FormattedMessage
@@ -207,32 +200,32 @@ const Footer = () => (
 );
 
 class Interface extends React.Component {
-    constructor (props) {
+    constructor(props) {
         super(props);
         this.handleUpdateProjectTitle = this.handleUpdateProjectTitle.bind(this);
         this.handleOpenInEditor = this.handleOpenInEditor.bind(this);
     }
-    componentDidUpdate (prevProps) {
+    componentDidUpdate(prevProps) {
         if (prevProps.isLoading && !this.props.isLoading) {
             loadServiceWorker();
         }
     }
-    handleUpdateProjectTitle (title, isDefault) {
+    handleUpdateProjectTitle(title, isDefault) {
         if (isDefault || !title) {
             document.title = `${APP_NAME} - ${this.props.intl.formatMessage(messages.defaultTitle)}`;
         } else {
             document.title = `${title} - ${APP_NAME}`;
         }
     }
-    handleOpenInEditor (event) {
+    handleOpenInEditor(event) {
         event.preventDefault();
-        const projectUrl = new URLSearchParams(location.search).get('project_url');
+        const projectUrl = new URLSearchParams(location.search).get("project_url");
         if (projectUrl) {
             const editorUrl = `${process.env.ROOT}editor?project_url=${encodeURIComponent(projectUrl)}`;
-            window.open(editorUrl, '_blank', 'noopener,noreferrer');
+            window.open(editorUrl, "_blank", "noopener,noreferrer");
         }
     }
-    render () {
+    render() {
         if (isInvalidEmbed) {
             return <InvalidEmbed />;
         }
@@ -256,23 +249,21 @@ class Interface extends React.Component {
             <div
                 className={classNames(styles.container, {
                     [styles.playerOnly]: isHomepage,
-                    [styles.editor]: isEditor
+                    [styles.editor]: isEditor,
                 })}
-                dir={isRtl ? 'rtl' : 'ltr'}
+                dir={isRtl ? "rtl" : "ltr"}
             >
-                    {/* Top-level 'Open in Editor' link for embedded projects with project_url */}
-                    {isInvalidEmbed && new URLSearchParams(location.search).has('project_url') ? (
-                        <div className={styles.openInEditorTop}>
-                            <a
-                                href={`${process.env.ROOT}editor?project_url=${encodeURIComponent(new URLSearchParams(location.search).get('project_url'))}`}
-                                onClick={this.handleOpenInEditor}
-                            >
-                                <FormattedMessage
-                                    id="tw.footer.openInEditor"
-                                />
-                            </a>
-                        </div>
-                    ) : null}
+                {/* Top-level 'Open in Editor' link for embedded projects with project_url */}
+                {isInvalidEmbed && new URLSearchParams(location.search).has("project_url") ? (
+                    <div className={styles.openInEditorTop}>
+                        <a
+                            href={`${process.env.ROOT}editor?project_url=${encodeURIComponent(new URLSearchParams(location.search).get("project_url"))}`}
+                            onClick={this.handleOpenInEditor}
+                        >
+                            <FormattedMessage id="tw.footer.openInEditor" />
+                        </a>
+                    </div>
+                ) : null}
                 {isHomepage ? (
                     <div className={styles.menu}>
                         <WrappedMenuBar
@@ -283,14 +274,17 @@ class Interface extends React.Component {
                             onClickAddonSettings={handleClickAddonSettings}
                         />
                     </div>
-                    
                 ) : null}
                 <div
                     className={styles.center}
-                    style={isPlayerOnly ? ({
-                        // + 2 accounts for 1px border on each side of the stage
-                        width: `${Math.max(480, props.customStageSize.width) + 2}px`
-                    }) : null}
+                    style={
+                        isPlayerOnly
+                            ? {
+                                  // + 2 accounts for 1px border on each side of the stage
+                                  width: `${Math.max(480, props.customStageSize.width) + 2}px`,
+                              }
+                            : null
+                    }
                 >
                     <GUI
                         onClickAddonSettings={handleClickAddonSettings}
@@ -301,16 +295,13 @@ class Interface extends React.Component {
                     />
                     {isHomepage ? (
                         <React.Fragment>
-                            {isBrowserSupported() ? null : (
-                                <BrowserModal isRtl={isRtl} />
-                            )}
+                            {isBrowserSupported() ? null : <BrowserModal isRtl={isRtl} />}
                             <div className={styles.section}>
                                 <ProjectInput />
                             </div>
-                            {(
-                                // eslint-disable-next-line max-len
-                                description.instructions === 'unshared' || description.credits === 'unshared'
-                            ) && (
+                            {// eslint-disable-next-line max-len
+                            (description.instructions === "unshared" ||
+                                description.credits === "unshared") && (
                                 <div className={classNames(styles.infobox, styles.unsharedUpdate)}>
                                     <p>
                                         <FormattedMessage
@@ -331,9 +322,11 @@ class Interface extends React.Component {
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                     >
-                                                        {'https://docs.02engine.org/unshared-projects'}
+                                                        {
+                                                            "https://docs.02engine.org/unshared-projects"
+                                                        }
                                                     </a>
-                                                )
+                                                ),
                                             }}
                                         />
                                     </p>
@@ -355,7 +348,7 @@ class Interface extends React.Component {
                                     </p>
                                 </div>
                             )}
-                            {hasCloudVariables && projectId !== '0' && (
+                            {hasCloudVariables && projectId !== "0" && (
                                 <div className={styles.section}>
                                     <CloudVariableBadge />
                                 </div>
@@ -399,20 +392,20 @@ Interface.propTypes = {
     hasCloudVariables: PropTypes.bool,
     customStageSize: PropTypes.shape({
         width: PropTypes.number,
-        height: PropTypes.number
+        height: PropTypes.number,
     }),
     description: PropTypes.shape({
         credits: PropTypes.string,
-        instructions: PropTypes.string
+        instructions: PropTypes.string,
     }),
     isFullScreen: PropTypes.bool,
     isLoading: PropTypes.bool,
     isPlayerOnly: PropTypes.bool,
     isRtl: PropTypes.bool,
-    projectId: PropTypes.string
+    projectId: PropTypes.string,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
     hasCloudVariables: state.scratchGui.tw.hasCloudVariables,
     customStageSize: state.scratchGui.customStageSize,
     description: state.scratchGui.tw.description,
@@ -420,22 +413,19 @@ const mapStateToProps = state => ({
     isLoading: getIsLoading(state.scratchGui.projectState.loadingState),
     isPlayerOnly: state.scratchGui.mode.isPlayerOnly,
     isRtl: state.locales.isRtl,
-    projectId: state.scratchGui.projectState.projectId
+    projectId: state.scratchGui.projectState.projectId,
 });
 
 const mapDispatchToProps = () => ({});
 
-const ConnectedInterface = injectIntl(connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(Interface));
+const ConnectedInterface = injectIntl(connect(mapStateToProps, mapDispatchToProps)(Interface));
 
 const WrappedInterface = compose(
     AppStateHOC,
-    ErrorBoundaryHOC('TW Interface'),
+    ErrorBoundaryHOC("TW Interface"),
     TWProjectMetaFetcherHOC,
     TWStateManagerHOC,
-    TWPackagerIntegrationHOC
+    TWPackagerIntegrationHOC,
 )(ConnectedInterface);
 
 export default WrappedInterface;

@@ -1,200 +1,200 @@
-import bindAll from 'lodash.bindall';
-import PropTypes from 'prop-types';
-import React from 'react';
-import VM from 'scratch-vm';
-import {defineMessages, injectIntl, intlShape, FormattedMessage} from 'react-intl';
+import bindAll from "lodash.bindall";
+import PropTypes from "prop-types";
+import React from "react";
+import VM from "scratch-vm";
+import { defineMessages, injectIntl, intlShape, FormattedMessage } from "react-intl";
 
 import extensionLibraryContent, {
     galleryError,
     galleryLoading,
-    galleryMore
-} from '../lib/libraries/extensions/index.jsx';
-import LibraryComponent from '../components/library/library.jsx';
-import libraryStyles from '../components/library/library.css';
-import {APP_NAME} from '../lib/brand.js';
-import log from '../lib/log';
+    galleryMore,
+} from "../lib/libraries/extensions/index.jsx";
+import LibraryComponent from "../components/library/library.jsx";
+import libraryStyles from "../components/library/library.css";
+import { APP_NAME } from "../lib/brand.js";
+import log from "../lib/log";
 
 const messages = defineMessages({
     extensionTitle: {
-        defaultMessage: 'Choose an Extension',
-        description: 'Heading for the extension library',
-        id: 'gui.extensionLibrary.chooseAnExtension'
+        defaultMessage: "Choose an Extension",
+        description: "Heading for the extension library",
+        id: "gui.extensionLibrary.chooseAnExtension",
     },
     batchImport: {
-        defaultMessage: 'Batch import {count} extensions',
-        description: 'Button label for importing multiple selected extensions',
-        id: 'tw.extensionLibrary.batchImport'
+        defaultMessage: "Batch import {count} extensions",
+        description: "Button label for importing multiple selected extensions",
+        id: "tw.extensionLibrary.batchImport",
     },
     clearSelection: {
-        defaultMessage: 'Clear selection',
-        description: 'Button label for clearing selected extensions from the batch queue',
-        id: 'tw.extensionLibrary.clearSelection'
+        defaultMessage: "Clear selection",
+        description: "Button label for clearing selected extensions from the batch queue",
+        id: "tw.extensionLibrary.clearSelection",
     },
     sourcesTitle: {
-        defaultMessage: 'Sources',
-        description: 'Sidebar title in the extension library',
-        id: 'tw.extensionLibrary.sourcesTitle'
+        defaultMessage: "Sources",
+        description: "Sidebar title in the extension library",
+        id: "tw.extensionLibrary.sourcesTitle",
     },
     allSources: {
-        defaultMessage: 'All',
-        description: 'Label for the all-sources filter in the extension library',
-        id: 'tw.extensionLibrary.source.all'
+        defaultMessage: "All",
+        description: "Label for the all-sources filter in the extension library",
+        id: "tw.extensionLibrary.source.all",
     },
     sourceScratch: {
-        defaultMessage: 'Official Scratch',
-        description: 'Label for the Scratch source filter in the extension library',
-        id: 'tw.extensionLibrary.source.scratch'
+        defaultMessage: "Official Scratch",
+        description: "Label for the Scratch source filter in the extension library",
+        id: "tw.extensionLibrary.source.scratch",
     },
     source02Engine: {
-        defaultMessage: '02Engine',
-        description: 'Label for the 02Engine source filter in the extension library',
-        id: 'tw.extensionLibrary.source.02engine'
+        defaultMessage: "02Engine",
+        description: "Label for the 02Engine source filter in the extension library",
+        id: "tw.extensionLibrary.source.02engine",
     },
     sourceTurboWarp: {
-        defaultMessage: 'TurboWarp',
-        description: 'Label for the TurboWarp source filter in the extension library',
-        id: 'tw.extensionLibrary.source.tw'
+        defaultMessage: "TurboWarp",
+        description: "Label for the TurboWarp source filter in the extension library",
+        id: "tw.extensionLibrary.source.tw",
     },
     sourceAstraEditor: {
-        defaultMessage: 'AstraEditor',
-        description: 'Label for the AstraEditor source filter in the extension library',
-        id: 'tw.extensionLibrary.source.astra'
+        defaultMessage: "AstraEditor",
+        description: "Label for the AstraEditor source filter in the extension library",
+        id: "tw.extensionLibrary.source.astra",
     },
     sourcePenguinMod: {
-        defaultMessage: 'PenguinMod',
-        description: 'Label for the PenguinMod source filter in the extension library',
-        id: 'tw.extensionLibrary.source.pm'
+        defaultMessage: "PenguinMod",
+        description: "Label for the PenguinMod source filter in the extension library",
+        id: "tw.extensionLibrary.source.pm",
     },
     sourceMist: {
-        defaultMessage: 'Mist',
-        description: 'Label for the Mist source filter in the extension library',
-        id: 'tw.extensionLibrary.source.mist'
+        defaultMessage: "Mist",
+        description: "Label for the Mist source filter in the extension library",
+        id: "tw.extensionLibrary.source.mist",
     },
     sourceSharkPool: {
-        defaultMessage: 'SharkPool',
-        description: 'Label for the SharkPool source filter in the extension library',
-        id: 'tw.extensionLibrary.source.sharkpool'
+        defaultMessage: "SharkPool",
+        description: "Label for the SharkPool source filter in the extension library",
+        id: "tw.extensionLibrary.source.sharkpool",
     },
     sourceCCW: {
-        defaultMessage: 'CCW',
-        description: 'Label for the CCW source filter in the extension library',
-        id: 'tw.extensionLibrary.source.ccw'
+        defaultMessage: "CCW",
+        description: "Label for the CCW source filter in the extension library",
+        id: "tw.extensionLibrary.source.ccw",
     },
     sourceOther: {
-        defaultMessage: 'Other',
-        description: 'Label for the Other source filter in the extension library',
-        id: 'tw.extensionLibrary.source.other'
+        defaultMessage: "Other",
+        description: "Label for the Other source filter in the extension library",
+        id: "tw.extensionLibrary.source.other",
     },
     sourceCustom: {
-        defaultMessage: 'Custom',
-        description: 'Label for custom extension items in the extension library',
-        id: 'tw.extensionLibrary.source.custom'
+        defaultMessage: "Custom",
+        description: "Label for custom extension items in the extension library",
+        id: "tw.extensionLibrary.source.custom",
     },
     sourceBuiltIn: {
-        defaultMessage: 'Built-in',
-        description: 'Label for special built-in feature items in the extension library',
-        id: 'tw.extensionLibrary.source.builtin'
+        defaultMessage: "Built-in",
+        description: "Label for special built-in feature items in the extension library",
+        id: "tw.extensionLibrary.source.builtin",
     },
     quickFavorites: {
-        defaultMessage: 'Favorites',
-        description: 'Quick filter label for favorite extensions',
-        id: 'tw.extensionLibrary.quickFilter.favorites'
+        defaultMessage: "Favorites",
+        description: "Quick filter label for favorite extensions",
+        id: "tw.extensionLibrary.quickFilter.favorites",
     },
     quickSelected: {
-        defaultMessage: 'Selected',
-        description: 'Quick filter label for selected extensions',
-        id: 'tw.extensionLibrary.quickFilter.selected'
+        defaultMessage: "Selected",
+        description: "Quick filter label for selected extensions",
+        id: "tw.extensionLibrary.quickFilter.selected",
     },
     quickCompatible: {
-        defaultMessage: 'Scratch-compatible',
-        description: 'Quick filter label for Scratch-compatible extensions',
-        id: 'tw.extensionLibrary.quickFilter.compatible'
+        defaultMessage: "Scratch-compatible",
+        description: "Quick filter label for Scratch-compatible extensions",
+        id: "tw.extensionLibrary.quickFilter.compatible",
     },
     quickNative: {
-        defaultMessage: 'Native only',
-        description: 'Quick filter label for native extensions',
-        id: 'tw.extensionLibrary.quickFilter.native'
+        defaultMessage: "Native only",
+        description: "Quick filter label for native extensions",
+        id: "tw.extensionLibrary.quickFilter.native",
     },
     quickCustom: {
-        defaultMessage: 'Custom only',
-        description: 'Quick filter label for custom extensions',
-        id: 'tw.extensionLibrary.quickFilter.custom'
+        defaultMessage: "Custom only",
+        description: "Quick filter label for custom extensions",
+        id: "tw.extensionLibrary.quickFilter.custom",
     },
     commonSection: {
-        defaultMessage: 'Favorites',
-        description: 'Section title for favorite extensions',
-        id: 'tw.extensionLibrary.section.common'
+        defaultMessage: "Favorites",
+        description: "Section title for favorite extensions",
+        id: "tw.extensionLibrary.section.common",
     },
     sourceSection: {
-        defaultMessage: '{source} Extensions',
-        description: 'Section title for a source group in the extension library',
-        id: 'tw.extensionLibrary.section.source'
+        defaultMessage: "{source} Extensions",
+        description: "Section title for a source group in the extension library",
+        id: "tw.extensionLibrary.section.source",
     },
     moreSection: {
-        defaultMessage: 'More from {source}',
-        description: 'Section title for remaining source extensions after the common section',
-        id: 'tw.extensionLibrary.section.more'
+        defaultMessage: "More from {source}",
+        description: "Section title for remaining source extensions after the common section",
+        id: "tw.extensionLibrary.section.more",
     },
     emptyTitle: {
-        defaultMessage: 'No extensions match those filters',
-        description: 'Empty state title in the extension library',
-        id: 'tw.extensionLibrary.emptyTitle'
+        defaultMessage: "No extensions match those filters",
+        description: "Empty state title in the extension library",
+        id: "tw.extensionLibrary.emptyTitle",
     },
     emptyDescription: {
-        defaultMessage: 'Try another source, clear a filter, or search for a different keyword.',
-        description: 'Empty state description in the extension library',
-        id: 'tw.extensionLibrary.emptyDescription'
+        defaultMessage: "Try another source, clear a filter, or search for a different keyword.",
+        description: "Empty state description in the extension library",
+        id: "tw.extensionLibrary.emptyDescription",
     },
     clearFilters: {
-        defaultMessage: 'Clear filters',
-        description: 'Button label to clear extension library filters',
-        id: 'tw.extensionLibrary.clearFilters'
+        defaultMessage: "Clear filters",
+        description: "Button label to clear extension library filters",
+        id: "tw.extensionLibrary.clearFilters",
     },
     badgeIncompatible: {
-        defaultMessage: 'Not Scratch-compatible',
-        description: 'Status badge for incompatible extensions',
-        id: 'tw.extensionLibrary.badge.incompatible'
+        defaultMessage: "Not Scratch-compatible",
+        description: "Status badge for incompatible extensions",
+        id: "tw.extensionLibrary.badge.incompatible",
     },
     badgeNative: {
-        defaultMessage: 'Native',
-        description: 'Status badge for native extensions',
-        id: 'tw.extensionLibrary.badge.native'
+        defaultMessage: "Native",
+        description: "Status badge for native extensions",
+        id: "tw.extensionLibrary.badge.native",
     },
     openCustomLoader: {
-        defaultMessage: '加载自定义扩展',
-        description: 'Action hint for the custom extension item',
-        id: 'tw.extensionLibrary.action.custom'
+        defaultMessage: "加载自定义扩展",
+        description: "Action hint for the custom extension item",
+        id: "tw.extensionLibrary.action.custom",
     },
     openWebsite: {
-        defaultMessage: 'Open website',
-        description: 'Action hint for extension library website links',
-        id: 'tw.extensionLibrary.action.website'
+        defaultMessage: "Open website",
+        description: "Action hint for extension library website links",
+        id: "tw.extensionLibrary.action.website",
     },
     enableFeature: {
-        defaultMessage: 'Enable feature',
-        description: 'Action hint for special extension actions',
-        id: 'tw.extensionLibrary.action.enableFeature'
+        defaultMessage: "Enable feature",
+        description: "Action hint for special extension actions",
+        id: "tw.extensionLibrary.action.enableFeature",
     },
     importExtension: {
-        defaultMessage: 'Click to import',
-        description: 'Action hint for importing an extension',
-        id: 'tw.extensionLibrary.action.import'
-    }
+        defaultMessage: "Click to import",
+        description: "Action hint for importing an extension",
+        id: "tw.extensionLibrary.action.import",
+    },
 });
 
 const SOURCE_KEYS = {
-    ALL: 'all',
-    SCRATCH: 'scratch',
-    ENGINE: '02engine',
-    TW: 'tw',
-    ASTRA: 'astra',
-    PM: 'pm',
-    MIST: 'mist',
-    SHARKPOOL: 'sharkpool',
-    CCW: 'ccw',
-    OTHER: 'other',
-    CUSTOM: 'custom',
-    SPECIAL: 'special'
+    ALL: "all",
+    SCRATCH: "scratch",
+    ENGINE: "02engine",
+    TW: "tw",
+    ASTRA: "astra",
+    PM: "pm",
+    MIST: "mist",
+    SHARKPOOL: "sharkpool",
+    CCW: "ccw",
+    OTHER: "other",
+    CUSTOM: "custom",
+    SPECIAL: "special",
 };
 
 const SOURCE_NAV_ORDER = [
@@ -207,11 +207,11 @@ const SOURCE_NAV_ORDER = [
     SOURCE_KEYS.SHARKPOOL,
     SOURCE_KEYS.ASTRA,
     SOURCE_KEYS.CCW,
-    SOURCE_KEYS.OTHER
+    SOURCE_KEYS.OTHER,
 ];
 
-const FAVORITES_STORAGE_KEY = 'tw:library-favorites:extensionLibrary';
-const CCW_EXTENSION_API_BASE = 'https://ccwbfs-proxy.netlify.app/extensions';
+const FAVORITES_STORAGE_KEY = "tw:library-favorites:extensionLibrary";
+const CCW_EXTENSION_API_BASE = "https://ccwbfs-proxy.netlify.app/extensions";
 
 const CCW_METADATA_CACHE = {};
 
@@ -226,10 +226,10 @@ const fetchCCWItemMetadata = async (eid) => {
     const data = await response.json();
     const metadata = data?.body || data;
     if (!metadata || !Array.isArray(metadata.versions) || !metadata.versions.length) {
-        throw new Error('No versions found for this CCW extension.');
+        throw new Error("No versions found for this CCW extension.");
     }
     if (!metadata.versions[0]?.assetUri) {
-        throw new Error('The latest version does not include an asset URL.');
+        throw new Error("The latest version does not include an asset URL.");
     }
     CCW_METADATA_CACHE[eid] = metadata;
     return metadata;
@@ -237,7 +237,7 @@ const fetchCCWItemMetadata = async (eid) => {
 
 // 实时调用CCW API进行搜索/排序，完全参考ccw-ext.html的请求构建逻辑
 const fetchCCWExtensions = async (name, sortField, page, perPage) => {
-    let requestUrl = `${CCW_EXTENSION_API_BASE}?page=${page || 1}&perPage=${perPage || 30}&sortField=${sortField || 'updatedAt'}&sortType=DESC`;
+    let requestUrl = `${CCW_EXTENSION_API_BASE}?page=${page || 1}&perPage=${perPage || 30}&sortField=${sortField || "updatedAt"}&sortType=DESC`;
     if (name) {
         requestUrl += `&name=${encodeURIComponent(name)}`;
     }
@@ -252,10 +252,10 @@ const fetchCCWExtensions = async (name, sortField, page, perPage) => {
             items: body.data,
             total: body.total || body.totalCount || body.count || null,
             page: body.page || page || 1,
-            perPage: body.perPage || perPage || 30
+            perPage: body.perPage || perPage || 30,
         };
     }
-    throw new Error('CCW API response format unexpected');
+    throw new Error("CCW API response format unexpected");
 };
 
 // 映射CCW API数据为内部扩展格式，不带标签
@@ -263,12 +263,17 @@ const toCCWGalleryItem = (item) => {
     const credits = [];
     if (item.publisher) {
         if (item.publisher.nickname) {
-            const oid = item.publisher.oid || item.publisher._id || item.publisher.id || '';
+            const oid = item.publisher.oid || item.publisher._id || item.publisher.id || "";
             if (oid) {
                 credits.push(
-                    <a href={`https://www.ccw.site/student/${oid}`} target="_blank" rel="noreferrer" key={oid}>
+                    <a
+                        href={`https://www.ccw.site/student/${oid}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        key={oid}
+                    >
                         {item.publisher.nickname}
-                    </a>
+                    </a>,
                 );
             } else {
                 credits.push(item.publisher.nickname);
@@ -276,14 +281,14 @@ const toCCWGalleryItem = (item) => {
         }
     }
     return {
-        name: item.name || item.eid || '未知扩展',
+        name: item.name || item.eid || "未知扩展",
         nameTranslations: {},
-        description: item.description || '暂无描述',
+        description: item.description || "暂无描述",
         descriptionTranslations: {},
         extensionId: `ccw_${item.eid || item.id}`,
         extensionURL: null, // 点击时才通过fetchCCWItemMetadata获取assetUri
-        iconURL: item.cover || 'https://placehold.co/600x310/f5f5f5/111111?text=No+Cover',
-        tags: ['ccw'],
+        iconURL: item.cover || "https://placehold.co/600x310/f5f5f5/111111?text=No+Cover",
+        tags: ["ccw"],
         credits,
         docsURI: null,
         samples: null,
@@ -297,72 +302,72 @@ const toCCWGalleryItem = (item) => {
             createdAt: item.createdAt,
             updatedAt: item.updatedAt,
             versions: item.versions,
-            activeVersionId: item.activeVersionId
-        }
+            activeVersionId: item.activeVersionId,
+        },
     };
 };
 
-const getItemSelectionKey = item => item.extensionURL || item.extensionId;
-const isBatchSelectableItem = item => {
-    if (!item || item === '---' || item.disabled || item.href || !item.extensionId) {
+const getItemSelectionKey = (item) => item.extensionURL || item.extensionId;
+const isBatchSelectableItem = (item) => {
+    if (!item || item === "---" || item.disabled || item.href || !item.extensionId) {
         return false;
     }
-    return item.extensionId !== 'custom_extension';
+    return item.extensionId !== "custom_extension";
 };
-const supportsTextImport = item => Boolean(item && item.extensionURL);
+const supportsTextImport = (item) => Boolean(item && item.extensionURL);
 
-const toBatchItem = item => {
-    if (item.extensionId === 'procedures_enable_return') {
+const toBatchItem = (item) => {
+    if (item.extensionId === "procedures_enable_return") {
         return {
-            kind: 'procedure-returns',
+            kind: "procedure-returns",
             extensionId: item.extensionId,
-            displayName: typeof item.name === 'string' ? item.name : item.extensionId
+            displayName: typeof item.name === "string" ? item.name : item.extensionId,
         };
     }
     if (!supportsTextImport(item)) {
         return {
-            kind: 'native-extension',
+            kind: "native-extension",
             extensionId: item.extensionId,
             extensionURL: item.extensionId,
-            displayName: typeof item.name === 'string' ? item.name : item.extensionId
+            displayName: typeof item.name === "string" ? item.name : item.extensionId,
         };
     }
     return {
-        kind: 'extension-url',
+        kind: "extension-url",
         extensionId: item.extensionId,
         extensionURL: item.extensionURL || item.extensionId,
-        displayName: typeof item.name === 'string' ? item.name : item.extensionId
+        displayName: typeof item.name === "string" ? item.name : item.extensionId,
     };
 };
 
-const toLibraryItem = extension => {
-    if (typeof extension === 'object') {
-        return ({
+const toLibraryItem = (extension) => {
+    if (typeof extension === "object") {
+        return {
             rawURL: extension.iconURL || extensionIcon,
-            ...extension
-        });
+            ...extension,
+        };
     }
     return extension;
 };
 
-const normalizeMatchValue = value => {
-    if (!value) return '';
+const normalizeMatchValue = (value) => {
+    if (!value) return "";
     return String(value)
         .toLowerCase()
-        .replace(/\.js$/i, '')
-        .replace(/[^a-z0-9]+/g, '');
+        .replace(/\.js$/i, "")
+        .replace(/[^a-z0-9]+/g, "");
 };
 
-const getURLStem = value => {
-    if (!value || typeof value !== 'string' || value.startsWith('data:')) {
-        return '';
+const getURLStem = (value) => {
+    if (!value || typeof value !== "string" || value.startsWith("data:")) {
+        return "";
     }
     try {
         const parsed = new URL(value);
-        const segments = parsed.pathname.split('/').filter(Boolean);
-        return segments.length ? segments[segments.length - 1].replace(/\.js$/i, '') : '';
+        const segments = parsed.pathname.split("/").filter(Boolean);
+        return segments.length ? segments[segments.length - 1].replace(/\.js$/i, "") : "";
     } catch (error) {
-        return '';
+        return "";
     }
 };
 
@@ -372,49 +377,58 @@ const loadExtensionAsText = async (vm, extensionURL) => {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
     const text = await response.text();
-    await vm.extensionManager.loadExtensionURL(`data:application/javascript,${encodeURIComponent(text)}`);
+    await vm.extensionManager.loadExtensionURL(
+        `data:application/javascript,${encodeURIComponent(text)}`,
+    );
 };
 
 const getNameText = (intl, value) => {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
         return value;
     }
     if (React.isValidElement(value) && value.props) {
-        return intl.formatMessage(value.props, {APP_NAME});
+        return intl.formatMessage(value.props, { APP_NAME });
     }
-    return '';
+    return "";
 };
 
 const getLocalizedGalleryText = (fallbackValue, translations, locale) => {
-    if (!translations || typeof translations !== 'object') {
+    if (!translations || typeof translations !== "object") {
         return fallbackValue;
     }
-    const normalizedLocale = typeof locale === 'string' ? locale.replace(/_/g, '-').toLowerCase() : '';
-    const languageCode = normalizedLocale.split('-')[0];
+    const normalizedLocale =
+        typeof locale === "string" ? locale.replace(/_/g, "-").toLowerCase() : "";
+    const languageCode = normalizedLocale.split("-")[0];
     const entries = Object.entries(translations);
-    const exactMatch = entries.find(([key]) => key.replace(/_/g, '-').toLowerCase() === normalizedLocale);
-    if (exactMatch && typeof exactMatch[1] === 'string' && exactMatch[1]) {
+    const exactMatch = entries.find(
+        ([key]) => key.replace(/_/g, "-").toLowerCase() === normalizedLocale,
+    );
+    if (exactMatch && typeof exactMatch[1] === "string" && exactMatch[1]) {
         return exactMatch[1];
     }
-    const languageMatch = entries.find(([key]) => key.replace(/_/g, '-').toLowerCase().split('-')[0] === languageCode);
-    if (languageMatch && typeof languageMatch[1] === 'string' && languageMatch[1]) {
+    const languageMatch = entries.find(
+        ([key]) => key.replace(/_/g, "-").toLowerCase().split("-")[0] === languageCode,
+    );
+    if (languageMatch && typeof languageMatch[1] === "string" && languageMatch[1]) {
         return languageMatch[1];
     }
     return fallbackValue;
 };
 
 const translateGalleryItem = (item, locale) => {
-    if (!item || typeof item !== 'object') {
+    if (!item || typeof item !== "object") {
         return item;
     }
     return {
         ...item,
-        name: typeof item.name === 'string' ?
-            getLocalizedGalleryText(item.name, item.nameTranslations, locale) :
-            item.name,
-        description: typeof item.description === 'string' ?
-            getLocalizedGalleryText(item.description, item.descriptionTranslations, locale) :
-            item.description
+        name:
+            typeof item.name === "string"
+                ? getLocalizedGalleryText(item.name, item.nameTranslations, locale)
+                : item.name,
+        description:
+            typeof item.description === "string"
+                ? getLocalizedGalleryText(item.description, item.descriptionTranslations, locale)
+                : item.description,
     };
 };
 
@@ -422,22 +436,22 @@ const fetchPenguinModLibrary = async () => {
     try {
         const module = await import(
             /* webpackIgnore: true */
-            '/penguinmod/extensions.js'
+            "/penguinmod/extensions.js"
         );
-        return module.default.map(extension => ({
+        return module.default.map((extension) => ({
             name: extension.name,
             nameTranslations: {},
             description: extension.description,
             descriptionTranslations: {},
             extensionId: extension.name,
             extensionURL: `https://extensions.penguinmod.com/extensions/${extension.code}`,
-            iconURL: `https://extensions.penguinmod.com/images/${extension.banner || 'images/unknown.svg'}`,
-            tags: ['pm'],
+            iconURL: `https://extensions.penguinmod.com/images/${extension.banner || "images/unknown.svg"}`,
+            tags: ["pm"],
             credits: [extension.creator],
             docsURI: null,
             samples: null,
             incompatibleWithScratch: false,
-            featured: true
+            featured: true,
         }));
     } catch (err) {
         log.error(err);
@@ -462,171 +476,205 @@ const fetchLibrary = async () => {
         }
     };
 
-    const [engineData, twData, astraData, mistData, sharkPoolData, penguinModData] = await Promise.all([
-        safeFetch(
-            'https://extensions.02engine.02studio.xyz/extensions.json',
-            data => data.extensions.map(extension => ({
-                name: extension.name,
-                nameTranslations: extension.nameTranslations || {},
-                description: extension.description,
-                descriptionTranslations: extension.descriptionTranslations || {},
-                extensionId: extension.id,
-                extensionURL: `https://extensions.02engine.02studio.xyz/extension/${extension.slug}.js`,
-                iconURL: `https://extensions.02engine.02studio.xyz/image/${extension.image || 'images/unknown.svg'}`,
-                tags: ['ztengine'],
-                credits: [
-                    ...(extension.original || []),
-                    ...(extension.by || [])
-                ].map(credit => {
-                    if (credit.link) {
-                        return (
-                            <a href={credit.link} target="_blank" rel="noreferrer" key={credit.name}>
-                                {credit.name}
-                            </a>
-                        );
-                    }
-                    return credit.name;
-                }),
-                docsURI: null,
-                samples: extension.samples ? extension.samples.map(sample => ({
-                    href: `${process.env.ROOT}editor?project_url=https://extensions.02engine.02studio.xyz/samples/${encodeURIComponent(sample)}.sb3`,
-                    text: sample
-                })) : null,
-                incompatibleWithScratch: !extension.scratchCompatible,
-                featured: true
-            })),
-            []
-        ),
-        safeFetch(
-            'https://extensions.turbowarp.org/generated-metadata/extensions-v0.json',
-            data => data.extensions.map(extension => ({
-                name: extension.name,
-                nameTranslations: extension.nameTranslations || {},
-                description: extension.description,
-                descriptionTranslations: extension.descriptionTranslations || {},
-                extensionId: extension.id,
-                extensionURL: `https://extensions.turbowarp.org/${extension.slug}.js`,
-                iconURL: `https://extensions.turbowarp.org/${extension.image || 'images/unknown.svg'}`,
-                tags: ['tw'],
-                credits: [
-                    ...(extension.original || []),
-                    ...(extension.by || [])
-                ].map(credit => {
-                    if (credit.link) {
-                        return (
-                            <a href={credit.link} target="_blank" rel="noreferrer" key={credit.name}>
-                                {credit.name}
-                            </a>
-                        );
-                    }
-                    return credit.name;
-                }),
-                docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
-                samples: extension.samples ? extension.samples.map(sample => ({
-                    href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
-                    text: sample
-                })) : null,
-                incompatibleWithScratch: !extension.scratchCompatible,
-                featured: true
-            })),
-            []
-        ),
-        safeFetch(
-            'https://editors.astras.top/extensions/generated-metadata/extensions-v0.json',
-            data => data.extensions.map(extension => ({
-                name: extension.name,
-                nameTranslations: extension.nameTranslations || {},
-                description: extension.description,
-                descriptionTranslations: extension.descriptionTranslations || {},
-                extensionId: extension.id,
-                extensionURL: `https://editors.astras.top/extensions/${extension.slug}.js`,
-                iconURL: extension.image ?
-                    `https://editors.astras.top/extensions/${extension.image}` :
-                    'https://extensions.turbowarp.org/images/unknown.svg',
-                tags: ['astra'],
-                credits: [
-                    ...(extension.original || []),
-                    ...(extension.by || [])
-                ].filter(credit => credit && typeof credit === 'object').map(credit => {
-                    if (credit.link) {
-                        return (
-                            <a href={credit.link} target="_blank" rel="noreferrer" key={credit.name}>
-                                {credit.name}
-                            </a>
-                        );
-                    }
-                    return credit.name;
-                }),
-                docsURI: extension.docs ? `https://editors.astras.top/extensions/${extension.slug}` : null,
-                samples: extension.samples ? extension.samples.map(sample => ({
-                    href: `${process.env.ROOT}editor?project_url=https://editors.astras.top/extensions/samples/${encodeURIComponent(sample)}.sb3`,
-                    text: sample
-                })) : null,
-                incompatibleWithScratch: !extension.scratchCompatible,
-                featured: true
-            })),
-            []
-        ),
-        safeFetch(
-            'https://mistiumextensions.02studio.xyz/generated-metadata/extensions-v0.json',
-            data => data.extensions.map(extension => ({
-                name: extension.name,
-                nameTranslations: extension.nameTranslations || {},
-                description: extension.description,
-                descriptionTranslations: extension.descriptionTranslations || {},
-                extensionId: extension.id,
-                extensionURL: `https://mistiumextensions.02studio.xyz/featured/${extension.name}.js`,
-                iconURL: `https://mistiumextensions.02studio.xyz/${extension.image || 'images/unknown.svg'}`,
-                tags: ['mist'],
-                credits: [
-                    ...(extension.original || []),
-                    ...(extension.by || [])
-                ].map(credit => {
-                    if (credit.link) {
-                        return (
-                            <a href={credit.link} target="_blank" rel="noreferrer" key={credit.name}>
-                                {credit.name}
-                            </a>
-                        );
-                    }
-                    return credit.name;
-                }),
-                docsURI: null,
-                samples: extension.samples ? extension.samples.map(sample => ({
-                    href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
-                    text: sample
-                })) : null,
-                incompatibleWithScratch: !extension.scratchCompatible,
-                featured: true
-            })),
-            []
-        ),
-        safeFetch(
-            'https://sharkpoolextensions.02studio.xyz/Gallery%20Files/Extension-Keys.json',
-            data => Object.entries(data.extensions).map(([slug, extension]) => ({
-                name: slug,
-                nameTranslations: {},
-                description: extension.desc,
-                descriptionTranslations: {},
-                extensionId: slug,
-                extensionURL: `https://sharkpoolextensions.02studio.xyz/extension-code/${extension.url}`,
-                iconURL: `https://sharkpoolextensions.02studio.xyz/extension-thumbs/${extension.banner || 'images/unknown.svg'}`,
-                tags: [...extension.tags, 'sp'],
-                credits: extension.creator.split(', ').map(creator => {
-                    const match = creator.match(/(.+?)(?:\s*\((.+)\))?$/);
-                    const name = match[1];
-                    const role = match[2] || '';
-                    return role ? `${name} (${role})` : name;
-                }),
-                docsURI: null,
-                samples: null,
-                incompatibleWithScratch: false,
-                featured: true
-            })),
-            []
-        ),
-        fetchPenguinModLibrary()
-    ]);
+    const [engineData, twData, astraData, mistData, sharkPoolData, penguinModData] =
+        await Promise.all([
+            safeFetch(
+                "https://extensions.02engine.02studio.xyz/extensions.json",
+                (data) =>
+                    data.extensions.map((extension) => ({
+                        name: extension.name,
+                        nameTranslations: extension.nameTranslations || {},
+                        description: extension.description,
+                        descriptionTranslations: extension.descriptionTranslations || {},
+                        extensionId: extension.id,
+                        extensionURL: `https://extensions.02engine.02studio.xyz/extension/${extension.slug}.js`,
+                        iconURL: `https://extensions.02engine.02studio.xyz/image/${extension.image || "images/unknown.svg"}`,
+                        tags: ["ztengine"],
+                        credits: [...(extension.original || []), ...(extension.by || [])].map(
+                            (credit) => {
+                                if (credit.link) {
+                                    return (
+                                        <a
+                                            href={credit.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            key={credit.name}
+                                        >
+                                            {credit.name}
+                                        </a>
+                                    );
+                                }
+                                return credit.name;
+                            },
+                        ),
+                        docsURI: null,
+                        samples: extension.samples
+                            ? extension.samples.map((sample) => ({
+                                  href: `${process.env.ROOT}editor?project_url=https://extensions.02engine.02studio.xyz/samples/${encodeURIComponent(sample)}.sb3`,
+                                  text: sample,
+                              }))
+                            : null,
+                        incompatibleWithScratch: !extension.scratchCompatible,
+                        featured: true,
+                    })),
+                [],
+            ),
+            safeFetch(
+                "https://extensions.turbowarp.org/generated-metadata/extensions-v0.json",
+                (data) =>
+                    data.extensions.map((extension) => ({
+                        name: extension.name,
+                        nameTranslations: extension.nameTranslations || {},
+                        description: extension.description,
+                        descriptionTranslations: extension.descriptionTranslations || {},
+                        extensionId: extension.id,
+                        extensionURL: `https://extensions.turbowarp.org/${extension.slug}.js`,
+                        iconURL: `https://extensions.turbowarp.org/${extension.image || "images/unknown.svg"}`,
+                        tags: ["tw"],
+                        credits: [...(extension.original || []), ...(extension.by || [])].map(
+                            (credit) => {
+                                if (credit.link) {
+                                    return (
+                                        <a
+                                            href={credit.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            key={credit.name}
+                                        >
+                                            {credit.name}
+                                        </a>
+                                    );
+                                }
+                                return credit.name;
+                            },
+                        ),
+                        docsURI: extension.docs
+                            ? `https://extensions.turbowarp.org/${extension.slug}`
+                            : null,
+                        samples: extension.samples
+                            ? extension.samples.map((sample) => ({
+                                  href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
+                                  text: sample,
+                              }))
+                            : null,
+                        incompatibleWithScratch: !extension.scratchCompatible,
+                        featured: true,
+                    })),
+                [],
+            ),
+            safeFetch(
+                "https://editors.astras.top/extensions/generated-metadata/extensions-v0.json",
+                (data) =>
+                    data.extensions.map((extension) => ({
+                        name: extension.name,
+                        nameTranslations: extension.nameTranslations || {},
+                        description: extension.description,
+                        descriptionTranslations: extension.descriptionTranslations || {},
+                        extensionId: extension.id,
+                        extensionURL: `https://editors.astras.top/extensions/${extension.slug}.js`,
+                        iconURL: extension.image
+                            ? `https://editors.astras.top/extensions/${extension.image}`
+                            : "https://extensions.turbowarp.org/images/unknown.svg",
+                        tags: ["astra"],
+                        credits: [...(extension.original || []), ...(extension.by || [])]
+                            .filter((credit) => credit && typeof credit === "object")
+                            .map((credit) => {
+                                if (credit.link) {
+                                    return (
+                                        <a
+                                            href={credit.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            key={credit.name}
+                                        >
+                                            {credit.name}
+                                        </a>
+                                    );
+                                }
+                                return credit.name;
+                            }),
+                        docsURI: extension.docs
+                            ? `https://editors.astras.top/extensions/${extension.slug}`
+                            : null,
+                        samples: extension.samples
+                            ? extension.samples.map((sample) => ({
+                                  href: `${process.env.ROOT}editor?project_url=https://editors.astras.top/extensions/samples/${encodeURIComponent(sample)}.sb3`,
+                                  text: sample,
+                              }))
+                            : null,
+                        incompatibleWithScratch: !extension.scratchCompatible,
+                        featured: true,
+                    })),
+                [],
+            ),
+            safeFetch(
+                "https://mistiumextensions.02studio.xyz/generated-metadata/extensions-v0.json",
+                (data) =>
+                    data.extensions.map((extension) => ({
+                        name: extension.name,
+                        nameTranslations: extension.nameTranslations || {},
+                        description: extension.description,
+                        descriptionTranslations: extension.descriptionTranslations || {},
+                        extensionId: extension.id,
+                        extensionURL: `https://mistiumextensions.02studio.xyz/featured/${extension.name}.js`,
+                        iconURL: `https://mistiumextensions.02studio.xyz/${extension.image || "images/unknown.svg"}`,
+                        tags: ["mist"],
+                        credits: [...(extension.original || []), ...(extension.by || [])].map(
+                            (credit) => {
+                                if (credit.link) {
+                                    return (
+                                        <a
+                                            href={credit.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            key={credit.name}
+                                        >
+                                            {credit.name}
+                                        </a>
+                                    );
+                                }
+                                return credit.name;
+                            },
+                        ),
+                        docsURI: null,
+                        samples: extension.samples
+                            ? extension.samples.map((sample) => ({
+                                  href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
+                                  text: sample,
+                              }))
+                            : null,
+                        incompatibleWithScratch: !extension.scratchCompatible,
+                        featured: true,
+                    })),
+                [],
+            ),
+            safeFetch(
+                "https://sharkpoolextensions.02studio.xyz/Gallery%20Files/Extension-Keys.json",
+                (data) =>
+                    Object.entries(data.extensions).map(([slug, extension]) => ({
+                        name: slug,
+                        nameTranslations: {},
+                        description: extension.desc,
+                        descriptionTranslations: {},
+                        extensionId: slug,
+                        extensionURL: `https://sharkpoolextensions.02studio.xyz/extension-code/${extension.url}`,
+                        iconURL: `https://sharkpoolextensions.02studio.xyz/extension-thumbs/${extension.banner || "images/unknown.svg"}`,
+                        tags: [...extension.tags, "sp"],
+                        credits: extension.creator.split(", ").map((creator) => {
+                            const match = creator.match(/(.+?)(?:\s*\((.+)\))?$/);
+                            const name = match[1];
+                            const role = match[2] || "";
+                            return role ? `${name} (${role})` : name;
+                        }),
+                        docsURI: null,
+                        samples: null,
+                        incompatibleWithScratch: false,
+                        featured: true,
+                    })),
+                [],
+            ),
+            fetchPenguinModLibrary(),
+        ]);
 
     return [
         ...engineData,
@@ -634,51 +682,51 @@ const fetchLibrary = async () => {
         ...astraData,
         ...penguinModData,
         ...mistData,
-        ...sharkPoolData
+        ...sharkPoolData,
     ];
 };
 
 class ExtensionLibrary extends React.PureComponent {
-    constructor (props) {
+    constructor(props) {
         super(props);
         bindAll(this, [
-            'executeItemAction',
-            'fetchAndSetCCWItems',
-            'getCCWRecommendationButtons',
-            'getActionLabel',
-            'getBatchSelectableItems',
-            'getCardProps',
-            'getCCWSortControl',
-            'getLibraryItems',
-            'getNormalizedItems',
-            'getQuickFilterButtons',
-            'getSidebar',
-            'getSourceCounts',
-            'getSourceLabel',
-            'getSections',
-            'handleBatchImport',
-            'handleCCWSortChange',
-            'handleCCWPageChange',
-            'handleCCWRecommendationSelect',
-            'handleClearFilters',
-            'handleClearQuery',
-            'handleClearSelection',
-            'handleCustomExtensionOpen',
-            'handleEnableProcedureReturns',
-            'handleFavoritesChange',
-            'handleItemSelect',
-            'handleQueryChange',
-            'handleSelectionToggle',
-            'handleSourceSelect',
-            'handleToggleQuickFilter',
-            'isItemSelectable',
-            'isItemSelected',
-            'matchesQuickFilters',
-            'matchesSearch',
-            'matchesSource',
-            'readFavoritesFromStorage',
-            'renderEmptyState',
-            'sortItems'
+            "executeItemAction",
+            "fetchAndSetCCWItems",
+            "getCCWRecommendationButtons",
+            "getActionLabel",
+            "getBatchSelectableItems",
+            "getCardProps",
+            "getCCWSortControl",
+            "getLibraryItems",
+            "getNormalizedItems",
+            "getQuickFilterButtons",
+            "getSidebar",
+            "getSourceCounts",
+            "getSourceLabel",
+            "getSections",
+            "handleBatchImport",
+            "handleCCWSortChange",
+            "handleCCWPageChange",
+            "handleCCWRecommendationSelect",
+            "handleClearFilters",
+            "handleClearQuery",
+            "handleClearSelection",
+            "handleCustomExtensionOpen",
+            "handleEnableProcedureReturns",
+            "handleFavoritesChange",
+            "handleItemSelect",
+            "handleQueryChange",
+            "handleSelectionToggle",
+            "handleSourceSelect",
+            "handleToggleQuickFilter",
+            "isItemSelectable",
+            "isItemSelected",
+            "matchesQuickFilters",
+            "matchesSearch",
+            "matchesSource",
+            "readFavoritesFromStorage",
+            "renderEmptyState",
+            "sortItems",
         ]);
         this.state = {
             favorites: this.readFavoritesFromStorage(),
@@ -687,73 +735,74 @@ class ExtensionLibrary extends React.PureComponent {
             galleryTimedOut: false,
             ccwItems: [],
             ccwLoading: false,
-            ccwSortField: 'likeCount',
+            ccwSortField: "likeCount",
             ccwPage: 1,
             ccwPerPage: 30,
             ccwHasMore: false,
             ccwTotal: null,
-            query: '',
+            query: "",
             quickFilters: {
                 favorites: false,
                 selected: false,
                 compatible: false,
                 native: false,
-                custom: false
+                custom: false,
             },
             selectedItemKeys: [],
-            selectedSource: SOURCE_KEYS.ALL
+            selectedSource: SOURCE_KEYS.ALL,
         };
         this._queryTimeout = null;
     }
-    componentDidMount () {
+    componentDidMount() {
         if (!this.state.gallery) {
             const timeout = setTimeout(() => {
                 this.setState({
-                    galleryTimedOut: true
+                    galleryTimedOut: true,
                 });
             }, 750);
 
             fetchLibrary()
-                .then(gallery => {
+                .then((gallery) => {
                     cachedGallery = gallery;
                     this.setState({
-                        gallery
+                        gallery,
                     });
                     clearTimeout(timeout);
                 })
-                .catch(error => {
+                .catch((error) => {
                     log.error(error);
                     this.setState({
-                        galleryError: error
+                        galleryError: error,
                     });
                     clearTimeout(timeout);
                 });
         }
         // 初始加载CCW扩展
-        this.fetchAndSetCCWItems('', 'likeCount', 1);
+        this.fetchAndSetCCWItems("", "likeCount", 1);
     }
-    async fetchAndSetCCWItems (name, sortField, page = 1) {
-        this.setState({ccwLoading: true});
+    async fetchAndSetCCWItems(name, sortField, page = 1) {
+        this.setState({ ccwLoading: true });
         try {
             const result = await fetchCCWExtensions(name, sortField, page, this.state.ccwPerPage);
             const rawItems = Array.isArray(result.items) ? result.items : [];
-            const ccwItems = rawItems.map(item => toCCWGalleryItem(item));
-            const hasMore = typeof result.total === 'number' ?
-                (page * result.perPage) < result.total :
-                rawItems.length >= result.perPage;
+            const ccwItems = rawItems.map((item) => toCCWGalleryItem(item));
+            const hasMore =
+                typeof result.total === "number"
+                    ? page * result.perPage < result.total
+                    : rawItems.length >= result.perPage;
             this.setState({
                 ccwItems,
                 ccwLoading: false,
                 ccwPage: page,
                 ccwHasMore: hasMore,
-                ccwTotal: result.total
+                ccwTotal: result.total,
             });
         } catch (err) {
             log.error(err);
-            this.setState({ccwItems: [], ccwLoading: false, ccwHasMore: false, ccwTotal: null});
+            this.setState({ ccwItems: [], ccwLoading: false, ccwHasMore: false, ccwTotal: null });
         }
     }
-    readFavoritesFromStorage () {
+    readFavoritesFromStorage() {
         let data;
         try {
             data = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY));
@@ -762,7 +811,7 @@ class ExtensionLibrary extends React.PureComponent {
         }
         return Array.isArray(data) ? data : [];
     }
-    getSourceLabel (sourceKey) {
+    getSourceLabel(sourceKey) {
         const sourceMessages = {
             [SOURCE_KEYS.ALL]: messages.allSources,
             [SOURCE_KEYS.SCRATCH]: messages.sourceScratch,
@@ -775,15 +824,15 @@ class ExtensionLibrary extends React.PureComponent {
             [SOURCE_KEYS.CCW]: messages.sourceCCW,
             [SOURCE_KEYS.OTHER]: messages.sourceOther,
             [SOURCE_KEYS.CUSTOM]: messages.sourceCustom,
-            [SOURCE_KEYS.SPECIAL]: messages.sourceBuiltIn
+            [SOURCE_KEYS.SPECIAL]: messages.sourceBuiltIn,
         };
         return this.props.intl.formatMessage(sourceMessages[sourceKey] || messages.sourceOther);
     }
-    getLibraryItems () {
+    getLibraryItems() {
         const locale = this.props.intl?.locale;
         const baseLibrary = extensionLibraryContent
             .map(toLibraryItem)
-            .map(item => translateGalleryItem(item, locale));
+            .map((item) => translateGalleryItem(item, locale));
         if (this.state.gallery) {
             const ccwItems = this.state.ccwItems.map(toLibraryItem);
             return [
@@ -791,114 +840,123 @@ class ExtensionLibrary extends React.PureComponent {
                 toLibraryItem(galleryMore),
                 ...this.state.gallery
                     .map(toLibraryItem)
-                    .map(item => translateGalleryItem(item, locale)),
-                ...ccwItems
+                    .map((item) => translateGalleryItem(item, locale)),
+                ...ccwItems,
             ];
         }
         if (this.state.galleryError) {
-            return [
-                ...baseLibrary,
-                toLibraryItem(galleryError)
-            ];
+            return [...baseLibrary, toLibraryItem(galleryError)];
         }
-        return [
-            ...baseLibrary,
-            toLibraryItem(galleryLoading)
-        ];
+        return [...baseLibrary, toLibraryItem(galleryLoading)];
     }
-    getNormalizedItems () {
+    getNormalizedItems() {
         const library = this.getLibraryItems();
         if (!library) {
             return [];
         }
-        const loadedExtensionURLs = this.props.vm.extensionManager.getExtensionURLs ?
-            this.props.vm.extensionManager.getExtensionURLs() :
-            {};
+        const loadedExtensionURLs = this.props.vm.extensionManager.getExtensionURLs
+            ? this.props.vm.extensionManager.getExtensionURLs()
+            : {};
         const loadedURLValues = new Set(Object.values(loadedExtensionURLs));
         const loadedIds = new Set([
             ...Object.keys(loadedExtensionURLs),
-            ...Array.from(this.props.vm.extensionManager._loadedExtensions?.keys?.() || [])
+            ...Array.from(this.props.vm.extensionManager._loadedExtensions?.keys?.() || []),
         ]);
-        const loadedEntries = Array.from(loadedIds).map(loadedId => ({
+        const loadedEntries = Array.from(loadedIds).map((loadedId) => ({
             id: loadedId,
             normalizedId: normalizeMatchValue(loadedId),
-            normalizedURLStem: normalizeMatchValue(getURLStem(loadedExtensionURLs[loadedId]))
+            normalizedURLStem: normalizeMatchValue(getURLStem(loadedExtensionURLs[loadedId])),
         }));
         return library
-            .filter(item => item && item !== '---')
+            .filter((item) => item && item !== "---")
             .map((item, originalIndex) => {
-                const extensionId = item.extensionId || '';
+                const extensionId = item.extensionId || "";
                 let source = SOURCE_KEYS.OTHER;
-                if (extensionId === 'custom_extension') {
+                if (extensionId === "custom_extension") {
                     source = SOURCE_KEYS.CUSTOM;
-                } else if (extensionId.startsWith('ccw_')) {
+                } else if (extensionId.startsWith("ccw_")) {
                     source = SOURCE_KEYS.CCW;
-                } else if (extensionId === 'procedures_enable_return') {
+                } else if (extensionId === "procedures_enable_return") {
                     source = SOURCE_KEYS.SPECIAL;
-                } else if (item.tags && item.tags.includes('scratch')) {
+                } else if (item.tags && item.tags.includes("scratch")) {
                     source = SOURCE_KEYS.SCRATCH;
-                } else if (item.tags && item.tags.includes('ztengine')) {
+                } else if (item.tags && item.tags.includes("ztengine")) {
                     source = SOURCE_KEYS.ENGINE;
-                } else if (item.tags && item.tags.includes('astra')) {
+                } else if (item.tags && item.tags.includes("astra")) {
                     source = SOURCE_KEYS.ASTRA;
-                } else if (item.tags && item.tags.includes('pm')) {
+                } else if (item.tags && item.tags.includes("pm")) {
                     source = SOURCE_KEYS.PM;
-                } else if (item.tags && item.tags.includes('mist')) {
+                } else if (item.tags && item.tags.includes("mist")) {
                     source = SOURCE_KEYS.MIST;
-                } else if (item.tags && item.tags.includes('sp')) {
+                } else if (item.tags && item.tags.includes("sp")) {
                     source = SOURCE_KEYS.SHARKPOOL;
-                } else if (item.tags && item.tags.includes('tw')) {
+                } else if (item.tags && item.tags.includes("tw")) {
                     source = SOURCE_KEYS.TW;
-                } else if (item.tags && item.tags.includes('ccw')) {
+                } else if (item.tags && item.tags.includes("ccw")) {
                     source = SOURCE_KEYS.CCW;
                 }
 
-                const isCustomLoad = extensionId === 'custom_extension';
+                const isCustomLoad = extensionId === "custom_extension";
                 const isCCWLoad = source === SOURCE_KEYS.CCW;
-                const isSpecialAction = extensionId === 'procedures_enable_return';
-                const isNative = Boolean(extensionId && !item.extensionURL && !item.href && !isCustomLoad && !isCCWLoad && !isSpecialAction);
-                const candidateValues = new Set([
-                    normalizeMatchValue(extensionId),
-                    normalizeMatchValue(getNameText(this.props.intl, item.name)),
-                    normalizeMatchValue(getURLStem(item.extensionURL))
-                ].filter(Boolean));
-                const fuzzyInstalled = loadedEntries.some(loadedEntry => (
-                    candidateValues.has(loadedEntry.normalizedId) ||
-                    candidateValues.has(loadedEntry.normalizedURLStem)
-                ));
+                const isSpecialAction = extensionId === "procedures_enable_return";
+                const isNative = Boolean(
+                    extensionId &&
+                    !item.extensionURL &&
+                    !item.href &&
+                    !isCustomLoad &&
+                    !isCCWLoad &&
+                    !isSpecialAction,
+                );
+                const candidateValues = new Set(
+                    [
+                        normalizeMatchValue(extensionId),
+                        normalizeMatchValue(getNameText(this.props.intl, item.name)),
+                        normalizeMatchValue(getURLStem(item.extensionURL)),
+                    ].filter(Boolean),
+                );
+                const fuzzyInstalled = loadedEntries.some(
+                    (loadedEntry) =>
+                        candidateValues.has(loadedEntry.normalizedId) ||
+                        candidateValues.has(loadedEntry.normalizedURLStem),
+                );
                 const isInstalled = Boolean(
                     extensionId &&
                     !item.href &&
                     !item.disabled &&
                     !isSpecialAction &&
-                    (
-                        this.props.vm.extensionManager.isExtensionLoaded(extensionId) ||
+                    (this.props.vm.extensionManager.isExtensionLoaded(extensionId) ||
                         loadedIds.has(extensionId) ||
                         (item.extensionURL && loadedURLValues.has(item.extensionURL)) ||
-                        fuzzyInstalled
-                    )
+                        fuzzyInstalled),
                 );
                 const sourceLabel = this.getSourceLabel(source);
                 const textParts = [];
                 textParts.push(getNameText(this.props.intl, item.name));
-                if (typeof item.description === 'string') {
+                if (typeof item.description === "string") {
                     textParts.push(item.description);
                 } else if (React.isValidElement(item.description) && item.description.props) {
-                    textParts.push(this.props.intl.formatMessage(item.description.props, {APP_NAME}));
+                    textParts.push(
+                        this.props.intl.formatMessage(item.description.props, { APP_NAME }),
+                    );
                 }
                 if (Array.isArray(item.tags)) {
                     textParts.push(...item.tags);
                 }
                 if (Array.isArray(item.credits)) {
-                    textParts.push(...item.credits.map(credit => {
-                        if (typeof credit === 'string') {
-                            return credit;
-                        }
-                        if (React.isValidElement(credit) && typeof credit.props?.children === 'string') {
-                            return credit.props.children;
-                        }
-                        return '';
-                    }));
+                    textParts.push(
+                        ...item.credits.map((credit) => {
+                            if (typeof credit === "string") {
+                                return credit;
+                            }
+                            if (
+                                React.isValidElement(credit) &&
+                                typeof credit.props?.children === "string"
+                            ) {
+                                return credit.props.children;
+                            }
+                            return "";
+                        }),
+                    );
                 }
                 textParts.push(sourceLabel);
 
@@ -913,16 +971,16 @@ class ExtensionLibrary extends React.PureComponent {
                     isNative,
                     originalIndex,
                     isSpecialAction,
-                    searchText: textParts.join('\n').toLowerCase(),
+                    searchText: textParts.join("\n").toLowerCase(),
                     source,
-                    sourceLabel
+                    sourceLabel,
                 };
             });
     }
-    getBatchSelectableItems () {
-        return this.getNormalizedItems().filter(item => item.isBatchSelectable);
+    getBatchSelectableItems() {
+        return this.getNormalizedItems().filter((item) => item.isBatchSelectable);
     }
-    handleEnableProcedureReturns () {
+    handleEnableProcedureReturns() {
         if (this.props.onEnableProcedureReturns) {
             this.props.onEnableProcedureReturns();
             return;
@@ -940,10 +998,10 @@ class ExtensionLibrary extends React.PureComponent {
             }
         }
         if (this.props.onCategorySelected) {
-            this.props.onCategorySelected('myBlocks');
+            this.props.onCategorySelected("myBlocks");
         }
     }
-    executeItemAction (item, {useImportModal}) {
+    executeItemAction(item, { useImportModal }) {
         if (item.href) {
             return;
         }
@@ -951,12 +1009,12 @@ class ExtensionLibrary extends React.PureComponent {
         const extensionId = item.extensionId;
         const extensionURL = item.extensionURL || extensionId;
 
-        if (extensionId === 'custom_extension') {
+        if (extensionId === "custom_extension") {
             this.props.onOpenCustomExtensionModal();
             return;
         }
 
-        if (extensionId === 'procedures_enable_return') {
+        if (extensionId === "procedures_enable_return") {
             this.handleEnableProcedureReturns();
             return;
         }
@@ -969,38 +1027,42 @@ class ExtensionLibrary extends React.PureComponent {
         if (item._ccwMeta && item._ccwMeta.eid) {
             const ccwEid = item._ccwMeta.eid;
             fetchCCWItemMetadata(ccwEid)
-                .then(metadata => {
+                .then((metadata) => {
                     const versions = Array.isArray(metadata.versions) ? metadata.versions : [];
                     const selectedVersion = versions[0];
                     if (!selectedVersion?.assetUri) {
-                        throw new Error('No valid asset URL found for this CCW extension.');
+                        throw new Error("No valid asset URL found for this CCW extension.");
                     }
                     const assetUri = selectedVersion.assetUri;
-                    if (this.props.onSetSelectedExtension && this.props.onOpenExtensionImportMethodModal) {
+                    if (
+                        this.props.onSetSelectedExtension &&
+                        this.props.onOpenExtensionImportMethodModal
+                    ) {
                         if (this.props.onSetSelectedExtensions) {
                             this.props.onSetSelectedExtensions([]);
                         }
                         this.props.onSetSelectedExtension({
                             extensionId: ccwEid,
                             extensionURL: assetUri,
-                            _ccwMeta: metadata
+                            _ccwMeta: metadata,
                         });
                         this.props.onOpenExtensionImportMethodModal();
                     } else {
-                        this.props.vm.extensionManager.loadExtensionURL(assetUri)
+                        this.props.vm.extensionManager
+                            .loadExtensionURL(assetUri)
                             .then(() => {
                                 if (this.props.onCategorySelected) {
                                     this.props.onCategorySelected(ccwEid);
                                 }
                             })
-                            .catch(err => {
+                            .catch((err) => {
                                 log.error(err);
                                 // eslint-disable-next-line no-alert
                                 alert(err);
                             });
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     log.error(err);
                     // eslint-disable-next-line no-alert
                     alert(err || String(err));
@@ -1008,12 +1070,12 @@ class ExtensionLibrary extends React.PureComponent {
             return;
         }
 
-        if (extensionId === 'extfind') {
+        if (extensionId === "extfind") {
             loadExtensionAsText(this.props.vm, extensionURL)
                 .then(() => {
                     this.props.onCategorySelected(extensionId);
                 })
-                .catch(err => {
+                .catch((err) => {
                     log.error(err);
                     // eslint-disable-next-line no-alert
                     alert(err);
@@ -1032,37 +1094,38 @@ class ExtensionLibrary extends React.PureComponent {
             }
             this.props.onSetSelectedExtension({
                 extensionId,
-                extensionURL
+                extensionURL,
             });
             this.props.onOpenExtensionImportMethodModal();
         } else if (this.props.vm.extensionManager.isExtensionLoaded(extensionId)) {
             this.props.onCategorySelected(extensionId);
         } else {
-            this.props.vm.extensionManager.loadExtensionURL(extensionURL)
+            this.props.vm.extensionManager
+                .loadExtensionURL(extensionURL)
                 .then(() => {
                     this.props.onCategorySelected(extensionId);
                 })
-                .catch(err => {
+                .catch((err) => {
                     log.error(err);
                     // eslint-disable-next-line no-alert
                     alert(err);
                 });
         }
     }
-    handleItemSelect (item) {
-        this.executeItemAction(item, {useImportModal: true});
+    handleItemSelect(item) {
+        this.executeItemAction(item, { useImportModal: true });
     }
-    handleSelectionToggle (item) {
+    handleSelectionToggle(item) {
         const selectionKey = getItemSelectionKey(item);
-        this.setState(prevState => ({
-            selectedItemKeys: prevState.selectedItemKeys.includes(selectionKey) ?
-                prevState.selectedItemKeys.filter(key => key !== selectionKey) :
-                [...prevState.selectedItemKeys, selectionKey]
+        this.setState((prevState) => ({
+            selectedItemKeys: prevState.selectedItemKeys.includes(selectionKey)
+                ? prevState.selectedItemKeys.filter((key) => key !== selectionKey)
+                : [...prevState.selectedItemKeys, selectionKey],
         }));
     }
-    handleBatchImport () {
+    handleBatchImport() {
         const selectedExtensions = this.getBatchSelectableItems()
-            .filter(item => this.state.selectedItemKeys.includes(getItemSelectionKey(item)))
+            .filter((item) => this.state.selectedItemKeys.includes(getItemSelectionKey(item)))
             .map(toBatchItem);
         if (!selectedExtensions.length) {
             return;
@@ -1073,26 +1136,26 @@ class ExtensionLibrary extends React.PureComponent {
         this.props.onSetSelectedExtensions(selectedExtensions);
         this.props.onOpenExtensionImportMethodModal();
     }
-    handleClearSelection () {
+    handleClearSelection() {
         this.setState({
-            selectedItemKeys: []
+            selectedItemKeys: [],
         });
     }
-    handleFavoritesChange (favorites) {
+    handleFavoritesChange(favorites) {
         this.setState({
-            favorites
+            favorites,
         });
     }
-    handleCCWSortChange (event) {
+    handleCCWSortChange(event) {
         const sortField = event.target.value;
-        this.setState({ccwSortField: sortField, ccwPage: 1});
+        this.setState({ ccwSortField: sortField, ccwPage: 1 });
         this.fetchAndSetCCWItems(this.state.query, sortField, 1);
     }
-    handleCCWRecommendationSelect (sortField) {
-        this.setState({ccwSortField: sortField, ccwPage: 1});
+    handleCCWRecommendationSelect(sortField) {
+        this.setState({ ccwSortField: sortField, ccwPage: 1 });
         this.fetchAndSetCCWItems(this.state.query, sortField, 1);
     }
-    handleCCWPageChange (delta) {
+    handleCCWPageChange(delta) {
         const nextPage = Math.max(1, this.state.ccwPage + delta);
         if (nextPage === this.state.ccwPage) {
             return;
@@ -1102,18 +1165,18 @@ class ExtensionLibrary extends React.PureComponent {
         }
         this.fetchAndSetCCWItems(this.state.query, this.state.ccwSortField, nextPage);
     }
-    handleSourceSelect (selectedSource) {
+    handleSourceSelect(selectedSource) {
         this.setState({
-            selectedSource
+            selectedSource,
         });
         // 切换到CCW时触发实时搜索
         if (selectedSource === SOURCE_KEYS.CCW || selectedSource === SOURCE_KEYS.ALL) {
             this.fetchAndSetCCWItems(this.state.query, this.state.ccwSortField, 1);
         }
     }
-    handleQueryChange (query) {
+    handleQueryChange(query) {
         this.setState({
-            query
+            query,
         });
         // 防抖：用户停止输入500ms后触发CCW搜索
         if (this._queryTimeout) {
@@ -1123,45 +1186,45 @@ class ExtensionLibrary extends React.PureComponent {
             this.fetchAndSetCCWItems(query, this.state.ccwSortField, 1);
         }, 500);
     }
-    handleToggleQuickFilter (filterKey) {
-        this.setState(prevState => ({
+    handleToggleQuickFilter(filterKey) {
+        this.setState((prevState) => ({
             quickFilters: {
                 ...prevState.quickFilters,
-                [filterKey]: !prevState.quickFilters[filterKey]
-            }
+                [filterKey]: !prevState.quickFilters[filterKey],
+            },
         }));
     }
-    handleClearQuery () {
+    handleClearQuery() {
         this.setState({
-            query: ''
+            query: "",
         });
-        this.fetchAndSetCCWItems('', this.state.ccwSortField, 1);
+        this.fetchAndSetCCWItems("", this.state.ccwSortField, 1);
     }
-    handleClearFilters () {
+    handleClearFilters() {
         this.setState({
-            query: '',
+            query: "",
             quickFilters: {
                 favorites: false,
                 selected: false,
                 compatible: false,
                 native: false,
-                custom: false
+                custom: false,
             },
             selectedSource: SOURCE_KEYS.ALL,
-            ccwPage: 1
+            ccwPage: 1,
         });
-        this.fetchAndSetCCWItems('', this.state.ccwSortField, 1);
+        this.fetchAndSetCCWItems("", this.state.ccwSortField, 1);
     }
-    handleCustomExtensionOpen () {
+    handleCustomExtensionOpen() {
         this.props.onOpenCustomExtensionModal();
     }
-    isItemSelectable (item) {
+    isItemSelectable(item) {
         return item.isBatchSelectable;
     }
-    isItemSelected (item) {
+    isItemSelected(item) {
         return this.state.selectedItemKeys.includes(getItemSelectionKey(item));
     }
-    matchesSource (item, sourceKey) {
+    matchesSource(item, sourceKey) {
         // CCW 扩展只在选中 "CCW" 分类时显示，不出现在 "All" 或 "Other" 中
         if (sourceKey === SOURCE_KEYS.CCW) {
             return item.source === SOURCE_KEYS.CCW;
@@ -1178,12 +1241,12 @@ class ExtensionLibrary extends React.PureComponent {
                 SOURCE_KEYS.PM,
                 SOURCE_KEYS.MIST,
                 SOURCE_KEYS.SHARKPOOL,
-                SOURCE_KEYS.CCW
+                SOURCE_KEYS.CCW,
             ].includes(item.source);
         }
         return item.source === sourceKey;
     }
-    matchesQuickFilters (item) {
+    matchesQuickFilters(item) {
         const filters = this.state.quickFilters;
         const selectionKey = getItemSelectionKey(item);
         if (filters.favorites && !this.state.favorites.includes(selectionKey)) {
@@ -1203,16 +1266,16 @@ class ExtensionLibrary extends React.PureComponent {
         }
         return true;
     }
-    matchesSearch (item) {
+    matchesSearch(item) {
         if (!this.state.query) {
             return true;
         }
         return item.searchText.includes(this.state.query.toLowerCase());
     }
-    sortItems (a, b) {
+    sortItems(a, b) {
         return a.originalIndex - b.originalIndex;
     }
-    getSourceCounts (items) {
+    getSourceCounts(items) {
         const counts = {
             [SOURCE_KEYS.ALL]: items.length,
             [SOURCE_KEYS.SCRATCH]: 0,
@@ -1223,7 +1286,7 @@ class ExtensionLibrary extends React.PureComponent {
             [SOURCE_KEYS.MIST]: 0,
             [SOURCE_KEYS.SHARKPOOL]: 0,
             [SOURCE_KEYS.CCW]: this.state.ccwItems.length,
-            [SOURCE_KEYS.OTHER]: 0
+            [SOURCE_KEYS.OTHER]: 0,
         };
         for (const item of items) {
             if (this.matchesSource(item, SOURCE_KEYS.OTHER)) {
@@ -1234,58 +1297,63 @@ class ExtensionLibrary extends React.PureComponent {
         }
         return counts;
     }
-    getSections () {
-        const normalized = this.getNormalizedItems()
-            .filter(item => this.matchesQuickFilters(item) && this.matchesSearch(item));
+    getSections() {
+        const normalized = this.getNormalizedItems().filter(
+            (item) => this.matchesQuickFilters(item) && this.matchesSearch(item),
+        );
         const visibleItems = normalized
-            .filter(item => this.matchesSource(item, this.state.selectedSource))
+            .filter((item) => this.matchesSource(item, this.state.selectedSource))
             .sort(this.sortItems);
-        const commonItems = visibleItems.filter(item => {
+        const commonItems = visibleItems.filter((item) => {
             const selectionKey = getItemSelectionKey(item);
             return this.state.favorites.includes(selectionKey);
         });
         const commonKeys = new Set(commonItems.map(getItemSelectionKey));
-        const remainingItems = visibleItems.filter(item => !commonKeys.has(getItemSelectionKey(item)));
+        const remainingItems = visibleItems.filter(
+            (item) => !commonKeys.has(getItemSelectionKey(item)),
+        );
         const sections = [];
 
         if (commonItems.length) {
             sections.push({
-                key: 'common',
+                key: "common",
                 title: this.props.intl.formatMessage(messages.commonSection),
-                items: commonItems
+                items: commonItems,
             });
         }
 
         if (this.state.selectedSource === SOURCE_KEYS.ALL) {
             for (const sourceKey of SOURCE_NAV_ORDER.slice(1)) {
-                const sourceItems = remainingItems.filter(item => this.matchesSource(item, sourceKey));
+                const sourceItems = remainingItems.filter((item) =>
+                    this.matchesSource(item, sourceKey),
+                );
                 if (!sourceItems.length) {
                     continue;
                 }
                 sections.push({
                     key: `source-${sourceKey}`,
                     title: this.props.intl.formatMessage(messages.sourceSection, {
-                        source: this.getSourceLabel(sourceKey)
+                        source: this.getSourceLabel(sourceKey),
                     }),
-                    items: sourceItems
+                    items: sourceItems,
                 });
             }
         } else if (remainingItems.length) {
             sections.push({
                 key: `source-${this.state.selectedSource}`,
                 title: this.props.intl.formatMessage(messages.moreSection, {
-                    source: this.getSourceLabel(this.state.selectedSource)
+                    source: this.getSourceLabel(this.state.selectedSource),
                 }),
-                items: remainingItems
+                items: remainingItems,
             });
         }
 
         return {
             counts: this.getSourceCounts(normalized),
-            sections
+            sections,
         };
     }
-    getActionLabel (item) {
+    getActionLabel(item) {
         if (item.isCustomLoad) {
             return <FormattedMessage {...messages.openCustomLoader} />;
         }
@@ -1300,31 +1368,31 @@ class ExtensionLibrary extends React.PureComponent {
         }
         return <FormattedMessage {...messages.importExtension} />;
     }
-    getCardProps (item) {
+    getCardProps(item) {
         const badges = [];
         if (!item.isCompatible) {
             badges.push({
-                key: 'incompatible',
-                label: <FormattedMessage {...messages.badgeIncompatible} />
+                key: "incompatible",
+                label: <FormattedMessage {...messages.badgeIncompatible} />,
             });
         }
         if (item.isNative) {
             badges.push({
-                key: 'native',
-                label: <FormattedMessage {...messages.badgeNative} />
+                key: "native",
+                label: <FormattedMessage {...messages.badgeNative} />,
             });
         }
         const sourceToneMap = {
-            [SOURCE_KEYS.SCRATCH]: 'Scratch',
-            [SOURCE_KEYS.ENGINE]: 'Engine',
-            [SOURCE_KEYS.TW]: 'Tw',
-            [SOURCE_KEYS.ASTRA]: 'Astra',
-            [SOURCE_KEYS.PM]: 'Pm',
-            [SOURCE_KEYS.MIST]: 'Mist',
-            [SOURCE_KEYS.SHARKPOOL]: 'Sharkpool',
-            [SOURCE_KEYS.CUSTOM]: 'Custom',
-            [SOURCE_KEYS.SPECIAL]: 'Special',
-            [SOURCE_KEYS.OTHER]: 'Other'
+            [SOURCE_KEYS.SCRATCH]: "Scratch",
+            [SOURCE_KEYS.ENGINE]: "Engine",
+            [SOURCE_KEYS.TW]: "Tw",
+            [SOURCE_KEYS.ASTRA]: "Astra",
+            [SOURCE_KEYS.PM]: "Pm",
+            [SOURCE_KEYS.MIST]: "Mist",
+            [SOURCE_KEYS.SHARKPOOL]: "Sharkpool",
+            [SOURCE_KEYS.CUSTOM]: "Custom",
+            [SOURCE_KEYS.SPECIAL]: "Special",
+            [SOURCE_KEYS.OTHER]: "Other",
         };
 
         return {
@@ -1332,15 +1400,15 @@ class ExtensionLibrary extends React.PureComponent {
             badges,
             hideFavorite: item.isCCWLoad,
             sourceLabel: item.sourceLabel,
-            sourceTone: sourceToneMap[item.source] || 'Other'
+            sourceTone: sourceToneMap[item.source] || "Other",
         };
     }
-    getCCWRecommendationButtons () {
+    getCCWRecommendationButtons() {
         const options = [
-            ['likeCount', '最多喜欢'],
-            ['updatedAt', '最近更新'],
-            ['createdAt', '最新创建'],
-            ['donateCount', '最多投币']
+            ["likeCount", "最多喜欢"],
+            ["updatedAt", "最近更新"],
+            ["createdAt", "最新创建"],
+            ["donateCount", "最多投币"],
         ];
         return options.map(([value, label]) => (
             <button
@@ -1348,25 +1416,39 @@ class ExtensionLibrary extends React.PureComponent {
                 type="button"
                 className={[
                     libraryStyles.quickFilterButton,
-                    this.state.ccwSortField === value ? libraryStyles.quickFilterButtonActive : ''
-                ].join(' ')}
+                    this.state.ccwSortField === value ? libraryStyles.quickFilterButtonActive : "",
+                ].join(" ")}
                 onClick={() => this.handleCCWRecommendationSelect(value)}
             >
                 {label}
             </button>
         ));
     }
-    getCCWSortControl () {
+    getCCWSortControl() {
         return (
-            <div style={{marginTop: '0.75rem'}}>
-                <div className={libraryStyles.sidebarTitle} style={{marginBottom: '0.5rem', opacity: 0.6, fontSize: '0.75rem'}}>
+            <div style={{ marginTop: "0.75rem" }}>
+                <div
+                    className={libraryStyles.sidebarTitle}
+                    style={{ marginBottom: "0.5rem", opacity: 0.6, fontSize: "0.75rem" }}
+                >
                     推荐方式
                 </div>
                 <div className={libraryStyles.quickFilters}>
                     {this.getCCWRecommendationButtons()}
                 </div>
-                <div className={libraryStyles.sidebarTitle} style={{marginTop: '0.75rem', marginBottom: '0.5rem', opacity: 0.6, fontSize: '0.75rem'}}>
-                    第 {this.state.ccwPage} 页{typeof this.state.ccwTotal === 'number' ? ` / 共 ${this.state.ccwTotal} 个` : ''}
+                <div
+                    className={libraryStyles.sidebarTitle}
+                    style={{
+                        marginTop: "0.75rem",
+                        marginBottom: "0.5rem",
+                        opacity: 0.6,
+                        fontSize: "0.75rem",
+                    }}
+                >
+                    第 {this.state.ccwPage} 页
+                    {typeof this.state.ccwTotal === "number"
+                        ? ` / 共 ${this.state.ccwTotal} 个`
+                        : ""}
                 </div>
                 <div className={libraryStyles.quickFilters}>
                     <button
@@ -1389,21 +1471,23 @@ class ExtensionLibrary extends React.PureComponent {
             </div>
         );
     }
-    getSidebar (counts) {
+    getSidebar(counts) {
         return (
             <React.Fragment>
                 <div className={libraryStyles.sidebarTitle}>
                     <FormattedMessage {...messages.sourcesTitle} />
                 </div>
                 <div className={libraryStyles.sidebarNav}>
-                    {SOURCE_NAV_ORDER.map(sourceKey => (
+                    {SOURCE_NAV_ORDER.map((sourceKey) => (
                         <button
                             key={sourceKey}
                             type="button"
                             className={[
                                 libraryStyles.sidebarButton,
-                                this.state.selectedSource === sourceKey ? libraryStyles.sidebarButtonActive : ''
-                            ].join(' ')}
+                                this.state.selectedSource === sourceKey
+                                    ? libraryStyles.sidebarButtonActive
+                                    : "",
+                            ].join(" ")}
                             onClick={() => this.handleSourceSelect(sourceKey)}
                         >
                             <div className={libraryStyles.sidebarButtonLabel}>
@@ -1418,8 +1502,8 @@ class ExtensionLibrary extends React.PureComponent {
                         type="button"
                         className={[
                             libraryStyles.sidebarButton,
-                            libraryStyles.sidebarActionButton
-                        ].join(' ')}
+                            libraryStyles.sidebarActionButton,
+                        ].join(" ")}
                         onClick={this.handleCustomExtensionOpen}
                     >
                         <div className={libraryStyles.sidebarButtonLabel}>
@@ -1431,13 +1515,13 @@ class ExtensionLibrary extends React.PureComponent {
             </React.Fragment>
         );
     }
-    getQuickFilterButtons () {
+    getQuickFilterButtons() {
         const quickFilterConfig = [
-            ['favorites', messages.quickFavorites],
-            ['selected', messages.quickSelected],
-            ['compatible', messages.quickCompatible],
-            ['native', messages.quickNative],
-            ['custom', messages.quickCustom]
+            ["favorites", messages.quickFavorites],
+            ["selected", messages.quickSelected],
+            ["compatible", messages.quickCompatible],
+            ["native", messages.quickNative],
+            ["custom", messages.quickCustom],
         ];
         return quickFilterConfig.map(([key, message]) => (
             <button
@@ -1445,15 +1529,15 @@ class ExtensionLibrary extends React.PureComponent {
                 type="button"
                 className={[
                     libraryStyles.quickFilterButton,
-                    this.state.quickFilters[key] ? libraryStyles.quickFilterButtonActive : ''
-                ].join(' ')}
+                    this.state.quickFilters[key] ? libraryStyles.quickFilterButtonActive : "",
+                ].join(" ")}
                 onClick={() => this.handleToggleQuickFilter(key)}
             >
                 {this.props.intl.formatMessage(message)}
             </button>
         ));
     }
-    renderEmptyState () {
+    renderEmptyState() {
         return (
             <div className={libraryStyles.emptyState}>
                 <div className={libraryStyles.emptyStateTitle}>
@@ -1472,25 +1556,27 @@ class ExtensionLibrary extends React.PureComponent {
             </div>
         );
     }
-    render () {
+    render() {
         const library = this.getLibraryItems();
-        const {counts, sections} = this.getSections();
+        const { counts, sections } = this.getSections();
 
         return (
             <LibraryComponent
-                    contentKey={[
-                        this.state.query,
-                        this.state.selectedSource,
-                        ...Object.keys(this.state.quickFilters)
-                            .filter(key => this.state.quickFilters[key])
-                    ].join(':')}
-                    data={library}
-                    emptyState={this.renderEmptyState()}
-                    favorites={this.state.favorites}
-                    filterQuery={this.state.query}
-                    filterable
-                    getItemProps={this.getCardProps}
-                    headerAction={this.state.selectedItemKeys.length > 0 ? (
+                contentKey={[
+                    this.state.query,
+                    this.state.selectedSource,
+                    ...Object.keys(this.state.quickFilters).filter(
+                        (key) => this.state.quickFilters[key],
+                    ),
+                ].join(":")}
+                data={library}
+                emptyState={this.renderEmptyState()}
+                favorites={this.state.favorites}
+                filterQuery={this.state.query}
+                filterable
+                getItemProps={this.getCardProps}
+                headerAction={
+                    this.state.selectedItemKeys.length > 0 ? (
                         <React.Fragment>
                             <button
                                 type="button"
@@ -1506,25 +1592,26 @@ class ExtensionLibrary extends React.PureComponent {
                             >
                                 <FormattedMessage
                                     {...messages.batchImport}
-                                    values={{count: this.state.selectedItemKeys.length}}
+                                    values={{ count: this.state.selectedItemKeys.length }}
                                 />
                             </button>
                         </React.Fragment>
-                    ) : null}
-                    id="extensionLibrary"
-                    isItemSelectable={this.isItemSelectable}
-                    isItemSelected={this.isItemSelected}
-                    persistableKey="favoriteKey"
-                    quickFilters={this.getQuickFilterButtons()}
-                    sections={library ? sections : []}
-                    sidebar={this.getSidebar(counts)}
-                    title={this.props.intl.formatMessage(messages.extensionTitle)}
-                    visible={this.props.visible}
-                    onFavoritesChange={this.handleFavoritesChange}
-                    onFilterQueryChange={this.handleQueryChange}
-                    onFilterQueryClear={this.handleClearQuery}
-                    onItemSelectionToggle={this.handleSelectionToggle}
-                    onItemSelected={this.handleItemSelect}
+                    ) : null
+                }
+                id="extensionLibrary"
+                isItemSelectable={this.isItemSelectable}
+                isItemSelected={this.isItemSelected}
+                persistableKey="favoriteKey"
+                quickFilters={this.getQuickFilterButtons()}
+                sections={library ? sections : []}
+                sidebar={this.getSidebar(counts)}
+                title={this.props.intl.formatMessage(messages.extensionTitle)}
+                visible={this.props.visible}
+                onFavoritesChange={this.handleFavoritesChange}
+                onFilterQueryChange={this.handleQueryChange}
+                onFilterQueryClear={this.handleClearQuery}
+                onItemSelectionToggle={this.handleSelectionToggle}
+                onItemSelected={this.handleItemSelect}
                 onRequestClose={this.props.onRequestClose}
             />
         );
@@ -1541,7 +1628,7 @@ ExtensionLibrary.propTypes = {
     onSetSelectedExtension: PropTypes.func,
     onSetSelectedExtensions: PropTypes.func,
     visible: PropTypes.bool,
-    vm: PropTypes.instanceOf(VM).isRequired
+    vm: PropTypes.instanceOf(VM).isRequired,
 };
 
 export default injectIntl(ExtensionLibrary);

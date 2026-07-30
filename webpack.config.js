@@ -20,7 +20,7 @@ if (root.length > 0 && !root.endsWith('/')) {
     throw new Error('If ROOT is defined, it must have a trailing slash.');
 }
 
-const FILE_TO_PRINT = path.resolve(__dirname, 'static/02engine-asciilogo.txt'); 
+const FILE_TO_PRINT = path.resolve(__dirname, 'static/02engine-asciilogo.txt');
 
 const htmlWebpackPluginCommon = {
     root: root,
@@ -35,7 +35,7 @@ const base = {
     devtool: process.env.SOURCEMAP || (process.env.NODE_ENV === 'production' ? false : 'cheap-module-source-map'),
     devServer: {
         contentBase: path.resolve(__dirname, 'build'),
-        host: '0.0.0.0',
+        host: 'localhost',
         disableHostCheck: true,
         compress: true,
         port: process.env.PORT || 8601,
