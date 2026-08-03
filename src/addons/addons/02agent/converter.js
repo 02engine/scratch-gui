@@ -1303,6 +1303,9 @@ export function jsToJson(jsCode) {
                         const explicitId = (literalValueOrObj && typeof literalValueOrObj === 'object' && !Array.isArray(literalValueOrObj))
                             ? (literalValueOrObj.id_b64 ? decodeIdFromJs(literalValueOrObj.id_b64) : (literalValueOrObj.id || null))
                             : null;
+                        const explicitScope = (literalValueOrObj && typeof literalValueOrObj === 'object' && !Array.isArray(literalValueOrObj))
+                            ? literalValueOrObj.scope
+                            : undefined;
 
                         const fieldSpec = blockInfo && blockInfo.fields ? blockInfo.fields[actualKey] : null;
                         if (fieldSpec && fieldSpec.menuType === 'placeable' && (typeof literalValue === 'string' || typeof literalValue === 'number')) {
@@ -1341,6 +1344,9 @@ export function jsToJson(jsCode) {
 
                         if (vType !== null) { // Note: vType can be empty string now
                             block.fields[actualKey].variableType = vType;
+                            if (explicitScope === 'local' || explicitScope === 'global') {
+                                block.fields[actualKey].scope = explicitScope;
+                            }
                             if (explicitId) {
                                 block.fields[actualKey].id = explicitId;
                             } else {

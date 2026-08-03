@@ -260,7 +260,7 @@ export const repairListVariableValues = (vm: PluginContext["vm"], targetId?: str
   return repairs;
 };
 
-const resolveVariableReferences = (
+export const resolveVariableReferences = (
   vm: PluginContext["vm"],
   workspace: Blockly.WorkspaceSvg,
   blocksState: any[],
@@ -296,8 +296,15 @@ const resolveVariableReferences = (
     })),
   ];
 
-  const createStableVariableId = (name: string, type: string) => {
-    const base = String(name || "").trim() || createScratchFieldId();
+  const variableMatchesScope = (item: any, scope: string) => {
+    if (scope === "local") return item.source === "runtime" && item.target?.id === target?.id;
+    if (scope === "global") return item.source === "runtime" && Boolean(item.target?.isStage);
+    return true;
+  };
+
+  const createStableVariableId = (name: string, type: string, scope: string) => {
+    const rawBase = String(name || "").trim() || createScratchFieldId();
+    const base = scope === "local" ? `${target?.id || "sprite"}:local:${rawBase}` : rawBase;
     const conflictingVariable = existingVariables.find((item) => item.id === base && (item.name !== name || item.type !== type));
     if (!conflictingVariable) return base;
 
@@ -311,7 +318,7 @@ const resolveVariableReferences = (
     return nextId;
   };
 
-  const ensureWorkspaceVariable = (id: string, name: string, type: string) => {
+  const ensureWorkspaceVariable = (id: string, name: string, type: string, scope: string) => {
     if (!workspace || options.syncWorkspace === false) return;
     try {
       const existingById =
@@ -320,7 +327,7 @@ const resolveVariableReferences = (
 
       const existingByName =
         typeof (workspace as any).getVariable === "function" ? (workspace as any).getVariable(name, type) : null;
-      if (existingByName) return;
+      if (existingByName && scope !== "local") return;
 
       if (typeof (workspace as any).createVariable === "function") {
         (workspace as any).createVariable(name, type, id);
@@ -330,20 +337,22 @@ const resolveVariableReferences = (
     }
   };
 
-  const ensureRuntimeVariable = (id: string, name: string, type: string) => {
-    let variableRecord = existingVariables.find((item) => item.id === id && item.type === type);
+  const ensureRuntimeVariable = (id: string, name: string, type: string, scope: string) => {
+    let variableRecord = existingVariables.find((item) =>
+      item.id === id && item.type === type && variableMatchesScope(item, scope));
     if (!variableRecord) {
-      variableRecord = existingVariables.find((item) => item.name === name && item.type === type);
+      variableRecord = existingVariables.find((item) =>
+        item.name === name && item.type === type && variableMatchesScope(item, scope));
     }
     if (variableRecord?.source === "runtime") {
       if (type === "list" && commit && options.repairLists !== false) {
         repairListVariableValue(variableRecord.target, variableRecord.variable);
       }
-      if (commit) ensureWorkspaceVariable(variableRecord.id, variableRecord.name, type);
+      if (commit) ensureWorkspaceVariable(variableRecord.id, variableRecord.name, type, scope);
       return variableRecord;
     }
 
-    const ownerTarget = type === "broadcast_msg" ? stageTarget : stageTarget || target;
+    const ownerTarget = type === "broadcast_msg" ? stageTarget : scope === "local" ? target : stageTarget || target;
     let variable = getTargetVariables(ownerTarget).find((item) => item.id === id || (item.name === name && item.type === type));
     if (!variable && commit) {
       ownerTarget?.createVariable(id, name, type, false);
@@ -352,7 +361,7 @@ const resolveVariableReferences = (
     if (type === "list" && commit && options.repairLists !== false) {
       repairListVariableValue(ownerTarget, variable);
     }
-    if (commit) ensureWorkspaceVariable(id, name, type);
+    if (commit) ensureWorkspaceVariable(id, name, type, scope);
     existingVariables.push({
       id,
       name,
@@ -364,11 +373,13 @@ const resolveVariableReferences = (
     return existingVariables[existingVariables.length - 1];
   };
 
-  const findVariableReference = (nameOrId: string, type: string) => {
-    const byName = existingVariables.find((item) => item.name === nameOrId && item.type === type);
+  const findVariableReference = (nameOrId: string, type: string, scope: string) => {
+    const byName = existingVariables.find((item) =>
+      item.name === nameOrId && item.type === type && variableMatchesScope(item, scope));
     if (byName) return byName;
 
-    const byId = existingVariables.find((item) => item.id === nameOrId && item.type === type);
+    const byId = existingVariables.find((item) =>
+      item.id === nameOrId && item.type === type && variableMatchesScope(item, scope));
     if (byId) return byId;
 
     return null;
@@ -378,25 +389,28 @@ const resolveVariableReferences = (
     const variableType = field.variableType === "broadcast_msg"
       ? "broadcast_msg"
       : field.name === "VARIABLE" ? "" : "list";
+    const requestedScope = field.scope === "local" ? "local" : field.scope === "global" ? "global" : "auto";
     const requestedName = String(field.value || "").trim();
     if (!requestedName) {
       return;
     }
 
-    const existingVariable = findVariableReference(requestedName, variableType);
+    const requestedId = typeof field.id === "string" ? field.id : "";
+    const existingVariable = (requestedId && findVariableReference(requestedId, variableType, requestedScope)) ||
+      findVariableReference(requestedName, variableType, requestedScope);
     if (existingVariable) {
       field.id = existingVariable.id;
       field.value = existingVariable.name;
       field.variableType = variableType;
-      ensureRuntimeVariable(existingVariable.id, existingVariable.name, variableType);
+      ensureRuntimeVariable(existingVariable.id, existingVariable.name, variableType, requestedScope);
       return;
     }
 
-    const fieldId = createStableVariableId(requestedName, variableType);
+    const fieldId = requestedId || createStableVariableId(requestedName, variableType, requestedScope);
     field.id = fieldId;
     field.value = requestedName;
     field.variableType = variableType;
-    ensureRuntimeVariable(fieldId, requestedName, variableType);
+    ensureRuntimeVariable(fieldId, requestedName, variableType, requestedScope);
   };
 
   blocksState.forEach((blockState) => {

@@ -61,6 +61,43 @@ const makeHarness = () => {
 };
 
 describe('02Agent target block transaction', () => {
+    test('creates explicitly local variables on the sprite instead of the stage', async () => {
+        const {resolveVariableReferences} = await import('../../src/addons/addons/02agent/workspaceRangeTools');
+        const stage: any = {
+            id: 'stage', isStage: true, variables: {},
+            createVariable(id: string, name: string, type: string) {
+                this.variables[id] = {id, name, type, value: 0};
+            }
+        };
+        const sprite: any = {
+            id: 'gamecore', isStage: false, variables: {},
+            createVariable(id: string, name: string, type: string) {
+                this.variables[id] = {id, name, type, value: 0};
+            }
+        };
+        const vm: any = {editingTarget: sprite, runtime: {targets: [stage, sprite]}};
+        const blocks: any[] = [{
+            id: 'set-local',
+            fields: {VARIABLE: {
+                name: 'VARIABLE', value: 'MY_SLOT', id: 'gamecore-local-my-slot',
+                variableType: '', scope: 'local'
+            }}
+        }, {
+            id: 'set-global',
+            fields: {VARIABLE: {
+                name: 'VARIABLE', value: 'CORE_STATE', id: 'core-state',
+                variableType: '', scope: 'global'
+            }}
+        }];
+
+        resolveVariableReferences(vm, workspace, blocks, sprite, {commit: true, syncWorkspace: false});
+
+        expect(sprite.variables['gamecore-local-my-slot']?.name).toBe('MY_SLOT');
+        expect(stage.variables['gamecore-local-my-slot']).toBeUndefined();
+        expect(stage.variables['core-state']?.name).toBe('CORE_STATE');
+        expect(sprite.variables['core-state']).toBeUndefined();
+    });
+
     test('preserves unchanged ids and avoids ids used by another target', async () => {
         uidIndex = 0;
         const {replaceTargetScriptsByUCFSections} = await import('../../src/addons/addons/02agent/workspaceRangeTools');

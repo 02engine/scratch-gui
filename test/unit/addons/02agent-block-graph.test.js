@@ -3,6 +3,7 @@ import {
     validateRuntimeBroadcastBlocks,
     validateSerializedBroadcastSchema
 } from '../../../src/addons/addons/02agent/blockGraph';
+import {jsToJson} from '../../../src/addons/addons/02agent/converter';
 
 const makeValidGraph = () => ({
     hat: {
@@ -128,5 +129,27 @@ describe('02Agent block graph validation', () => {
         expect(decoded.targets[0].lists['列表-id'][1]).toEqual(['小明', '小红']);
         expect(decoded.targets[0].blocks.receiver.fields.BROADCAST_OPTION).toEqual(['开始游戏', '广播-id']);
         expect(validateSerializedBroadcastSchema(decoded).valid).toBe(true);
+    });
+
+    test('converts broadcast DSL into connected menu blocks with stable IDs', () => {
+        const blocks = jsToJson(`
+            event.whenbroadcastreceived({ $field_BROADCAST_OPTION: "开始游戏", $xy: { x: 20, y: 30 } }, () => {
+                event.broadcast({ BROADCAST_INPUT: "开始游戏" });
+            });
+        `);
+        const byId = Object.fromEntries(blocks.map(block => [block.id, block]));
+        const receiver = blocks.find(block => block.opcode === 'event_whenbroadcastreceived');
+        const sender = blocks.find(block => block.opcode === 'event_broadcast');
+        const menu = byId[sender.inputs.BROADCAST_INPUT.block];
+
+        expect(menu).toMatchObject({
+            opcode: 'event_broadcast_menu',
+            parent: sender.id,
+            shadow: true
+        });
+        expect(menu.fields.BROADCAST_OPTION.value).toBe('开始游戏');
+        expect(menu.fields.BROADCAST_OPTION.id).toBe(receiver.fields.BROADCAST_OPTION.id);
+        expect(validateBlockGraph(byId, {scripts: blocks.filter(block => block.topLevel).map(block => block.id)}).valid).toBe(true);
+        expect(validateRuntimeBroadcastBlocks(byId)).toEqual({valid: true, errors: []});
     });
 });
