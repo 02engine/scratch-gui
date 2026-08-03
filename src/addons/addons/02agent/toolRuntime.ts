@@ -136,7 +136,10 @@ export const callAITool = async (aiTools: Record<string, any> | null, functionNa
   validateToolArguments(functionName, args);
 
   if (MUTATING_TOOLS.has(functionName)) {
-    return enqueueMutation(() => dispatchAITool(aiTools, functionName, args));
+    return enqueueMutation(() => {
+      aiTools.assertCanMutate?.();
+      return dispatchAITool(aiTools, functionName, args);
+    });
   }
 
   return dispatchAITool(aiTools, functionName, args);

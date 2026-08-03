@@ -4,7 +4,6 @@ import {
   deleteScriptById,
   getBlocksRangeUCF,
   insertScriptByUCF,
-  repairListVariableValues,
   replaceBlocksRangeByUCF,
   replaceScriptByUCF,
   replaceTargetScriptsByUCFSections,
@@ -12,10 +11,35 @@ import {
 import { setGetBlockInfoTool, setRuntime } from "./converter";
 import scratchBlocksCatalog from "./scratch_blocks.json";
 import { resolveKnownExtension, searchKnownExtensions, type ExtensionRegistryItem } from "./extensionRegistry";
+import { validateSerializedBroadcastSchema, validateBlockGraph, validateRuntimeBroadcastBlocks } from "./blockGraph";
+import * as acorn from "acorn";
 
 // This file contains tools for 02Agent to interact with Scratch.
 
 declare const require: any;
+
+const countJavascriptAstNodes = (source: string) => {
+  try {
+    const root: any = acorn.parse(source, { ecmaVersion: 2020 });
+    const seen = new Set<any>();
+    const stack = [root];
+    let count = 0;
+    while (stack.length) {
+      const node = stack.pop();
+      if (!node || typeof node !== "object" || seen.has(node)) continue;
+      seen.add(node);
+      if (typeof node.type === "string") count += 1;
+      Object.entries(node).forEach(([key, value]) => {
+        if (key === "loc" || key === "start" || key === "end") return;
+        if (Array.isArray(value)) value.forEach((item) => stack.push(item));
+        else if (value && typeof value === "object") stack.push(value);
+      });
+    }
+    return count;
+  } catch {
+    return 0;
+  }
+};
 
 const ScratchVmSprite = (() => {
   try {
@@ -796,17 +820,126 @@ export class AITools {
   private draftContentByPath = new Map<string, string>();
   private costumeVirtualIdByObject = new WeakMap<object, string>();
   private nextCostumeVirtualId = 1;
+  private patchQueue: Promise<unknown> = Promise.resolve();
+  private projectGeneration = 0;
+  private projectId = "";
+  private projectReady = false;
+  private projectSwitching = false;
+  private lastSyncError = "";
+  private disposed = false;
+  private lifecycleHandlers: Array<{ emitter: any; event: string; handler: (...args: any[]) => void }> = [];
 
   constructor(vm: any) {
     this.vm = vm;
+    this._bindProjectLifecycle();
     if (vm?.runtime) {
       setRuntime(vm.runtime);
-      repairListVariableValues(vm);
     }
     const fn = (opcode: string) => this.getBlockInfo(opcode);
     if (typeof fn === 'function') {
       setGetBlockInfoTool(fn);
     }
+  }
+
+  private _bindProjectLifecycle() {
+    const runtime = this.vm?.runtime;
+    const onProjectSwitchStart = () => {
+      this.projectGeneration += 1;
+      this.projectReady = false;
+      this.projectSwitching = true;
+      this.projectId = "";
+      this.lastSyncError = "";
+      this.draftContentByPath.clear();
+      this.costumeVirtualIdByObject = new WeakMap<object, string>();
+      this.nextCostumeVirtualId = 1;
+    };
+    const onProjectLoaded = () => {
+      this.projectGeneration += 1;
+      this.projectReady = Array.isArray(runtime?.targets) && runtime.targets.length > 0;
+      this.projectSwitching = false;
+      this.projectId = this._computeProjectId();
+      this.lastSyncError = "";
+      this.draftContentByPath.clear();
+      this.costumeVirtualIdByObject = new WeakMap<object, string>();
+      this.nextCostumeVirtualId = 1;
+    };
+    const onTargetsUpdate = () => {
+      if (!Array.isArray(runtime?.targets) || runtime.targets.length === 0 || !this.vm?.editingTarget) onProjectSwitchStart();
+      else if (!this.projectReady && !this.projectSwitching) {
+        this.projectReady = true;
+        this.projectId = this._computeProjectId();
+      }
+    };
+    const onExtensionChange = () => {
+      this.projectGeneration += 1;
+      this.draftContentByPath.clear();
+      this.lastSyncError = "";
+    };
+    if (runtime?.on) {
+      runtime.on("PROJECT_LOADED", onProjectLoaded);
+      runtime.on("EXTENSION_ADDED", onExtensionChange);
+      runtime.on("EXTENSION_DELETED", onExtensionChange);
+      this.lifecycleHandlers.push(
+        { emitter: runtime, event: "PROJECT_LOADED", handler: onProjectLoaded },
+        { emitter: runtime, event: "EXTENSION_ADDED", handler: onExtensionChange },
+        { emitter: runtime, event: "EXTENSION_DELETED", handler: onExtensionChange },
+      );
+    }
+    if (this.vm?.on) {
+      this.vm.on("targetsUpdate", onTargetsUpdate);
+      this.lifecycleHandlers.push({ emitter: this.vm, event: "targetsUpdate", handler: onTargetsUpdate });
+    }
+    this.projectReady = Array.isArray(runtime?.targets) && runtime.targets.length > 0 && Boolean(this.vm?.editingTarget);
+    this.projectSwitching = !this.projectReady;
+    this.projectId = this.projectReady ? this._computeProjectId() : "";
+  }
+
+  assertCanMutate() {
+    if (this.disposed) {
+      const error: any = new Error("PROJECT_SWITCHING: this 02Agent project context is no longer active.");
+      error.code = "PROJECT_SWITCHING";
+      throw error;
+    }
+    this._assertProjectReady();
+  }
+
+  private _computeProjectId() {
+    const targets = Array.isArray(this.vm?.runtime?.targets) ? this.vm.runtime.targets : [];
+    return targets.map((target: any) => `${target?.id || ""}:${target?.isStage ? "stage" : this._getTargetName(target)}`).join("|");
+  }
+
+  private _assertProjectReady(expectedGeneration?: number) {
+    if (expectedGeneration !== undefined && expectedGeneration !== this.projectGeneration) {
+      const error: any = new Error("PROJECT_SWITCHING: the project changed while the operation was running.");
+      error.code = "PROJECT_SWITCHING";
+      throw error;
+    }
+    if (this.projectSwitching || !this.projectReady) {
+      const error: any = new Error("PROJECT_SWITCHING: wait until the current Scratch project finishes loading.");
+      error.code = "PROJECT_SWITCHING";
+      throw error;
+    }
+  }
+
+  getSyncStatus() {
+    return {
+      connectionState: "connected",
+      vmReady: Boolean(this.vm?.runtime),
+      projectReady: this.projectReady,
+      syncGeneration: this.projectGeneration,
+      projectId: this.projectId || undefined,
+      lastSyncError: this.lastSyncError || undefined,
+    };
+  }
+
+  dispose() {
+    this.disposed = true;
+    this.lifecycleHandlers.forEach(({ emitter, event, handler }) => emitter?.off?.(event, handler));
+    this.lifecycleHandlers = [];
+    this.projectGeneration += 1;
+    this.projectReady = false;
+    this.projectSwitching = true;
+    this.draftContentByPath.clear();
   }
 
   private _getTarget(targetId?: string) {
@@ -1146,7 +1279,6 @@ export class AITools {
   }
 
   private _getVirtualFiles() {
-    repairListVariableValues(this.vm);
     const targets = Array.isArray(this.vm.runtime?.targets) ? this.vm.runtime.targets : [];
     const pathByTargetId = this._getVirtualPathMapForTargets(targets);
     const scriptEntries: VirtualFileEntry[] = targets.map((target: any) => {
@@ -1913,7 +2045,7 @@ export class AITools {
     };
   }
 
-  private _verifyTargetSyncResult(entry: VirtualFileEntry, expectedContent: string) {
+  private _verifyTargetSyncResult(entry: VirtualFileEntry, expectedContent: string, scriptIdMap: Record<string, string> = {}) {
     const currentEntry = this._getVirtualFile(entry.path);
     if (!currentEntry || currentEntry.kind !== "target") {
       return {
@@ -1924,7 +2056,7 @@ export class AITools {
 
     const expectedSections = extractVirtualScriptSections(expectedContent);
     const actualSections = extractVirtualScriptSections(currentEntry.content);
-    const expectedIds = expectedSections.map((section) => section.scriptId);
+    const expectedIds = expectedSections.map((section) => scriptIdMap[section.scriptId] || section.scriptId);
     const actualIds = actualSections.map((section) => section.scriptId);
     const missingScriptIds = expectedIds.filter((scriptId) => !actualIds.includes(scriptId));
     const extraScriptIds = actualIds.filter((scriptId) => !expectedIds.includes(scriptId));
@@ -1944,7 +2076,8 @@ export class AITools {
     const mismatches: any[] = [];
 
     expectedSections.forEach((expectedSection) => {
-      const actualSection = actualById.get(expectedSection.scriptId);
+      const expectedScriptId = scriptIdMap[expectedSection.scriptId] || expectedSection.scriptId;
+      const actualSection = actualById.get(expectedScriptId);
       if (!actualSection) return;
       if (expectedSection.normalizedCode === actualSection.normalizedCode) return;
 
@@ -1953,14 +2086,14 @@ export class AITools {
         const actualFingerprint = this._getScriptStructureFingerprint(actualSection);
         if (JSON.stringify(expectedFingerprint) !== JSON.stringify(actualFingerprint)) {
           mismatches.push({
-            scriptId: expectedSection.scriptId,
+            scriptId: expectedScriptId,
             expected: expectedFingerprint,
             actual: actualFingerprint,
           });
         }
       } catch (error) {
         mismatches.push({
-          scriptId: expectedSection.scriptId,
+          scriptId: expectedScriptId,
           error: error instanceof Error ? error.message : String(error),
         });
       }
@@ -2027,6 +2160,25 @@ export class AITools {
             line: section.startLine,
             scriptId: section.scriptId,
             message: `Each // @script section must produce exactly one top-level script; got ${topLevelBlocks.length}.`,
+          });
+        }
+        const parsedBlockMap = Object.fromEntries(blocks.map((block: any) => [block.id, block]));
+        const graphDiagnostics = validateBlockGraph(parsedBlockMap, { scripts: topLevelBlocks.map((block: any) => block.id) });
+        if (!graphDiagnostics.valid) {
+          diagnostics.errors.push({
+            line: section.startLine,
+            scriptId: section.scriptId,
+            message: "Generated block graph is invalid.",
+            details: graphDiagnostics.errors,
+          });
+        }
+        const broadcastDiagnostics = validateRuntimeBroadcastBlocks(parsedBlockMap);
+        if (!broadcastDiagnostics.valid) {
+          diagnostics.errors.push({
+            line: section.startLine,
+            scriptId: section.scriptId,
+            message: "Generated broadcast graph is invalid.",
+            details: broadcastDiagnostics.errors,
           });
         }
         const runtimeDiagnostics = this._validateGeneratedBlocksForRuntime(section, blocks);
@@ -2208,10 +2360,48 @@ export class AITools {
         : [],
       rotationCenterX: result?.rotationCenterX,
       rotationCenterY: result?.rotationCenterY,
+      scriptIdMap: result?.scriptIdMap,
     };
   }
 
+  private _validateRuntimeProjectSerialization() {
+    if (typeof this.vm?.toJSON !== "function") return { valid: true, skipped: true };
+    try {
+      const project = JSON.parse(this.vm.toJSON());
+      const broadcast = validateSerializedBroadcastSchema(project);
+      if (!broadcast.valid) return { valid: false, broadcast };
+      const graphResults = (this.vm.runtime?.targets || []).map((target: any) => ({
+        targetId: target.id,
+        validation: validateBlockGraph(target.blocks?._blocks, { scripts: target.blocks?._scripts }),
+        broadcasts: validateRuntimeBroadcastBlocks(target.blocks?._blocks),
+      }));
+      const invalidGraph = graphResults.find((item: any) => !item.validation.valid);
+      if (invalidGraph) return { valid: false, graph: invalidGraph };
+      const invalidBroadcasts = graphResults.find((item: any) => !item.broadcasts.valid);
+      if (invalidBroadcasts) return { valid: false, broadcasts: invalidBroadcasts };
+      const ownersByBlockId = new Map<string, string[]>();
+      (this.vm.runtime?.targets || []).forEach((target: any) => {
+        Object.keys(target.blocks?._blocks || {}).forEach((blockId) => {
+          ownersByBlockId.set(blockId, [...(ownersByBlockId.get(blockId) || []), target.id]);
+        });
+      });
+      const duplicateBlockIds = [...ownersByBlockId.entries()]
+        .filter(([, owners]) => owners.length > 1)
+        .map(([blockId, owners]) => ({ blockId, targetIds: owners }));
+      if (duplicateBlockIds.length) return { valid: false, duplicateBlockIds };
+      return {
+        valid: true,
+        targetCount: project.targets?.length || 0,
+        graph: graphResults.map((item: any) => ({ targetId: item.targetId, stats: item.validation.stats })),
+      };
+    } catch (error) {
+      return { valid: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
   private async _syncVirtualTargetFile(entry: VirtualFileEntry, oldContent: string, newContent: string) {
+    const generation = this.projectGeneration;
+    this._assertProjectReady(generation);
     const oldSections = extractVirtualScriptSections(oldContent);
     const newSections = extractVirtualScriptSections(newContent);
     const oldById = new Map(oldSections.map((section) => [section.scriptId, section]));
@@ -2238,30 +2428,46 @@ export class AITools {
         this.vm,
         window.Blockly.getMainWorkspace() as Blockly.WorkspaceSvg,
         entry.targetId || "",
-        newSections.map((section) => ({ scriptId: section.scriptId, code: section.code })),
+        newSections.map((section) => ({
+          scriptId: section.scriptId,
+          code: section.code,
+          changed: !oldById.has(section.scriptId) || oldById.get(section.scriptId)?.normalizedCode !== section.normalizedCode,
+        })),
         {
           includeComments: true,
+          canCommit: () => this.projectGeneration === generation && this.projectReady && !this.projectSwitching,
         },
       );
       if (!result.success) {
         throw new Error(this._formatSyncFailure("Failed to sync target", entry.path, result));
       }
 
-      const verification = this._verifyTargetSyncResult(entry, newContent);
+      this._assertProjectReady(generation);
+      const verification = this._verifyTargetSyncResult(entry, newContent, result.scriptIdMap || {});
       if (!verification.success) {
+        await result.rollback?.();
         throw new Error(`Target sync verification failed for ${entry.path}: ${verification.error} ${JSON.stringify(verification).slice(0, 1200)}`);
+      }
+
+      const serialization = this._validateRuntimeProjectSerialization();
+      if (!serialization.valid) {
+        await result.rollback?.();
+        throw new Error(`Saved project validation failed after syncing ${entry.path}: ${JSON.stringify(serialization).slice(0, 1400)}`);
       }
 
       return {
         path: entry.path,
         targetId: entry.targetId,
         operationCount: operations.length,
+        scriptIdMap: result.scriptIdMap,
         operations: operations.map((operation) => ({
           type: operation.type,
           scriptId: operation.section?.scriptId || operation.oldSection?.scriptId,
           result,
         })),
         verification,
+        serialization,
+        rollback: result.rollback,
       };
     }
 
@@ -2309,6 +2515,8 @@ export class AITools {
   }
 
   private async _syncVirtualCostumeFile(entry: VirtualFileEntry, _oldContent: string, newContent: string) {
+    const generation = this.projectGeneration;
+    this._assertProjectReady(generation);
     const target = entry.targetId ? this.vm.runtime.getTargetById(entry.targetId) : null;
     const costume = typeof entry.costumeIndex === "number" ? target?.sprite?.costumes?.[entry.costumeIndex] : null;
     if (!target || !costume) {
@@ -2325,7 +2533,38 @@ export class AITools {
     const inferredCenter = target.isStage ? this._inferSvgRotationCenter(target, newContent, fallbackCenter) : fallbackCenter;
     const rotationCenterX = inferredCenter[0];
     const rotationCenterY = inferredCenter[1];
-    this._applySvgToCostumeObject(costume, newContent, rotationCenterX, rotationCenterY);
+    const previous = {
+      svg: this._getCostumeSvgContent(costume),
+      rotationCenterX: costume.rotationCenterX,
+      rotationCenterY: costume.rotationCenterY,
+      size: costume.size,
+      dataFormat: costume.dataFormat,
+      bitmapResolution: costume.bitmapResolution,
+      asset: costume.asset,
+      assetId: costume.assetId,
+      md5: costume.md5,
+      md5ext: costume.md5ext,
+      skinId: costume.skinId,
+    };
+    const restoreCostume = () => {
+      if (previous.svg) this._applySvgToCostumeObject(costume, previous.svg, Number(previous.rotationCenterX), Number(previous.rotationCenterY));
+      costume.rotationCenterX = previous.rotationCenterX;
+      costume.rotationCenterY = previous.rotationCenterY;
+      costume.size = previous.size;
+      costume.dataFormat = previous.dataFormat;
+      costume.bitmapResolution = previous.bitmapResolution;
+      costume.asset = previous.asset;
+      costume.assetId = previous.assetId;
+      costume.md5 = previous.md5;
+      costume.md5ext = previous.md5ext;
+      costume.skinId = previous.skinId;
+    };
+    try {
+      this._applySvgToCostumeObject(costume, newContent, rotationCenterX, rotationCenterY);
+    } catch (error) {
+      restoreCostume();
+      throw error;
+    }
     this.vm.emitTargetsUpdate?.();
     this.vm.runtime.emitProjectChanged?.();
     return {
@@ -2337,6 +2576,11 @@ export class AITools {
       rotationCenterX,
       rotationCenterY,
       operations: [{ type: "update-costume-svg", costumeIndex: entry.costumeIndex, costumeName: costume.name, rotationCenterX, rotationCenterY }],
+      rollback: async () => {
+        restoreCostume();
+        this.vm.emitTargetsUpdate?.();
+        this.vm.runtime.emitProjectChanged?.();
+      },
     };
   }
 
@@ -2568,6 +2812,17 @@ export class AITools {
   }
 
   getDiagnostics(path?: string) {
+    const sync = this.getSyncStatus();
+    if (!sync.projectReady || this.projectSwitching) {
+      return {
+        success: false,
+        valid: false,
+        code: "PROJECT_SWITCHING",
+        error: "The Scratch project is still loading or switching.",
+        sync,
+        diagnostics: [],
+      };
+    }
     const requestedEntry = path ? this._getVirtualFile(path) : null;
     if (path && !requestedEntry) {
       return {
@@ -2584,16 +2839,34 @@ export class AITools {
       return this._validateVirtualFile(entry, entry.content);
     });
     const filteredDiagnostics = diagnostics.filter(Boolean);
-    const valid = filteredDiagnostics.every((item: any) => item.valid);
+    const runtimeValidation = this._validateRuntimeProjectSerialization();
+    const valid = filteredDiagnostics.every((item: any) => item.valid) && runtimeValidation.valid;
 
     return {
       success: valid,
       valid,
       diagnostics: filteredDiagnostics,
+      runtimeValidation,
     };
   }
 
   async applyPatch(patch: string) {
+    const operation = this.patchQueue.then(() => this._applyPatch(patch));
+    this.patchQueue = operation.catch(() => undefined);
+    return operation;
+  }
+
+  private async _applyPatch(patch: string) {
+    const generation = this.projectGeneration;
+    try {
+      this._assertProjectReady(generation);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+        code: (error as any)?.code || "PROJECT_SWITCHING",
+      };
+    }
     const updates = parseCodexPatch(patch);
     const entries = this._getVirtualFiles();
     const nextContentByPath = new Map(entries.map((entry) => [entry.path, entry.content]));
@@ -2657,19 +2930,31 @@ export class AITools {
     }
 
     const sizeProfile = this._getProjectSizeProfile(entries);
-    const useFullSnapshot = sizeProfile.isSmall && typeof this.vm?.toJSON === "function";
-    const snapshot = useFullSnapshot ? this.vm.toJSON() : "";
     const syncResults = [];
 
     try {
       for (const entry of changedEntries) {
+        this._assertProjectReady(generation);
         const result = await this._syncVirtualFile(entry, entry.content, nextContentByPath.get(entry.path) || "");
         syncResults.push(result);
       }
+      this._assertProjectReady(generation);
+      const serialization = this._validateRuntimeProjectSerialization();
+      if (!serialization.valid) throw new Error(`Final project validation failed: ${JSON.stringify(serialization).slice(0, 1400)}`);
     } catch (error) {
-      if (snapshot) {
-        await this._restoreProjectSnapshot(snapshot);
+      const isProjectSwitching = (error as any)?.code === "PROJECT_SWITCHING" || this.projectGeneration !== generation || this.projectSwitching;
+      let rollbackComplete = true;
+      if (!isProjectSwitching) {
+        for (const result of [...syncResults].reverse()) {
+          try {
+            await result?.rollback?.();
+          } catch (rollbackError) {
+            rollbackComplete = false;
+            console.error("[02Agent] Failed to rollback a patch transaction", rollbackError);
+          }
+        }
       }
+      this.lastSyncError = error instanceof Error ? error.message : String(error);
       changedEntries.forEach((entry) => {
         if (entry.kind === "costume") {
           this.draftContentByPath.set(entry.path, nextContentByPath.get(entry.path) || "");
@@ -2678,15 +2963,16 @@ export class AITools {
       const costumeDraftSaved = changedEntries.some((entry) => entry.kind === "costume");
       const largeProjectNote = sizeProfile.isSmall
         ? undefined
-        : "Large runtime data detected; full project rollback and verbose sync results were skipped to avoid oversized serialization.";
+        : "Large runtime data detected; rollback used per-target transactions without serializing the entire project.";
       return {
         success: false,
         mode: sizeProfile.isSmall ? "full" : "large-project",
         sizeProfile,
         error: costumeDraftSaved
-          ? `${error instanceof Error ? error.message : "Failed to apply virtual file changes"}. Invalid costume drafts were saved in 02Agent memory when possible; script changes before the failed operation may already be applied.`
+          ? `${error instanceof Error ? error.message : "Failed to apply virtual file changes"}. Invalid costume drafts were saved in 02Agent memory when possible; committed patch operations were rolled back.`
           : error instanceof Error ? error.message : "Failed to apply virtual file changes",
-        rolledBack: Boolean(snapshot),
+        code: isProjectSwitching ? "PROJECT_SWITCHING" : undefined,
+        rolledBack: rollbackComplete && !isProjectSwitching,
         draftSaved: costumeDraftSaved,
         syncResults: sizeProfile.isSmall ? syncResults : syncResults.map((result) => this._summarizeSyncResult(result)),
         note: largeProjectNote,
@@ -2719,7 +3005,7 @@ export class AITools {
       diagnostics: validationResults,
       note: sizeProfile.isSmall
         ? undefined
-        : "Large runtime data detected; applyPatch used compact output and skipped full project snapshot serialization.",
+        : "Large runtime data detected; applyPatch used compact output and atomic per-target transactions without a full project snapshot.",
     };
   }
 
@@ -4223,7 +4509,16 @@ export class AITools {
   }
 
   getProjectOverview() {
-    const listRepairs = repairListVariableValues(this.vm);
+    const sync = this.getSyncStatus();
+    if (!sync.projectReady || this.projectSwitching) {
+      return {
+        success: false,
+        code: "PROJECT_SWITCHING",
+        error: "The Scratch project is still loading or switching. Retry getProjectOverview after projectReady becomes true.",
+        sync,
+      };
+    }
+    const listRepairs: any[] = [];
     const targets = Array.isArray(this.vm.runtime?.targets) ? this.vm.runtime.targets : [];
     const virtualFiles = this._getVirtualFiles();
     const files = virtualFiles.filter((entry) => entry.kind === "target");
@@ -4233,10 +4528,37 @@ export class AITools {
     const health = this._getDataHealth(targets, pathByTargetId, listRepairs);
     const sizeProfile = this._getProjectSizeProfile(virtualFiles);
     const overviewMode = sizeProfile.isSmall ? "full" : "indexed";
+    const graphStats = targets.map((target: any) => {
+      const validation = validateBlockGraph(target.blocks?._blocks, { scripts: target.blocks?._scripts });
+      const virtualFile = files.find((entry) => entry.targetId === target.id);
+      const astNodeCount = virtualFile
+        ? extractVirtualScriptSections(virtualFile.content).reduce((sum, section) => sum + countJavascriptAstNodes(section.code), 0)
+        : 0;
+      return {
+        targetId: target.id,
+        actualBlockObjectCount: validation.stats.blockCount,
+        topLevelScriptCount: validation.stats.topLevelScriptCount,
+        shadowBlockCount: validation.stats.shadowBlockCount,
+        reachableBlockCount: validation.stats.reachableBlockCount,
+        orphanBlockCount: validation.stats.orphanBlockCount,
+        virtualDslAstNodeCount: astNodeCount,
+        graphValid: validation.valid,
+      };
+    });
 
     return {
       success: true,
       mode: overviewMode,
+      sync,
+      blockStatistics: {
+        actualBlockObjectCount: graphStats.reduce((sum, item) => sum + item.actualBlockObjectCount, 0),
+        topLevelScriptCount: graphStats.reduce((sum, item) => sum + item.topLevelScriptCount, 0),
+        shadowBlockCount: graphStats.reduce((sum, item) => sum + item.shadowBlockCount, 0),
+        reachableBlockCount: graphStats.reduce((sum, item) => sum + item.reachableBlockCount, 0),
+        orphanBlockCount: graphStats.reduce((sum, item) => sum + item.orphanBlockCount, 0),
+        virtualDslAstNodeCount: graphStats.reduce((sum, item) => sum + item.virtualDslAstNodeCount, 0),
+        byTarget: graphStats,
+      },
       sizeProfile,
       reason: sizeProfile.isSmall
         ? undefined

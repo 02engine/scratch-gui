@@ -326,12 +326,13 @@ export function useChat({
     callAITool(aiToolsRef.current as Record<string, any> | null, functionName, args);
 
   useEffect(() => {
-    if (!aiToolsRef.current && vm) {
-      aiToolsRef.current = new AITools(vm);
-    }
+    aiToolsRef.current?.dispose?.();
+    aiToolsRef.current = vm ? new AITools(vm) : null;
 
     return () => {
       abortControllerRef.current?.abort();
+      aiToolsRef.current?.dispose?.();
+      aiToolsRef.current = null;
     };
   }, [vm]);
 

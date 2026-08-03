@@ -10,7 +10,7 @@ type BridgeMessage = {
   method?: string;
   params?: Record<string, any>;
   result?: unknown;
-  error?: { message: string };
+  error?: { message: string; code?: string };
 };
 
 const DEFAULT_BRIDGE_CONFIG: BridgeConfig = {
@@ -76,11 +76,15 @@ export const useBridgeClient = (vm: any) => {
   const reconnectTimerRef = useRef<number | null>(null);
   const shouldReconnectRef = useRef(false);
   const aiToolsRef = useRef<AITools | null>(null);
+  const requestQueueRef = useRef<Promise<unknown>>(Promise.resolve());
 
   useEffect(() => {
-    if (vm && !aiToolsRef.current) {
-      aiToolsRef.current = new AITools(vm);
-    }
+    aiToolsRef.current?.dispose?.();
+    aiToolsRef.current = vm ? new AITools(vm) : null;
+    return () => {
+      aiToolsRef.current?.dispose?.();
+      aiToolsRef.current = null;
+    };
   }, [vm]);
 
   const buildManifest = useCallback(() => {
@@ -90,7 +94,7 @@ export const useBridgeClient = (vm: any) => {
     } catch {
       projectOverview = null;
     }
-    return createBridgeManifest({ projectOverview });
+    return createBridgeManifest({ projectOverview, sync: aiToolsRef.current?.getSyncStatus?.() || null });
   }, []);
 
   const send = useCallback((message: BridgeMessage) => {
@@ -101,12 +105,19 @@ export const useBridgeClient = (vm: any) => {
   }, []);
 
   const handleRequest = useCallback(
-    async (message: BridgeMessage) => {
+    async (message: BridgeMessage, sourceSocket: WebSocket) => {
       if (!message.id) return;
+
+      const sendResponse = (response: BridgeMessage) => {
+        if (socketRef.current !== sourceSocket || sourceSocket.readyState !== WebSocket.OPEN) return false;
+        sourceSocket.send(safeStringifyBridgeMessage(response));
+        return true;
+      };
 
       try {
         if (message.method === "getManifest") {
-          send({ id: message.id, result: buildManifest() });
+          const result = await requestQueueRef.current.catch(() => undefined).then(() => buildManifest());
+          sendResponse({ id: message.id, result });
           return;
         }
 
@@ -115,17 +126,35 @@ export const useBridgeClient = (vm: any) => {
           const args = (message.params?.arguments && typeof message.params.arguments === "object"
             ? message.params.arguments
             : {}) as Record<string, any>;
-          const result = await callAITool(aiToolsRef.current as Record<string, any> | null, toolName, args);
-          send({ id: message.id, result });
+          const requestTools = aiToolsRef.current;
+          const requestGeneration = requestTools?.getSyncStatus?.().syncGeneration;
+          const operation = requestQueueRef.current
+            .catch(() => undefined)
+            .then(() => {
+              if (socketRef.current !== sourceSocket || sourceSocket.readyState !== WebSocket.OPEN) {
+                const error: any = new Error("CLIENT_DISCONNECTED: bridge connection changed before the request could run.");
+                error.code = "CLIENT_DISCONNECTED";
+                throw error;
+              }
+              if (requestTools !== aiToolsRef.current || requestGeneration !== requestTools?.getSyncStatus?.().syncGeneration) {
+                const error: any = new Error("PROJECT_SWITCHING: queued request belongs to an older project generation.");
+                error.code = "PROJECT_SWITCHING";
+                throw error;
+              }
+              return callAITool(requestTools as Record<string, any> | null, toolName, args);
+            });
+          requestQueueRef.current = operation.catch(() => undefined);
+          const result = await operation;
+          sendResponse({ id: message.id, result });
           return;
         }
 
-        send({ id: message.id, error: { message: `Unsupported bridge method: ${message.method || "unknown"}` } });
+        sendResponse({ id: message.id, error: { message: `Unsupported bridge method: ${message.method || "unknown"}` } });
       } catch (error) {
-        send({ id: message.id, error: { message: error instanceof Error ? error.message : String(error) } });
+        sendResponse({ id: message.id, error: { message: error instanceof Error ? error.message : String(error), code: (error as any)?.code } });
       }
     },
-    [buildManifest, send],
+    [buildManifest],
   );
 
   const disconnect = useCallback(() => {
@@ -134,7 +163,8 @@ export const useBridgeClient = (vm: any) => {
       window.clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = null;
     }
-    socketRef.current?.close();
+    const previousSocket = socketRef.current;
+    if (previousSocket && (previousSocket.readyState === WebSocket.OPEN || previousSocket.readyState === WebSocket.CONNECTING)) previousSocket.close(1000, "Bridge disabled");
     socketRef.current = null;
     setStatus("disabled");
   }, []);
@@ -153,12 +183,17 @@ export const useBridgeClient = (vm: any) => {
     shouldReconnectRef.current = true;
     setStatus("connecting");
     setLastError("");
-    socketRef.current?.close();
+    const previousSocket = socketRef.current;
+    if (previousSocket && (previousSocket.readyState === WebSocket.OPEN || previousSocket.readyState === WebSocket.CONNECTING)) previousSocket.close(1000, "Reconnecting");
 
     const socket = new WebSocket(`ws://127.0.0.1:${config.port}/agent?token=${encodeURIComponent(config.token)}`);
     socketRef.current = socket;
 
     socket.addEventListener("open", () => {
+      if (socketRef.current !== socket) {
+        socket.close(1000, "Superseded connection");
+        return;
+      }
       setStatus("connected");
       setLastError("");
       send({ type: "register", result: buildManifest() });
@@ -167,14 +202,15 @@ export const useBridgeClient = (vm: any) => {
     socket.addEventListener("message", (event) => {
       try {
         const message = JSON.parse(String(event.data)) as BridgeMessage;
-        void handleRequest(message);
+        void handleRequest(message, socket);
       } catch (error) {
         setLastError(error instanceof Error ? error.message : String(error));
       }
     });
 
     socket.addEventListener("close", () => {
-      if (socketRef.current === socket) socketRef.current = null;
+      if (socketRef.current !== socket) return;
+      socketRef.current = null;
       if (!shouldReconnectRef.current) return;
       setStatus("connecting");
       reconnectTimerRef.current = window.setTimeout(connect, 1500);
@@ -197,7 +233,8 @@ export const useBridgeClient = (vm: any) => {
     return () => {
       shouldReconnectRef.current = false;
       if (reconnectTimerRef.current !== null) window.clearTimeout(reconnectTimerRef.current);
-      socketRef.current?.close();
+      const socket = socketRef.current;
+      if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) socket.close(1000, "Component unmounted");
     };
   }, [config, connect, disconnect]);
 

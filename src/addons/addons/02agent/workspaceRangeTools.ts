@@ -1,5 +1,8 @@
 import { scratchToUCF, ucfToScratch } from "./ucf";
 import { normalizeModelUCF, toAnnotatedUCF } from "./annotatedUcf";
+import { cloneBlockMap, validateBlockGraph, validateRuntimeBroadcastBlocks, validateSerializedBroadcastSchema } from "./blockGraph";
+
+declare const require: any;
 
 const getScratchBlocks = () => (window as any).ScratchBlocks || window.Blockly;
 const LARGE_SCRIPT_BLOCK_THRESHOLD = 120;
@@ -257,13 +260,20 @@ export const repairListVariableValues = (vm: PluginContext["vm"], targetId?: str
   return repairs;
 };
 
-const resolveVariableReferences = (vm: PluginContext["vm"], workspace: Blockly.WorkspaceSvg, blocksState: any[]) => {
+const resolveVariableReferences = (
+  vm: PluginContext["vm"],
+  workspace: Blockly.WorkspaceSvg,
+  blocksState: any[],
+  targetOverride: any = null,
+  options: { commit?: boolean; repairLists?: boolean; syncWorkspace?: boolean } = {},
+) => {
   const createScratchFieldId = () =>
     window.Blockly?.Utils?.genUid?.() || `ai-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-  const target = vm.editingTarget;
+  const target = targetOverride || vm.editingTarget;
+  const commit = options.commit !== false;
   const runtimeTargets = Array.isArray(vm.runtime?.targets) ? vm.runtime.targets : [];
   const stageTarget = runtimeTargets.find((item: any) => item?.isStage) || target;
-  repairListVariableValues(vm, target?.id);
+  if (commit && options.repairLists !== false) repairListVariableValues(vm, target?.id);
 
   const existingVariables = [
     ...runtimeTargets.flatMap((runtimeTarget: any) =>
@@ -276,7 +286,7 @@ const resolveVariableReferences = (vm: PluginContext["vm"], workspace: Blockly.W
         variable: item,
       })),
     ),
-    ...workspace.getAllVariables().map((item: any) => ({
+    ...(workspace?.getAllVariables?.() || []).map((item: any) => ({
       id: item.id_ || item.id,
       name: item.name,
       type: item.type || "",
@@ -302,7 +312,7 @@ const resolveVariableReferences = (vm: PluginContext["vm"], workspace: Blockly.W
   };
 
   const ensureWorkspaceVariable = (id: string, name: string, type: string) => {
-    if (!workspace) return;
+    if (!workspace || options.syncWorkspace === false) return;
     try {
       const existingById =
         typeof (workspace as any).getVariableById === "function" ? (workspace as any).getVariableById(id) : null;
@@ -326,23 +336,23 @@ const resolveVariableReferences = (vm: PluginContext["vm"], workspace: Blockly.W
       variableRecord = existingVariables.find((item) => item.name === name && item.type === type);
     }
     if (variableRecord?.source === "runtime") {
-      if (type === "list") {
+      if (type === "list" && commit && options.repairLists !== false) {
         repairListVariableValue(variableRecord.target, variableRecord.variable);
       }
-      ensureWorkspaceVariable(variableRecord.id, variableRecord.name, type);
+      if (commit) ensureWorkspaceVariable(variableRecord.id, variableRecord.name, type);
       return variableRecord;
     }
 
     const ownerTarget = type === "broadcast_msg" ? stageTarget : stageTarget || target;
     let variable = getTargetVariables(ownerTarget).find((item) => item.id === id || (item.name === name && item.type === type));
-    if (!variable) {
+    if (!variable && commit) {
       ownerTarget?.createVariable(id, name, type, false);
       variable = ownerTarget?.variables?.[id] || getTargetVariables(ownerTarget).find((item) => item.id === id);
     }
-    if (type === "list") {
+    if (type === "list" && commit && options.repairLists !== false) {
       repairListVariableValue(ownerTarget, variable);
     }
-    ensureWorkspaceVariable(id, name, type);
+    if (commit) ensureWorkspaceVariable(id, name, type);
     existingVariables.push({
       id,
       name,
@@ -365,7 +375,9 @@ const resolveVariableReferences = (vm: PluginContext["vm"], workspace: Blockly.W
   };
 
   const normalizeVariableField = (field: any) => {
-    const variableType = field.name === "VARIABLE" ? "" : "list";
+    const variableType = field.variableType === "broadcast_msg"
+      ? "broadcast_msg"
+      : field.name === "VARIABLE" ? "" : "list";
     const requestedName = String(field.value || "").trim();
     if (!requestedName) {
       return;
@@ -389,7 +401,7 @@ const resolveVariableReferences = (vm: PluginContext["vm"], workspace: Blockly.W
 
   blocksState.forEach((blockState) => {
     Object.values(blockState.fields || {}).forEach((field: any) => {
-      if (field.name !== "VARIABLE" && field.name !== "LIST" && field.name !== "LIST_MENU") return;
+      if (field.name !== "VARIABLE" && field.name !== "LIST" && field.name !== "LIST_MENU" && field.variableType !== "broadcast_msg") return;
       normalizeVariableField(field);
     });
   });
@@ -496,7 +508,16 @@ const refreshWorkspaceAfterRuntimeWrite = async (vm: PluginContext["vm"], target
     await new Promise((resolve) => window.setTimeout(resolve, 60));
   }
   try {
+    const stageTarget = vm.runtime?.getTargetForStage?.();
+    const broadcastVariables = stageTarget
+      ? Object.fromEntries(Object.entries(stageTarget.variables || {}).filter(([, variable]: [string, any]) => variable?.type === "broadcast_msg"))
+      : {};
     vm.emitWorkspaceUpdate?.();
+    // Scratch's workspace serializer removes unreferenced broadcasts as a cleanup side effect.
+    // Agent edits must never delete project data that was not part of the patch.
+    if (stageTarget) Object.entries(broadcastVariables).forEach(([id, variable]) => {
+      if (!stageTarget.variables[id]) stageTarget.variables[id] = variable;
+    });
   } catch (error) {
     console.warn("[02Agent] Runtime blocks were written but workspace refresh failed", error);
     return error instanceof Error ? error.message : String(error);
@@ -896,12 +917,39 @@ export const replaceScriptByUCF = async (
   };
 };
 
+const normalizeProcedureCode = (value: unknown) => String(value || "").replace(/\s+/g, " ").trim();
+
+const parseMutationArray = (value: unknown) => {
+  if (Array.isArray(value)) return value.map(String);
+  try {
+    const parsed = JSON.parse(String(value || "[]"));
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+};
+
+const applyProcedureArgumentIds = (block: any, argumentIds: string[]) => {
+  if (!block?.mutation || argumentIds.length === 0) return;
+  const previousIds = parseMutationArray(block.mutation.argumentids);
+  if (previousIds.length !== argumentIds.length) return;
+  const nextInputs: Record<string, any> = { ...(block.inputs || {}) };
+  previousIds.forEach((previousId, index) => {
+    const nextId = argumentIds[index];
+    if (previousId === nextId || !Object.prototype.hasOwnProperty.call(nextInputs, previousId)) return;
+    nextInputs[nextId] = { ...nextInputs[previousId], name: nextId };
+    delete nextInputs[previousId];
+  });
+  block.inputs = nextInputs;
+  block.mutation.argumentids = JSON.stringify(argumentIds);
+};
+
 export const replaceTargetScriptsByUCFSections = async (
   vm: PluginContext["vm"],
   _workspace: Blockly.WorkspaceSvg,
   targetId: string,
-  sections: Array<{ scriptId: string; code: string }>,
-  options: { includeComments?: boolean } = {},
+  sections: Array<{ scriptId: string; code: string; changed?: boolean }>,
+  options: { includeComments?: boolean; canCommit?: () => boolean } = {},
 ) => {
   const target = targetId ? vm.runtime.getTargetById(targetId) : vm.editingTarget;
   if (!target) {
@@ -909,25 +957,81 @@ export const replaceTargetScriptsByUCFSections = async (
   }
 
   const workspace = _workspace || (window.Blockly.getMainWorkspace() as Blockly.WorkspaceSvg);
-  const existingTopLevelIds = Object.values(target.blocks?._blocks || {})
-    .filter((block: any) => block?.topLevel && !block?.parent)
-    .map((block: any) => block.id);
-  const seenTopLevelIds = new Set<string>();
+  const currentBlocks = target.blocks?._blocks || {};
+  const sectionIds = sections.map((section) => section.scriptId).filter(Boolean);
+  if (new Set(sectionIds).size !== sectionIds.length) {
+    return buildFailureResult("Target file contains duplicate script ids", "validate_target_script_ids", { targetId: target.id, scriptIds: sectionIds });
+  }
+  const currentTopLevelIds = (Array.isArray(target.blocks?._scripts) ? target.blocks._scripts : Object.keys(currentBlocks))
+    .filter((id: string, index: number, list: string[]) => list.indexOf(id) === index)
+    .filter((id: string) => currentBlocks[id]?.topLevel === true && (currentBlocks[id]?.parent === null || currentBlocks[id]?.parent === undefined));
+  const changedSections = sections.filter((section) => section.changed !== false || !currentBlocks[section.scriptId]?.topLevel);
+  const retainedSectionIds = new Set(
+    sections.filter((section) => section.changed === false && currentBlocks[section.scriptId]?.topLevel === true).map((section) => section.scriptId),
+  );
+  const removedTopLevelIds = currentTopLevelIds.filter((id) => !retainedSectionIds.has(id));
+  const candidateBlocks = cloneBlockMap(currentBlocks);
+  const existingProcedureArgumentIds = new Map<string, string[]>();
+  Object.values(currentBlocks).forEach((block: any) => {
+    if (block?.opcode !== "procedures_prototype") return;
+    const proccode = normalizeProcedureCode(block.mutation?.proccode);
+    const argumentIds = parseMutationArray(block.mutation?.argumentids);
+    if (proccode && argumentIds.length) existingProcedureArgumentIds.set(proccode, argumentIds);
+  });
+  const reservedIds = new Set<string>();
+  (vm.runtime?.targets || []).forEach((runtimeTarget: any) => {
+    Object.keys(runtimeTarget?.blocks?._blocks || {}).forEach((id) => reservedIds.add(id));
+  });
+  const generatedIds = new Set<string>();
   const parsedScripts: Array<{ scriptId: string; blocksState: any[]; topLevelBlockId: string }> = [];
+  const commentPlans: Array<{ id: string; blockId: string; text: string; x: number; y: number; width: number; height: number }> = [];
+
+  const makeUniqueId = (preferred?: string, allowExisting = false) => {
+    const candidate = String(preferred || "").trim();
+    if (candidate && !generatedIds.has(candidate) && (allowExisting || !reservedIds.has(candidate))) {
+      generatedIds.add(candidate);
+      reservedIds.add(candidate);
+      return candidate;
+    }
+    let next = "";
+    do {
+      next = window.Blockly?.Utils?.genUid?.() || `02agent-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    } while (reservedIds.has(next) || generatedIds.has(next));
+    generatedIds.add(next);
+    reservedIds.add(next);
+    return next;
+  };
+
+  const remapParsedBlocks = (blocksState: any[], preferredTopLevelId: string) => {
+    const topLevel = blocksState.find((blockState) => blockState.topLevel === true);
+    if (!topLevel) return null;
+    const oldToNew = new Map<string, string>();
+    blocksState.forEach((blockState) => {
+      const preferred = blockState === topLevel && preferredTopLevelId ? preferredTopLevelId : undefined;
+      const mayReuseExistingTopId = Boolean(preferred && currentBlocks[preferred]?.topLevel === true);
+      oldToNew.set(blockState.id, makeUniqueId(preferred, mayReuseExistingTopId));
+    });
+    blocksState.forEach((blockState) => {
+      blockState.id = oldToNew.get(blockState.id) || blockState.id;
+      blockState.parent = blockState.parent ? oldToNew.get(blockState.parent) || blockState.parent : null;
+      blockState.next = blockState.next ? oldToNew.get(blockState.next) || blockState.next : null;
+      Object.values(blockState.inputs || {}).forEach((input: any) => {
+        if (input?.block) input.block = oldToNew.get(input.block) || input.block;
+        if (input?.shadow) input.shadow = oldToNew.get(input.shadow) || input.shadow;
+      });
+    });
+    return blocksState;
+  };
 
   try {
-    for (const section of sections) {
+    for (const section of changedSections) {
       const blocksState = ucfToScratch(normalizeModelUCF(section.code), {
         runtime: vm.runtime,
         includeComments: options.includeComments === true,
       });
       if (!blocksState.length) {
-        return buildFailureResult("Script UCF produced no blocks", "parse_target_script", {
-          targetId: target.id,
-          scriptId: section.scriptId,
-        });
+        return buildFailureResult("Script UCF produced no blocks", "parse_target_script", { targetId: target.id, scriptId: section.scriptId });
       }
-
       const topLevelBlocks = blocksState.filter((blockState) => blockState.topLevel);
       if (topLevelBlocks.length !== 1) {
         return buildFailureResult("Each script section must produce exactly one top-level stack", "validate_target_script_topology", {
@@ -937,54 +1041,190 @@ export const replaceTargetScriptsByUCFSections = async (
         });
       }
 
-      const topLevelBlock = topLevelBlocks[0];
-      if (section.scriptId && topLevelBlock.id !== section.scriptId) {
-        const oldTopLevelId = topLevelBlock.id;
-        if (seenTopLevelIds.has(section.scriptId)) {
-          return buildFailureResult("Duplicate script id in target file", "validate_target_script_ids", {
-            targetId: target.id,
-            scriptId: section.scriptId,
-          });
-        }
-        topLevelBlock.id = section.scriptId;
-        blocksState.forEach((blockState) => {
-          if (blockState.next === oldTopLevelId) blockState.next = section.scriptId;
-          if (blockState.parent === oldTopLevelId) blockState.parent = section.scriptId;
-          Object.values(blockState.inputs || {}).forEach((input: any) => {
-            if (input.block === oldTopLevelId) input.block = section.scriptId;
-            if (input.shadow === oldTopLevelId) input.shadow = section.scriptId;
-          });
-        });
+      const preferredTopId = section.scriptId && (currentBlocks[section.scriptId]?.topLevel === true || !reservedIds.has(section.scriptId))
+        ? section.scriptId
+        : "";
+      const remapped = remapParsedBlocks(blocksState, preferredTopId);
+      if (!remapped) return buildFailureResult("Could not allocate a top-level script block", "allocate_target_script_id", { targetId: target.id, scriptId: section.scriptId });
+      remapped.forEach((blockState) => {
+        if (blockState?.opcode !== "procedures_prototype") return;
+        const existingIds = existingProcedureArgumentIds.get(normalizeProcedureCode(blockState.mutation?.proccode));
+        if (existingIds) applyProcedureArgumentIds(blockState, existingIds);
+      });
+      resolveVariableReferences(vm, workspace, remapped, target, { commit: false });
+      const localGraph = validateBlockGraph(Object.fromEntries(remapped.map((blockState) => [blockState.id, blockState])));
+      if (!localGraph.valid) {
+        return buildFailureResult("Generated script block graph is invalid", "validate_generated_graph", { targetId: target.id, scriptId: section.scriptId, errors: localGraph.errors, stats: localGraph.stats });
       }
-
-      seenTopLevelIds.add(topLevelBlock.id);
-      resolveVariableReferences(vm, workspace, blocksState);
-      parsedScripts.push({ scriptId: section.scriptId, blocksState, topLevelBlockId: topLevelBlock.id });
+      const localBroadcast = validateRuntimeBroadcastBlocks(Object.fromEntries(remapped.map((blockState) => [blockState.id, blockState])));
+      if (!localBroadcast.valid) {
+        return buildFailureResult("Generated broadcast block graph is invalid", "validate_generated_broadcasts", { targetId: target.id, scriptId: section.scriptId, errors: localBroadcast.errors });
+      }
+      const topLevelBlock = remapped.find((blockState) => blockState.topLevel);
+      parsedScripts.push({ scriptId: section.scriptId || topLevelBlock.id, blocksState: remapped, topLevelBlockId: topLevelBlock.id });
     }
 
-    setBlocklyEventGroup(true);
-    const removed = existingTopLevelIds.map((topBlockId) => removeRuntimeScriptBlocks(target, topBlockId));
-    const inserted = parsedScripts.map((script) => insertRuntimeBlocks(target, script.blocksState));
-    repairListVariableValues(vm, target.id);
-    const refreshError = await refreshWorkspaceAfterRuntimeWrite(vm, target);
+    const removeIds = new Set<string>();
+    removedTopLevelIds.forEach((topBlockId) => collectRuntimeSubtreeBlockIds({ blocks: { _blocks: candidateBlocks } } as any, topBlockId, removeIds));
+    removeIds.forEach((id) => delete candidateBlocks[id]);
 
+    parsedScripts.forEach((script) => {
+      script.blocksState.forEach((blockState) => {
+        const block = { ...blockState, fields: { ...(blockState.fields || {}) }, inputs: Object.fromEntries(Object.entries(blockState.inputs || {}).map(([name, input]) => [name, input && typeof input === "object" ? { ...input } : input])) };
+        delete block.commentText;
+        delete block.commentWidth;
+        delete block.commentHeight;
+        candidateBlocks[block.id] = block;
+      });
+    });
+
+    const procedureArgumentIds = new Map<string, string[]>();
+    for (const block of Object.values(candidateBlocks) as any[]) {
+      if (block?.opcode !== "procedures_prototype") continue;
+      const proccode = normalizeProcedureCode(block.mutation?.proccode);
+      const argumentIds = parseMutationArray(block.mutation?.argumentids);
+      if (!proccode || !argumentIds.length) continue;
+      if (procedureArgumentIds.has(proccode)) {
+        return buildFailureResult("Target contains duplicate custom block definitions", "validate_procedure_definitions", { targetId: target.id, proccode });
+      }
+      procedureArgumentIds.set(proccode, argumentIds);
+    }
+    const mutableBlockIds = new Set(parsedScripts.flatMap((script) => script.blocksState.map((blockState) => blockState.id)));
+    Object.values(candidateBlocks).forEach((block: any) => {
+      if (!mutableBlockIds.has(block?.id) || block?.opcode !== "procedures_call") return;
+      const argumentIds = procedureArgumentIds.get(normalizeProcedureCode(block.mutation?.proccode));
+      if (argumentIds) applyProcedureArgumentIds(block, argumentIds);
+    });
+
+    const candidateScripts = sections.map((section) => {
+      if (section.changed === false && retainedSectionIds.has(section.scriptId)) return section.scriptId;
+      const replacement = parsedScripts.find((script) => script.scriptId === section.scriptId);
+      return replacement?.topLevelBlockId || section.scriptId;
+    });
+    const uniqueCandidateScripts = candidateScripts.filter((id, index, list) => id && list.indexOf(id) === index);
+    const candidateComments = { ...(target.comments || {}) };
+    removeIds.forEach((blockId) => {
+      Object.entries(candidateComments).forEach(([commentId, comment]: [string, any]) => {
+        if (comment?.blockId === blockId) delete candidateComments[commentId];
+      });
+    });
+    parsedScripts.forEach((script) => {
+      script.blocksState.forEach((blockState) => {
+        if (typeof blockState.commentText !== "string" || !blockState.commentText.trim()) return;
+        let commentId = `comment-${blockState.id}`;
+        let suffix = 2;
+        while (candidateComments[commentId]) commentId = `comment-${blockState.id}-${suffix++}`;
+        const block = candidateBlocks[blockState.id];
+        block.comment = commentId;
+        commentPlans.push({ id: commentId, blockId: blockState.id, text: blockState.commentText, x: Number(blockState.x || 0) + 32, y: Number(blockState.y || 0) + 32, width: Number(blockState.commentWidth) || 200, height: Number(blockState.commentHeight) || 160 });
+      });
+    });
+
+    const graph = validateBlockGraph(candidateBlocks, { scripts: uniqueCandidateScripts });
+    if (!graph.valid) {
+      return buildFailureResult("Candidate target block graph is invalid; no VM changes were made", "validate_candidate_graph", { targetId: target.id, errors: graph.errors, stats: graph.stats });
+    }
+    const broadcastGraph = validateRuntimeBroadcastBlocks(candidateBlocks);
+    if (!broadcastGraph.valid) {
+      return buildFailureResult("Candidate broadcast block graph is invalid; no VM changes were made", "validate_candidate_broadcasts", { targetId: target.id, errors: broadcastGraph.errors });
+    }
+    try {
+      const sb3 = require("scratch-vm/src/serialization/sb3");
+      const serializedBlocks = sb3.serializeBlocks(candidateBlocks)[0];
+      const serializedBroadcast = validateSerializedBroadcastSchema({ targets: [{ blocks: serializedBlocks }] });
+      if (!serializedBroadcast.valid) {
+        return buildFailureResult("Candidate blocks do not serialize to valid SB3 broadcast input arrays", "validate_candidate_serialization", { targetId: target.id, errors: serializedBroadcast.errors });
+      }
+    } catch (error) {
+      return buildFailureResult(error instanceof Error ? error.message : "Could not validate candidate SB3 serialization", "validate_candidate_serialization", { targetId: target.id });
+    }
+
+    const before = {
+      blocks: target.blocks._blocks,
+      scripts: target.blocks._scripts,
+      comments: target.comments,
+      variablesByTarget: new Map((vm.runtime?.targets || []).map((item: any) => [item.id, {
+        container: item.variables,
+        entries: new Map(Object.entries(item.variables || {}).map(([id, variable]: [string, any]) => [id, {
+          variable,
+          value: variable?.value,
+          internalValue: variable?._value,
+          monitorUpToDate: variable?._monitorUpToDate,
+        }])),
+      }])),
+    };
+    let committed = false;
+    const restore = async () => {
+      target.blocks._blocks = before.blocks;
+      target.blocks._scripts = before.scripts;
+      target.comments = before.comments;
+      before.variablesByTarget.forEach((state: any, id) => {
+        const previousTarget = vm.runtime?.getTargetById?.(id);
+        if (!previousTarget) return;
+        previousTarget.variables = state.container;
+        Object.keys(previousTarget.variables || {}).forEach((variableId) => {
+          if (!state.entries.has(variableId)) delete previousTarget.variables[variableId];
+        });
+        state.entries.forEach((entry: any, variableId: string) => {
+          previousTarget.variables[variableId] = entry.variable;
+          if (entry.variable) {
+            entry.variable.value = entry.value;
+            if ("_value" in entry.variable) entry.variable._value = entry.internalValue;
+            if ("_monitorUpToDate" in entry.variable) entry.variable._monitorUpToDate = entry.monitorUpToDate;
+          }
+        });
+      });
+      target.blocks.resetCache?.();
+      target.blocks.updateTargetSpecificBlocks?.(Boolean(target.isStage));
+      await refreshWorkspaceAfterRuntimeWrite(vm, target);
+    };
+
+    if (options.canCommit && !options.canCommit()) {
+      return buildFailureResult("PROJECT_SWITCHING: project changed before the candidate graph could be committed", "project_switching", { targetId: target.id });
+    }
+    setBlocklyEventGroup(true);
+    try {
+      target.blocks._blocks = candidateBlocks;
+      target.blocks._scripts = uniqueCandidateScripts;
+      target.comments = candidateComments;
+      parsedScripts.forEach((script) => resolveVariableReferences(vm, workspace, script.blocksState, target, {
+        commit: true,
+        repairLists: false,
+        syncWorkspace: false,
+      }));
+      commentPlans.forEach((comment) => target.createComment?.(comment.id, comment.blockId, comment.text, comment.x, comment.y, comment.width, comment.height, false));
+      target.blocks.resetCache?.();
+      target.blocks.updateTargetSpecificBlocks?.(Boolean(target.isStage));
+      const committedGraph = validateBlockGraph(target.blocks._blocks, { scripts: target.blocks._scripts });
+      if (!committedGraph.valid) throw new Error(`Committed target block graph is invalid: ${JSON.stringify(committedGraph.errors).slice(0, 1000)}`);
+      committed = true;
+    } catch (error) {
+      await restore();
+      return buildFailureResult(error instanceof Error ? error.message : "Failed to commit target block graph", "commit_target_graph", { targetId: target.id });
+    } finally {
+      setBlocklyEventGroup(false);
+    }
+
+    const refreshError = await refreshWorkspaceAfterRuntimeWrite(vm, target);
     return {
       success: true,
-      syncMode: "vm-direct-target",
+      syncMode: "vm-direct-target-transaction",
       targetId: target.id,
-      scriptCount: parsedScripts.length,
-      removedScriptIds: existingTopLevelIds,
+      scriptCount: uniqueCandidateScripts.length,
+      removedScriptIds: removedTopLevelIds,
       insertedScriptIds: parsedScripts.map((script) => script.topLevelBlockId),
-      removedBlockCount: removed.reduce((sum, item) => sum + item.removedBlockIds.length, 0),
-      insertedBlockCount: inserted.reduce((sum, item) => sum + item.insertedBlockIds.length, 0),
-      commentCount: inserted.reduce((sum, item) => sum + item.insertedCommentIds.length, 0),
+      scriptIdMap: Object.fromEntries(parsedScripts.map((script) => [script.scriptId, script.topLevelBlockId])),
+      removedBlockCount: removeIds.size,
+      insertedBlockCount: parsedScripts.reduce((sum, script) => sum + script.blocksState.length, 0),
+      commentCount: commentPlans.length,
+      graph: validateBlockGraph(target.blocks._blocks, { scripts: target.blocks._scripts }).stats,
       workspaceRefreshWarning: refreshError || undefined,
+      rollback: async () => {
+        if (committed) await restore();
+      },
     };
   } catch (error) {
-    return buildFailureResult(error instanceof Error ? error.message : "Failed to replace target scripts", "exception", {
-      targetId: target.id,
-      parsedScriptCount: parsedScripts.length,
-    });
+    return buildFailureResult(error instanceof Error ? error.message : "Failed to prepare target script transaction", "prepare_target_graph", { targetId: target.id });
   } finally {
     setBlocklyEventGroup(false);
   }
