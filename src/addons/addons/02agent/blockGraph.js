@@ -129,21 +129,44 @@ export const validateBlockGraph = (blocks, options = {}) => {
   };
 };
 
-const validateBroadcastPrimitive = (value, path, errors) => {
+const validateBroadcastDefinition = (name, id, path, errors, stageBroadcasts) => {
+  if (!stageBroadcasts) return;
+  if (!hasOwn(stageBroadcasts, id)) {
+    errors.push({ path, message: `Broadcast id ${JSON.stringify(id)} is not registered on the stage.` });
+    return;
+  }
+  if (stageBroadcasts[id] !== name) {
+    errors.push({
+      path,
+      message: `Broadcast id ${JSON.stringify(id)} is registered as ${JSON.stringify(stageBroadcasts[id])}, not ${JSON.stringify(name)}.`,
+    });
+  }
+};
+
+const validateBroadcastPrimitive = (value, path, errors, stageBroadcasts) => {
   if (!Array.isArray(value)) return;
   if (value[0] === 11) {
     if (value.length !== 3 || typeof value[1] !== "string" || typeof value[2] !== "string") {
       errors.push({ path, message: "Broadcast primitive must be [11, broadcastName, broadcastId]." });
+    } else {
+      validateBroadcastDefinition(value[1], value[2], path, errors, stageBroadcasts);
     }
   }
 };
 
 export const validateSerializedBroadcastSchema = (project) => {
   const errors = [];
-  (project?.targets || []).forEach((target, targetIndex) => {
+  const targets = project?.targets || [];
+  const stage = targets.find((target) => target?.isStage === true);
+  // Partial target serialization is used while preparing an atomic patch. In
+  // that mode there is no stage to validate against, so only validate shape.
+  const stageBroadcasts = stage && stage.broadcasts && typeof stage.broadcasts === "object"
+    ? stage.broadcasts
+    : null;
+  targets.forEach((target, targetIndex) => {
     Object.entries(target?.blocks || {}).forEach(([blockId, block]) => {
       if (Array.isArray(block)) {
-        validateBroadcastPrimitive(block, `targets[${targetIndex}].blocks.${blockId}`, errors);
+        validateBroadcastPrimitive(block, `targets[${targetIndex}].blocks.${blockId}`, errors, stageBroadcasts);
         return;
       }
       if (!block || typeof block !== "object") return;
@@ -152,14 +175,22 @@ export const validateSerializedBroadcastSchema = (project) => {
         if (!Array.isArray(input) || input.length < 2 || input.length > 3) {
           errors.push({ path: `targets[${targetIndex}].blocks.${blockId}.inputs.BROADCAST_INPUT`, message: "Broadcast input must contain two or three items in SB3 format." });
         } else {
-          validateBroadcastPrimitive(input[1], `targets[${targetIndex}].blocks.${blockId}.inputs.BROADCAST_INPUT[1]`, errors);
-          if (input.length === 3) validateBroadcastPrimitive(input[2], `targets[${targetIndex}].blocks.${blockId}.inputs.BROADCAST_INPUT[2]`, errors);
+          validateBroadcastPrimitive(input[1], `targets[${targetIndex}].blocks.${blockId}.inputs.BROADCAST_INPUT[1]`, errors, stageBroadcasts);
+          if (input.length === 3) validateBroadcastPrimitive(input[2], `targets[${targetIndex}].blocks.${blockId}.inputs.BROADCAST_INPUT[2]`, errors, stageBroadcasts);
         }
       }
       if (block.opcode === "event_whenbroadcastreceived") {
         const field = block.fields?.BROADCAST_OPTION;
         if (!Array.isArray(field) || field.length !== 2 || typeof field[0] !== "string" || typeof field[1] !== "string") {
           errors.push({ path: `targets[${targetIndex}].blocks.${blockId}.fields.BROADCAST_OPTION`, message: "Broadcast receiver field must be [broadcastName, broadcastId]." });
+        } else {
+          validateBroadcastDefinition(
+            field[0],
+            field[1],
+            `targets[${targetIndex}].blocks.${blockId}.fields.BROADCAST_OPTION`,
+            errors,
+            stageBroadcasts,
+          );
         }
       }
     });

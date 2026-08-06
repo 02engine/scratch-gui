@@ -616,6 +616,166 @@ export function jsToJson(jsCode) {
     const scratchIdChars = '!#%()*+,-./0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~';
     const fieldIdByTypeAndName = new Map();
 
+    // Older 02engine builds treated the broadcast menu as an input named
+    // BROADCAST_OPTION. Normalize that shape before graph and SB3 validation
+    // so projects written by either converter generation remain loadable.
+    function normalizeBroadcastInputs() {
+        const byId = new Map(blocks.map(block => [block.id, block]));
+        const receiverIds = new Map();
+        blocks.forEach(block => {
+            if (block.opcode !== 'event_whenbroadcastreceived') return;
+            const field = block.fields && block.fields.BROADCAST_OPTION;
+            if (field && typeof field.value === 'string') {
+                receiverIds.set(field.value, field.id || randomFieldId('broadcast_msg', field.value));
+            }
+        });
+        const removeIds = new Set();
+        blocks.forEach(block => {
+            if (block.opcode !== 'event_broadcast' && block.opcode !== 'event_broadcastandwait') return;
+            const inputs = block.inputs || (block.inputs = {});
+            const legacy = inputs.BROADCAST_OPTION;
+            const current = inputs.BROADCAST_INPUT;
+            const legacyBlock = legacy && legacy.block ? byId.get(legacy.block) : null;
+            const currentBlock = current && current.block ? byId.get(current.block) : null;
+            const menuBlock = currentBlock && currentBlock.opcode === 'event_broadcast_menu'
+                ? currentBlock
+                : legacyBlock && legacyBlock.opcode === 'event_broadcast_menu'
+                    ? legacyBlock
+                    : null;
+            let value = '';
+            if (menuBlock && menuBlock.fields && menuBlock.fields.BROADCAST_OPTION) {
+                value = String(menuBlock.fields.BROADCAST_OPTION.value || '');
+            } else if (legacyBlock && legacyBlock.fields) {
+                const field = legacyBlock.fields.BROADCAST_OPTION || legacyBlock.fields.TEXT;
+                value = field ? String(field.value || '') : '';
+            }
+            if (!value && currentBlock && currentBlock.fields) {
+                const field = currentBlock.fields.BROADCAST_OPTION || currentBlock.fields.TEXT;
+                value = field ? String(field.value || '') : '';
+            }
+            const selected = menuBlock || currentBlock;
+            if (selected && selected.opcode === 'event_broadcast_menu') {
+                inputs.BROADCAST_INPUT = {
+                    name: 'BROADCAST_INPUT',
+                    block: selected.id,
+                    shadow: selected.id
+                };
+                selected.parent = block.id;
+                selected.shadow = true;
+                if (selected.fields && selected.fields.BROADCAST_OPTION) {
+                    selected.fields.BROADCAST_OPTION.id = receiverIds.get(value) || selected.fields.BROADCAST_OPTION.id || randomFieldId('broadcast_msg', value);
+                }
+            } else {
+                const menuId = stableScratchId(`${block.id}:broadcast-menu`);
+                const menu = {
+                    id: menuId,
+                    opcode: 'event_broadcast_menu',
+                    inputs: {},
+                    fields: {
+                        BROADCAST_OPTION: {
+                            name: 'BROADCAST_OPTION',
+                            value,
+                            variableType: 'broadcast_msg',
+                            id: receiverIds.get(value) || randomFieldId('broadcast_msg', value)
+                        }
+                    },
+                    next: null,
+                    topLevel: false,
+                    parent: block.id,
+                    shadow: true,
+                    hidden: false,
+                    locked: false,
+                    collapsed: false
+                };
+                blocks.push(menu);
+                byId.set(menu.id, menu);
+                inputs.BROADCAST_INPUT = { name: 'BROADCAST_INPUT', block: menu.id, shadow: menu.id };
+            }
+            if (legacy && legacy.block && legacy.block !== inputs.BROADCAST_INPUT.block) removeIds.add(legacy.block);
+            if (current && current.block && current.block !== inputs.BROADCAST_INPUT.block && current.block !== (legacy && legacy.block)) removeIds.add(current.block);
+            delete inputs.BROADCAST_OPTION;
+        });
+        if (removeIds.size) {
+            for (let i = blocks.length - 1; i >= 0; i--) {
+                if (removeIds.has(blocks[i].id)) blocks.splice(i, 1);
+            }
+        }
+    }
+
+    // Older generated projects represented control_create_clone_of's
+    // CLONE_OPTION as a field, and the generic input parser can represent a
+    // string as a text shadow. Scratch expects the dedicated
+    // control_create_clone_of_menu shadow instead. Normalize both forms so
+    // the editor renders the self option and the VM receives "_myself_".
+    function normalizeCloneInputs() {
+        const byId = new Map(blocks.map(block => [block.id, block]));
+        const removeIds = new Set();
+        for (const block of blocks) {
+            if (block.opcode !== 'control_create_clone_of') continue;
+            const inputs = block.inputs || (block.inputs = {});
+            const current = inputs.CLONE_OPTION;
+            const currentBlock = current && current.block ? byId.get(current.block) : null;
+            const legacyField = block.fields && block.fields.CLONE_OPTION;
+            let value = '';
+            if (currentBlock && currentBlock.fields) {
+                const field = currentBlock.fields.CLONE_OPTION || currentBlock.fields.TEXT;
+                if (field) value = String(field.value ?? '');
+            }
+            if (!value && legacyField) value = String(legacyField.value ?? '');
+            if (!value) value = '_myself_';
+
+            if (currentBlock && currentBlock.opcode === 'control_create_clone_of_menu') {
+                currentBlock.fields = currentBlock.fields || {};
+                currentBlock.fields.CLONE_OPTION = {
+                    ...(currentBlock.fields.CLONE_OPTION || {}),
+                    name: 'CLONE_OPTION',
+                    value,
+                    // Keep the optional field-id slot explicit.  The 02Engine
+                    // Blockly renderer otherwise displays this menu as
+                    // `克隆（）` even though the VM can execute it.
+                    id: null
+                };
+                currentBlock.parent = block.id;
+                currentBlock.shadow = true;
+                delete block.fields?.CLONE_OPTION;
+                continue;
+            }
+
+            let menuId = stableScratchId(`${block.id}:clone-option`);
+            while (byId.has(menuId)) menuId = `${menuId}~`;
+            const menu = {
+                id: menuId,
+                opcode: 'control_create_clone_of_menu',
+                inputs: {},
+                fields: {
+                    CLONE_OPTION: { name: 'CLONE_OPTION', value, id: null }
+                },
+                next: null,
+                topLevel: false,
+                parent: block.id,
+                shadow: true,
+                hidden: false,
+                locked: false,
+                collapsed: false
+            };
+            blocks.push(menu);
+            byId.set(menuId, menu);
+            block.inputs = block.inputs || {};
+            block.inputs.CLONE_OPTION = {
+                name: 'CLONE_OPTION',
+                block: menuId,
+                shadow: menuId
+            };
+            if (currentBlock && currentBlock.id !== menuId) removeIds.add(currentBlock.id);
+            delete block.fields?.CLONE_OPTION;
+        }
+        if (removeIds.size) {
+            for (let i = blocks.length - 1; i >= 0; i--) {
+                if (removeIds.has(blocks[i].id)) blocks.splice(i, 1);
+            }
+        }
+    }
+
     function decodeIdFromJs(b64url) {
         if (typeof b64url !== 'string') return null;
         let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
@@ -1859,6 +2019,11 @@ export function jsToJson(jsCode) {
         if (da !== db) return da - db;
         return (originalOrder.get(a.id) || 0) - (originalOrder.get(b.id) || 0);
     });
+
+    normalizeBroadcastInputs();
+    normalizeCloneInputs();
+    // Normalizers may append menu shadows after the initial index was built.
+    for (const block of blocks) byId.set(block.id, block);
 
     if (options.validate !== false) {
         validateBlocks();
