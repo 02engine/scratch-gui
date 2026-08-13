@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-08-03T13:04:11.542Z
+// Synced at: 2026-08-13T13:27:17.161Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -314,7 +314,7 @@ export default [
         creator: "Dicuo",
         creatorAlias: "Div",
         isGitHub: true,
-        tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
+        tags: ["customtype", "iterators", "data", "utility", "builder"]
     },
     {
         name: "Algebraic Effects",
@@ -324,7 +324,17 @@ export default [
         creator: "Dicuo",
         creatorAlias: "Div",
         isGitHub: true,
-        tags: ["new", "effects", "control", "data", "utility"]
+        tags: ["effects", "control", "data", "utility"]
+    },
+    {
+        name: "3D Vectors & Quaternions",
+        description: "Perform 3D Math and Rotations with Vectors and Quaternions",
+        code: "Div/divVecQuat.js",
+        banner: "Div/divVecQuat.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "customtype", "3D", "data", "utility", "math"]
     },
     {
         name: "Blobs",
