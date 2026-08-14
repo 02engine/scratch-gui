@@ -56,7 +56,19 @@ const ExpansionBox = ({
     x: Math.max(containerInfo.translateX || 0, 0),
     y: Math.max(containerInfo.translateY || 0, 0)
   });
+  const handleOnMinimize = React.useCallback(async ()=>{
+    if(!windowRef.current) return;
+    windowRef.current.style.scale = "0";
+    windowRef.current.style.opacity = "0";
+    await new Promise(resolve => setTimeout(resolve, 200));
+    onMinimize?.();
+  },[onMinimize])
+  React.useEffect(()=>{
+    if(!windowRef.current) return;
+    windowRef.current.style.scale = "1";
+    windowRef.current.style.opacity = "1";
 
+  },[])
   React.useEffect(() => {
     setPosition({
       x: Math.max(containerInfo.translateX || 0, 0),
@@ -139,7 +151,10 @@ const ExpansionBox = ({
           display: "flex",
           flexDirection: "column",
           background: isDark ? "#152223" : "#f4fbfa",
-          boxShadow: isDark ? "0 18px 46px rgba(0, 0, 0, 0.38)" : "0 18px 46px rgba(16, 72, 68, 0.24)"
+          boxShadow: isDark ? "0 18px 46px rgba(0, 0, 0, 0.38)" : "0 18px 46px rgba(16, 72, 68, 0.24)",
+          scale: 0,
+          opacity: 0,
+          transition: "scale 0.2s ease-in-out, opacity 0.2s ease-in-out"
         }}
       >
         <div
@@ -157,17 +172,17 @@ const ExpansionBox = ({
             userSelect: "none"
           }}
         >
-          {onMinimize ? (
+
             <button
               type="button"
-              onClick={onMinimize}
+              onClick={handleOnMinimize}
               title="最小化到后台"
               style={{ position: "absolute", right: 34, background: "transparent", border: 0, color: "inherit" }}
             >
               −
             </button>
-          ) : null}
-          {onClose ? (
+
+
             <button
               type="button"
               onClick={onClose}
@@ -176,7 +191,6 @@ const ExpansionBox = ({
             >
               ×
             </button>
-          ) : null}
           <strong>{title}</strong>
         </div>
         {children}

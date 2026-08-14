@@ -1,14 +1,11 @@
 import * as React from "react";
 import ReactDOM from "react-dom";
-import Draggable from "react-draggable";
-import styles from "./styles.less";
 import themeStyles from "./ui/Theme.module.less";
 import shell from "./ui/Shell.module.less";
-import Tooltip from "./shims/components/Tooltip";
 import ExpansionBox, { ExpansionRect } from "./shims/components/ExpansionBox.tsx";
 import { useStoredState } from "./hooks/useStoredState";
 import { registerContextMenu } from "./contextMenu";
-import { AIAssistantIcon } from "./components/AIAssistantIcon";
+import Launcher from "./components/Launcher";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { SettingsModal } from "./components/SettingsModal";
 import { ChatArea } from "./components/ChatArea";
@@ -40,12 +37,10 @@ type AgentProps = PluginContext & { editorThemeMode?: ThemeMode };
 const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" }) => {
   console.log(`[02Agent] Rendering\n vm:`, vm)
   const [visible, setVisible] = React.useState(false);
-  const [launcherPosition, setLauncherPosition] = useStoredState("02AGENT_LAUNCHER_POSITION", { x: 0, y: 0 });
+
   const [isAgentMenuOpen, setIsAgentMenuOpen] = React.useState(false);
   const [isComposerExpanded, setIsComposerExpanded] = React.useState(false);
   const [themeMode, setThemeMode] = React.useState<ThemeMode>(editorThemeMode);
-  const containerRef = React.useRef(null);
-  const launcherDraggedRef = React.useRef(false);
   const agentMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [enableReasoning, setEnableReasoning] = useStoredState<boolean>("02AGENT_ENABLE_REASONING", false);
 
@@ -130,21 +125,21 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
     };
   }, []);
 
-  const handleShow = React.useCallback(() => {
+  const handleToggle = React.useCallback(() => {
     setContainerInfo({
       ...containerInfoRef.current,
       ...getContainerPosition(),
     });
-    setVisible(true);
-  }, [getContainerPosition, setContainerInfo]);
+    setVisible(!visible);
+  }, [getContainerPosition, setContainerInfo, visible]);
 
-  const handleClose = () => {
+  const handleClose = React.useCallback(() => {
     setVisible(false);
-  };
-
+  }, []);
   const handleMinimize = () => {
     setVisible(false);
   };
+
 
   const handleRestoreToUserMessage = React.useCallback(
     async (messageId: string, message: { content: string; attachments?: Attachment[] }) => {
@@ -273,7 +268,7 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
       contextMenuRegistration.dispose();
       window.removeEventListener("02agent-add-context", handleAddContext);
     };
-  }, [vm, workspace, handleShow, setAttachments]);
+  }, [vm, workspace, handleToggle, setAttachments]);
 
   if (!pluginsWrapper) {
     console.warn("[02Agent] No portal target found (.plugins-wrapper or #gandi-plugins-wrapper)");
@@ -281,33 +276,8 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
 
   return ReactDOM.createPortal(
     <>
-      <Draggable
-        handle=".tw-02agent-launcher-handle"
-        cancel="input, textarea, select, option, [contenteditable=true]"
-        position={launcherPosition}
-        onStart={() => {
-          launcherDraggedRef.current = false;
-        }}
-        onDrag={() => {
-          launcherDraggedRef.current = true;
-        }}
-        onStop={(_, data) => {
-          setLauncherPosition({ x: data.x, y: data.y });
-          window.setTimeout(() => {
-            launcherDraggedRef.current = false;
-          }, 0);
-        }}
-      >
-      <section className={styles.aiAssistantRoot} ref={containerRef}>
-        <Tooltip
-          className={`tw-02agent-launcher-handle ${styles.icon} ${themeMode === "dark" ? styles.iconDark : styles.iconLight}`}
-          icon={<><AIAssistantIcon /><span>02Agent</span></>}
-          onClick={() => {
-            if (!launcherDraggedRef.current) handleShow();
-          }}
-          tipText={"02Agent"}
-        />
-        {visible &&
+      <Launcher themeMode={themeMode} onToggle={handleToggle} />
+              {visible &&
           ReactDOM.createPortal(
             <ExpansionBox
             id="02agent"
@@ -322,7 +292,7 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
             borderRadius={8}
           >
             <div
-              className={`${styles.container} ${shell.appShell} ${themeStyles.themeRoot} ${
+              className={`${shell.container} ${shell.appShell} ${themeStyles.themeRoot} ${
                 themeMode === "dark" ? themeStyles.themeDark : themeStyles.themeLight
               }`}
             >
@@ -495,8 +465,6 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
           </ExpansionBox>,
           document.body,
         )}
-      </section>
-      </Draggable>
       {/*<ConverterDebugger vm={vm} workspace={workspace} />*/}
     </>,
     pluginsWrapper,
