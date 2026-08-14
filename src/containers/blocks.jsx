@@ -190,6 +190,7 @@ class Blocks extends React.Component {
         this.lastWorkspaceMetricsTargetId = null;
         this.pendingMonitorState = null;
         this.workspaceUpdateFrame = null;
+        this.workspaceLoadGeneration = 0;
         this.toolboxUpdateFrame = null;
         this.monitorUpdateFrame = null;
         this.workspaceChromeRefreshFrame = null;
@@ -427,6 +428,7 @@ class Blocks extends React.Component {
     componentWillUnmount() {
         this.detachVM();
         this.unmounted = true;
+        this.workspaceLoadGeneration++;
         this.flushWorkspaceMetrics();
         this.flushWorkspaceMetricsDebounced.cancel();
         if (this.workspaceMetricsFrame) {
@@ -1140,11 +1142,6 @@ class Blocks extends React.Component {
             this.requestToolboxStateSync(targetChanged || workspaceChanged);
         }
 
-        if (editingTarget && !this.props.workspaceMetrics.targets[editingTarget.id]) {
-            this.updateWorkspaceMetricsCache(editingTarget.id);
-            this.flushWorkspaceMetrics();
-        }
-
         if (!workspaceChanged) {
             this.syncWorkspaceCullingState();
             this.restoreWorkspaceMetrics(editingTargetId);
@@ -1152,14 +1149,69 @@ class Blocks extends React.Component {
             return;
         }
 
-        // Remove and reattach the workspace listener (but allow flyout events)
+        if (targetChanged) {
+            if (this.props.workspaceMetrics.targets[editingTargetId]) {
+                this.restoreWorkspaceMetrics(editingTargetId);
+            } else {
+                this.workspace.scrollX = 0;
+                this.workspace.scrollY = 0;
+                this.workspace.resize();
+            }
+        } else if (this.props.workspaceMetrics.targets[editingTargetId]) {
+            this.restoreWorkspaceMetrics(editingTargetId);
+        }
+
+        const incomingBlockCount = editingTarget && editingTarget.blocks && editingTarget.blocks._blocks ?
+            Object.keys(editingTarget.blocks._blocks).length : 0;
+        const useLazySvgInitialization = incomingBlockCount >= OFFSCREEN_CULLING_BLOCK_THRESHOLD &&
+            typeof this.workspace.setLazySvgInitializationEnabled === 'function';
+        if (typeof this.workspace.setLazySvgInitializationEnabled === 'function') {
+            this.workspace.setLazySvgInitializationEnabled(useLazySvgInitialization);
+        }
+        if (useLazySvgInitialization) {
+            this.workspace.setOffscreenTopBlockCullingEnabled(true);
+        }
+
+        const loadGeneration = ++this.workspaceLoadGeneration;
+
+        // Remove and reattach the workspace listener around the synchronous
+        // clear. Async loader batches suppress their own Blockly events.
         this.workspace.removeChangeListener(this.props.vm.blockListener);
         const dom = this.ScratchBlocks.Xml.textToDom(data.xml);
-        try {
-            this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
+        const finishWorkspaceLoad = () => {
+            if (this.unmounted || loadGeneration !== this.workspaceLoadGeneration) return;
             this.lastAppliedWorkspaceXML = data.xml;
             this.isLargeWorkspace = false;
             this.syncWorkspaceCullingState();
+            this.lastEditingTargetId = editingTargetId;
+            this.updateWorkspaceMetricsCache(editingTargetId);
+            this.flushWorkspaceMetrics();
+        };
+        const handleWorkspaceLoadError = error => {
+            if (this.unmounted || loadGeneration !== this.workspaceLoadGeneration) return;
+            if (error.message) {
+                error.message = `Workspace Update Error: ${error.message}`;
+            }
+            log.error(error);
+        };
+        try {
+            if (useLazySvgInitialization && this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlAsync) {
+                const load = this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlAsync(
+                    dom,
+                    this.workspace,
+                    () => loadGeneration !== this.workspaceLoadGeneration
+                );
+                this.workspace.clearUndo();
+                this.workspace.addChangeListener(this.props.vm.blockListener);
+                load.then(result => {
+                    if (!result.cancelled) finishWorkspaceLoad();
+                }).catch(handleWorkspaceLoadError);
+                this.lastEditingTargetId = editingTargetId;
+                return;
+            }
+            this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
+            this.workspace.clearUndo();
+            finishWorkspaceLoad();
         } catch (error) {
             // The workspace is likely incomplete. What did update should be
             // functional.
@@ -1170,20 +1222,9 @@ class Blocks extends React.Component {
             // incomplete. Throwing the error would keep things like setting the
             // correct editing target from happening which can interfere with
             // some blocks and processes in the vm.
-            if (error.message) {
-                error.message = `Workspace Update Error: ${error.message}`;
-            }
-            log.error(error);
+            handleWorkspaceLoadError(error);
         }
         this.workspace.addChangeListener(this.props.vm.blockListener);
-
-        this.restoreWorkspaceMetrics(editingTargetId);
-
-        // Clear the undo state of the workspace since this is a
-        // fresh workspace and we don't want any changes made to another sprites
-        // workspace to be 'undone' here.
-        this.workspace.clearUndo();
-        this.lastEditingTargetId = editingTargetId;
     }
     handleMonitorsUpdate(monitors) {
         this.pendingMonitorState = monitors;

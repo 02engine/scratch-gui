@@ -402,6 +402,9 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
 
     const originalClearWorkspaceAndLoadFromXml = ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml;
     ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml = function (xml, workspace) {
+        workspace.asyncXmlLoadToken_ = (workspace.asyncXmlLoadToken_ || 0) + 1;
+        workspace.deferBlockRendering_ = false;
+        workspace.deferSvgInitialization_ = false;
         const deferBlockRendering = !!(
             workspace.rendered &&
             workspace.setOffscreenTopBlockCullingEnabled &&
@@ -410,9 +413,14 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         if (deferBlockRendering) {
             workspace.deferBlockRendering_ = true;
         }
-        const blockIds = originalClearWorkspaceAndLoadFromXml(xml, workspace);
-        if (deferBlockRendering) {
+        let blockIds;
+        try {
+            blockIds = originalClearWorkspaceAndLoadFromXml(xml, workspace);
+        } finally {
             workspace.deferBlockRendering_ = false;
+            workspace.deferSvgInitialization_ = false;
+        }
+        if (deferBlockRendering) {
             if (workspace.renderVisibleTopBlocks) {
                 workspace.renderVisibleTopBlocks();
             }
@@ -421,6 +429,296 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             }
         }
         return blockIds;
+    };
+
+    ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlAsync = function (xml, workspace, isCancelled = () => false) {
+        const loadToken = (workspace.asyncXmlLoadToken_ || 0) + 1;
+        workspace.asyncXmlLoadToken_ = loadToken;
+
+        const ownsWorkspace = () => workspace.asyncXmlLoadToken_ === loadToken;
+        const cancelled = () => !ownsWorkspace() || isCancelled() || !workspace.rendered;
+        const nextFrame = callback => requestAnimationFrame(() => setTimeout(callback, 0));
+        const now = () => (typeof performance === 'undefined' ? Date.now() : performance.now());
+        const getPosition = element => ({
+            x: Number.parseInt(element.getAttribute('x'), 10) || 10,
+            y: Number.parseInt(element.getAttribute('y'), 10) || 10
+        });
+        const metrics = workspace.getMetrics ? workspace.getMetrics() : null;
+        const viewport = metrics ? {
+            left: -metrics.viewLeft,
+            right: -metrics.viewLeft + metrics.viewWidth,
+            top: -metrics.viewTop,
+            bottom: -metrics.viewTop + metrics.viewHeight
+        } : null;
+        const distanceFromViewport = element => {
+            if (!viewport) return 0;
+            const position = getPosition(element);
+            const dx = Math.max(viewport.left - position.x, 0, position.x - viewport.right);
+            const dy = Math.max(viewport.top - position.y, 0, position.y - viewport.bottom);
+            return (dx * dx) + (dy * dy);
+        };
+
+        const scripts = [];
+        const variables = [];
+        const comments = [];
+        for (let i = 0; i < xml.childNodes.length; i++) {
+            const child = xml.childNodes[i];
+            const name = child.nodeName.toLowerCase();
+            if (name === 'block' || (name === 'shadow' && !ScratchBlocks.Events.recordUndo)) {
+                scripts.push({element: child, order: i, distance: distanceFromViewport(child)});
+            } else if (name === 'variables') {
+                variables.push(child);
+            } else if (name === 'comment') {
+                comments.push(child);
+            }
+        }
+        scripts.sort((a, b) => (a.distance - b.distance) || (a.order - b.order));
+
+        const setLoadFlags = enabled => {
+            workspace.deferBlockRendering_ = enabled;
+            workspace.deferSvgInitialization_ = enabled;
+            workspace.setResizesEnabled(!enabled);
+            workspace.setToolboxRefreshEnabled(!enabled);
+        };
+        const runWithoutEvents = callback => {
+            ScratchBlocks.Events.disable();
+            ScratchBlocks.Field.startCache();
+            try {
+                return callback();
+            } finally {
+                ScratchBlocks.Field.stopCache();
+                ScratchBlocks.Events.enable();
+            }
+        };
+        // Blockly's recursive importer cannot yield inside deeply nested
+        // SUBSTACKs. This explicit stack preserves its order and connections.
+        const createBlockFrame = (element, onComplete) => {
+            const prototypeName = element.getAttribute('type');
+            if (!prototypeName) {
+                throw new Error(`Block type unspecified: ${element.outerHTML}`);
+            }
+            return {
+                element,
+                block: workspace.newBlock(prototypeName, element.getAttribute('id')),
+                childIndex: 0,
+                onComplete
+            };
+        };
+        const completeBlockFrame = frame => {
+            const {block, element} = frame;
+            const inline = element.getAttribute('inline');
+            if (inline) block.setInputsInline(inline === 'true');
+            const disabled = element.getAttribute('disabled');
+            if (disabled) block.setDisabled(disabled === 'true' || disabled === 'disabled');
+            const deletable = element.getAttribute('deletable');
+            if (deletable) block.setDeletable(deletable === 'true');
+            const movable = element.getAttribute('movable');
+            if (movable) block.setMovable(movable === 'true');
+            const editable = element.getAttribute('editable');
+            if (editable) block.setEditable(editable === 'true');
+            const collapsed = element.getAttribute('collapsed');
+            if (collapsed) block.setCollapsed(collapsed === 'true');
+            if (element.nodeName.toLowerCase() === 'shadow') block.setShadow(true);
+            frame.onComplete(block);
+        };
+        const processBlockFrame = task => {
+            const frame = task.stack[task.stack.length - 1];
+            if (frame.childIndex >= frame.element.childNodes.length) {
+                task.stack.pop();
+                completeBlockFrame(frame);
+                return;
+            }
+
+            const element = frame.element.childNodes[frame.childIndex++];
+            if (element.nodeType === 3) return;
+
+            const {block} = frame;
+            const elementName = element.nodeName.toLowerCase();
+            const name = element.getAttribute('name');
+            let childBlockElement = null;
+            let childShadowElement = null;
+            for (let i = 0; i < element.childNodes.length; i++) {
+                const child = element.childNodes[i];
+                if (child.nodeType !== 1) continue;
+                const childName = child.nodeName.toLowerCase();
+                if (childName === 'block') childBlockElement = child;
+                if (childName === 'shadow') childShadowElement = child;
+            }
+            if (!childBlockElement && childShadowElement) childBlockElement = childShadowElement;
+
+            if (elementName === 'mutation') {
+                if (block.domToMutation) {
+                    block.domToMutation(element);
+                    if (block.initSvg) block.initSvg();
+                }
+                return;
+            }
+            if (elementName === 'comment') {
+                const bubbleX = Number.parseInt(element.getAttribute('x'), 10);
+                const bubbleY = Number.parseInt(element.getAttribute('y'), 10);
+                block.setCommentText(
+                    element.textContent,
+                    element.getAttribute('id'),
+                    bubbleX,
+                    bubbleY,
+                    (element.getAttribute('minimized') || false) === 'true'
+                );
+                const visible = element.getAttribute('pinned');
+                if (visible && !block.isInFlyout) {
+                    setTimeout(() => {
+                        if (block.comment && block.comment.setVisible) {
+                            block.comment.setVisible(visible === 'true');
+                        }
+                    }, 1);
+                }
+                const bubbleWidth = Number.parseInt(element.getAttribute('w'), 10);
+                const bubbleHeight = Number.parseInt(element.getAttribute('h'), 10);
+                if (!Number.isNaN(bubbleWidth) && !Number.isNaN(bubbleHeight) &&
+                    block.comment && block.comment.setVisible) {
+                    if (block.comment instanceof ScratchBlocks.ScratchBlockComment) {
+                        block.comment.setSize(bubbleWidth, bubbleHeight);
+                    } else {
+                        block.comment.setBubbleSize(bubbleWidth, bubbleHeight);
+                    }
+                }
+                return;
+            }
+            if (elementName === 'data') {
+                block.data = element.textContent;
+                return;
+            }
+            if (elementName === 'title' || elementName === 'field') {
+                ScratchBlocks.Xml.domToField_(block, name, element);
+                return;
+            }
+            if (elementName === 'value' || elementName === 'statement') {
+                const input = block.getInput(name);
+                if (!input) {
+                    console.warn(`Ignoring non-existent input ${name} in block ${block.type}`);
+                    return;
+                }
+                if (childShadowElement) input.connection.setShadowDom(childShadowElement);
+                if (childBlockElement) {
+                    task.blockCount++;
+                    task.stack.push(createBlockFrame(childBlockElement, childBlock => {
+                        const connection = childBlock.outputConnection || childBlock.previousConnection;
+                        if (!connection) throw new Error('Child block does not have an output or previous connection.');
+                        input.connection.connect(connection);
+                    }));
+                }
+                return;
+            }
+            if (elementName === 'next') {
+                if (childShadowElement && block.nextConnection) {
+                    block.nextConnection.setShadowDom(childShadowElement);
+                }
+                if (childBlockElement) {
+                    if (!block.nextConnection || block.nextConnection.isConnected()) {
+                        throw new Error(`Invalid next connection on block ${block.type}`);
+                    }
+                    task.blockCount++;
+                    task.stack.push(createBlockFrame(childBlockElement, childBlock => {
+                        if (!childBlock.previousConnection) {
+                            throw new Error('Next block does not have a previous connection.');
+                        }
+                        block.nextConnection.connect(childBlock.previousConnection);
+                    }));
+                }
+            }
+        };
+        const blockIds = [];
+        const finish = wasCancelled => {
+            if (ownsWorkspace()) {
+                setLoadFlags(false);
+                if (!wasCancelled) {
+                    workspace.resizeContents();
+                    if (workspace.renderVisibleTopBlocks) workspace.renderVisibleTopBlocks();
+                    if (workspace.queueIntersectionCheck) workspace.queueIntersectionCheck();
+                }
+            }
+            return {cancelled: wasCancelled, blockIds};
+        };
+
+        setLoadFlags(true);
+        runWithoutEvents(() => {
+            workspace.clear();
+            for (const variableElement of variables) {
+                ScratchBlocks.Xml.domToVariables(variableElement, workspace);
+            }
+            const width = workspace.RTL ? workspace.getWidth() : 0;
+            for (const commentElement of comments) {
+                if (workspace.rendered) {
+                    ScratchBlocks.WorkspaceCommentSvg.fromXml(commentElement, workspace, width);
+                } else {
+                    ScratchBlocks.WorkspaceComment.fromXml(commentElement, workspace);
+                }
+            }
+        });
+        setLoadFlags(true);
+
+        let index = 0;
+        let blockTask = null;
+        return new Promise((resolve, reject) => {
+            const processSlice = () => {
+                if (cancelled()) {
+                    resolve(finish(true));
+                    return;
+                }
+
+                const started = now();
+                try {
+                    runWithoutEvents(() => {
+                        do {
+                            if (!blockTask) {
+                                if (index >= scripts.length) break;
+                                const script = scripts[index++].element;
+                                const nextBlockTask = {
+                                    element: script,
+                                    blockCount: 1,
+                                    topBlock: null,
+                                    stack: []
+                                };
+                                nextBlockTask.stack.push(createBlockFrame(script, block => {
+                                    nextBlockTask.topBlock = block;
+                                }));
+                                blockTask = nextBlockTask;
+                            }
+
+                            processBlockFrame(blockTask);
+                            if (blockTask.stack.length === 0) {
+                                const {topBlock, element, blockCount} = blockTask;
+                                topBlock.setConnectionsHidden(true);
+                                topBlock.deferredRenderPending_ = true;
+                                topBlock.deferredSvgInitPending_ = true;
+                                topBlock.lazyEstimatedWidth_ = 1200;
+                                topBlock.lazyEstimatedHeight_ = Math.max(160, blockCount * 5);
+                                const position = getPosition(element);
+                                topBlock.translate(
+                                    workspace.RTL ? workspace.getWidth() - position.x : position.x,
+                                    position.y
+                                );
+                                topBlock.updateDisabled();
+                                blockIds.push(topBlock.id);
+                                blockTask = null;
+                            }
+                        } while (now() - started < 6 && !cancelled());
+                    });
+                } catch (error) {
+                    finish(false);
+                    reject(error);
+                    return;
+                }
+
+                if (workspace.renderVisibleTopBlocks) workspace.renderVisibleTopBlocks();
+                if (workspace.queueIntersectionCheck) workspace.queueIntersectionCheck();
+                if (index >= scripts.length && !blockTask) {
+                    resolve(finish(false));
+                } else {
+                    nextFrame(processSlice);
+                }
+            };
+            nextFrame(processSlice);
+        });
     };
 
     ScratchBlocks.Xml.domToBlock = function (xmlBlock, workspace) {
@@ -437,10 +735,13 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
             topBlock = ScratchBlocks.Xml.domToBlockHeadless_(xmlBlock, workspace);
             const blocks = topBlock.getDescendants(false);
             const deferBlockRendering = !!workspace.deferBlockRendering_;
+            const deferSvgInitialization = !!workspace.deferSvgInitialization_;
             if (workspace.rendered) {
                 topBlock.setConnectionsHidden(true);
-                for (let i = blocks.length - 1; i >= 0; i--) {
-                    blocks[i].initSvg();
+                if (!deferSvgInitialization) {
+                    for (let i = blocks.length - 1; i >= 0; i--) {
+                        blocks[i].initSvg();
+                    }
                 }
                 if (!deferBlockRendering) {
                     for (let i = blocks.length - 1; i >= 0; i--) {
@@ -456,6 +757,11 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                     workspace.resizeContents();
                 } else {
                     topBlock.deferredRenderPending_ = true;
+                    if (deferSvgInitialization) {
+                        topBlock.deferredSvgInitPending_ = true;
+                        topBlock.lazyEstimatedWidth_ = 1200;
+                        topBlock.lazyEstimatedHeight_ = Math.max(160, blocks.length * 5);
+                    }
                 }
                 topBlock.updateDisabled();
             } else {

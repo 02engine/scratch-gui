@@ -107,8 +107,8 @@ const EDITOR_WINDOW_BASE_Z_INDEX = 120;
 const TARGET_PANE_WINDOW_Z_INDEX = 470;
 const STAGE_WINDOW_Z_INDEX = 475;
 const EDITOR_WINDOW_DEFAULT_SIZE = {width: 760, height: 560};
-const EDITOR_WINDOW_MIN_SIZE = {width: 0, height: 0};
-const EDITOR_WINDOW_MAX_SIZE = {width: Number.MAX_SAFE_INTEGER, height: Number.MAX_SAFE_INTEGER};
+const UNBOUNDED_WINDOW_MIN_SIZE = {width: 0, height: 0};
+const UNBOUNDED_WINDOW_MAX_SIZE = {width: Number.MAX_SAFE_INTEGER, height: Number.MAX_SAFE_INTEGER};
 const EDITOR_WINDOW_INITIAL_MARGIN_X = 12;
 const EDITOR_WINDOW_INITIAL_MARGIN_BOTTOM = 12;
 const EDITOR_WINDOW_INITIAL_TOP_OFFSET = 40;
@@ -1412,8 +1412,8 @@ const GUIComponent = props => {
                     headerActions={renderEditorWindowHeaderActions(session)}
                     isFullScreen={session.isFullScreen}
                     isMinimized={session.isMinimized}
-                    maxSize={EDITOR_WINDOW_MAX_SIZE}
-                    minSize={EDITOR_WINDOW_MIN_SIZE}
+                    maxSize={UNBOUNDED_WINDOW_MAX_SIZE}
+                    minSize={UNBOUNDED_WINDOW_MIN_SIZE}
                     onActivate={activateEditorWindow}
                     onClose={handleEditorWindowClose}
                     onDragStop={handleEditorWindowPositionChange}
@@ -1446,8 +1446,8 @@ const GUIComponent = props => {
                     headerActions={renderEditorWindowHeaderActions(activeSession)}
                     isFullScreen={activeSession.isFullScreen}
                     isMinimized={activeSession.isMinimized}
-                    maxSize={EDITOR_WINDOW_MAX_SIZE}
-                    minSize={EDITOR_WINDOW_MIN_SIZE}
+                    maxSize={UNBOUNDED_WINDOW_MAX_SIZE}
+                    minSize={UNBOUNDED_WINDOW_MIN_SIZE}
                     onActivate={activateEditorWindow}
                     onClose={handleEditorWindowClose}
                     onContentResize={handleEditorWindowContentResize}
@@ -1760,8 +1760,8 @@ const GUIComponent = props => {
                                     title="Stage"
                                     defaultPosition={stageWindowPosition}
                                     defaultSize={stageWindowSize}
-                                    minSize={{width: 74, height: 25}}
-                                    maxSize={{width: 960+4, height: 720+75}}
+                                    minSize={UNBOUNDED_WINDOW_MIN_SIZE}
+                                    maxSize={UNBOUNDED_WINDOW_MAX_SIZE}
                                     allowResize={true}
                                     allowMaximize={false}
                                     onContentResize={handleStageWindowContentResize}
@@ -1793,8 +1793,8 @@ const GUIComponent = props => {
                                     title="Sprites"
                                     defaultPosition={targetPaneWindowPosition}
                                     defaultSize={targetPaneWindowSize}
-                                    minSize={{width: 471, height: 211}}
-                                    maxSize={{width: 600, height: 800}}
+                                    minSize={UNBOUNDED_WINDOW_MIN_SIZE}
+                                    maxSize={UNBOUNDED_WINDOW_MAX_SIZE}
                                     onDragStop={(id, position) => setTargetPaneWindowPosition(position)}
                                     onResizeStop={(id, size) => setTargetPaneWindowSize(size)}
                                     onMinimizeToggle={(id, minimized) => setTargetPaneWindowMinimized(minimized)}
