@@ -10,6 +10,7 @@ import extensionLibraryContent, {
     galleryMore
 } from '../lib/libraries/extensions/index.jsx';
 import LibraryComponent from '../components/library/library.jsx';
+import ccwIcon from '../lib/libraries/extensions/custom/ccw.svg';
 import libraryStyles from '../components/library/library.css';
 import {APP_NAME} from '../lib/brand.js';
 import log from '../lib/log';
@@ -179,6 +180,16 @@ const messages = defineMessages({
         defaultMessage: 'Click to import',
         description: 'Action hint for importing an extension',
         id: 'tw.extensionLibrary.action.import'
+    },
+    ccwLoaderName: {
+        defaultMessage: '添加CCW扩展',
+        description: 'Name of the CCW extension loader item',
+        id: 'tw.extensionLibrary.ccw.name'
+    },
+    ccwLoaderDescription: {
+        defaultMessage: '输入CCW扩展ID，查询并选择要添加的版本。',
+        description: 'Description of the CCW extension loader item',
+        id: 'tw.extensionLibrary.ccw.description'
     }
 });
 
@@ -212,6 +223,7 @@ const SOURCE_NAV_ORDER = [
 
 const FAVORITES_STORAGE_KEY = 'tw:library-favorites:extensionLibrary';
 const CCW_EXTENSION_API_BASE = 'https://ccwbfs-proxy.netlify.app/extensions';
+const CCW_EXTENSION_LOADER_ID = 'ccw_extension_loader';
 
 const CCW_METADATA_CACHE = {};
 
@@ -307,7 +319,7 @@ const isBatchSelectableItem = item => {
     if (!item || item === '---' || item.disabled || item.href || !item.extensionId) {
         return false;
     }
-    return item.extensionId !== 'custom_extension';
+    return item.extensionId !== 'custom_extension' && item.extensionId !== CCW_EXTENSION_LOADER_ID;
 };
 const supportsTextImport = item => Boolean(item && item.extensionURL);
 
@@ -779,11 +791,22 @@ class ExtensionLibrary extends React.PureComponent {
         };
         return this.props.intl.formatMessage(sourceMessages[sourceKey] || messages.sourceOther);
     }
+    getCCWLoaderItem () {
+        return {
+            name: <FormattedMessage {...messages.ccwLoaderName} />,
+            extensionId: CCW_EXTENSION_LOADER_ID,
+            iconURL: ccwIcon,
+            description: <FormattedMessage {...messages.ccwLoaderDescription} />,
+            featured: true,
+            tags: []
+        };
+    }
     getLibraryItems () {
         const locale = this.props.intl?.locale;
         const baseLibrary = extensionLibraryContent
             .map(toLibraryItem)
             .map(item => translateGalleryItem(item, locale));
+        baseLibrary.push(toLibraryItem(this.getCCWLoaderItem()));
         if (this.state.gallery) {
             const ccwItems = this.state.ccwItems.map(toLibraryItem);
             return [
@@ -831,6 +854,8 @@ class ExtensionLibrary extends React.PureComponent {
                 let source = SOURCE_KEYS.OTHER;
                 if (extensionId === 'custom_extension') {
                     source = SOURCE_KEYS.CUSTOM;
+                } else if (extensionId === CCW_EXTENSION_LOADER_ID) {
+                    source = SOURCE_KEYS.OTHER;
                 } else if (extensionId.startsWith('ccw_')) {
                     source = SOURCE_KEYS.CCW;
                 } else if (extensionId === 'procedures_enable_return') {
@@ -854,9 +879,11 @@ class ExtensionLibrary extends React.PureComponent {
                 }
 
                 const isCustomLoad = extensionId === 'custom_extension';
+                const isCCWLoader = extensionId === CCW_EXTENSION_LOADER_ID;
                 const isCCWLoad = source === SOURCE_KEYS.CCW;
                 const isSpecialAction = extensionId === 'procedures_enable_return';
-                const isNative = Boolean(extensionId && !item.extensionURL && !item.href && !isCustomLoad && !isCCWLoad && !isSpecialAction);
+                const isNative = Boolean(extensionId && !item.extensionURL && !item.href && !isCustomLoad &&
+                    !isCCWLoader && !isCCWLoad && !isSpecialAction);
                 const candidateValues = new Set([
                     normalizeMatchValue(extensionId),
                     normalizeMatchValue(getNameText(this.props.intl, item.name)),
@@ -908,6 +935,7 @@ class ExtensionLibrary extends React.PureComponent {
                     isBatchSelectable: isBatchSelectableItem(item),
                     isCompatible: !item.incompatibleWithScratch,
                     isCCWLoad,
+                    isCCWLoader,
                     isCustomLoad,
                     isInstalled,
                     isNative,
@@ -953,6 +981,11 @@ class ExtensionLibrary extends React.PureComponent {
 
         if (extensionId === 'custom_extension') {
             this.props.onOpenCustomExtensionModal();
+            return;
+        }
+
+        if (extensionId === CCW_EXTENSION_LOADER_ID) {
+            this.props.onOpenCCWExtensionModal();
             return;
         }
 
@@ -1289,6 +1322,9 @@ class ExtensionLibrary extends React.PureComponent {
         if (item.isCustomLoad) {
             return <FormattedMessage {...messages.openCustomLoader} />;
         }
+        if (item.isCCWLoader) {
+            return <FormattedMessage {...messages.importExtension} />;
+        }
         if (item.isCCWLoad) {
             return <FormattedMessage {...messages.importExtension} />;
         }
@@ -1330,7 +1366,7 @@ class ExtensionLibrary extends React.PureComponent {
         return {
             actionLabel: this.getActionLabel(item),
             badges,
-            hideFavorite: item.isCCWLoad,
+            hideFavorite: item.isCCWLoad || item.isCCWLoader,
             sourceLabel: item.sourceLabel,
             sourceTone: sourceToneMap[item.source] || 'Other'
         };
@@ -1535,6 +1571,7 @@ ExtensionLibrary.propTypes = {
     intl: intlShape.isRequired,
     onCategorySelected: PropTypes.func,
     onEnableProcedureReturns: PropTypes.func,
+    onOpenCCWExtensionModal: PropTypes.func,
     onOpenCustomExtensionModal: PropTypes.func,
     onOpenExtensionImportMethodModal: PropTypes.func,
     onRequestClose: PropTypes.func,

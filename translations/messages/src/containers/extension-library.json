@@ -163,5 +163,15 @@
     "id": "tw.extensionLibrary.action.import",
     "description": "Action hint for importing an extension",
     "defaultMessage": "Click to import"
+  },
+  {
+    "id": "tw.extensionLibrary.ccw.name",
+    "description": "Name of the CCW extension loader item",
+    "defaultMessage": "添加CCW扩展"
+  },
+  {
+    "id": "tw.extensionLibrary.ccw.description",
+    "description": "Description of the CCW extension loader item",
+    "defaultMessage": "输入CCW扩展ID，查询并选择要添加的版本。"
   }
 ]
