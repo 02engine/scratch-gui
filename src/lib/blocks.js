@@ -697,6 +697,9 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                                     workspace.RTL ? workspace.getWidth() - position.x : position.x,
                                     position.y
                                 );
+                                if (topBlock.createLazySvgPlaceholder) {
+                                    topBlock.createLazySvgPlaceholder();
+                                }
                                 topBlock.updateDisabled();
                                 blockIds.push(topBlock.id);
                                 blockTask = null;
@@ -761,6 +764,9 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                         topBlock.deferredSvgInitPending_ = true;
                         topBlock.lazyEstimatedWidth_ = 1200;
                         topBlock.lazyEstimatedHeight_ = Math.max(160, blocks.length * 5);
+                        if (topBlock.createLazySvgPlaceholder) {
+                            topBlock.createLazySvgPlaceholder();
+                        }
                     }
                 }
                 topBlock.updateDisabled();

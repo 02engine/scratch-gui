@@ -18,11 +18,12 @@ const patchOffscreenTopBlockCulling = ScratchBlocks => {
             }
 
             const blockRect = block.getBoundingRectangle();
-            const padding = OFFSCREEN_CULLING_SCREEN_MARGIN / (this.scale || 1);
-            const viewLeft = -metrics.viewLeft - padding;
-            const viewRight = -metrics.viewLeft + metrics.viewWidth + padding;
-            const viewTop = -metrics.viewTop - padding;
-            const viewBottom = -metrics.viewTop + metrics.viewHeight + padding;
+            const scale = this.scale || 1;
+            const padding = OFFSCREEN_CULLING_SCREEN_MARGIN / scale;
+            const viewLeft = (metrics.viewLeft / scale) - padding;
+            const viewRight = ((metrics.viewLeft + metrics.viewWidth) / scale) + padding;
+            const viewTop = (metrics.viewTop / scale) - padding;
+            const viewBottom = ((metrics.viewTop + metrics.viewHeight) / scale) + padding;
 
             return !(blockRect.bottomRight.x < viewLeft ||
                 blockRect.topLeft.x > viewRight ||
