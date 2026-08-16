@@ -199,6 +199,7 @@ module.exports = [
             'player': './src/playground/player.jsx',
             'fullscreen': './src/playground/fullscreen.jsx',
             'embed': './src/playground/embed.jsx',
+            'canvas-block-test': './src/playground/canvas-block-test.js',
             'addon-settings': './src/playground/addon-settings.jsx',
             'credits': './src/playground/credits/credits.jsx'
         },
@@ -261,6 +262,13 @@ module.exports = [
                 template: 'src/playground/embed.ejs',
                 filename: 'embed.html',
                 title: `Embedded Project - ${APP_NAME}`,
+                ...htmlWebpackPluginCommon
+            }),
+            new HtmlWebpackPlugin({
+                chunks: ['canvas-block-test'],
+                template: 'src/playground/canvas-block-test.ejs',
+                filename: 'canvas-block-test.html',
+                title: 'Canvas Blockly renderer test',
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({

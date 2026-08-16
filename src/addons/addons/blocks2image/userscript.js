@@ -39,7 +39,9 @@ export default async function ({ addon, console, msg }) {
   addon.tab.createBlockContextMenu(
     (items) => {
       if (addon.self.disabled) return items;
+      const workspace = Blockly.getMainWorkspace();
       let svgchild = document.querySelector("svg.blocklySvg g.blocklyBlockCanvas");
+      const hasBlocks = workspace && workspace.getTopBlocks(false).length > 0;
 
       const pasteItemIndex = items.findIndex((obj) => obj._isDevtoolsFirstItem);
       const insertBeforeIndex =
@@ -53,7 +55,7 @@ export default async function ({ addon, console, msg }) {
         insertBeforeIndex,
         0,
         {
-          enabled: !!svgchild?.childNodes?.length,
+          enabled: hasBlocks || !!svgchild?.childNodes?.length,
           text: msg("export_all_to_SVG"),
           callback: () => {
             exportBlock(false);
@@ -61,7 +63,7 @@ export default async function ({ addon, console, msg }) {
           separator: true,
         },
         {
-          enabled: !!svgchild?.childNodes?.length,
+          enabled: hasBlocks || !!svgchild?.childNodes?.length,
           text: msg("export_all_to_PNG"),
           callback: () => {
             exportBlock(true);
@@ -145,10 +147,13 @@ export default async function ({ addon, console, msg }) {
   }
 
   function selectedBlocks(isExportPNG, block) {
+    const renderer = block && block.workspace && block.workspace.canvasBlockRenderer;
+    if (renderer) {
+      return canvasSnapshotToSvg(renderer.captureBlockCanvas(block, isExportPNG ? 2 : 1));
+    }
     let svg = exSVG.cloneNode();
 
-    let svgchild = block.svgGroup_;
-    svgchild = svgchild.cloneNode(true);
+    let svgchild = cloneBlockNode(block);
     let dataShapes = svgchild.getAttribute("data-shapes");
     let translateY = 0; // blocks no hat
     const scale = isExportPNG ? 2 : 1;
@@ -169,10 +174,24 @@ export default async function ({ addon, console, msg }) {
   }
 
   function allBlocks(isExportPNG) {
+    const workspace = Blockly.getMainWorkspace();
+    const renderer = workspace && workspace.canvasBlockRenderer;
+    if (renderer) {
+      return canvasSnapshotToSvg(renderer.captureWorkspaceCanvas(isExportPNG ? 2 : 1));
+    }
     let svg = exSVG.cloneNode();
 
     let svgchild = document.querySelector("svg.blocklySvg g.blocklyBlockCanvas");
-    svgchild = svgchild.cloneNode(true);
+    if ((!svgchild || !svgchild.childNodes.length) && workspace) {
+      svgchild = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      workspace.getTopBlocks(false).forEach(block => {
+        const blockNode = cloneBlockNode(block);
+        if (blockNode) svgchild.appendChild(blockNode);
+      });
+    } else if (svgchild) {
+      svgchild = svgchild.cloneNode(true);
+    }
+    if (!svgchild) return exSVG.cloneNode();
 
     let xArr = [];
     let yArr = [];
@@ -197,6 +216,27 @@ export default async function ({ addon, console, msg }) {
     return svg;
   }
 
+  function cloneBlockNode(block) {
+    if (!block || !block.getSvgRoot) return null;
+    const root = block.getSvgRoot();
+    return root instanceof Node ? root.cloneNode(true) : null;
+  }
+
+  function canvasSnapshotToSvg(canvas) {
+    const svg = exSVG.cloneNode();
+    if (!canvas) return svg;
+    svg.setAttribute("data-canvas-snapshot", "true");
+    svg.setAttribute("width", canvas.width);
+    svg.setAttribute("height", canvas.height);
+    svg.setAttribute("viewBox", `0 0 ${canvas.width} ${canvas.height}`);
+    const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+    image.setAttribute("width", canvas.width);
+    image.setAttribute("height", canvas.height);
+    image.setAttributeNS("http://www.w3.org/1999/xlink", "href", canvas.toDataURL("image/png"));
+    svg.appendChild(image);
+    return svg;
+  }
+
   function exportData(text) {
     const saveLink = document.createElement("a");
     document.body.appendChild(saveLink);
@@ -215,13 +255,34 @@ export default async function ({ addon, console, msg }) {
   }
 
   function exportPNG(svg) {
+    // Canvas workspaces already have a raster snapshot. Do not serialize that
+    // snapshot through an iframe: it has no block <g> to measure and doing so
+    // would needlessly rasterize the image a second time.
+    if (svg.getAttribute("data-canvas-snapshot") === "true") {
+      const image = svg.querySelector("image");
+      const dataUrl = image && (image.getAttribute("href") || image.getAttribute("xlink:href"));
+      if (dataUrl) {
+        const link = document.createElement("a");
+        const date = new Date();
+        const timestamp = `${date.toLocaleDateString()}-${date.toLocaleTimeString()}`;
+        link.download = `block_${timestamp}.png`;
+        link.href = dataUrl;
+        link.click();
+        return;
+      }
+    }
     const serializer = new XMLSerializer();
 
     const iframe = document.createElement("iframe");
     // iframe.style.display = "none"
     document.body.append(iframe);
     iframe.contentDocument.write(serializer.serializeToString(svg));
-    let { width, height } = iframe.contentDocument.body.querySelector("svg g").getBoundingClientRect();
+    const measurable = iframe.contentDocument.body.querySelector("svg g, svg");
+    if (!measurable) {
+      iframe.remove();
+      return;
+    }
+    let { width, height } = measurable.getBoundingClientRect();
     svg.setAttribute("width", width + "px");
     svg.setAttribute("height", height + "px");
 

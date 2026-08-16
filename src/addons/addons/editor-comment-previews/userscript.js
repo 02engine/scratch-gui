@@ -1,5 +1,6 @@
 export default async function ({ addon, console }) {
   const vm = addon.tab.traps.vm;
+  const Blockly = await addon.tab.traps.getBlockly();
 
   const updateStyles = () => {
     previewInner.classList.toggle("sa-comment-preview-delay", addon.settings.get("delay") !== "none");
@@ -82,11 +83,15 @@ export default async function ({ addon, console }) {
     }
 
     const el = e.target.closest(".blocklyBubbleCanvas > g, .blocklyBlockCanvas .blocklyDraggable[data-id]");
-    if (el === hoveredElement) {
+    const workspace = Blockly.getMainWorkspace && Blockly.getMainWorkspace();
+    const renderer = workspace && workspace.canvasBlockRenderer;
+    const canvasHit = !el && renderer && renderer.hitTest(e);
+    const hoveredTarget = el || (canvasHit && canvasHit.block);
+    if (hoveredTarget === hoveredElement) {
       // Nothing to do.
       return;
     }
-    if (!el) {
+    if (!hoveredTarget) {
       hidePreview();
       return;
     }
@@ -102,6 +107,19 @@ export default async function ({ addon, console }) {
       if (collapsedText.getAttribute("display") !== "none") {
         const textarea = el.querySelector("textarea");
         text = textarea.value;
+      }
+    } else if (canvasHit) {
+      const block = canvasHit.block;
+      const comment = getComment(block);
+      if (addon.settings.get("hover-view-block") && comment) {
+        text = comment.text;
+      } else if (block && block.opcode === "procedures_call" && addon.settings.get("hover-view-procedure")) {
+        const procCode = block.mutation.proccode;
+        const procedureDefinitionBlock = getProcedureDefinitionBlock(procCode);
+        const procedureComment = getComment(procedureDefinitionBlock);
+        if (procedureComment) {
+          text = procedureComment.text;
+        }
       }
     } else if (e.target.closest(".blocklyBlockCanvas .blocklyDraggable[data-id]")) {
       const id = el.dataset.id;
@@ -121,7 +139,7 @@ export default async function ({ addon, console }) {
 
     if (text !== null && text.trim() !== "") {
       showTimeout = afterDelay(() => {
-        hoveredElement = el;
+          hoveredElement = hoveredTarget;
         setText(text);
       });
     } else {

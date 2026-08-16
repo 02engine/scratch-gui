@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { intlShape, injectIntl, defineMessages } from 'react-intl';
 import VMScratchBlocks from '../lib/blocks';
+import CanvasBlockRenderer from '../lib/model-canvas-block-renderer';
 import VM from 'scratch-vm';
 import initializeBlockDisableExtension from '../lib/block-disable-extensions';
 import {applyCustomToolboxLayout} from '../lib/custom-toolbox-layout';
@@ -162,9 +163,10 @@ class Blocks extends React.Component {
             'syncWorkspaceCullingState',
             'syncFlyoutCullingState',
             'updateToolboxStateIfNeeded',
-            'installBlockDragPortal',
             'installBlockDropTargetOutsideCheck',
+            'installBlockDragPortal',
             'restoreBlockDragPortal',
+            'refreshBlockDropTargetRects',
             'setBlocks',
             'setLocale',
             'handleEnableProcedureReturns'
@@ -204,6 +206,8 @@ class Blocks extends React.Component {
         this.isLargeWorkspace = false;
         this.blockDragPortal = null;
         this.restoreBlockDropTargetOutsideCheck = null;
+        this.blockDropTargetRects = [];
+        this.canvasBlockRenderer = null;
         this.flyoutWidth = this.clampFlyoutWidth(getPersistentBlockFlyoutWidth(DEFAULT_FLYOUT_WIDTH));
         this.flyoutCategoryWidth = DEFAULT_FLYOUT_CATEGORY_WIDTH;
         this.flyoutResizeStart = null;
@@ -227,11 +231,18 @@ class Blocks extends React.Component {
         Msg.PROCEDURES_TO_STATEMENT = this.props.intl.formatMessage(messages.PROCEDURES_TO_STATEMENT);
         Msg.PROCEDURES_DOCS = this.props.intl.formatMessage(messages.PROCEDURES_DOCS);
 
+        // Canvas is a newUI-only renderer. Legacy UI intentionally keeps the
+        // native Scratch Blocks SVG renderer and addon contract unchanged.
+        if (this.props.canvasRenderer) {
+            CanvasBlockRenderer.enableBlocklyCanvasMode(this.ScratchBlocks);
+        }
+
         const workspaceConfig = defaultsDeep({},
             this.props.options,
             {
                 rtl: this.props.isRtl,
                 toolbox: this.props.toolboxXML,
+                canvasRenderer: !!this.props.canvasRenderer,
                 colours: this.props.theme.getBlockColors(),
                 grid: {
                     colour: this.props.theme.getBlockColors().gridColor
@@ -240,6 +251,10 @@ class Blocks extends React.Component {
             Blocks.defaultOptions
         );
         this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
+        if (this.props.canvasRenderer) {
+            this.canvasBlockRenderer = new CanvasBlockRenderer(this.workspace, this.ScratchBlocks);
+            this.canvasBlockRenderer.attach();
+        }
         // Keep a post-inject fallback for environments that bypass src/lib/blocks.js.
         if (this.props.vm && this.props.vm.runtime && !this.props.vm.runtime.scratchBlocks) {
             const sb = this.ScratchBlocks;
@@ -259,7 +274,7 @@ class Blocks extends React.Component {
         AddonHooks.blocklyWorkspace = this.workspace;
         this.applyFlyoutWidth(this.flyoutWidth, false);
         this.installBlockDropTargetOutsideCheck();
-        this.installBlockDragPortal();
+        if (!this.canvasBlockRenderer) this.installBlockDragPortal();
         this.syncWorkspaceCullingState();
         this.syncFlyoutCullingState();
         window.__twEnableProcedureReturns = () => {
@@ -351,10 +366,14 @@ class Blocks extends React.Component {
             this.props.toolboxLayout !== nextProps.toolboxLayout ||
             this.props.editingTargetId !== nextProps.editingTargetId ||
             this.props.stageSize !== nextProps.stageSize ||
-            this.props.customStageSize !== nextProps.customStageSize
+            this.props.customStageSize !== nextProps.customStageSize ||
+            this.props.theme !== nextProps.theme
         );
     }
     componentDidUpdate(prevProps) {
+        if (this.canvasBlockRenderer && this.props.theme !== prevProps.theme) {
+            this.canvasBlockRenderer.invalidateStyles();
+        }
         // If any modals are open, call hideChaff to close z-indexed field editors
         if (this.props.anyModalVisible && !prevProps.anyModalVisible) {
             this.ScratchBlocks.hideChaff();
@@ -422,6 +441,7 @@ class Blocks extends React.Component {
             this.scheduleWorkspaceChromeRefresh();
             this.syncWorkspaceCullingState();
         } else {
+            if (this.canvasBlockRenderer) this.canvasBlockRenderer.setEnabled(false);
             this.workspace.setVisible(false);
         }
     }
@@ -460,13 +480,17 @@ class Blocks extends React.Component {
             this.procedureReturnsRefreshFrame = null;
         }
         this.stopFlyoutResize();
+        this.restoreBlockDragPortal();
         if (window.__twEnableProcedureReturns) {
             delete window.__twEnableProcedureReturns;
         }
-        this.restoreBlockDragPortal();
         if (this.restoreBlockDropTargetOutsideCheck) {
             this.restoreBlockDropTargetOutsideCheck();
             this.restoreBlockDropTargetOutsideCheck = null;
+        }
+        if (this.canvasBlockRenderer) {
+            this.canvasBlockRenderer.dispose();
+            this.canvasBlockRenderer = null;
         }
         this.workspace.dispose();
 
@@ -495,27 +519,48 @@ class Blocks extends React.Component {
             return;
         }
         const workspace = this.workspace;
+        if (!this.canvasBlockRenderer) {
+            const originalIsInsideBlocksArea = workspace.isInsideBlocksArea;
+            workspace.isInsideBlocksArea = function (event) {
+                if (event && typeof document.elementsFromPoint === 'function') {
+                    const elements = document.elementsFromPoint(event.clientX, event.clientY);
+                    for (let i = 0; i < elements.length; i++) {
+                        if (elements[i].closest && elements[i].closest('[data-block-drop-target-id]')) {
+                            return false;
+                        }
+                    }
+                }
+                return originalIsInsideBlocksArea.call(this, event);
+            };
+            this.restoreBlockDropTargetOutsideCheck = () => {
+                workspace.isInsideBlocksArea = originalIsInsideBlocksArea;
+            };
+            return;
+        }
+        this.refreshBlockDropTargetRects();
         const originalIsInsideBlocksArea = workspace.isInsideBlocksArea;
         workspace.isInsideBlocksArea = function (event) {
-            if (event && typeof document.elementsFromPoint === 'function') {
-                const elements = document.elementsFromPoint(event.clientX, event.clientY);
-                for (let i = 0; i < elements.length; i++) {
-                    if (elements[i].closest && elements[i].closest('[data-block-drop-target-id]')) {
+            if (event && this.blockDropTargetRects.length) {
+                const x = event.clientX;
+                const y = event.clientY;
+                for (let i = 0; i < this.blockDropTargetRects.length; i++) {
+                    const rect = this.blockDropTargetRects[i];
+                    if (x >= rect.left && x <= rect.right &&
+                        y >= rect.top && y <= rect.bottom) {
                         return false;
                     }
                 }
             }
-            return originalIsInsideBlocksArea.call(this, event);
-        };
+            return originalIsInsideBlocksArea.call(workspace, event);
+        }.bind(this);
         this.restoreBlockDropTargetOutsideCheck = () => {
             workspace.isInsideBlocksArea = originalIsInsideBlocksArea;
+            this.blockDropTargetRects = [];
         };
     }
     installBlockDragPortal() {
         const dragSurface = this.workspace && this.workspace.getBlockDragSurface && this.workspace.getBlockDragSurface();
-        if (!dragSurface || !dragSurface.SVG_ || this.blockDragPortal) {
-            return;
-        }
+        if (!dragSurface || !dragSurface.SVG_ || this.blockDragPortal) return;
 
         const surface = dragSurface.SVG_;
         this.blockDragPortal = {
@@ -528,9 +573,7 @@ class Blocks extends React.Component {
         };
 
         const restoreSurfaceParent = () => {
-            if (!this.blockDragPortal || !surface.parentNode) {
-                return;
-            }
+            if (!this.blockDragPortal || !surface.parentNode) return;
             const {originalParent, originalNextSibling, originalStyle} = this.blockDragPortal;
             if (originalParent && surface.parentNode !== originalParent) {
                 if (originalNextSibling && originalNextSibling.parentNode === originalParent) {
@@ -539,11 +582,8 @@ class Blocks extends React.Component {
                     originalParent.appendChild(surface);
                 }
             }
-            if (originalStyle === null) {
-                surface.removeAttribute('style');
-            } else {
-                surface.setAttribute('style', originalStyle);
-            }
+            if (originalStyle === null) surface.removeAttribute('style');
+            else surface.setAttribute('style', originalStyle);
         };
 
         dragSurface.setBlocksAndShow = blocks => {
@@ -570,9 +610,7 @@ class Blocks extends React.Component {
         this.blockDragPortal.dragSurface = dragSurface;
     }
     restoreBlockDragPortal() {
-        if (!this.blockDragPortal) {
-            return;
-        }
+        if (!this.blockDragPortal) return;
         const {dragSurface, setBlocksAndShow, clearAndHide, restoreSurfaceParent} = this.blockDragPortal;
         if (dragSurface) {
             dragSurface.setBlocksAndShow = setBlocksAndShow;
@@ -580,6 +618,26 @@ class Blocks extends React.Component {
         }
         restoreSurfaceParent();
         this.blockDragPortal = null;
+    }
+    refreshBlockDropTargetRects() {
+        if (typeof document === 'undefined') {
+            this.blockDropTargetRects = [];
+            return;
+        }
+        const targets = document.querySelectorAll('[data-block-drop-target-id]');
+        const rects = [];
+        for (let i = 0; i < targets.length; i++) {
+            const rect = targets[i].getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                rects.push({
+                    left: rect.left,
+                    right: rect.right,
+                    top: rect.top,
+                    bottom: rect.bottom
+                });
+            }
+        }
+        this.blockDropTargetRects = rects;
     }
     requestToolboxUpdate() {
         if (!this.props.isVisible) {
@@ -842,12 +900,21 @@ class Blocks extends React.Component {
         document.removeEventListener('touchcancel', this.stopFlyoutResize);
     }
     syncWorkspaceCullingState() {
-        if (!this.workspace || !this.workspace.setOffscreenTopBlockCullingEnabled) {
+        if (!this.workspace) {
             return;
         }
         const blocks = this.workspace.getAllBlocks ? this.workspace.getAllBlocks(false) : [];
         this.isLargeWorkspace = blocks.length >= OFFSCREEN_CULLING_BLOCK_THRESHOLD;
-        this.workspace.setOffscreenTopBlockCullingEnabled(this.isLargeWorkspace);
+        if (this.canvasBlockRenderer) {
+            this.canvasBlockRenderer.setEnabled(this.props.isVisible !== false);
+        }
+        if (this.workspace.setOffscreenTopBlockCullingEnabled) {
+            // Canvas owns visibility. The legacy workspace keeps its original
+            // threshold-based SVG culling behavior.
+            this.workspace.setOffscreenTopBlockCullingEnabled(
+                this.canvasBlockRenderer ? false : this.isLargeWorkspace
+            );
+        }
     }
     syncFlyoutCullingState() {
         const flyout = this.workspace && this.workspace.getFlyout ? this.workspace.getFlyout() : null;
@@ -855,6 +922,7 @@ class Blocks extends React.Component {
         if (!flyoutWorkspace || !flyoutWorkspace.setOffscreenTopBlockCullingEnabled) {
             return;
         }
+        // The flyout remains native SVG in both render modes.
         flyoutWorkspace.setOffscreenTopBlockCullingEnabled(true);
         if (typeof flyoutWorkspace.renderVisibleTopBlocks === 'function') {
             flyoutWorkspace.renderVisibleTopBlocks();
@@ -1005,6 +1073,9 @@ class Blocks extends React.Component {
         }
     }
     onWorkspaceMetricsChange() {
+        if (this.canvasBlockRenderer) {
+            this.canvasBlockRenderer.scheduleDraw();
+        }
         const target = this.props.vm.editingTarget;
         if (target && target.id) {
             this.updateWorkspaceMetricsCache(target.id);
@@ -1052,28 +1123,33 @@ class Blocks extends React.Component {
         this.pendingWorkspaceMetricsTargetId = null;
     }
     onScriptGlowOn(data) {
-        if (this.isLargeWorkspace) return;
+        if (this.isLargeWorkspace && !this.canvasBlockRenderer) return;
         if (!this.workspace.getBlockById(data.id)) return;
+        if (this.canvasBlockRenderer) this.canvasBlockRenderer.materializeBlock(data.id);
         this.workspace.glowStack(data.id, true);
     }
     onScriptGlowOff(data) {
-        if (this.isLargeWorkspace) return;
+        if (this.isLargeWorkspace && !this.canvasBlockRenderer) return;
         if (!this.workspace.getBlockById(data.id)) return;
+        if (this.canvasBlockRenderer) this.canvasBlockRenderer.materializeBlock(data.id);
         this.workspace.glowStack(data.id, false);
     }
     onBlockGlowOn(data) {
-        if (this.isLargeWorkspace) return;
+        if (this.isLargeWorkspace && !this.canvasBlockRenderer) return;
         if (!this.workspace.getBlockById(data.id)) return;
+        if (this.canvasBlockRenderer) this.canvasBlockRenderer.materializeBlock(data.id);
         this.workspace.glowBlock(data.id, true);
     }
     onBlockGlowOff(data) {
-        if (this.isLargeWorkspace) return;
+        if (this.isLargeWorkspace && !this.canvasBlockRenderer) return;
         if (!this.workspace.getBlockById(data.id)) return;
+        if (this.canvasBlockRenderer) this.canvasBlockRenderer.materializeBlock(data.id);
         this.workspace.glowBlock(data.id, false);
     }
     onVisualReport(data) {
-        if (this.isLargeWorkspace) return;
+        if (this.isLargeWorkspace && !this.canvasBlockRenderer) return;
         if (!this.workspace.getBlockById(data.id)) return;
+        if (this.canvasBlockRenderer) this.canvasBlockRenderer.materializeBlock(data.id);
         const value = data && Object.prototype.hasOwnProperty.call(data, 'value') ? data.value : '';
         this.workspace.reportValue(data.id, value);
     }
@@ -1165,14 +1241,28 @@ class Blocks extends React.Component {
             Object.keys(editingTarget.blocks._blocks).length : 0;
         const useLazySvgInitialization = incomingBlockCount >= OFFSCREEN_CULLING_BLOCK_THRESHOLD &&
             typeof this.workspace.setLazySvgInitializationEnabled === 'function';
+        const supportsAsyncWorkspaceLoad = typeof this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlAsync === 'function';
+        const useAsyncWorkspaceLoad = supportsAsyncWorkspaceLoad &&
+            (this.canvasBlockRenderer || useLazySvgInitialization);
         if (typeof this.workspace.setLazySvgInitializationEnabled === 'function') {
-            this.workspace.setLazySvgInitializationEnabled(useLazySvgInitialization);
+            // Canvas owns block visibility and has no SVG materialization to defer.
+            this.workspace.setLazySvgInitializationEnabled(
+                this.canvasBlockRenderer ? false : useLazySvgInitialization
+            );
         }
-        if (useLazySvgInitialization) {
+        if (useLazySvgInitialization && this.workspace.setOffscreenTopBlockCullingEnabled) {
             this.workspace.setOffscreenTopBlockCullingEnabled(true);
         }
 
         const loadGeneration = ++this.workspaceLoadGeneration;
+
+        if (this.canvasBlockRenderer) {
+            // Do not repeatedly lay out the partially-created block graph while
+            // the async XML loader is still attaching descendants. Blockly's
+            // graph and events continue normally; Canvas resumes once the
+            // complete target workspace is available.
+            this.canvasBlockRenderer.setLoading(true);
+        }
 
         // Remove and reattach the workspace listener around the synchronous
         // clear. Async loader batches suppress their own Blockly events.
@@ -1182,6 +1272,15 @@ class Blocks extends React.Component {
             if (this.unmounted || loadGeneration !== this.workspaceLoadGeneration) return;
             this.lastAppliedWorkspaceXML = data.xml;
             this.isLargeWorkspace = false;
+            if (this.canvasBlockRenderer) {
+                this.canvasBlockRenderer.reset();
+                this.canvasBlockRenderer.setLoading(false);
+                // The async loader intentionally skips Blockly's normal
+                // resize pass in Canvas mode. Refresh scrollbars once after
+                // the complete graph is attached so large-coordinate targets
+                // do not retain the previous target's viewport.
+                this.workspace.resizeContents();
+            }
             this.syncWorkspaceCullingState();
             this.lastEditingTargetId = editingTargetId;
             this.updateWorkspaceMetricsCache(editingTargetId);
@@ -1189,13 +1288,15 @@ class Blocks extends React.Component {
         };
         const handleWorkspaceLoadError = error => {
             if (this.unmounted || loadGeneration !== this.workspaceLoadGeneration) return;
+            if (this.canvasBlockRenderer) this.canvasBlockRenderer.setLoading(false);
             if (error.message) {
                 error.message = `Workspace Update Error: ${error.message}`;
             }
             log.error(error);
         };
         try {
-            if (useLazySvgInitialization && this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlAsync) {
+            if (this.canvasBlockRenderer) this.canvasBlockRenderer.reset();
+            if (useAsyncWorkspaceLoad) {
                 const load = this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlAsync(
                     dom,
                     this.workspace,
@@ -1752,8 +1853,11 @@ class Blocks extends React.Component {
             customStageSize,
             customProceduresVisible,
             extensionLibraryVisible,
+            editingTargetId,
+            layoutToken,
             options,
             stageSize,
+            toolboxLayout,
             vm,
             isRtl,
             isVisible,
@@ -1842,6 +1946,7 @@ Blocks.propTypes = {
     intl: intlShape,
     anyModalVisible: PropTypes.bool,
     canUseCloud: PropTypes.bool,
+    canvasRenderer: PropTypes.bool,
     customStageSize: PropTypes.shape({
         width: PropTypes.number,
         height: PropTypes.number

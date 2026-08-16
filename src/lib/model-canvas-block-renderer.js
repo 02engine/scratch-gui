@@ -1,0 +1,3602 @@
+/*
+ * Model-driven Canvas renderer for the new UI block workspace.
+ *
+ * Blockly remains responsible for the block graph, events, serialization,
+ * undo/redo, connection matching and gestures. Ordinary blocks in a Canvas
+ * workspace never create SVG DOM (or an in-memory SVG facsimile): geometry is
+ * derived directly from the block model and painted only when it intersects
+ * the viewport. The flyout deliberately remains the native SVG renderer.
+ */
+
+const VIEWPORT_MARGIN = 192;
+const SPATIAL_CELL_SIZE = 256;
+const STACK_HEIGHT = 48;
+const REPORTER_HEIGHT = 40;
+const HAT_HEIGHT = 24;
+const CANVAS_TOP_PADDING = HAT_HEIGHT + 4;
+const BLOCK_PADDING_X = 12;
+const STATEMENT_INDENT = 16;
+const NOTCH_X = 16;
+const NOTCH_WIDTH = 32;
+const NOTCH_DEPTH = 8;
+const BLOCK_TEXT_FONT = '500 16px "Helvetica Neue", Helvetica, sans-serif';
+const BLOCK_TEXT_FONT_SIZE = '12pt';
+
+const now = () => (typeof performance === 'undefined' ? Date.now() : performance.now());
+const numberOr = (value, fallback = 0) => {
+    const number = typeof value === 'string' ? parseFloat(value) : Number(value);
+    return Number.isFinite(number) ? number : fallback;
+};
+
+const rectsIntersect = (a, b) => !(
+    a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom
+);
+
+const unionRect = (a, b) => {
+    if (!a) return Object.assign({}, b);
+    return {
+        left: Math.min(a.left, b.left),
+        top: Math.min(a.top, b.top),
+        right: Math.max(a.right, b.right),
+        bottom: Math.max(a.bottom, b.bottom)
+    };
+};
+
+const parseWorkspaceTransform = workspace => {
+    const canvas = workspace && workspace.getCanvas && workspace.getCanvas();
+    const value = canvas && canvas.getAttribute ? String(canvas.getAttribute('transform') || '') : '';
+    const translate = /translate\(\s*([-+\d.e]+)(?:[, ]+)([-+\d.e]+)\)?/.exec(value);
+    const scaleMatch = /scale\(\s*([-+\d.e]+)/.exec(value);
+    return {
+        x: translate ? numberOr(translate[1]) : 0,
+        y: translate ? numberOr(translate[2]) : 0,
+        scale: workspace && workspace.scale ? workspace.scale : (scaleMatch ? numberOr(scaleMatch[1], 1) : 1)
+    };
+};
+
+const parseTranslate = value => {
+    const match = /translate\(\s*([-+\d.e]+)(?:[, ]+)\s*([-+\d.e]+)/.exec(String(value || ''));
+    return match ? {x: numberOr(match[1]), y: numberOr(match[2])} : null;
+};
+
+const parseTransformScale = value => {
+    const match = /scale\(\s*([-+\d.e]+)(?:[, ]+\s*([-+\d.e]+))?\)/.exec(String(value || ''));
+    if (!match) return {x: 1, y: 1};
+    return {
+        x: numberOr(match[1], 1),
+        y: numberOr(match[2], numberOr(match[1], 1))
+    };
+};
+
+const makeClassList = invalidate => {
+    const names = new Set();
+    return {
+        add: (...items) => {
+            items.forEach(item => names.add(item));
+            invalidate();
+        },
+        remove: (...items) => {
+            items.forEach(item => names.delete(item));
+            invalidate();
+        },
+        contains: item => names.has(item),
+        toggle: (item, force) => {
+            const add = typeof force === 'boolean' ? force : !names.has(item);
+            if (add) names.add(item);
+            else names.delete(item);
+            invalidate();
+            return add;
+        },
+        set: value => {
+            names.clear();
+            String(value || '')
+                .split(/\s+/)
+                .filter(Boolean)
+                .forEach(item => names.add(item));
+            invalidate();
+        },
+        toString: () => Array.from(names).join(' ')
+    };
+};
+
+// Blockly and several addons still read svgGroup_/svgPath_. In Canvas mode
+// these properties point to lightweight model nodes only. They are never DOM
+// nodes, never enter an SVG tree and never trigger browser SVG layout.
+class CanvasModelNode {
+    constructor (owner, kind, getRect) {
+        this.__02CanvasModelNode = true;
+        this.owner = owner;
+        this.kind = kind;
+        this.getRect = getRect;
+        this.attributes = Object.create(null);
+        this.childNodes = [];
+        this.children = this.childNodes;
+        this.parentNode = null;
+        this.parentElement = null;
+        this.nodeType = 1;
+        this.tagName = ['circle', 'g', 'image', 'line', 'path', 'rect', 'text'].includes(kind) ? kind : 'g';
+        this.nodeName = this.tagName;
+        this.ownerDocument = typeof document === 'undefined' ? null : document;
+        this.dataset = Object.create(null);
+        this.className = {baseVal: '', animVal: ''};
+        this.classList = makeClassList(() => this.invalidate());
+        this.styleValues = Object.create(null);
+        this.style = new Proxy(this.styleValues, {
+            set: (target, key, value) => {
+                target[key] = String(value);
+                this.invalidate();
+                return true;
+            },
+            get: (target, key) => {
+                if (key === 'setProperty') {
+                    return (name, value) => {
+                        target[name.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase())] = String(value);
+                        this.invalidate();
+                    };
+                }
+                if (key === 'getPropertyValue') return name => target[name] || '';
+                if (key === 'removeProperty') {
+                    return name => {
+                        delete target[name];
+                        this.invalidate();
+                    };
+                }
+                return target[key] || '';
+            }
+        });
+        this.textContent = '';
+    }
+    invalidate () {
+        const block = this.owner && (this.owner.sourceBlock_ || this.owner);
+        const renderer = block && block.workspace && block.workspace.canvasBlockRenderer;
+        if (renderer && !renderer.renderingNative) renderer.invalidateBlock(block);
+    }
+    setAttribute (name, value) {
+        const text = String(value);
+        this.attributes[name] = text;
+        if (name === 'class') {
+            this.className.baseVal = text;
+            this.className.animVal = text;
+            this.classList.set(text);
+        } else if (name === 'data-id') {
+            this.dataset.id = text;
+        } else if (name === 'transform' && this.kind === 'block') {
+            const match = /translate\(\s*([-+\d.e]+)(?:[, ]+)([-+\d.e]+)\)?/.exec(text);
+            if (match && this.owner) {
+                this.owner.__02CanvasPosition = {x: numberOr(match[1]), y: numberOr(match[2])};
+            }
+        } else if (name === 'style') {
+            for (const declaration of text.split(';')) {
+                const separator = declaration.indexOf(':');
+                if (separator < 0) continue;
+                const property = declaration.slice(0, separator)
+                    .trim()
+                    .replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
+                this.styleValues[property] = declaration.slice(separator + 1).trim();
+            }
+        }
+        this.invalidate();
+    }
+    setAttributeNS (namespace, name, value) {
+        this.setAttribute(name, value);
+    }
+    getAttribute (name) {
+        return Object.prototype.hasOwnProperty.call(this.attributes, name) ? this.attributes[name] : null;
+    }
+    getAttributeNS (namespace, name) {
+        return this.getAttribute(name);
+    }
+    removeAttribute (name) {
+        delete this.attributes[name];
+        this.invalidate();
+    }
+    appendChild (child) {
+        if (!child) return child;
+        if (child.parentNode && child.parentNode !== this && child.parentNode.removeChild) {
+            child.parentNode.removeChild(child);
+        }
+        if (!this.childNodes.includes(child)) this.childNodes.push(child);
+        if (child.__02CanvasModelNode) {
+            child.parentNode = this;
+            child.parentElement = this;
+        }
+        return child;
+    }
+    insertBefore (child, reference) {
+        if (!child) return child;
+        if (child.parentNode && child.parentNode !== this && child.parentNode.removeChild) {
+            child.parentNode.removeChild(child);
+        }
+        const existingIndex = this.childNodes.indexOf(child);
+        if (existingIndex >= 0) this.childNodes.splice(existingIndex, 1);
+        const index = this.childNodes.indexOf(reference);
+        if (index < 0) return this.appendChild(child);
+        this.childNodes.splice(index, 0, child);
+        if (child.__02CanvasModelNode) {
+            child.parentNode = this;
+            child.parentElement = this;
+        }
+        return child;
+    }
+    removeChild (child) {
+        const index = this.childNodes.indexOf(child);
+        if (index >= 0) this.childNodes.splice(index, 1);
+        if (child && child.__02CanvasModelNode) {
+            child.parentNode = null;
+            child.parentElement = null;
+        }
+        return child;
+    }
+    remove () {
+        if (this.parentNode && this.parentNode.removeChild) this.parentNode.removeChild(this);
+    }
+    hasAttribute (name) {
+        return Object.prototype.hasOwnProperty.call(this.attributes, name);
+    }
+    contains (child) {
+        if (child === this) return true;
+        return this.childNodes.some(candidate => candidate === child ||
+            (candidate && typeof candidate.contains === 'function' && candidate.contains(child)));
+    }
+    get firstChild () {
+        return this.childNodes[0] || null;
+    }
+    get lastChild () {
+        return this.childNodes[this.childNodes.length - 1] || null;
+    }
+    get nextSibling () {
+        const siblings = this.parentNode && this.parentNode.childNodes;
+        if (!siblings) return null;
+        const index = siblings.indexOf(this);
+        return index < 0 ? null : (siblings[index + 1] || null);
+    }
+    get previousSibling () {
+        const siblings = this.parentNode && this.parentNode.childNodes;
+        if (!siblings) return null;
+        const index = siblings.indexOf(this);
+        return index <= 0 ? null : siblings[index - 1];
+    }
+    matches (selector) {
+        return String(selector || '')
+            .split(',')
+            .some(part => {
+                let value = part.trim();
+                if (!value) return false;
+                value = value.replace(/^:scope\s*>?\s*/, '');
+                const attributes = [];
+                value = value.replace(/\[([^\]]+)\]/g, (match, expression) => {
+                    const attribute = /^([^~*^$|=\s]+)\s*(?:([*^$|~]?=)\s*["']?([^"']*)["']?)?$/.exec(
+                        expression.trim()
+                    );
+                    if (attribute) attributes.push(attribute.slice(1));
+                    return '';
+                });
+                const classes = [];
+                value = value.replace(/\.([\w-]+)/g, (match, className) => {
+                    classes.push(className);
+                    return '';
+                });
+                const tag = value.trim().toLowerCase();
+                if (tag && tag !== '*' && tag !== String(this.tagName || '').toLowerCase()) return false;
+                if (classes.some(className => !this.classList.contains(className))) return false;
+                return attributes.every(([name, operator, expected]) => {
+                    const actual = this.getAttribute(name);
+                    if (actual === null) return false;
+                    if (!operator) return true;
+                    if (operator === '*=') return actual.includes(expected);
+                    if (operator === '^=') return actual.startsWith(expected);
+                    if (operator === '$=') return actual.endsWith(expected);
+                    if (operator === '~=') return actual.split(/\s+/).includes(expected);
+                    return actual === expected;
+                });
+            });
+    }
+    querySelectorAll (selector) {
+        const matches = [];
+        const visit = node => {
+            for (const child of node.childNodes || []) {
+                if (child.matches && child.matches(selector)) matches.push(child);
+                visit(child);
+            }
+        };
+        visit(this);
+        return matches;
+    }
+    querySelector (selector) {
+        return this.querySelectorAll(selector)[0] || null;
+    }
+    getElementsByClassName (className) {
+        const firstClass = String(className || '').trim()
+            .split(/\s+/)[0];
+        return this.querySelectorAll(`.${firstClass}`);
+    }
+    getElementsByTagName (tagName) {
+        return this.querySelectorAll(String(tagName || '*'));
+    }
+    closest (selector) {
+        let node = this;
+        while (node) {
+            if (node.matches && node.matches(selector)) return node;
+            node = node.parentNode;
+        }
+        return null;
+    }
+    getRootNode () {
+        let node = this;
+        while (node && node.parentNode) node = node.parentNode;
+        return node;
+    }
+    get ownerSVGElement () {
+        return null;
+    }
+    addEventListener () {}
+    removeEventListener () {}
+    focus () {}
+    blur () {}
+    getModelClientRect () {
+        const owner = this.owner;
+        const block = owner && (owner.sourceBlock_ || owner.block_ || owner);
+        const renderer = block && block.workspace && block.workspace.canvasBlockRenderer;
+        if (!renderer) return null;
+        if (this.kind === 'icon' && owner.block_) {
+            return renderer.getIconClientRect(owner);
+        }
+        if (!owner.sourceBlock_) return null;
+        const fieldRect = renderer.getFieldClientRect(owner);
+        if (!fieldRect) return null;
+        if (this.kind === 'field') return fieldRect;
+        const nodeOffset = renderer.getFieldNodePaintOffset(owner, this);
+        const scale = renderer.getTransform().scale;
+        const x = nodeOffset.x;
+        const y = nodeOffset.y;
+        let width = numberOr(this.getAttribute('width'));
+        let height = numberOr(this.getAttribute('height'));
+        if (this.kind === 'text') {
+            const fontSize = numberOr(
+                this.getAttribute('font-size') || this.style.fontSize,
+                16
+            );
+            const textWidth = this.getComputedTextLength();
+            const anchor = this.getAttribute('text-anchor');
+            const left = anchor === 'middle' ? x - (textWidth / 2) :
+                (anchor === 'end' ? x - textWidth : x);
+            return {
+                left: fieldRect.left + (left * scale),
+                top: fieldRect.top + ((y - fontSize) * scale),
+                right: fieldRect.left + ((left + textWidth) * scale),
+                bottom: fieldRect.top + (y * scale),
+                width: textWidth * scale,
+                height: fontSize * scale
+            };
+        }
+        if (!width) width = fieldRect.width / scale;
+        if (!height) height = fieldRect.height / scale;
+        return {
+            left: fieldRect.left + (x * scale),
+            top: fieldRect.top + (y * scale),
+            right: fieldRect.left + ((x + width) * scale),
+            bottom: fieldRect.top + ((y + height) * scale),
+            width: width * scale,
+            height: height * scale
+        };
+    }
+    getBoundingClientRect () {
+        const modelRect = this.getModelClientRect();
+        if (modelRect) return modelRect;
+        const rect = this.getRect ? this.getRect() : null;
+        return rect || {left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0};
+    }
+    getBBox () {
+        const owner = this.owner;
+        const block = owner && (owner.sourceBlock_ || owner.block_ || owner);
+        const renderer = block && block.workspace && block.workspace.canvasBlockRenderer;
+        if (renderer && block.id) {
+            const geometry = renderer.blockGeometry.get(block.id);
+            if (geometry) {
+                if (this.kind === 'block' || this === block.svgPath_) {
+                    return {
+                        x: 0,
+                        y: geometry.isHat ? -HAT_HEIGHT : 0,
+                        width: geometry.width,
+                        height: geometry.height + (geometry.isHat ? HAT_HEIGHT : 0)
+                    };
+                }
+                if (this.kind === 'field' || this.kind.indexOf('field-') === 0) {
+                    const field = owner.sourceBlock_ ? owner : null;
+                    const fieldGeometry = field && renderer.fieldGeometry.get(field);
+                    if (fieldGeometry) {
+                        return {
+                            x: 0,
+                            y: 0,
+                            width: fieldGeometry.width,
+                            height: fieldGeometry.height
+                        };
+                    }
+                }
+            }
+        }
+        const x = numberOr(this.getAttribute('x'));
+        const y = numberOr(this.getAttribute('y'));
+        if (this.kind === 'text') {
+            const fontSize = numberOr(
+                this.getAttribute('font-size') || this.style.fontSize,
+                16
+            );
+            return {
+                x,
+                y: y - fontSize,
+                width: this.getComputedTextLength(),
+                height: fontSize
+            };
+        }
+        if (['circle', 'image', 'line', 'rect'].includes(this.kind)) {
+            const radius = numberOr(this.getAttribute('r'));
+            const x1 = numberOr(this.getAttribute('x1'));
+            const x2 = numberOr(this.getAttribute('x2'));
+            const y1 = numberOr(this.getAttribute('y1'));
+            const y2 = numberOr(this.getAttribute('y2'));
+            const width = this.kind === 'line' ? Math.abs(x2 - x1) :
+                numberOr(this.getAttribute('width'), radius * 2);
+            const height = this.kind === 'line' ? Math.abs(y2 - y1) :
+                numberOr(this.getAttribute('height'), radius * 2);
+            return {
+                x: this.kind === 'circle' ? numberOr(this.getAttribute('cx')) - radius :
+                    (this.kind === 'line' ? Math.min(x1, x2) : x),
+                y: this.kind === 'circle' ? numberOr(this.getAttribute('cy')) - radius :
+                    (this.kind === 'line' ? Math.min(y1, y2) : y),
+                width,
+                height
+            };
+        }
+        const rect = this.getBoundingClientRect();
+        const parentRect = this.parentNode && this.parentNode.getBoundingClientRect ?
+            this.parentNode.getBoundingClientRect() : null;
+        return {
+            x: parentRect ? rect.left - parentRect.left : 0,
+            y: parentRect ? rect.top - parentRect.top : 0,
+            width: rect.width || 0,
+            height: rect.height || 0
+        };
+    }
+    getClientRects () {
+        return [this.getBoundingClientRect()];
+    }
+    getComputedTextLength () {
+        const owner = this.owner;
+        const block = owner && (owner.sourceBlock_ || owner.block_ || owner);
+        const renderer = block && block.workspace && block.workspace.canvasBlockRenderer;
+        if (renderer && renderer.context) {
+            renderer.context.save();
+            const fontSize = this.getAttribute('font-size') || this.style.fontSize || '16px';
+            const fontWeight = this.getAttribute('font-weight') || this.style.fontWeight || '500';
+            const fontFamily = this.getAttribute('font-family') || this.style.fontFamily ||
+                '"Helvetica Neue", Helvetica, sans-serif';
+            renderer.context.font = `${fontWeight} ${fontSize} ${fontFamily}`;
+            const width = renderer.context.measureText(String(this.textContent || '')).width;
+            renderer.context.restore();
+            return width;
+        }
+        return String(this.textContent || '').length * 9;
+    }
+    cloneNode () {
+        return new CanvasModelNode(this.owner, this.kind, this.getRect);
+    }
+}
+
+const isCanvasWorkspace = workspace => !!(
+    workspace && !workspace.isFlyout && (
+        workspace.__02CanvasRendererEnabled || workspace.canvasBlockRenderer ||
+        (workspace.options && workspace.options.canvasRenderer)
+    )
+);
+
+const rootOf = block => (block && block.getRootBlock ? block.getRootBlock() : block);
+
+const blockGraphDepth = block => {
+    let depth = 0;
+    let current = block;
+    const seen = new Set();
+    while (current && current.getParent && current.getParent() && !seen.has(current.id)) {
+        seen.add(current.id);
+        depth++;
+        current = current.getParent();
+    }
+    return depth;
+};
+
+const prepareCanvasIcon = icon => {
+    if (!icon || icon.iconGroup_ || !icon.block_) return;
+    const block = icon.block_;
+    const rect = () => {
+        const renderer = block.workspace && block.workspace.canvasBlockRenderer;
+        return renderer ? renderer.getIconClientRect(icon) : null;
+    };
+    // Icon.createIcon creates a real SVG group with a null parent. Build the
+    // same small model tree directly so icon drawing stays on Canvas.
+    icon.iconGroup_ = new CanvasModelNode(icon, 'icon', rect);
+    icon.iconGroup_.setAttribute('class', 'blocklyIconGroup');
+    if (block.isInFlyout) icon.iconGroup_.classList.add('blocklyIconGroupReadonly');
+    if (typeof icon.drawIcon_ === 'function') icon.drawIcon_(icon.iconGroup_);
+    if (typeof icon.updateEditable === 'function') icon.updateEditable();
+    block.svgGroup_.appendChild(icon.iconGroup_);
+};
+
+const getRootPosition = root => {
+    const value = root && (root.__02CanvasDragPosition || root.__02CanvasPosition || root.deferredXY_ || root.xy_);
+    return {x: numberOr(value && value.x), y: numberOr(value && value.y)};
+};
+
+const fieldText = field => {
+    if (!field) return '';
+    if (field.getDisplayText_) return String(field.getDisplayText_()).replace(/[\u202a\u202b\u202c\u00a0]/g, ' ');
+    if (field.getText) return String(field.getText() || '');
+    return String(field.text_ || '');
+};
+
+const resolveImageSource = field => {
+    let source = field && field.src_;
+    if (!source && field && field.imageJson_) source = field.imageJson_.src;
+    if (typeof source !== 'string') return null;
+    if (source.indexOf('media://') === 0 && field.sourceBlock_) {
+        source = field.sourceBlock_.workspace.options.pathToMedia + source.slice('media://'.length);
+    }
+    return source;
+};
+
+const installBlocklyCanvasMode = ScratchBlocks => {
+    if (!ScratchBlocks || ScratchBlocks.__02ModelCanvasInstalled) return;
+    ScratchBlocks.__02ModelCanvasInstalled = true;
+
+    const blockProto = ScratchBlocks.BlockSvg && ScratchBlocks.BlockSvg.prototype;
+    if (!blockProto) return;
+
+    const utils = ScratchBlocks.utils;
+    let canvasCreationOwner = null;
+    if (utils && !utils.__02CanvasModelNodePatched && utils.createSvgElement) {
+        const originalCreateSvgElement = utils.createSvgElement;
+        utils.createSvgElement = function (name, attrs, parent) {
+            if (parent && parent.__02CanvasModelNode) {
+                const node = new CanvasModelNode(parent.owner, name, parent.getRect);
+                Object.keys(attrs || {}).forEach(key => node.setAttribute(key, attrs[key]));
+                parent.appendChild(node);
+                return node;
+            }
+            if (!parent && canvasCreationOwner) {
+                const node = new CanvasModelNode(canvasCreationOwner, name, null);
+                Object.keys(attrs || {}).forEach(key => node.setAttribute(key, attrs[key]));
+                return node;
+            }
+            return originalCreateSvgElement.call(this, name, attrs, parent);
+        };
+        utils.__02CanvasModelNodePatched = true;
+    }
+
+    const inputProto = ScratchBlocks.Input && ScratchBlocks.Input.prototype;
+    if (inputProto && inputProto.init && !inputProto.__02CanvasInputInitPatched) {
+        const originalInputInit = inputProto.init;
+        inputProto.init = function () {
+            const block = this.sourceBlock_;
+            if (!isCanvasWorkspace(block && block.workspace)) return originalInputInit.call(this);
+            if (!block.workspace || !block.workspace.rendered) return;
+            for (const field of this.fieldRow || []) {
+                if (!field || field.fieldGroup_ || field.textElement_) continue;
+                field.sourceBlock_ = block;
+                canvasCreationOwner = field;
+                try {
+                    field.init(block);
+                } finally {
+                    canvasCreationOwner = null;
+                }
+            }
+        };
+        inputProto.__02CanvasInputInitPatched = true;
+    }
+
+    const flyoutProto = ScratchBlocks.Flyout && ScratchBlocks.Flyout.prototype;
+    if (flyoutProto && flyoutProto.placeNewBlock_ && !flyoutProto.__02CanvasPlaceNewBlockPatched) {
+        const originalPlaceNewBlock = flyoutProto.placeNewBlock_;
+        flyoutProto.placeNewBlock_ = function (...args) {
+            const block = originalPlaceNewBlock.apply(this, args);
+            const workspace = this.targetWorkspace_;
+            const renderer = workspace && workspace.canvasBlockRenderer;
+            if (renderer && block) {
+                // The gesture starts dragging immediately after placeNewBlock_
+                // returns. Build this one new stack synchronously so its first
+                // Canvas frame and connection coordinates exist before the
+                // BlockDragger snapshots them.
+                renderer.materializeBlock(block.id, true);
+            }
+            return block;
+        };
+        flyoutProto.__02CanvasPlaceNewBlockPatched = true;
+    }
+
+    const originalCreateSvgElements = blockProto.createSvgElements_;
+    blockProto.createSvgElements_ = function () {
+        if (!isCanvasWorkspace(this.workspace)) return originalCreateSvgElements.call(this);
+        if (this.svgGroup_ && this.svgGroup_.__02CanvasModelNode) return;
+        const rect = () => {
+            const renderer = this.workspace && this.workspace.canvasBlockRenderer;
+            return renderer ? renderer.getBlockClientRect(this) : null;
+        };
+        this.svgGroup_ = new CanvasModelNode(this, 'block', rect);
+        this.svgGroup_.setAttribute('class', 'blocklyDraggable');
+        this.svgGroup_.setAttribute('data-id', this.id || '');
+        this.svgPath_ = new CanvasModelNode(this, 'path', rect);
+        this.svgPath_.setAttribute('class', 'blocklyPath blocklyBlockBackground');
+        this.svgGroup_.appendChild(this.svgPath_);
+        this.useDragSurface_ = false;
+    };
+
+    const originalGetHeightWidth = blockProto.getHeightWidth;
+    if (originalGetHeightWidth && !blockProto.__02CanvasGetHeightWidthPatched) {
+        blockProto.getHeightWidth = function (...args) {
+            if (!isCanvasWorkspace(this.workspace)) {
+                return originalGetHeightWidth.apply(this, args);
+            }
+            const renderer = this.workspace.canvasBlockRenderer;
+            return renderer ? renderer.getEstimatedHeightWidth(this) :
+                originalGetHeightWidth.apply(this, args);
+        };
+        blockProto.__02CanvasGetHeightWidthPatched = true;
+    }
+
+    const prepareField = field => {
+        if (!field) return;
+        const wasPrepared = !!field.__02CanvasPrepared;
+        field.__02CanvasPrepared = true;
+        const fieldNodeNames = [
+            'fieldGroup_', 'textElement_', 'box_', 'arrow_', 'imageElement_', 'checkElement_'
+        ];
+        const rect = () => {
+            const block = field.sourceBlock_;
+            const renderer = block && block.workspace && block.workspace.canvasBlockRenderer;
+            return renderer ? renderer.getFieldClientRect(field) : null;
+        };
+        const nodeKind = name => ({
+            fieldGroup_: 'field',
+            textElement_: 'text',
+            box_: 'field-box',
+            arrow_: 'field-arrow',
+            imageElement_: 'field-image',
+            checkElement_: 'field-checkbox'
+        }[name] || 'g');
+        const convertNode = (node, owner, kind) => {
+            if (!node) return null;
+            if (node.__02CanvasModelNode) {
+                node.getRect = rect;
+                for (const child of node.childNodes || []) convertNode(child, owner, child.kind);
+                return node;
+            }
+            const model = new CanvasModelNode(owner, kind || String(node.tagName || 'g').toLowerCase(), rect);
+            for (const attribute of Array.from(node.attributes || [])) {
+                model.setAttribute(attribute.name, attribute.value);
+            }
+            if (node.getAttribute && node.getAttribute('style')) {
+                model.setAttribute('style', node.getAttribute('style'));
+            }
+            model.textContent = node.textContent || '';
+            for (const child of Array.from(node.childNodes || [])) {
+                const childModel = convertNode(child, owner, String(child.tagName || 'g').toLowerCase());
+                if (childModel) model.appendChild(childModel);
+            }
+            return model;
+        };
+
+        // Some fields create detached SVG nodes after their first init/render.
+        // Convert those nodes on every preparation pass, while preserving the
+        // Field instance, value, validator and event wrapper.
+        const hasDetachedSvg = fieldNodeNames.some(name => field[name] && !field[name].__02CanvasModelNode);
+        if (hasDetachedSvg && !wasPrepared && field.mouseDownWrapper_ && ScratchBlocks.unbindEvent_) {
+            if (field.mouseDownWrapper_ && ScratchBlocks.unbindEvent_) {
+                ScratchBlocks.unbindEvent_(field.mouseDownWrapper_);
+            }
+            field.mouseDownWrapper_ = null;
+        }
+        if (!wasPrepared) {
+            canvasCreationOwner = field;
+            try {
+                // Running the normal field initializer preserves specialized field
+                // behavior (dropdown arrows, image fields, checkboxes, validators)
+                // while createSvgElement is redirected to model nodes above.
+                if (typeof field.init === 'function') field.init(field.sourceBlock_);
+                else if (field.initModel) field.initModel();
+            } finally {
+                canvasCreationOwner = null;
+            }
+        }
+        for (const name of fieldNodeNames) {
+            if (field[name] && !field[name].__02CanvasModelNode) {
+                field[name] = convertNode(field[name], field, nodeKind(name));
+            }
+        }
+        if (field.fieldGroup_ && field.fieldGroup_.__02CanvasModelNode) {
+            field.fieldGroup_.kind = 'field';
+        }
+        // Keep equivalent handles for field implementations which only expose
+        // part of their SVG state after initialization.
+        if (!field.fieldGroup_) field.fieldGroup_ = new CanvasModelNode(field, 'field', rect);
+        if (!field.textElement_) field.textElement_ = new CanvasModelNode(field, 'text', rect);
+        if (!field.box_ && (field.getOptions || field.positionArrow)) {
+            field.box_ = new CanvasModelNode(field, 'field-box', rect);
+        }
+        if (!field.arrow_ && (field.getOptions || field.positionArrow)) {
+            field.arrow_ = new CanvasModelNode(field, 'field-arrow', rect);
+        }
+        if (!field.imageElement_ && typeof field.src_ !== 'undefined') {
+            field.imageElement_ = new CanvasModelNode(field, 'field-image', rect);
+        }
+        if (!field.checkElement_ && typeof field.state_ !== 'undefined') {
+            field.checkElement_ = new CanvasModelNode(field, 'field-checkbox', rect);
+        }
+        // Field.init creates some nodes with a null SVG parent (notably
+        // FieldLabel and FieldDropdown). Give every model node in that field's
+        // tree the same live geometry callback so Blockly's native popup and
+        // input widgets receive real screen coordinates.
+        const visited = new Set();
+        const bindRect = node => {
+            if (!node || visited.has(node)) return;
+            visited.add(node);
+            if (node.__02CanvasModelNode) node.getRect = rect;
+            for (const child of node.childNodes || []) bindRect(child);
+        };
+        bindRect(field.fieldGroup_);
+        bindRect(field.textElement_);
+        bindRect(field.box_);
+        bindRect(field.arrow_);
+        bindRect(field.imageElement_);
+        bindRect(field.checkElement_);
+    };
+    ScratchBlocks.__02PrepareCanvasField = prepareField;
+
+    const originalInitSvg = blockProto.initSvg;
+    blockProto.initSvg = function () {
+        if (!isCanvasWorkspace(this.workspace)) return originalInitSvg.call(this);
+        this.createSvgElements_();
+        if (this.deferredXY_) {
+            this.__02CanvasPosition = {
+                x: numberOr(this.deferredXY_.x),
+                y: numberOr(this.deferredXY_.y)
+            };
+            this.deferredXY_ = null;
+        }
+        for (const input of this.inputList || []) {
+            // Preserve Blockly's complete field and empty-input initialization.
+            // createSvgElement redirects these nodes to CanvasModelNode, so this
+            // does not create SVG DOM in the main workspace.
+            if (typeof input.init === 'function') input.init();
+            if (typeof input.initOutlinePath === 'function') input.initOutlinePath(this.svgGroup_);
+            for (const field of input.fieldRow || []) {
+                field.sourceBlock_ = this;
+                prepareField(field);
+            }
+        }
+        for (const icon of this.getIcons ? this.getIcons() : []) prepareCanvasIcon(icon);
+        this.updateColour();
+        this.updateMovable();
+        this.eventsInit_ = true;
+        this.rendered = true;
+        const renderer = this.workspace.canvasBlockRenderer;
+        // initSvg is also used by the Canvas shape compiler. Model-node
+        // creation during that pass is an implementation detail, not a
+        // workspace mutation; invalidating here would cancel and restart the
+        // active layout task once for every newly materialized block.
+        if (renderer && !renderer.renderingNative) renderer.invalidateBlock(this);
+    };
+
+    const originalRender = blockProto.render;
+    blockProto.render = function (optBubble) {
+        if (!isCanvasWorkspace(this.workspace)) return originalRender.call(this, optBubble);
+        if (!this.svgGroup_) this.initSvg();
+        this.rendered = true;
+        const renderer = this.workspace.canvasBlockRenderer;
+        if (renderer && !renderer.renderingNative) {
+            renderer.invalidateBlock(this);
+            // InsertionMarkerManager reads this block's connection offsets in
+            // the same call stack as render(). Ordinary Canvas layout may be
+            // deferred, but a marker must be measured synchronously or its
+            // preview is positioned at the workspace origin on the first drag.
+            if (this.isInsertionMarker && this.isInsertionMarker()) {
+                renderer.materializeBlock(this.id, true);
+            }
+        }
+        return this;
+    };
+
+    // BlockSvg.setParent normally moves the block's SVG root between the
+    // workspace canvas and its new parent. Canvas workspaces deliberately use
+    // model nodes instead of DOM nodes, so that final appendChild would throw
+    // during unplug/reconnect and leave Blockly's gesture stuck in dragging.
+    const originalSetParent = blockProto.setParent;
+    if (originalSetParent && !blockProto.__02CanvasSetParentPatched) {
+        blockProto.setParent = function (newParent) {
+            if (!isCanvasWorkspace(this.workspace)) {
+                return originalSetParent.call(this, newParent);
+            }
+            const oldParent = this.parentBlock_;
+            if (newParent === oldParent) return;
+            const Field = ScratchBlocks.Field;
+            if (Field && Field.startCache) Field.startCache();
+            try {
+                // Keep Blockly's authoritative graph bookkeeping. This is the
+                // part needed by connections, serialization, undo and VM sync.
+                if (ScratchBlocks.Block && ScratchBlocks.Block.prototype.setParent) {
+                    ScratchBlocks.Block.prototype.setParent.call(this, newParent);
+                } else {
+                    this.parentBlock_ = newParent || null;
+                }
+            } finally {
+                if (Field && Field.stopCache) Field.stopCache();
+            }
+            if (newParent && this.isShadow && this.isShadow() &&
+                newParent.getColourTertiary && this.setColour) {
+                this.setColour(
+                    this.getColour(),
+                    this.getColourSecondary(),
+                    newParent.getColourTertiary(),
+                    this.getColourQuaternary()
+                );
+            }
+            const renderer = this.workspace.canvasBlockRenderer;
+            if (renderer) renderer.invalidateBlock(this);
+        };
+        blockProto.__02CanvasSetParentPatched = true;
+    }
+
+    const originalShowContextMenu = blockProto.showContextMenu_;
+    blockProto.showContextMenu_ = function (event) {
+        if (!isCanvasWorkspace(this.workspace)) return originalShowContextMenu.call(this, event);
+        if (typeof originalShowContextMenu === 'function') {
+            return originalShowContextMenu.call(this, event);
+        }
+    };
+
+    const workspaceProto = ScratchBlocks.WorkspaceSvg && ScratchBlocks.WorkspaceSvg.prototype;
+    if (workspaceProto && workspaceProto.getSvgXY && !workspaceProto.__02CanvasGetSvgXYPatched) {
+        const originalGetSvgXY = workspaceProto.getSvgXY;
+        workspaceProto.getSvgXY = function (element) {
+            if (!isCanvasWorkspace(this) || !element || !element.__02CanvasModelNode) {
+                return originalGetSvgXY.call(this, element);
+            }
+            const renderer = this.canvasBlockRenderer;
+            const owner = element.owner;
+            const block = owner && (owner.sourceBlock_ || owner);
+            if (renderer && block && block.id) {
+                const root = rootOf(block);
+                const rootPosition = getRootPosition(root);
+                const geometry = renderer.blockGeometry.get(block.id);
+                if (geometry) {
+                    return new ScratchBlocks.goog.math.Coordinate(
+                        rootPosition.x + geometry.x,
+                        rootPosition.y + geometry.y
+                    );
+                }
+                return new ScratchBlocks.goog.math.Coordinate(rootPosition.x, rootPosition.y);
+            }
+            return new ScratchBlocks.goog.math.Coordinate(0, 0);
+        };
+        workspaceProto.__02CanvasGetSvgXYPatched = true;
+    }
+
+    const originalGetRelative = blockProto.getRelativeToSurfaceXY;
+    blockProto.getRelativeToSurfaceXY = function () {
+        if (!isCanvasWorkspace(this.workspace)) return originalGetRelative.call(this);
+        const renderer = this.workspace.canvasBlockRenderer;
+        if (renderer) return renderer.getBlockWorkspacePosition(this);
+        const Coordinate = ScratchBlocks.goog && ScratchBlocks.goog.math &&
+            ScratchBlocks.goog.math.Coordinate;
+        const position = getRootPosition(rootOf(this));
+        return Coordinate ? new Coordinate(position.x, position.y) : position;
+    };
+
+    const originalTranslate = blockProto.translate;
+    blockProto.translate = function (x, y) {
+        if (!isCanvasWorkspace(this.workspace)) return originalTranslate.call(this, x, y);
+        const root = rootOf(this);
+        if (root === this) {
+            this.__02CanvasPosition = {x, y};
+            this.__02CanvasDragPosition = null;
+            this.deferredXY_ = null;
+        }
+        const renderer = this.workspace.canvasBlockRenderer;
+        if (renderer) renderer.invalidatePosition(root);
+    };
+
+    const originalMoveDuringDrag = blockProto.moveDuringDrag;
+    blockProto.moveDuringDrag = function (location) {
+        if (!isCanvasWorkspace(this.workspace)) return originalMoveDuringDrag.call(this, location);
+        const root = rootOf(this);
+        root.__02CanvasDragPosition = {x: location.x, y: location.y};
+        const renderer = this.workspace.canvasBlockRenderer;
+        if (renderer) renderer.invalidatePosition(root);
+    };
+
+    const originalMoveToDragSurface = blockProto.moveToDragSurface_;
+    blockProto.moveToDragSurface_ = function () {
+        if (!isCanvasWorkspace(this.workspace)) return originalMoveToDragSurface.call(this);
+    };
+
+    const originalMoveOffDragSurface = blockProto.moveOffDragSurface_;
+    blockProto.moveOffDragSurface_ = function (location) {
+        if (!isCanvasWorkspace(this.workspace)) return originalMoveOffDragSurface.call(this, location);
+        this.translate(location.x, location.y);
+        const renderer = this.workspace && this.workspace.canvasBlockRenderer;
+        if (renderer) renderer.invalidatePosition(rootOf(this));
+    };
+
+    const originalPositionNewBlock = blockProto.positionNewBlock;
+    if (originalPositionNewBlock && !blockProto.__02CanvasPositionNewBlockPatched) {
+        blockProto.positionNewBlock = function (newBlock, newConnection, existingConnection) {
+            if (!isCanvasWorkspace(this.workspace)) {
+                return originalPositionNewBlock.call(this, newBlock, newConnection, existingConnection);
+            }
+            if (!newBlock || !newConnection || !existingConnection ||
+                newConnection.type !== ScratchBlocks.NEXT_STATEMENT) return;
+
+            // positionNewBlock normally calls moveBy(), whose DOM-based
+            // getRelativeToSurfaceXY cannot see a Canvas model node. Apply the
+            // same connection delta directly to the model position instead.
+            const current = getRootPosition(rootOf(newBlock));
+            const dx = numberOr(existingConnection.x_) - numberOr(newConnection.x_);
+            const dy = numberOr(existingConnection.y_) - numberOr(newConnection.y_);
+            newBlock.translate(current.x + dx, current.y + dy);
+            if (typeof newBlock.moveConnections_ === 'function') {
+                newBlock.moveConnections_(dx, dy);
+            }
+            const renderer = this.workspace.canvasBlockRenderer;
+            if (renderer) {
+                renderer.materializeBlock(newBlock.id, true);
+                renderer.scheduleDraw();
+            }
+        };
+        blockProto.__02CanvasPositionNewBlockPatched = true;
+    }
+
+    // Blockly's flyout creates a block in the target workspace and then lets
+    // BlockDragger move it through the SVG drag-surface lifecycle. Canvas
+    // workspaces intentionally have no SVG drag surface, so keep the same
+    // lifecycle but notify the Canvas renderer on every drag phase.
+    const draggerProto = ScratchBlocks.BlockDragger && ScratchBlocks.BlockDragger.prototype;
+    if (draggerProto && !draggerProto.__02CanvasDragPatched) {
+        const originalStart = draggerProto.startBlockDrag;
+        const originalDrag = draggerProto.dragBlock;
+        const originalEnd = draggerProto.endBlockDrag;
+        draggerProto.startBlockDrag = function (...args) {
+            const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
+            if (renderer && this.draggingBlock_) renderer.prepareBlockDrag(this.draggingBlock_);
+            const result = originalStart.apply(this, args);
+            if (renderer && this.draggingBlock_) renderer.beginBlockDrag(this.draggingBlock_);
+            if (renderer) renderer.scheduleDraw();
+            return result;
+        };
+        draggerProto.dragBlock = function (...args) {
+            const result = originalDrag.apply(this, args);
+            const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
+            if (renderer) renderer.scheduleDraw();
+            return result;
+        };
+        draggerProto.endBlockDrag = function (...args) {
+            const result = originalEnd.apply(this, args);
+            const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
+            if (renderer) {
+                renderer.endBlockDrag(this.draggingBlock_);
+                renderer.scheduleDraw();
+            }
+            return result;
+        };
+        draggerProto.__02CanvasDragPatched = true;
+    }
+
+    const originalBringToFront = blockProto.bringToFront;
+    blockProto.bringToFront = function () {
+        if (!isCanvasWorkspace(this.workspace)) return originalBringToFront.call(this);
+        const renderer = this.workspace.canvasBlockRenderer;
+        if (renderer) renderer.bringToFront(rootOf(this));
+    };
+
+    const originalDispose = blockProto.dispose;
+    blockProto.dispose = function (...args) {
+        const renderer = isCanvasWorkspace(this.workspace) && this.workspace.canvasBlockRenderer;
+        // BlockAnimations.disposeUiEffect expects a real SVG Node and calls
+        // goog.dom.contains on it. Canvas model nodes deliberately are not
+        // DOM nodes, so keep the graph disposal but skip that SVG-only effect.
+        if (renderer && args.length > 1 && args[1]) args[1] = false;
+        const root = rootOf(this);
+        const result = originalDispose.apply(this, args);
+        if (renderer) renderer.invalidateBlock(root);
+        return result;
+    };
+
+    const originalLazyMethods = [
+        'createLazySvgPlaceholder', 'removeLazySvgPlaceholder',
+        'updateLazySvgPlaceholder', 'updateLazySvgPlaceholderPosition_',
+        'dematerializeLazySvg', 'rematerializeLazySvg'
+    ];
+    for (const name of originalLazyMethods) {
+        const original = blockProto[name];
+        if (!original) continue;
+        blockProto[name] = function (...args) {
+            if (isCanvasWorkspace(this.workspace)) return name.indexOf('materialize') >= 0 ? false : null;
+            return original.apply(this, args);
+        };
+    }
+
+    const connectionProto = ScratchBlocks.RenderedConnection && ScratchBlocks.RenderedConnection.prototype;
+    if (connectionProto) {
+        const originalTighten = connectionProto.tighten_;
+        connectionProto.tighten_ = function () {
+            const block = this.sourceBlock_;
+            if (!isCanvasWorkspace(block && block.workspace)) return originalTighten.call(this);
+            const renderer = block.workspace.canvasBlockRenderer;
+            if (renderer && !renderer.renderingNative) renderer.invalidateBlock(block);
+        };
+        const originalHighlight = connectionProto.highlight;
+        connectionProto.highlight = function () {
+            const block = this.sourceBlock_;
+            if (!isCanvasWorkspace(block && block.workspace)) return originalHighlight.call(this);
+            const renderer = block.workspace.canvasBlockRenderer;
+            if (renderer) renderer.setHighlightedConnection(this);
+        };
+        const originalUnhighlight = connectionProto.unhighlight;
+        connectionProto.unhighlight = function () {
+            const block = this.sourceBlock_;
+            if (!isCanvasWorkspace(block && block.workspace)) return originalUnhighlight.call(this);
+            const renderer = block.workspace.canvasBlockRenderer;
+            if (renderer) renderer.setHighlightedConnection(null);
+        };
+    }
+
+    const fieldProto = ScratchBlocks.Field && ScratchBlocks.Field.prototype;
+    if (fieldProto) {
+        const originalGetSize = fieldProto.getSize;
+        fieldProto.getSize = function () {
+            const block = this.sourceBlock_;
+            if (!isCanvasWorkspace(block && block.workspace)) return originalGetSize.call(this);
+            // Keep Blockly's original measurement implementation available to
+            // the Canvas renderer. It updates textElement_, box_, arrow_ and
+            // specialized field state exactly as the SVG renderer does.
+            this.__02CanvasOriginalGetSize = originalGetSize;
+            prepareField(this);
+            const renderer = block.workspace.canvasBlockRenderer;
+            return renderer ? renderer.measureField(this) : this.size_;
+        };
+        const originalAbsolute = fieldProto.getAbsoluteXY_;
+        fieldProto.getAbsoluteXY_ = function () {
+            const block = this.sourceBlock_;
+            if (!isCanvasWorkspace(block && block.workspace)) return originalAbsolute.call(this);
+            // Native Blockly uses the whole reporter as the click target when
+            // it contains one text field. Respect that contract so the HTML
+            // editor covers a shadow reporter instead of starting at its
+            // internally padded text position.
+            const clickTarget = this.getClickTarget_ && this.getClickTarget_();
+            const rect = clickTarget && clickTarget.__02CanvasModelNode &&
+                clickTarget.getBoundingClientRect ? clickTarget.getBoundingClientRect() :
+                block.workspace.canvasBlockRenderer.getFieldClientRect(this);
+            return {x: rect.left, y: rect.top};
+        };
+        const originalForce = fieldProto.forceRerender;
+        fieldProto.forceRerender = function () {
+            const block = this.sourceBlock_;
+            if (!isCanvasWorkspace(block && block.workspace)) return originalForce.call(this);
+            const renderer = block.workspace.canvasBlockRenderer;
+            this.size_.width = 0;
+            // Invalidating only the block leaves the model field one render
+            // behind. Re-render the field model before laying out its block.
+            if (typeof this.render_ === 'function') this.render_();
+            if (renderer && !renderer.renderingNative) renderer.invalidateBlock(block);
+        };
+    }
+};
+
+class ModelCanvasBlockRenderer {
+    static enableBlocklyCanvasMode (ScratchBlocks) {
+        installBlocklyCanvasMode(ScratchBlocks);
+    }
+
+    constructor (workspace, ScratchBlocks) {
+        this.workspace = workspace;
+        this.ScratchBlocks = ScratchBlocks;
+        this.rootLayouts = new Map();
+        this.nativeBlockCache = new Map();
+        this.fieldGeometry = new WeakMap();
+        this.blockGeometry = new Map();
+        this.imageCache = new Map();
+        this.pathCache = new Map();
+        this.hitContext = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
+        this.enabled = false;
+        this.layoutSuspended = false;
+        this.pendingDraw = false;
+        this.frame = null;
+        this.layoutFrame = null;
+        this.layoutTasks = new Map();
+        this.renderingNative = false;
+        this.loadingIndicatorStartedAt = 0;
+        this.resizeObserver = null;
+        this.highlightedConnection = null;
+        this.zCounter = 1;
+        this.draggingRoot = null;
+        this.lastDrawDuration = 0;
+        this.lastLayoutDuration = 0;
+        this.visibleBlockCount = 0;
+        this.estimateCache = new Map();
+        this.viewportKey = null;
+        this.workspaceMethodRestores = [];
+        this.forceMaterializedIds = new Set();
+        this.handleChange = this.handleChange.bind(this);
+        this.handleMouseDown = this.handleMouseDown.bind(this);
+        this.handleContextMenu = this.handleContextMenu.bind(this);
+        this.handleDocumentPaint = this.handleDocumentPaint.bind(this);
+    }
+
+    attach () {
+        if (!this.workspace || this.workspace.isFlyout) return;
+        // Blockly.Options does not preserve arbitrary properties reliably.
+        // Keep the renderer mode on the workspace instance so every block
+        // created after injection takes the model-only path.
+        this.workspace.__02CanvasRendererEnabled = true;
+        const injection = this.workspace.getInjectionDiv && this.workspace.getInjectionDiv();
+        if (!injection) return;
+        this.injection = injection;
+        injection.classList.add('blocklyCanvasWorkspace');
+        this.canvas = document.createElement('canvas');
+        this.canvas.className = 'blocklyCanvasRenderCanvas';
+        Object.assign(this.canvas.style, {
+            position: 'absolute',
+            left: '0',
+            right: '0',
+            top: `${-CANVAS_TOP_PADDING}px`,
+            height: `calc(100% + ${CANVAS_TOP_PADDING}px)`,
+            width: '100%',
+            display: 'block',
+            pointerEvents: 'none',
+            // Above the main SVG background, below Blockly's flyout (20),
+            // scrollbars and drag surface. This keeps the toolbox interactive
+            // when a workspace block is panned underneath it.
+            zIndex: '1'
+        });
+        injection.appendChild(this.canvas);
+        this.context = this.canvas.getContext('2d', {alpha: true, desynchronized: true});
+        this.workspace.canvasBlockRenderer = this;
+        this.workspace.ensureBlockRendered = blockId => this.materializeBlock(blockId);
+        this.workspace.ensureScriptRendered = blockId => this.materializeBlock(blockId);
+        this.workspace.addChangeListener(this.handleChange);
+        this.patchWorkspaceViewportMethods();
+        injection.addEventListener('mousedown', this.handleMouseDown, true);
+        injection.addEventListener('contextmenu', this.handleContextMenu, true);
+        document.addEventListener('mousemove', this.handleDocumentPaint, true);
+        document.addEventListener('mouseup', this.handleDocumentPaint, true);
+        this.boundResize = () => this.scheduleDraw();
+        window.addEventListener('resize', this.boundResize, {passive: true});
+        if (typeof ResizeObserver !== 'undefined') {
+            this.resizeObserver = new ResizeObserver(this.boundResize);
+            this.resizeObserver.observe(injection);
+        }
+        this.setEnabled(true);
+    }
+
+    patchWorkspaceViewportMethods () {
+        const workspace = this.workspace;
+        if (!workspace || workspace.__02CanvasViewportMethodsPatched) return;
+        const renderer = this;
+        const patch = (name, replacement) => {
+            const original = workspace[name];
+            if (typeof original !== 'function') return;
+            workspace[name] = function (...args) {
+                return replacement.call(this, original, args);
+            };
+            renderer.workspaceMethodRestores.push(() => {
+                if (workspace[name]) workspace[name] = original;
+            });
+        };
+
+        // The native workspace calls this after scrolling and during XML
+        // loading. Canvas owns block visibility, so route the notification to
+        // the viewport compiler instead of asking Blockly to materialize SVG.
+        patch('renderVisibleTopBlocks', () => {
+            renderer.ensureLayoutsAsync(renderer.getVisibleWorldBounds());
+            renderer.scheduleDraw();
+        });
+        patch('ensureTopBlockRendered_', (original, args) => {
+            const block = args[0];
+            if (block && block.id) renderer.materializeBlock(block.id, true);
+            return block || original.apply(workspace, args);
+        });
+        patch('translate', (original, args) => {
+            const result = original.apply(workspace, args);
+            renderer.scheduleDraw();
+            return result;
+        });
+        patch('setScale', (original, args) => {
+            const result = original.apply(workspace, args);
+            renderer.scheduleDraw();
+            return result;
+        });
+        workspace.__02CanvasViewportMethodsPatched = true;
+        this.workspaceMethodRestores.push(() => {
+            delete workspace.__02CanvasViewportMethodsPatched;
+        });
+    }
+
+    getEstimateKey (block, ignoreFields, stack = false) {
+        return `${block.id}:${ignoreFields ? 'no-fields' : 'fields'}${stack ? ':stack' : ''}`;
+    }
+
+    getEstimatedBaseSize (block, ignoreFields = false) {
+        if (!block) return {width: 64, height: STACK_HEIGHT};
+        const BlockSvg = this.ScratchBlocks.BlockSvg || {};
+        let width = numberOr(block.width);
+        let height = numberOr(block.height);
+        if (width <= 0) {
+            width = block.outputConnection ?
+                numberOr(BlockSvg.MIN_BLOCK_X_OUTPUT, 48) :
+                numberOr(BlockSvg.MIN_BLOCK_X, 96);
+        }
+        if (height <= 0) {
+            height = block.outputConnection ?
+                numberOr(BlockSvg.FIELD_HEIGHT, REPORTER_HEIGHT) :
+                numberOr(BlockSvg.MIN_BLOCK_Y, STACK_HEIGHT);
+        }
+
+        if (!ignoreFields) {
+            for (const input of block.inputList || []) {
+                if (input.isVisible && !input.isVisible()) continue;
+                let rowWidth = 0;
+                let rowHeight = 0;
+                for (const field of input.fieldRow || []) {
+                    const size = field && field.size_;
+                    const fieldWidth = numberOr(size && size.width) ||
+                        Math.max(16, (fieldText(field).length * 8) + 16);
+                    const fieldHeight = numberOr(size && size.height) ||
+                        numberOr(BlockSvg.FIELD_HEIGHT, REPORTER_HEIGHT);
+                    rowWidth += fieldWidth + numberOr(BlockSvg.SEP_SPACE_X, 8);
+                    rowHeight = Math.max(rowHeight, fieldHeight);
+                }
+                width = Math.max(width, rowWidth + (BLOCK_PADDING_X * 2));
+                height = Math.max(height, rowHeight);
+            }
+        }
+        return {width, height};
+    }
+
+    getEstimatedBlockSize (block, ignoreFields = false, seen = new Set()) {
+        if (!block) return {width: 64, height: STACK_HEIGHT};
+        const key = this.getEstimateKey(block, ignoreFields);
+        if (this.estimateCache.has(key)) return this.estimateCache.get(key);
+
+        // A malformed or partially constructed workspace must not make the
+        // recursive estimator loop forever. The base size is still a useful
+        // conservative value for the edge that closes the cycle.
+        if (seen.has(block.id)) return this.getEstimatedBaseSize(block, ignoreFields);
+        seen.add(block.id);
+
+        // Once Blockly has measured a clean block, width/height already include
+        // all inline and statement inputs for that block. Re-walking those
+        // children here both double-counts them and turns a large nested graph
+        // into repeated recursive work.
+        const nativeState = this.nativeBlockCache.get(block.id);
+        if (nativeState && !nativeState.dirty && numberOr(block.width) > 0 && numberOr(block.height) > 0) {
+            const measured = {width: numberOr(block.width), height: numberOr(block.height)};
+            seen.delete(block.id);
+            this.estimateCache.set(key, measured);
+            return measured;
+        }
+
+        const BlockSvg = this.ScratchBlocks.BlockSvg || {};
+        const base = this.getEstimatedBaseSize(block, ignoreFields);
+        let width = base.width;
+        let height = base.height;
+        let currentRowHeight = 0;
+        let currentRowWidth = numberOr(BlockSvg.SEP_SPACE_X, 8);
+        let currentRowType = null;
+        let lastInputType = null;
+        let rowCount = 0;
+        let totalRowHeight = 0;
+        let hasStatement = false;
+        let lastRowWasStatement = false;
+
+        const finishInlineRow = () => {
+            if (currentRowType === 'inline') {
+                width = Math.max(width, currentRowWidth + numberOr(BlockSvg.SEP_SPACE_X, 8));
+            }
+            if (currentRowType) totalRowHeight += currentRowHeight;
+            currentRowHeight = 0;
+            currentRowWidth = numberOr(BlockSvg.SEP_SPACE_X, 8);
+            currentRowType = null;
+        };
+
+        for (const input of block.inputList || []) {
+            if (input.isVisible && !input.isVisible()) continue;
+            const connection = input.connection;
+            const isStatement = connection && connection.type === this.ScratchBlocks.NEXT_STATEMENT;
+            const rowType = isStatement ? 'statement' : 'inline';
+            const startsNewRow = isStatement || !currentRowType || lastInputType === this.ScratchBlocks.NEXT_STATEMENT;
+            if (startsNewRow) {
+                finishInlineRow();
+                currentRowType = rowType;
+                rowCount++;
+                currentRowHeight = 0;
+                currentRowWidth = numberOr(BlockSvg.SEP_SPACE_X, 8);
+            }
+            lastRowWasStatement = isStatement;
+
+            let fieldWidth = 0;
+            let fieldHeight = 0;
+            if (!ignoreFields) {
+                for (const field of input.fieldRow || []) {
+                    const size = field && field.size_;
+                    fieldWidth += numberOr(size && size.width) ||
+                        Math.max(16, (fieldText(field).length * 8) + 16);
+                    fieldWidth += numberOr(BlockSvg.SEP_SPACE_X, 8);
+                    fieldHeight = Math.max(fieldHeight,
+                        numberOr(size && size.height, numberOr(BlockSvg.FIELD_HEIGHT, REPORTER_HEIGHT)));
+                }
+            }
+            currentRowWidth += fieldWidth;
+            currentRowHeight = Math.max(currentRowHeight, fieldHeight,
+                isStatement ? numberOr(BlockSvg.MIN_STATEMENT_INPUT_HEIGHT, STACK_HEIGHT) :
+                    numberOr(BlockSvg.MIN_BLOCK_Y, STACK_HEIGHT));
+
+            const child = connection && connection.targetBlock && connection.targetBlock();
+            if (child) {
+                const childSize = isStatement ?
+                    this.getEstimatedHeightWidth(child, ignoreFields, seen) :
+                    this.getEstimatedBlockSize(child, ignoreFields, seen);
+                if (isStatement) {
+                    hasStatement = true;
+                    const canUseNotch = !child.lastConnectionInStack || child.lastConnectionInStack();
+                    const childHeight = childSize.height - (canUseNotch ?
+                        numberOr(BlockSvg.NOTCH_HEIGHT, NOTCH_DEPTH) : 0);
+                    currentRowHeight = Math.max(currentRowHeight, childHeight);
+                    width = Math.max(width,
+                        currentRowWidth + numberOr(BlockSvg.STATEMENT_INPUT_EDGE_WIDTH, STATEMENT_INDENT) +
+                            childSize.width);
+                } else if (connection.type === this.ScratchBlocks.INPUT_VALUE) {
+                    currentRowWidth += childSize.width + numberOr(BlockSvg.SEP_SPACE_X, 8);
+                    currentRowHeight = Math.max(currentRowHeight,
+                        childSize.height + (2 * numberOr(BlockSvg.INLINE_PADDING_Y, 4)));
+                }
+            } else if (connection && connection.type === this.ScratchBlocks.INPUT_VALUE) {
+                currentRowWidth += numberOr(BlockSvg.INPUT_SHAPE_ROUND_WIDTH, 44) +
+                    numberOr(BlockSvg.SEP_SPACE_X, 8);
+            }
+
+            if (isStatement) {
+                finishInlineRow();
+            }
+            lastInputType = input.type;
+        }
+        finishInlineRow();
+        height = Math.max(height, totalRowHeight);
+        if (lastRowWasStatement && rowCount && block.type !== this.ScratchBlocks.PROCEDURES_DEFINITION_BLOCK_TYPE) {
+            height = Math.max(height, totalRowHeight + numberOr(BlockSvg.EXTRA_STATEMENT_ROW_Y, 16));
+        }
+        if (hasStatement) {
+            width = Math.max(width, numberOr(BlockSvg.MIN_BLOCK_X_WITH_STATEMENT, width));
+        }
+        seen.delete(block.id);
+        const result = {width, height};
+        this.estimateCache.set(key, result);
+        return result;
+    }
+
+    getProjectionBlockSize (block) {
+        if (!block) return {width: 64, height: STACK_HEIGHT};
+        const state = this.nativeBlockCache.get(block.id);
+        if (state && !state.dirty && numberOr(block.width) > 0 && numberOr(block.height) > 0) {
+            return {width: numberOr(block.width), height: numberOr(block.height)};
+        }
+        // Projection only needs a conservative rectangle. Calling the full
+        // stack estimator here would walk every NEXT link before the first
+        // visible block can paint in a large project.
+        return this.getEstimatedBaseSize(block, false);
+    }
+
+    getEstimatedHeightWidth (block, ignoreFields = false, seen = new Set()) {
+        if (!block) return {width: 64, height: STACK_HEIGHT};
+        const key = this.getEstimateKey(block, ignoreFields, true);
+        if (this.estimateCache.has(key)) return this.estimateCache.get(key);
+        if (seen.has(block.id)) return this.getEstimatedBaseSize(block, ignoreFields);
+
+        // Long Scratch scripts regularly contain thousands of NEXT links.
+        // Compute that chain bottom-up so stack dimensions are linear and do
+        // not depend on the JavaScript recursion limit.
+        const chain = [];
+        const visited = new Set(seen);
+        let current = block;
+        let accumulated = null;
+        while (current && !visited.has(current.id)) {
+            const currentKey = this.getEstimateKey(current, ignoreFields, true);
+            if (this.estimateCache.has(currentKey)) {
+                accumulated = this.estimateCache.get(currentKey);
+                break;
+            }
+            visited.add(current.id);
+            chain.push(current);
+            current = current.getNextBlock && current.getNextBlock();
+        }
+        if (current && !accumulated) {
+            accumulated = this.getEstimatedBaseSize(current, ignoreFields);
+        }
+        const notchHeight = numberOr(
+            this.ScratchBlocks.BlockSvg && this.ScratchBlocks.BlockSvg.NOTCH_HEIGHT,
+            NOTCH_DEPTH
+        );
+        for (let index = chain.length - 1; index >= 0; index--) {
+            const currentBlock = chain[index];
+            const own = this.getEstimatedBlockSize(currentBlock, ignoreFields, new Set(seen));
+            const result = accumulated ? {
+                width: Math.max(own.width, accumulated.width),
+                height: Math.max(own.height, own.height + accumulated.height - notchHeight)
+            } : own;
+            this.estimateCache.set(this.getEstimateKey(currentBlock, ignoreFields, true), result);
+            accumulated = result;
+        }
+        return accumulated || this.getEstimatedBaseSize(block, ignoreFields);
+    }
+
+    dispose () {
+        if (!this.workspace) return;
+        this.workspace.removeChangeListener(this.handleChange);
+        for (const restore of this.workspaceMethodRestores) restore();
+        this.workspaceMethodRestores = [];
+        if (this.injection) this.injection.removeEventListener('mousedown', this.handleMouseDown, true);
+        if (this.injection) this.injection.removeEventListener('contextmenu', this.handleContextMenu, true);
+        document.removeEventListener('mousemove', this.handleDocumentPaint, true);
+        document.removeEventListener('mouseup', this.handleDocumentPaint, true);
+        window.removeEventListener('resize', this.boundResize);
+        if (this.resizeObserver) this.resizeObserver.disconnect();
+        if (this.frame !== null) cancelAnimationFrame(this.frame);
+        if (this.canvas) this.canvas.remove();
+        delete this.workspace.canvasBlockRenderer;
+        delete this.workspace.__02CanvasRendererEnabled;
+        delete this.workspace.ensureBlockRendered;
+        delete this.workspace.ensureScriptRendered;
+        this.pathCache.clear();
+        this.nativeBlockCache.clear();
+        this.estimateCache.clear();
+        this.forceMaterializedIds.clear();
+        this.draggingRoot = null;
+        this.layoutTasks.clear();
+        if (this.layoutFrame !== null) cancelAnimationFrame(this.layoutFrame);
+        this.workspace = null;
+    }
+
+    setEnabled (enabled) {
+        this.enabled = !!enabled && !!this.context;
+        if (this.enabled) this.invalidateAll();
+        else this.clear();
+    }
+
+    beginBlockDrag (block) {
+        const root = rootOf(block);
+        this.draggingRoot = root && root.id ? root : null;
+        if (!root || !this.workspace || !root.getDescendants) return;
+        // A dragged stack must remain paintable even when its old projection is
+        // outside the viewport. Keep every descendant materialized for the
+        // duration of the gesture so connection previews never fall back to a
+        // stale SVG/model position.
+        for (const descendant of root.getDescendants(false)) {
+            if (descendant && descendant.id) this.forceMaterializedIds.add(descendant.id);
+        }
+        if (root.id) this.forceMaterializedIds.add(root.id);
+        this.materializeBlock(root.id, true);
+    }
+
+    prepareBlockDrag (block) {
+        if (!this.isLiveBlock(block) || this.layoutSuspended) return;
+        // The insertion manager snapshots both the dragged connections and the
+        // nearby workspace connection database before the first drag frame.
+        // Finish only viewport layouts here; offscreen scripts remain deferred.
+        const visible = this.getVisibleWorldBounds();
+        this.ensureLayoutsForRoot(visible);
+        const root = rootOf(block);
+        const layout = root && this.rootLayouts.get(root.id);
+        if (layout) this.updateConnectionPositions(layout);
+    }
+
+    endBlockDrag (block) {
+        const root = rootOf(block);
+        if (this.draggingRoot === root) this.draggingRoot = null;
+        if (root && root.getDescendants) {
+            for (const descendant of root.getDescendants(false)) {
+                if (descendant && descendant.id) this.forceMaterializedIds.delete(descendant.id);
+            }
+        }
+        if (root && root.id) this.forceMaterializedIds.delete(root.id);
+        this.invalidateBlock(root || block);
+    }
+
+    setLoading (loading) {
+        this.layoutSuspended = !!loading;
+        if (this.layoutSuspended) {
+            this.pendingDraw = true;
+            if (this.frame !== null) {
+                cancelAnimationFrame(this.frame);
+                this.frame = null;
+            }
+            if (this.layoutFrame !== null) {
+                cancelAnimationFrame(this.layoutFrame);
+                this.layoutFrame = null;
+            }
+            this.layoutTasks.clear();
+            for (const layout of this.rootLayouts.values()) layout.inProgress = false;
+            this.clear();
+            return;
+        }
+        if (this.pendingDraw) {
+            this.pendingDraw = false;
+            this.invalidateAll();
+        }
+    }
+
+    reset () {
+        if (this.layoutFrame !== null) {
+            cancelAnimationFrame(this.layoutFrame);
+            this.layoutFrame = null;
+        }
+        this.layoutTasks.clear();
+        this.rootLayouts.clear();
+        this.nativeBlockCache.clear();
+        this.blockGeometry.clear();
+        this.fieldGeometry = new WeakMap();
+        this.estimateCache.clear();
+        this.loadingIndicatorStartedAt = 0;
+        this.viewportKey = null;
+        this.invalidateAll();
+    }
+
+    invalidateStyles () {
+        this.invalidateAll();
+    }
+
+    invalidateAll () {
+        const blocks = this.workspace && this.workspace.getAllBlocks ? this.workspace.getAllBlocks(false) : [];
+        // Estimate entries have mode and stack suffixes in their keys. A
+        // bare block id never matched those keys, so stale nested dimensions
+        // survived imports and later field/mutation changes.
+        this.estimateCache.clear();
+        for (const block of blocks) {
+            const state = this.nativeBlockCache.get(block.id) || {dirty: true};
+            state.dirty = true;
+            this.nativeBlockCache.set(block.id, state);
+        }
+        for (const layout of this.rootLayouts.values()) {
+            layout.dirty = true;
+            layout.projectionDirty = true;
+            layout.version = numberOr(layout.version) + 1;
+            if (layout.inProgress) {
+                layout.inProgress = false;
+                this.layoutTasks.delete(layout.root.id);
+            }
+        }
+        const roots = this.workspace && this.workspace.getTopBlocks ? this.workspace.getTopBlocks(false) : [];
+        for (const root of roots) this.getRootLayout(root).dirty = true;
+        this.scheduleDraw();
+    }
+
+    invalidateBlock (block) {
+        if (!block) return;
+        let current = block;
+        while (current) {
+            const state = this.nativeBlockCache.get(current.id) || {dirty: true};
+            state.dirty = true;
+            this.nativeBlockCache.set(current.id, state);
+            const prefix = `${current.id}:`;
+            for (const key of this.estimateCache.keys()) {
+                if (key.startsWith(prefix)) this.estimateCache.delete(key);
+            }
+            current = current.getParent && current.getParent();
+        }
+        const root = rootOf(block);
+        if (root && root.id) {
+            const layout = this.getRootLayout(root);
+            layout.dirty = true;
+            layout.projectionDirty = true;
+            layout.version = numberOr(layout.version) + 1;
+            // A structure or field change invalidates the partial task. Let
+            // the next frame build a fresh graph instead of committing a
+            // layout computed from stale connections.
+            if (layout.inProgress) {
+                layout.inProgress = false;
+                this.layoutTasks.delete(root.id);
+            }
+        }
+        this.scheduleDraw();
+    }
+
+    invalidatePosition (root) {
+        if (root && root.id) this.getRootLayout(root).positionDirty = true;
+        this.scheduleDraw();
+    }
+
+    handleChange (event) {
+        const block = event && event.blockId && this.workspace.getBlockById(event.blockId);
+        if (block && String(event.type).toLowerCase() === 'move' &&
+            !event.oldParentId && !event.newParentId) this.invalidatePosition(rootOf(block));
+        else if (block) this.invalidateBlock(block);
+        else if (!event || !event.type || [
+            'create', 'delete', 'change', 'move', 'finished_loading'
+        ].includes(String(event.type).toLowerCase())) this.invalidateAll();
+        else this.scheduleDraw();
+    }
+
+    materializeBlock (blockId, immediate = false) {
+        const block = this.workspace && this.workspace.getBlockById(blockId);
+        if (this.isLiveBlock(block)) {
+            this.ensureBlockModel(block);
+            this.forceMaterializedIds.add(block.id);
+            this.invalidateBlock(block);
+            if (immediate && !this.layoutSuspended) {
+                const root = rootOf(block);
+                const layout = this.getRootLayout(root);
+                layout.dirty = true;
+                this.layoutTasks.delete(root.id);
+                this.ensureLayoutsForRoot(this.getVisibleWorldBounds(), root);
+                this.forceMaterializedIds.delete(block.id);
+                this.bringToFront(root);
+                // A newly-created flyout block must be visible in the same
+                // event turn in which Blockly starts its drag.
+                this.draw();
+            }
+        }
+        return block;
+    }
+
+    ensureBlockModel (block) {
+        if (!this.isLiveBlock(block)) return block;
+        // initSvg is intercepted above for Canvas workspaces. It initializes
+        // fields and compatibility handles without invoking native SVG code.
+        if (!(block.svgGroup_ && block.svgGroup_.__02CanvasModelNode) &&
+            typeof block.initSvg === 'function') block.initSvg();
+        if (!(block.svgGroup_ && block.svgGroup_.__02CanvasModelNode)) return block;
+
+        // Mutation blocks and blocks created by XML import can acquire inputs
+        // after their first initSvg call. Native Blockly initializes those
+        // fields during its next render; Canvas must do the same before reading
+        // their model nodes or dimensions.
+        for (const input of block.inputList || []) {
+            if (typeof input.init === 'function') input.init();
+            if (!input.outlinePath && typeof input.initOutlinePath === 'function') {
+                input.initOutlinePath(block.svgGroup_);
+            }
+            for (const field of input.fieldRow || []) {
+                field.sourceBlock_ = block;
+                const prepareField = this.ScratchBlocks.__02PrepareCanvasField;
+                if (prepareField) prepareField(field);
+            }
+        }
+        for (const icon of block.getIcons ? block.getIcons() : []) prepareCanvasIcon(icon);
+        return block;
+    }
+
+    isLiveBlock (block) {
+        if (!this.workspace || !block || block.workspace !== this.workspace || !block.id) return false;
+        return !this.workspace.getBlockById || this.workspace.getBlockById(block.id) === block;
+    }
+
+    bringToFront (root) {
+        root.__02CanvasZ = ++this.zCounter;
+        this.scheduleDraw();
+    }
+
+    setHighlightedConnection (connection) {
+        this.highlightedConnection = connection;
+        this.scheduleDraw();
+    }
+
+    getRootLayout (root) {
+        let layout = this.rootLayouts.get(root.id);
+        if (!layout) {
+            layout = {
+                root,
+                dirty: true,
+                projectionDirty: true,
+                version: 0,
+                positionDirty: false,
+                geometries: [],
+                fields: [],
+                buckets: new Map(),
+                bounds: null,
+                projectionBounds: null,
+                projectedPositions: new Map(),
+                projectedPaintBounds: new Map(),
+                projectedBlocks: new Map(),
+                visibleIds: new Set()
+            };
+            this.rootLayouts.set(root.id, layout);
+        }
+        layout.root = root;
+        return layout;
+    }
+
+    renderNativeBlock (block) {
+        if (!this.isLiveBlock(block)) return;
+        const state = this.nativeBlockCache.get(block.id) || {dirty: true};
+        const wasRenderingNative = this.renderingNative;
+        this.renderingNative = true;
+        try {
+            // Field and model-node initialization must be inside the native
+            // compilation guard. Those lightweight nodes intentionally call
+            // invalidate() when addons mutate them outside this pass.
+            this.ensureBlockModel(block);
+            if (!this.isLiveBlock(block)) return;
+            const hasUninitializedField = (block.inputList || []).some(input =>
+                (input.fieldRow || []).some(field => !field.fieldGroup_ && !field.textElement_)
+            );
+            if (!state.dirty && !hasUninitializedField && block.svgPath_ &&
+                block.svgPath_.getAttribute('d')) return;
+            if (typeof block.renderCompute_ !== 'function' || typeof block.renderDraw_ !== 'function') return;
+            // A custom block-shape addon can change FIELD_HEIGHT and padding
+            // without changing the field value. Force ordinary fields through
+            // Blockly's normal render_ path so cached dimensions do not survive a
+            // style refresh and make the following blocks jump on first click.
+            for (const input of block.inputList || []) {
+                for (const field of input.fieldRow || []) {
+                    if (!field.size_) continue;
+                    if (!Number.isFinite(field.width_) || !Number.isFinite(field.height_)) {
+                        field.size_.width = 0;
+                    }
+                }
+            }
+            let cursorX = this.ScratchBlocks.BlockSvg.SEP_SPACE_X || 0;
+            if (block.RTL) cursorX = -cursorX;
+            let scratchCommentIcon = null;
+            for (const icon of block.getIcons ? block.getIcons() : []) {
+                prepareCanvasIcon(icon);
+                if (this.ScratchBlocks.ScratchBlockComment &&
+                    icon instanceof this.ScratchBlocks.ScratchBlockComment) {
+                    scratchCommentIcon = icon;
+                } else if (typeof icon.renderIcon === 'function') {
+                    cursorX = icon.renderIcon(cursorX);
+                }
+            }
+            cursorX += block.RTL ?
+                this.ScratchBlocks.BlockSvg.SEP_SPACE_X : -this.ScratchBlocks.BlockSvg.SEP_SPACE_X;
+            if (block.isScratchExtension && block.outputConnection) {
+                cursorX += block.RTL ?
+                    -this.ScratchBlocks.BlockSvg.GRID_UNIT : this.ScratchBlocks.BlockSvg.GRID_UNIT;
+            }
+            const inputRows = block.renderCompute_(cursorX);
+            block.renderDraw_(cursorX, inputRows);
+            // FieldDropdown and several custom fields create their presentation
+            // nodes during renderDraw_. Normalize that late-created state before
+            // Canvas reads attributes or addons query the field handles.
+            const prepareCanvasField = this.ScratchBlocks.__02PrepareCanvasField;
+            if (prepareCanvasField) {
+                for (const input of block.inputList || []) {
+                    for (const field of input.fieldRow || []) prepareCanvasField(field);
+                }
+            }
+            // render() normally updates connection offsets between drawing and
+            // layout. Canvas skips the native render() wrapper, so do that part
+            // explicitly or every child would be laid out at (0, 0).
+            if (typeof block.renderMoveConnections_ === 'function') {
+                block.renderMoveConnections_();
+            }
+            if (typeof block.renderClassify_ === 'function') block.renderClassify_();
+            if (scratchCommentIcon && typeof scratchCommentIcon.renderIcon === 'function') {
+                const firstRow = inputRows && inputRows[0];
+                const iconX = block.RTL ? -inputRows.rightEdge : inputRows.rightEdge;
+                scratchCommentIcon.renderIcon(iconX, firstRow ? firstRow.height / 2 : STACK_HEIGHT / 2);
+            }
+            block.rendered = true;
+        } finally {
+            this.renderingNative = wasRenderingNative;
+        }
+        state.dirty = false;
+        this.nativeBlockCache.set(block.id, state);
+        // Replace any pre-render estimate made earlier in this layout pass with
+        // Blockly's authoritative own-block dimensions. Stack dimensions are
+        // recomputed from these cached O(1) entries.
+        this.estimateCache.set(this.getEstimateKey(block, false), {
+            width: numberOr(block.width),
+            height: numberOr(block.height)
+        });
+        this.estimateCache.set(this.getEstimateKey(block, true), {
+            width: numberOr(block.width),
+            height: numberOr(block.height)
+        });
+        this.estimateCache.delete(this.getEstimateKey(block, false, true));
+        this.estimateCache.delete(this.getEstimateKey(block, true, true));
+    }
+
+    renderNativeModel (block, seen = new Set()) {
+        if (!this.isLiveBlock(block)) return;
+        // Render children before parents because renderCompute_ uses child
+        // dimensions. An explicit stack avoids recursion limits on very long
+        // Scratch scripts.
+        const stack = [{block, expanded: false}];
+        while (stack.length) {
+            const frame = stack.pop();
+            const current = frame.block;
+            if (!this.isLiveBlock(current)) continue;
+            if (frame.expanded) {
+                this.renderNativeBlock(current);
+                continue;
+            }
+            if (seen.has(current.id)) continue;
+            seen.add(current.id);
+            stack.push({block: current, expanded: true});
+            const children = [];
+            for (const input of current.inputList || []) {
+                const child = input.connection && input.connection.targetBlock && input.connection.targetBlock();
+                if (child) children.push(child);
+            }
+            const next = current.getNextBlock && current.getNextBlock();
+            if (next) children.push(next);
+            for (let index = children.length - 1; index >= 0; index--) {
+                if (!seen.has(children[index].id)) stack.push({block: children[index], expanded: false});
+            }
+        }
+    }
+
+    measureField (field) {
+        const BlockSvg = this.ScratchBlocks.BlockSvg;
+        if (!field.size_) field.size_ = {width: 0, height: BlockSvg.FIELD_HEIGHT || 32};
+        // Use the original Blockly implementation rather than duplicating its
+        // width rules. FieldDropdown, FieldImage, custom fields and addons may
+        // all override part of the measurement/render pipeline. The original
+        // method is safe here because its SVG nodes are CanvasModelNodes.
+        const originalGetSize = field.__02CanvasOriginalGetSize;
+        if (originalGetSize) {
+            const wasRenderingNative = this.renderingNative;
+            this.renderingNative = true;
+            try {
+                return originalGetSize.call(field);
+            } finally {
+                this.renderingNative = wasRenderingNative;
+            }
+        }
+        return field.size_;
+    }
+
+    indexGeometry (layout, geometry) {
+        layout.bounds = unionRect(layout.bounds, geometry.paintBounds);
+        const minX = Math.floor(geometry.paintBounds.left / SPATIAL_CELL_SIZE);
+        const maxX = Math.floor(geometry.paintBounds.right / SPATIAL_CELL_SIZE);
+        const minY = Math.floor(geometry.paintBounds.top / SPATIAL_CELL_SIZE);
+        const maxY = Math.floor(geometry.paintBounds.bottom / SPATIAL_CELL_SIZE);
+        const index = layout.geometries.length - 1;
+        for (let x = minX; x <= maxX; x++) {
+            for (let y = minY; y <= maxY; y++) {
+                const key = `${x}:${y}`;
+                if (!layout.buckets.has(key)) layout.buckets.set(key, []);
+                layout.buckets.get(key).push(index);
+            }
+        }
+    }
+
+    getConnectionOffset (connection, fallback) {
+        return connection && connection.offsetInBlock_ ? connection.offsetInBlock_ : fallback;
+    }
+
+    projectBlockPositions (root, worldBounds = null) {
+        const positions = new Map();
+        const blocks = new Map();
+        const projectedPaintBounds = new Map();
+        const visibleIds = new Set();
+        let bounds = null;
+        const rootPosition = getRootPosition(root);
+        const stack = [{block: root, x: 0, y: 0}];
+        while (stack.length) {
+            const current = stack.pop();
+            const block = current.block;
+            if (!this.isLiveBlock(block) || positions.has(block.id)) continue;
+            positions.set(block.id, {x: current.x, y: current.y});
+            blocks.set(block.id, block);
+            const size = this.getProjectionBlockSize(block);
+            const paintBounds = {
+                left: rootPosition.x + current.x - 4,
+                top: rootPosition.y + current.y - (block.startHat_ ? HAT_HEIGHT + 4 : 4),
+                right: rootPosition.x + current.x + size.width + 4,
+                bottom: rootPosition.y + current.y + size.height + 4
+            };
+            projectedPaintBounds.set(block.id, paintBounds);
+            bounds = unionRect(bounds, paintBounds);
+            if (!worldBounds || rectsIntersect(paintBounds, worldBounds) ||
+                this.forceMaterializedIds.has(block.id)) visibleIds.add(block.id);
+
+            const childLayouts = [];
+            for (const input of block.inputList || []) {
+                const child = input.connection && input.connection.targetBlock &&
+                    input.connection.targetBlock();
+                if (!child) continue;
+                if (input.connection.type === this.ScratchBlocks.NEXT_STATEMENT) {
+                    const connectionOffset = this.getConnectionOffset(input.connection, {
+                        x: STATEMENT_INDENT,
+                        y: size.height - NOTCH_DEPTH
+                    });
+                    const childConnection = child.previousConnection || child.outputConnection;
+                    const childOffset = this.getConnectionOffset(childConnection, {x: 0, y: 0});
+                    childLayouts.push({
+                        block: child,
+                        x: current.x + connectionOffset.x - childOffset.x,
+                        y: current.y + connectionOffset.y - childOffset.y
+                    });
+                } else if (input.connection.type === this.ScratchBlocks.INPUT_VALUE) {
+                    const connectionOffset = this.getConnectionOffset(input.connection, {
+                        x: BLOCK_PADDING_X,
+                        y: size.height / 2
+                    });
+                    const childConnection = child.outputConnection || child.previousConnection;
+                    const childOffset = this.getConnectionOffset(childConnection, {x: 0, y: 0});
+                    childLayouts.push({
+                        block: child,
+                        x: current.x + connectionOffset.x - childOffset.x,
+                        y: current.y + connectionOffset.y - childOffset.y
+                    });
+                }
+            }
+            const next = block.getNextBlock && block.getNextBlock();
+            if (next) {
+                const connectionOffset = this.getConnectionOffset(block.nextConnection, {
+                    x: NOTCH_X,
+                    y: size.height - NOTCH_DEPTH
+                });
+                const nextConnection = next.previousConnection || next.outputConnection;
+                const nextOffset = this.getConnectionOffset(nextConnection, {x: 0, y: 0});
+                childLayouts.push({
+                    block: next,
+                    x: current.x + connectionOffset.x - nextOffset.x,
+                    y: current.y + connectionOffset.y - nextOffset.y
+                });
+            }
+            for (let index = childLayouts.length - 1; index >= 0; index--) {
+                stack.push(childLayouts[index]);
+            }
+        }
+        return {positions, blocks, projectedPaintBounds, visibleIds, bounds};
+    }
+
+    ensureProjection (layout) {
+        if (!layout || !this.isLiveBlock(layout.root)) return;
+        if (!layout.projectionDirty && layout.projectedPositions.size) return;
+        const projection = this.projectBlockPositions(layout.root);
+        layout.projectedPositions = projection.positions;
+        layout.projectedBlocks = projection.blocks;
+        layout.projectedPaintBounds = projection.projectedPaintBounds;
+        layout.projectionBounds = projection.bounds;
+        layout.projectionDirty = false;
+    }
+
+    updateVisibleProjection (layout, worldBounds) {
+        this.ensureProjection(layout);
+        const visibleIds = new Set();
+        for (const [id, paintBounds] of layout.projectedPaintBounds) {
+            if (!worldBounds || rectsIntersect(paintBounds, worldBounds) ||
+                this.forceMaterializedIds.has(id)) visibleIds.add(id);
+        }
+
+        // A visible inline expression must be complete. Testing each nested
+        // reporter against an approximate rectangle independently can omit a
+        // third-level input until a later zoom or click. Add only INPUT_VALUE
+        // dependencies here; statement stacks keep their normal viewport
+        // culling and do not get materialized as a side effect of a visible C
+        // block.
+        const pending = Array.from(visibleIds);
+        while (pending.length) {
+            const id = pending.pop();
+            const block = layout.projectedBlocks.get(id);
+            if (!this.isLiveBlock(block)) continue;
+            for (const input of block.inputList || []) {
+                if (!input.connection || input.connection.type !== this.ScratchBlocks.INPUT_VALUE) continue;
+                const child = input.connection.targetBlock && input.connection.targetBlock();
+                if (!this.isLiveBlock(child) || visibleIds.has(child.id)) continue;
+                visibleIds.add(child.id);
+                pending.push(child.id);
+            }
+        }
+        layout.visibleIds = visibleIds;
+        return visibleIds;
+    }
+
+    layoutRoot (root, worldBounds = null) {
+        const started = now();
+        const task = this.createLayoutTask(root, worldBounds);
+        if (!task) return this.getRootLayout(root);
+        let completed = false;
+        while (!completed) {
+            completed = this.processLayoutTask(task, Number.POSITIVE_INFINITY);
+        }
+        this.lastLayoutDuration = now() - started;
+        this.layoutTasks.delete(root.id);
+        return task.layout;
+    }
+
+    collectPostOrder (root) {
+        const result = [];
+        const seen = new Set();
+        const stack = [{block: root, expanded: false}];
+        while (stack.length) {
+            const frame = stack.pop();
+            const block = frame.block;
+            if (!this.isLiveBlock(block)) continue;
+            if (frame.expanded) {
+                result.push(block);
+                continue;
+            }
+            if (seen.has(block.id)) continue;
+            seen.add(block.id);
+            stack.push({block, expanded: true});
+            const children = [];
+            for (const input of block.inputList || []) {
+                const child = input.connection && input.connection.targetBlock && input.connection.targetBlock();
+                if (child) children.push(child);
+            }
+            const next = block.getNextBlock && block.getNextBlock();
+            if (next) children.push(next);
+            for (let index = children.length - 1; index >= 0; index--) {
+                if (!seen.has(children[index].id)) stack.push({block: children[index], expanded: false});
+            }
+        }
+        return result;
+    }
+
+    collectMeasurementBlocks (blocks) {
+        // Exact inline child widths are needed before their visible parent is
+        // drawn. Statement stack sizes are supplied by the cached
+        // getEstimatedHeightWidth path, so do not materialize every descendant
+        // under a visible C block.
+        const result = new Map();
+        const pending = blocks.slice();
+        while (pending.length) {
+            const block = pending.pop();
+            if (!this.isLiveBlock(block) || result.has(block.id)) continue;
+            result.set(block.id, block);
+            for (const input of block.inputList || []) {
+                if (!input.connection || input.connection.type !== this.ScratchBlocks.INPUT_VALUE) continue;
+                const child = input.connection && input.connection.targetBlock &&
+                    input.connection.targetBlock();
+                if (child && !result.has(child.id)) pending.push(child);
+            }
+        }
+        return Array.from(result.values());
+    }
+
+    resetLayoutGeometry (layout) {
+        for (const geometry of layout.geometries || []) {
+            this.blockGeometry.delete(geometry.block && geometry.block.id);
+        }
+        layout.geometries = [];
+        layout.fields = [];
+        layout.buckets = new Map();
+        layout.bounds = null;
+    }
+
+    createLayoutTask (root, worldBounds = null) {
+        if (!this.isLiveBlock(root)) return null;
+        const layout = this.getRootLayout(root);
+        this.updateVisibleProjection(layout, worldBounds);
+        const rebuilding = !!layout.dirty;
+        if (rebuilding) this.resetLayoutGeometry(layout);
+        const existingIds = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
+        const targetIds = Array.from(layout.visibleIds).filter(id => rebuilding || !existingIds.has(id));
+        const viewportCenter = worldBounds ? {
+            x: (worldBounds.left + worldBounds.right) / 2,
+            y: (worldBounds.top + worldBounds.bottom) / 2
+        } : null;
+        const distanceToViewport = id => {
+            if (!viewportCenter) return 0;
+            const bounds = layout.projectedPaintBounds.get(id);
+            if (!bounds) return 0;
+            const x = ((bounds.left + bounds.right) / 2) - viewportCenter.x;
+            const y = ((bounds.top + bounds.bottom) / 2) - viewportCenter.y;
+            return (x * x) + (y * y);
+        };
+        // Materialize the blocks closest to the user's view first. This only
+        // changes Canvas scheduling; the Blockly graph and connection order
+        // remain authoritative.
+        targetIds.sort((a, b) => distanceToViewport(a) - distanceToViewport(b));
+        let nativeBlocks = targetIds
+            .map(id => layout.projectedBlocks.get(id))
+            .filter(block => this.isLiveBlock(block));
+        nativeBlocks = this.collectMeasurementBlocks(nativeBlocks);
+        // Child dimensions are needed before a parent is laid out. Sorting the
+        // dependency closure by graph depth preserves that dependency while
+        // keeping unrelated roots out of the native shape compiler.
+        const depthCache = new Map();
+        const depth = block => {
+            if (depthCache.has(block.id)) return depthCache.get(block.id);
+            let value = 0;
+            let current = block;
+            while (current && current.getParent && current.getParent()) {
+                value++;
+                current = current.getParent();
+            }
+            depthCache.set(block.id, value);
+            return value;
+        };
+        nativeBlocks.sort((a, b) => depth(b) - depth(a) ||
+            distanceToViewport(a.id) - distanceToViewport(b.id));
+        layout.inProgress = true;
+        return {
+            root,
+            layout,
+            version: layout.version,
+            nativeBlocks,
+            nativeIndex: 0,
+            pendingPositions: targetIds.map(id => ({
+                block: layout.projectedBlocks.get(id),
+                ...(layout.projectedPositions.get(id) || {x: 0, y: 0})
+            })),
+            worldBounds,
+            reprojected: false,
+            seen: new Set(),
+            onlyVisible: true,
+            phase: 'native',
+            started: now()
+        };
+    }
+
+    scheduleLayoutWork () {
+        if (this.layoutFrame !== null || !this.layoutTasks.size) return;
+        this.layoutFrame = requestAnimationFrame(() => {
+            this.layoutFrame = null;
+            const frameStarted = now();
+            // Rotate unfinished roots to the end of the Map. A single very
+            // large script must not monopolize every frame while other visible
+            // scripts remain blank.
+            const rootsThisFrame = this.layoutTasks.size;
+            let processedRoots = 0;
+            while (this.layoutTasks.size && processedRoots < rootsThisFrame &&
+                now() - frameStarted < 7) {
+                const [id, task] = this.layoutTasks.entries().next().value;
+                this.layoutTasks.delete(id);
+                const remaining = Math.max(1, 6 - (now() - frameStarted));
+                const taskBudget = rootsThisFrame > 1 ? Math.min(2, remaining) : remaining;
+                const completed = this.processLayoutTask(task, taskBudget);
+                if (completed) {
+                    task.layout.inProgress = false;
+                } else {
+                    this.layoutTasks.set(id, task);
+                }
+                // Paint every completed slice. Without this, a large target
+                // stays blank until its whole viewport task finishes, which
+                // makes the editor look frozen even though work is progressing.
+                this.scheduleDraw();
+                processedRoots++;
+            }
+            if (this.layoutTasks.size) this.scheduleLayoutWork();
+        });
+    }
+
+    processLayoutTask (task, budget = 4) {
+        if (!task || !this.isLiveBlock(task.root) ||
+            this.rootLayouts.get(task.root.id) !== task.layout) {
+            if (task && task.layout) task.layout.inProgress = false;
+            return true;
+        }
+        if (task.version !== task.layout.version) {
+            task.layout.dirty = true;
+            task.layout.inProgress = false;
+            return true;
+        }
+        const started = now();
+        if (task.phase === 'native') {
+            const Field = this.ScratchBlocks.Field;
+            if (Field && Field.startCache) Field.startCache();
+            try {
+                while (task.nativeIndex < task.nativeBlocks.length && now() - started < budget) {
+                    const block = task.nativeBlocks[task.nativeIndex++];
+                    if (this.isLiveBlock(block)) this.renderNativeBlock(block);
+                }
+            } finally {
+                if (Field && Field.stopCache) Field.stopCache();
+            }
+            if (task.nativeIndex < task.nativeBlocks.length) return false;
+            if (!task.reprojected) {
+                // Native measurement may have replaced several estimates in a
+                // nested C stack. Rebuild the projection before assigning
+                // Canvas geometry, otherwise visible children keep the old
+                // coordinates until an unrelated zoom or pan.
+                task.layout.projectionDirty = true;
+                this.ensureProjection(task.layout);
+                this.updateVisibleProjection(task.layout, task.worldBounds);
+                this.resetLayoutGeometry(task.layout);
+                const visibleBlocks = Array.from(task.layout.visibleIds)
+                    .map(id => task.layout.projectedBlocks.get(id))
+                    .filter(block => this.isLiveBlock(block));
+                task.nativeBlocks = this.collectMeasurementBlocks(visibleBlocks);
+                task.nativeIndex = 0;
+                task.pendingPositions = Array.from(task.layout.visibleIds).map(id => ({
+                    block: task.layout.projectedBlocks.get(id),
+                    ...(task.layout.projectedPositions.get(id) || {x: 0, y: 0})
+                }));
+                task.seen = new Set();
+                task.reprojected = true;
+                if (task.nativeBlocks.length) return false;
+            }
+            task.phase = 'layout';
+        }
+
+        while (task.pendingPositions.length && now() - started < budget) {
+            const position = task.pendingPositions.pop();
+            this.layoutModelBlock(
+                position.block,
+                position.x,
+                position.y,
+                task.layout,
+                task.seen,
+                task.pendingPositions,
+                task.onlyVisible
+            );
+        }
+        if (task.pendingPositions.length) return false;
+        if (task.version !== task.layout.version) {
+            task.layout.dirty = true;
+            task.layout.inProgress = false;
+            return true;
+        }
+        task.layout.dirty = false;
+        task.layout.positionDirty = false;
+        task.layout.inProgress = false;
+        this.updateConnectionPositions(task.layout);
+        this.lastLayoutDuration = now() - task.started;
+        return true;
+    }
+
+    ensureLayoutsAsync (worldBounds = null) {
+        if (!this.workspace) return [];
+        const transform = this.getTransform();
+        const rect = this.getWorkspaceRect();
+        const viewportKey = rect ? [
+            rect.width,
+            rect.height,
+            transform.x,
+            transform.y,
+            transform.scale,
+            worldBounds && worldBounds.left,
+            worldBounds && worldBounds.top,
+            worldBounds && worldBounds.right,
+            worldBounds && worldBounds.bottom
+        ].join(':') : null;
+        if (viewportKey !== this.viewportKey) {
+            this.viewportKey = viewportKey;
+        }
+        const roots = this.workspace.getTopBlocks ? this.workspace.getTopBlocks(false) : [];
+        const live = new Set(roots.map(root => root.id));
+        for (const key of this.rootLayouts.keys()) {
+            if (!live.has(key)) {
+                const stale = this.rootLayouts.get(key);
+                for (const geometry of (stale && stale.geometries) || []) {
+                    this.blockGeometry.delete(geometry.block && geometry.block.id);
+                }
+                this.rootLayouts.delete(key);
+                this.layoutTasks.delete(key);
+            }
+        }
+        for (const root of roots) {
+            const layout = this.getRootLayout(root);
+            this.updateVisibleProjection(layout, worldBounds);
+            const materialized = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
+            const hasMissingVisible = Array.from(layout.visibleIds).some(id => !materialized.has(id));
+            if ((layout.dirty || hasMissingVisible) && !layout.inProgress &&
+                this.rootMayIntersect(root, worldBounds)) {
+                const task = this.createLayoutTask(root, worldBounds);
+                if (task) this.layoutTasks.set(root.id, task);
+            }
+        }
+        this.scheduleLayoutWork();
+        return roots.map(root => this.getRootLayout(root));
+    }
+
+    layoutModelBlock (block, x, y, layout, seen, pendingPositions = null, onlyVisible = false) {
+        if (!this.isLiveBlock(block) || seen.has(block.id)) return {width: 0, height: 0};
+        seen.add(block.id);
+        const shouldPaint = !layout.visibleIds || layout.visibleIds.has(block.id) ||
+            this.forceMaterializedIds.has(block.id);
+        if (shouldPaint) this.ensureBlockModel(block);
+        const isReporter = !!block.outputConnection;
+        const isHat = !!block.startHat_ || (!isReporter && !block.previousConnection);
+        const valueInputs = [];
+        const fields = [];
+        const childLayouts = [];
+        // Visible blocks use Blockly's measured dimensions. Offscreen blocks
+        // retain only a cheap estimate so they can still provide positions to
+        // the graph walk without creating field models or model SVG nodes.
+        const estimated = this.getEstimatedBlockSize(block);
+        const width = shouldPaint && numberOr(block.width) > 0 ? numberOr(block.width) : estimated.width;
+        const ownHeight = shouldPaint && numberOr(block.height) > 0 ? numberOr(block.height) : estimated.height;
+
+        for (const input of block.inputList || []) {
+            if (input.isVisible && !input.isVisible()) continue;
+            const isStatement = input.connection && input.connection.type === this.ScratchBlocks.NEXT_STATEMENT;
+            if (isStatement) {
+                const child = input.connection.targetBlock && input.connection.targetBlock();
+                if (child) {
+                    const childConnection = child.previousConnection || child.outputConnection;
+                    const childOffset = (childConnection && childConnection.offsetInBlock_) || {x: 0, y: 0};
+                    const connectionOffset = input.connection.offsetInBlock_ || {
+                        x: STATEMENT_INDENT,
+                        y: ownHeight - NOTCH_DEPTH
+                    };
+                    childLayouts.push({
+                        block: child,
+                        x: x + connectionOffset.x - childOffset.x,
+                        y: y + connectionOffset.y - childOffset.y
+                    });
+                }
+                continue;
+            }
+
+            if (shouldPaint) {
+                for (const field of input.fieldRow || []) {
+                    field.sourceBlock_ = block;
+                    if (field.isVisible && !field.isVisible()) continue;
+                    const size = this.measureField(field);
+                    const fieldRoot = field.getSvgRoot && field.getSvgRoot();
+                    const nativePosition = parseTranslate(
+                        (fieldRoot && fieldRoot.getAttribute && fieldRoot.getAttribute('transform')) ||
+                        (field.fieldGroup_ && field.fieldGroup_.getAttribute('transform'))
+                    );
+                    const fieldGeometry = {
+                        field,
+                        block,
+                        x: x + (nativePosition ? nativePosition.x : BLOCK_PADDING_X),
+                        y: y + (nativePosition ? nativePosition.y : Math.max(
+                            8, (ownHeight - size.height) / 2
+                        )),
+                        width: size.width,
+                        height: size.height
+                    };
+                    fields.push(fieldGeometry);
+                    layout.fields.push(fieldGeometry);
+                    this.fieldGeometry.set(field, fieldGeometry);
+                }
+            }
+
+            if (input.connection && input.connection.type === this.ScratchBlocks.INPUT_VALUE) {
+                const child = input.connection.targetBlock && input.connection.targetBlock();
+                if (child) {
+                    const connectionOffset = input.connection.offsetInBlock_ || {
+                        x: BLOCK_PADDING_X,
+                        y: ownHeight / 2
+                    };
+                    const childConnection = child.outputConnection || child.previousConnection;
+                    const childOffset = (childConnection && childConnection.offsetInBlock_) || {x: 0, y: 0};
+                    childLayouts.push({
+                        block: child,
+                        x: x + connectionOffset.x - childOffset.x,
+                        y: y + connectionOffset.y - childOffset.y
+                    });
+                } else {
+                    const inputPosition = parseTranslate(
+                        input.outlinePath && input.outlinePath.getAttribute('transform')
+                    );
+                    valueInputs.push({
+                        x: x + (inputPosition ? inputPosition.x : BLOCK_PADDING_X),
+                        y: y + (inputPosition ? inputPosition.y : Math.max(
+                            4, (STACK_HEIGHT - REPORTER_HEIGHT) / 2
+                        )),
+                        width: 44,
+                        height: REPORTER_HEIGHT,
+                        shape: input.connection.getOutputShape ? input.connection.getOutputShape() : null,
+                        pathData: input.outlinePath && input.outlinePath.getAttribute('d'),
+                        outlineNode: input.outlinePath
+                    });
+                }
+            }
+        }
+        if (shouldPaint) {
+            block.__02CanvasLocal = {x, y};
+            const geometry = {
+                block,
+                x,
+                y,
+                width,
+                height: ownHeight,
+                fields,
+                valueInputs,
+                icons: (block.getIcons ? block.getIcons() : []).map(icon => {
+                    const position = parseTranslate(icon.iconGroup_ && icon.iconGroup_.getAttribute('transform'));
+                    return {
+                        icon,
+                        x: x + (position ? position.x : 0),
+                        y: y + (position ? position.y : 0),
+                        width: numberOr(icon.SIZE, 17),
+                        height: numberOr(icon.SIZE, 17)
+                    };
+                }),
+                isReporter,
+                isHat,
+                outputShape: block.getOutputShape ? block.getOutputShape() : null,
+                depth: blockGraphDepth(block),
+                pathData: block.svgPath_ && block.svgPath_.getAttribute('d'),
+                paintBounds: {
+                    left: x - 4,
+                    // Scratch's START_HAT_PATH reaches 22px above the block's
+                    // model origin. Keep a small additional margin for custom
+                    // hats and anti-aliasing at the Canvas clip edge.
+                    top: y - (isHat ? HAT_HEIGHT + 4 : 4),
+                    right: x + width + 4,
+                    bottom: y + ownHeight + 4
+                }
+            };
+            layout.geometries.push(geometry);
+            this.indexGeometry(layout, geometry);
+            this.blockGeometry.set(block.id, geometry);
+        }
+
+        const next = block.getNextBlock && block.getNextBlock();
+        if (next) {
+            const connectionOffset = (block.nextConnection && block.nextConnection.offsetInBlock_) || {
+                x: NOTCH_X,
+                y: ownHeight - NOTCH_DEPTH
+            };
+            const nextConnection = next.previousConnection || next.outputConnection;
+            const nextOffset = (nextConnection && nextConnection.offsetInBlock_) || {x: 0, y: 0};
+            childLayouts.push({
+                block: next,
+                x: x + connectionOffset.x - nextOffset.x,
+                y: y + connectionOffset.y - nextOffset.y
+            });
+        }
+        if (pendingPositions && !onlyVisible) {
+            for (let index = childLayouts.length - 1; index >= 0; index--) {
+                pendingPositions.push(childLayouts[index]);
+            }
+        } else if (!onlyVisible) {
+            for (const childLayout of childLayouts) {
+                this.layoutModelBlock(childLayout.block, childLayout.x, childLayout.y, layout, seen, null, false);
+            }
+        }
+        return {width, height: ownHeight};
+    }
+
+    updateConnectionPositions (layout) {
+        if (!layout || !this.isLiveBlock(layout.root)) return;
+        const rootPosition = getRootPosition(layout.root);
+        for (const geometry of layout.geometries) {
+            const block = geometry.block;
+            if (!this.isLiveBlock(block)) continue;
+            const topLeft = {x: rootPosition.x + geometry.x, y: rootPosition.y + geometry.y};
+            for (const connection of block.getConnections_ ? block.getConnections_(true) : []) {
+                if (connection.moveToOffset) connection.moveToOffset(topLeft);
+            }
+        }
+    }
+
+    getPath (pathData) {
+        if (!pathData) return null;
+        if (this.pathCache.has(pathData)) return this.pathCache.get(pathData);
+        let path = null;
+        try {
+            path = new Path2D(pathData);
+        } catch (error) {
+            path = null;
+        }
+        this.pathCache.set(pathData, path);
+        return path;
+    }
+
+    getEstimatedRootBounds (root) {
+        const layout = this.rootLayouts.get(root && root.id);
+        if (layout && layout.projectionBounds) return layout.projectionBounds;
+        const position = getRootPosition(root);
+        const width = Math.max(
+            160,
+            numberOr(root.width, numberOr(root.lazyEstimatedWidth_, 320))
+        );
+        const height = Math.max(
+            STACK_HEIGHT,
+            numberOr(root.height, numberOr(root.lazyEstimatedHeight_, 160))
+        );
+        return {
+            left: position.x - 4,
+            top: position.y - HAT_HEIGHT - 4,
+            right: position.x + width + 4,
+            bottom: position.y + height + 4
+        };
+    }
+
+    rootMayIntersect (root, worldBounds) {
+        if (!worldBounds) return true;
+        return rectsIntersect(this.getEstimatedRootBounds(root), worldBounds);
+    }
+
+    ensureLayouts (worldBounds = null) {
+        return this.ensureLayoutsForRoot(worldBounds, null);
+    }
+
+    ensureLayoutsForRoot (worldBounds = null, requestedRoot = null) {
+        const roots = this.workspace.getTopBlocks ? this.workspace.getTopBlocks(false) : [];
+        const live = new Set(roots.map(root => root.id));
+        for (const key of this.rootLayouts.keys()) {
+            if (!live.has(key)) {
+                const stale = this.rootLayouts.get(key);
+                for (const geometry of (stale && stale.geometries) || []) {
+                    this.blockGeometry.delete(geometry.block && geometry.block.id);
+                }
+                this.rootLayouts.delete(key);
+                this.layoutTasks.delete(key);
+            }
+        }
+        for (const root of roots) {
+            if (requestedRoot && root !== requestedRoot) continue;
+            const layout = this.getRootLayout(root);
+            this.updateVisibleProjection(layout, worldBounds);
+            const materialized = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
+            const hasMissingVisible = Array.from(layout.visibleIds).some(id => !materialized.has(id));
+            if ((layout.dirty || hasMissingVisible) && this.rootMayIntersect(root, worldBounds)) {
+                this.layoutTasks.delete(root.id);
+                this.layoutRoot(root, worldBounds);
+                this.updateConnectionPositions(layout);
+            }
+        }
+        return roots.map(root => this.getRootLayout(root));
+    }
+
+    getBlockWorkspacePosition (block) {
+        const root = rootOf(block);
+        const rootPosition = getRootPosition(root);
+        const geometry = this.blockGeometry.get(block.id);
+        const x = rootPosition.x + (geometry ? geometry.x : 0);
+        const y = rootPosition.y + (geometry ? geometry.y : 0);
+        const Coordinate = this.ScratchBlocks.goog && this.ScratchBlocks.goog.math &&
+            this.ScratchBlocks.goog.math.Coordinate;
+        return Coordinate ? new Coordinate(x, y) : {x, y};
+    }
+
+    getWorkspaceRect () {
+        return this.injection && this.injection.getBoundingClientRect ? this.injection.getBoundingClientRect() : null;
+    }
+
+    getTransform () {
+        return parseWorkspaceTransform(this.workspace);
+    }
+
+    workspaceToClient (x, y) {
+        const rect = this.getWorkspaceRect() || {left: 0, top: 0};
+        const transform = this.getTransform();
+        return {
+            x: rect.left + transform.x + (x * transform.scale),
+            y: rect.top + transform.y + (y * transform.scale)
+        };
+    }
+
+    ensureBlockGeometry (block) {
+        if (!this.isLiveBlock(block)) return null;
+        let geometry = this.blockGeometry.get(block.id);
+        if (geometry || this.renderingNative || this.layoutSuspended) return geometry || null;
+
+        const root = rootOf(block);
+        const layout = this.getRootLayout(root);
+        this.ensureProjection(layout);
+        const projected = layout.projectedPaintBounds.get(block.id);
+        const targetBounds = projected ? {
+            left: projected.left - 1,
+            top: projected.top - 1,
+            right: projected.right + 1,
+            bottom: projected.bottom + 1
+        } : this.getVisibleWorldBounds();
+
+        // Compatibility APIs frequently ask for one model node's rectangle.
+        // Compile that block and its inline inputs only; passing null here used
+        // to synchronously materialize the complete script.
+        this.forceMaterializedIds.add(block.id);
+        try {
+            this.ensureLayoutsForRoot(targetBounds, root);
+            geometry = this.blockGeometry.get(block.id);
+        } finally {
+            if (this.draggingRoot !== root) this.forceMaterializedIds.delete(block.id);
+        }
+        return geometry || null;
+    }
+
+    getBlockClientRect (block) {
+        const geometry = this.ensureBlockGeometry(block);
+        if (!geometry) return {left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0};
+        const rootPosition = getRootPosition(rootOf(block));
+        const start = this.workspaceToClient(rootPosition.x + geometry.x, rootPosition.y + geometry.y);
+        const scale = this.getTransform().scale;
+        const width = geometry.width * scale;
+        const height = geometry.height * scale;
+        return {left: start.x, top: start.y, right: start.x + width, bottom: start.y + height, width, height};
+    }
+
+    getFieldClientRect (field) {
+        this.ensureBlockGeometry(field && field.sourceBlock_);
+        const geometry = this.fieldGeometry.get(field);
+        if (!geometry) return {left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0};
+        const rootPosition = getRootPosition(rootOf(geometry.block));
+        const start = this.workspaceToClient(rootPosition.x + geometry.x, rootPosition.y + geometry.y);
+        const scale = this.getTransform().scale;
+        const width = geometry.width * scale;
+        const height = geometry.height * scale;
+        return {left: start.x, top: start.y, right: start.x + width, bottom: start.y + height, width, height};
+    }
+
+    getFieldNodePaintOffset (field, node) {
+        const root = field && (
+            (typeof field.getSvgRoot === 'function' && field.getSvgRoot()) ||
+            field.fieldGroup_ ||
+            field.textElement_
+        );
+        if (!node) return {x: 0, y: 0};
+        let current = node;
+        let x = 0;
+        let y = 0;
+        while (current) {
+            // x/y are local drawing coordinates for text, image and rect
+            // nodes. A field root's transform is the field's block position and
+            // is already represented by fieldGeometry, so exclude that
+            // transform but keep the root's own drawing coordinates.
+            x += numberOr(current.getAttribute && current.getAttribute('x'));
+            y += numberOr(current.getAttribute && current.getAttribute('y'));
+            if (current === root) {
+                break;
+            }
+            const transform = parseTranslate(current.getAttribute && current.getAttribute('transform'));
+            if (transform) {
+                x += transform.x;
+                y += transform.y;
+            }
+            current = current.parentNode;
+        }
+        // Detached compatibility nodes have no parent chain. Their own
+        // attributes are still useful, but must remain relative to the field.
+        return {x, y};
+    }
+
+    getTextNodeStyle (node) {
+        const getValue = (name, fallback = '') => {
+            const attribute = node && node.getAttribute && node.getAttribute(name);
+            if (attribute !== null && attribute !== '') return attribute;
+            const style = node && node.style;
+            if (style) {
+                const value = style[name] || (style.getPropertyValue && style.getPropertyValue(name));
+                if (value) return value;
+            }
+            return fallback;
+        };
+        const className = String((node && node.getAttribute && node.getAttribute('class')) || '');
+        return {
+            fontSize: getValue('font-size', className.includes('blocklyTextTruncated') ? '11pt' : BLOCK_TEXT_FONT_SIZE),
+            fontFamily: getValue('font-family', '"Helvetica Neue", Helvetica, sans-serif'),
+            fontWeight: getValue('font-weight', '500'),
+            textAnchor: getValue('text-anchor', 'start'),
+            dominantBaseline: getValue('dominant-baseline', 'alphabetic'),
+            dy: numberOr(getValue('dy', 0)),
+            fill: getValue('fill', '')
+        };
+    }
+
+    getCanvasTextValue (field, node) {
+        // The model node contains Blockly's already formatted display value
+        // (ellipsis, NBSP and RTL markers included). Using it keeps Canvas
+        // text width and position identical to the native SVG text node.
+        if (node && typeof node.textContent === 'string' && node.textContent.length) {
+            return node.textContent;
+        }
+        return fieldText(field);
+    }
+
+    drawSvgText (context, value, x, y, style) {
+        context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        context.textAlign = style.textAnchor === 'middle' ? 'center' :
+            (style.textAnchor === 'end' ? 'right' : 'left');
+        const baseline = String(style.dominantBaseline || 'alphabetic').toLowerCase();
+        if (baseline === 'middle' || baseline === 'central') {
+            // Blockly's block fields use dominant-baseline="middle". Let the
+            // browser use the same Canvas middle baseline for every field,
+            // rather than mixing font-metric corrections that move ordinary
+            // labels and editable/dropdown fields in opposite directions.
+            context.textBaseline = 'middle';
+            context.fillText(value, x, y + style.dy);
+            return;
+        }
+        context.textBaseline = baseline === 'hanging' ? 'hanging' :
+            (baseline === 'ideographic' ? 'ideographic' : 'alphabetic');
+        context.fillText(value, x, y + style.dy);
+    }
+
+    getVisibleWorldBounds () {
+        const rect = this.getWorkspaceRect();
+        if (!rect) return null;
+        const transform = this.getTransform();
+        return {
+            left: (-transform.x / transform.scale) - VIEWPORT_MARGIN,
+            top: (-transform.y / transform.scale) - VIEWPORT_MARGIN,
+            right: ((rect.width - transform.x) / transform.scale) + VIEWPORT_MARGIN,
+            bottom: ((rect.height - transform.y) / transform.scale) + VIEWPORT_MARGIN
+        };
+    }
+
+    getIconClientRect (icon) {
+        const block = icon && icon.block_;
+        const blockRect = block ? this.getBlockClientRect(block) : null;
+        if (!blockRect) return null;
+        const location = icon && icon.getIconLocation && icon.getIconLocation();
+        const size = numberOr(icon && icon.SIZE, 17) * this.getTransform().scale;
+        if (!location) return blockRect;
+        const center = this.workspaceToClient(location.x, location.y);
+        return {
+            left: center.x - (size / 2),
+            top: center.y - (size / 2),
+            right: center.x + (size / 2),
+            bottom: center.y + (size / 2),
+            width: size,
+            height: size
+        };
+    }
+
+    isBroadcastMenuField (field, block) {
+        return !!field && !!block &&
+            field.name === 'BROADCAST_OPTION' &&
+            block.type === 'event_broadcast_menu';
+    }
+
+    fieldHitContains (candidate, localX, localY, geometry = null) {
+        if (!candidate) return false;
+        const inField = localX >= candidate.x &&
+            localX <= candidate.x + candidate.width &&
+            localY >= candidate.y &&
+            localY <= candidate.y + candidate.height;
+        if (inField) return true;
+
+        // The field used by event_broadcast is inside an output shadow block.
+        // Some Blockly versions do not expose the shadow field's final
+        // translate until its parent block has rendered. The shadow block
+        // geometry is still authoritative, so use it as a narrow fallback for
+        // this field only. Do not broaden ordinary field hit boxes.
+        return this.isBroadcastMenuField(candidate.field, candidate.block) &&
+            !!geometry && localX >= geometry.x &&
+            localX <= geometry.x + geometry.width &&
+            localY >= geometry.y &&
+            localY <= geometry.y + geometry.height;
+    }
+
+    queryLayout (layout, worldBounds) {
+        const position = getRootPosition(layout.root);
+        const local = {
+            left: worldBounds.left - position.x,
+            top: worldBounds.top - position.y,
+            right: worldBounds.right - position.x,
+            bottom: worldBounds.bottom - position.y
+        };
+        const indices = new Set();
+        const minX = Math.floor(local.left / SPATIAL_CELL_SIZE);
+        const maxX = Math.floor(local.right / SPATIAL_CELL_SIZE);
+        const minY = Math.floor(local.top / SPATIAL_CELL_SIZE);
+        const maxY = Math.floor(local.bottom / SPATIAL_CELL_SIZE);
+        for (let x = minX; x <= maxX; x++) {
+            for (let y = minY; y <= maxY; y++) {
+                const bucket = layout.buckets.get(`${x}:${y}`);
+                if (bucket) bucket.forEach(index => indices.add(index));
+            }
+        }
+        return Array.from(indices)
+            .map(index => layout.geometries[index])
+            .filter(geometry => rectsIntersect(geometry.paintBounds, local))
+            // Parent shapes form the background of inline and statement
+            // children. Async materialization may append geometries in any
+            // order, so enforce the same back-to-front order as native SVG.
+            .sort((a, b) => a.depth - b.depth);
+    }
+
+    pointIntersectsGeometry (geometry, x, y) {
+        if (x < geometry.paintBounds.left || x > geometry.paintBounds.right ||
+            y < geometry.paintBounds.top || y > geometry.paintBounds.bottom) return false;
+        const path = this.getPath(geometry.pathData);
+        if (!path || !this.hitContext) {
+            return x >= geometry.x && x <= geometry.x + geometry.width &&
+                y >= geometry.y - (geometry.isHat ? HAT_HEIGHT : 0) &&
+                y <= geometry.y + geometry.height;
+        }
+        const pathNode = geometry.block && geometry.block.svgPath_;
+        const pathScale = parseTransformScale(pathNode && pathNode.getAttribute &&
+            pathNode.getAttribute('transform'));
+        const localX = (x - geometry.x) / pathScale.x;
+        const localY = (y - geometry.y) / pathScale.y;
+        return this.hitContext.isPointInPath(path, localX, localY, 'evenodd');
+    }
+
+    blockPath (context, geometry) {
+        const {x, y, width, height, isReporter, isHat, outputShape, statementInputs = []} = geometry;
+        const path = new Path2D();
+        if (isReporter) {
+            if (outputShape === this.ScratchBlocks.OUTPUT_SHAPE_HEXAGONAL) {
+                const point = height / 2;
+                path.moveTo(x + point, y);
+                path.lineTo(x + width - point, y);
+                path.lineTo(x + width, y + point);
+                path.lineTo(x + width - point, y + height);
+                path.lineTo(x + point, y + height);
+                path.lineTo(x, y + point);
+                path.closePath();
+            } else if (outputShape === this.ScratchBlocks.OUTPUT_SHAPE_SQUARE) {
+                path.roundRect(x, y, width, height, 4);
+            } else {
+                path.roundRect(x, y, width, height, height / 2);
+            }
+            return path;
+        }
+
+        path.moveTo(x + 4, y);
+        if (isHat) {
+            path.bezierCurveTo(x + 29, y - 22, x + 75, y - 22, x + 100, y);
+        } else if (geometry.block.previousConnection) {
+            path.lineTo(x + NOTCH_X, y);
+            path.lineTo(x + NOTCH_X + 6, y + 4);
+            path.lineTo(x + NOTCH_X + 10, y + NOTCH_DEPTH);
+            path.lineTo(x + NOTCH_X + NOTCH_WIDTH - 10, y + NOTCH_DEPTH);
+            path.lineTo(x + NOTCH_X + NOTCH_WIDTH - 6, y + 4);
+            path.lineTo(x + NOTCH_X + NOTCH_WIDTH, y);
+        }
+        path.lineTo(x + width - 4, y);
+        path.quadraticCurveTo(x + width, y, x + width, y + 4);
+        path.lineTo(x + width, y + height - 4);
+        path.quadraticCurveTo(x + width, y + height, x + width - 4, y + height);
+        if (geometry.block.nextConnection) {
+            path.lineTo(x + NOTCH_X + NOTCH_WIDTH, y + height);
+            path.lineTo(x + NOTCH_X + NOTCH_WIDTH - 6, y + height + 4);
+            path.lineTo(x + NOTCH_X + NOTCH_WIDTH - 10, y + height + NOTCH_DEPTH);
+            path.lineTo(x + NOTCH_X + 10, y + height + NOTCH_DEPTH);
+            path.lineTo(x + NOTCH_X + 6, y + height + 4);
+            path.lineTo(x + NOTCH_X, y + height);
+        }
+        path.lineTo(x + 4, y + height);
+        path.quadraticCurveTo(x, y + height, x, y + height - 4);
+        path.lineTo(x, y + 4);
+        path.quadraticCurveTo(x, y, x + 4, y);
+        path.closePath();
+        for (const statement of statementInputs) {
+            const cavityTop = y + statement.top;
+            const cavityBottom = cavityTop + statement.height;
+            path.moveTo(x + STATEMENT_INDENT, cavityTop);
+            path.lineTo(x + width + 2, cavityTop);
+            path.lineTo(x + width + 2, cavityBottom);
+            path.lineTo(x + STATEMENT_INDENT, cavityBottom);
+            path.closePath();
+        }
+        return path;
+    }
+
+    drawField (context, fieldGeometry) {
+        const {field, x, y, width, height, block} = fieldGeometry;
+        const isHidden = node => !!(
+            node && (
+                (node.getAttribute && (node.getAttribute('display') === 'none' ||
+                    node.getAttribute('visibility') === 'hidden')) ||
+                (node.style && (node.style.display === 'none' || node.style.visibility === 'hidden'))
+            )
+        );
+        if (isHidden(field.fieldGroup_) || isHidden(field.textElement_)) return;
+
+        const drawImageNode = (node, fallbackSource, fallbackWidth, fallbackHeight) => {
+            if (!node && !fallbackSource) return false;
+            const source = fallbackSource || (node.getAttribute && (
+                node.getAttribute('href') || node.getAttribute('xlink:href')
+            ));
+            if (!source) return false;
+            let image = this.imageCache.get(source);
+            if (!image && typeof Image !== 'undefined') {
+                image = new Image();
+                image.onload = () => this.scheduleDraw();
+                image.src = source;
+                this.imageCache.set(source, image);
+            }
+            if (!image || !image.complete || !image.naturalWidth) return true;
+            const nodeOffset = node && this.getFieldNodePaintOffset(field, node);
+            const size = parseTransformScale(node && node.getAttribute && node.getAttribute('transform'));
+            const imageX = x + (nodeOffset ? nodeOffset.x : 0);
+            const imageY = y + (nodeOffset ? nodeOffset.y : 0);
+            const imageWidth = numberOr(node && node.getAttribute && node.getAttribute('width'), fallbackWidth);
+            const imageHeight = numberOr(node && node.getAttribute && node.getAttribute('height'), fallbackHeight);
+            context.save();
+            context.translate(imageX, imageY);
+            context.scale(size.x, size.y);
+            context.drawImage(image, 0, 0, imageWidth, imageHeight);
+            context.restore();
+            return true;
+        };
+
+        const source = resolveImageSource(field);
+        if (source) {
+            drawImageNode(field.imageElement_, source, width, height);
+            return;
+        }
+        if (typeof field.state_ !== 'undefined') {
+            const checkNode = field.checkElement_;
+            if (!isHidden(checkNode)) {
+                const checkOffset = checkNode && this.getFieldNodePaintOffset(field, checkNode);
+                const checkX = checkOffset ? checkOffset.x : -3;
+                const checkY = checkOffset ? checkOffset.y : height / 2;
+                context.fillStyle = '#fff';
+                context.font = BLOCK_TEXT_FONT;
+                context.textBaseline = 'middle';
+                context.textAlign = 'left';
+                context.fillText(field.state_ ? '\u2713' : '',
+                    x + checkX,
+                    y + checkY);
+            }
+            return;
+        }
+        const editable = !!field.EDITABLE;
+        const dropdown = !!(field.getOptions || field.positionArrow);
+        const box = field.box_;
+        if (box && !isHidden(box)) {
+            const boxOffset = this.getFieldNodePaintOffset(field, box);
+            const boxX = x + boxOffset.x;
+            const boxY = y + boxOffset.y;
+            const boxWidth = numberOr(box.getAttribute && box.getAttribute('width'), width);
+            const boxHeight = numberOr(box.getAttribute && box.getAttribute('height'), height);
+            const radius = numberOr(box.getAttribute && box.getAttribute('rx'), 4);
+            context.fillStyle = (box.getAttribute && box.getAttribute('fill')) ||
+                (block.getColour ? block.getColour() : '#4c97ff');
+            context.strokeStyle = (box.getAttribute && box.getAttribute('stroke')) ||
+                (block.getColourTertiary ? block.getColourTertiary() : 'rgba(0,0,0,.2)');
+            context.lineWidth = 1;
+            context.beginPath();
+            context.roundRect(boxX, boxY, boxWidth, boxHeight, radius);
+            context.fill();
+            context.stroke();
+        } else if (editable && !block.isShadow()) {
+            context.fillStyle = block.getColour ? block.getColour() : '#4c97ff';
+            context.strokeStyle = block.getColourTertiary ? block.getColourTertiary() : 'rgba(0,0,0,.18)';
+            context.lineWidth = 1;
+            context.beginPath();
+            context.roundRect(x, y, width, height, Math.min(16, height / 2));
+            context.fill();
+            context.stroke();
+        }
+        const textNode = field.textElement_;
+        const textStyle = this.getTextNodeStyle(textNode);
+        const Colours = this.ScratchBlocks.Colours || {};
+        const textClasses = [
+            textNode && textNode.getAttribute && textNode.getAttribute('class'),
+            field.fieldGroup_ && field.fieldGroup_.getAttribute && field.fieldGroup_.getAttribute('class'),
+            field.className_
+        ].join(' ');
+        if (textClasses.includes('blocklyDropdownText') ||
+            textClasses.includes('blocklyEditableLabel')) {
+            context.fillStyle = Colours.text || '#fff';
+        } else if (block.isShadow && block.isShadow()) {
+            context.fillStyle = Colours.textFieldText || '#575e75';
+        } else {
+            context.fillStyle = textStyle.fill || Colours.text || '#fff';
+        }
+        const textOffset = textNode && this.getFieldNodePaintOffset(field, textNode);
+        this.drawSvgText(context, this.getCanvasTextValue(field, textNode),
+            x + (textOffset ? textOffset.x : width / 2),
+            y + (textOffset ? textOffset.y : height / 2), textStyle);
+
+        // Blockly positions the real dropdown image with arrowX_/arrowY_.
+        // Reusing those values avoids the old fixed `width - 12` placement,
+        // which was wrong for custom padding, RTL and long labels.
+        if (dropdown && !drawImageNode(field.arrow_, null, field.arrowSize_ || 12, field.arrowSize_ || 12)) {
+            const arrowX = numberOr(field.arrowX_, width - 12);
+            const arrowY = numberOr(field.arrowY_, (height - 4) / 2);
+            context.beginPath();
+            context.moveTo(x + arrowX, y + arrowY);
+            context.lineTo(x + arrowX + 6, y + arrowY);
+            context.lineTo(x + arrowX + 3, y + arrowY + 4);
+            context.closePath();
+            context.fill();
+        }
+    }
+
+    getFieldModelNodes (block) {
+        const nodes = new Set();
+        const add = node => {
+            if (!node || nodes.has(node)) return;
+            nodes.add(node);
+            for (const child of node.childNodes || []) add(child);
+        };
+        for (const input of block.inputList || []) {
+            for (const field of input.fieldRow || []) {
+                add(field.fieldGroup_);
+                add(field.textElement_);
+                add(field.box_);
+                add(field.arrow_);
+                add(field.imageElement_);
+                add(field.checkElement_);
+            }
+        }
+        return nodes;
+    }
+
+    drawModelDecorations (context, geometry) {
+        const root = geometry.block && geometry.block.svgGroup_;
+        if (!root || !root.childNodes) return;
+        const block = geometry.block;
+        const fieldNodes = this.getFieldModelNodes(block);
+        const drawNode = node => {
+            if (!node || node === block.svgPath_) return;
+            const isFieldNode = node.__02CanvasModelNode &&
+                ['field', 'field-box', 'field-arrow', 'input'].includes(node.kind);
+            if (fieldNodes.has(node) || isFieldNode) return;
+            const tagName = String(node.tagName || '').toLowerCase();
+            context.save();
+            const transform = parseTranslate(node.getAttribute && node.getAttribute('transform'));
+            if (transform) context.translate(transform.x, transform.y);
+            const scale = /scale\(\s*([-+\d.e]+)(?:[, ]+\s*([-+\d.e]+))?/.exec(
+                String((node.getAttribute && node.getAttribute('transform')) || '')
+            );
+            if (scale) context.scale(numberOr(scale[1], 1), numberOr(scale[2], numberOr(scale[1], 1)));
+            const style = node.style || {};
+            const stroke = (node.getAttribute && node.getAttribute('stroke')) || style.stroke;
+            const fill = (node.getAttribute && node.getAttribute('fill')) || style.fill;
+            const strokeWidth = numberOr(
+                (node.getAttribute && node.getAttribute('stroke-width')) || style.strokeWidth,
+                1
+            );
+            context.lineWidth = strokeWidth;
+            context.lineCap = (node.getAttribute && node.getAttribute('stroke-linecap')) || 'butt';
+            context.lineJoin = (node.getAttribute && node.getAttribute('stroke-linejoin')) || 'miter';
+            if (tagName === 'path') {
+                const pathData = node.getAttribute && node.getAttribute('d');
+                if (pathData) {
+                    const path = this.getPath(pathData);
+                    if (path) {
+                        if (fill && fill !== 'none') {
+                            context.fillStyle = fill;
+                            context.fill(path);
+                        }
+                        if (stroke && stroke !== 'none') {
+                            context.strokeStyle = stroke;
+                            context.stroke(path);
+                        }
+                    }
+                }
+            } else if (tagName === 'line' && stroke && stroke !== 'none') {
+                context.beginPath();
+                context.strokeStyle = stroke;
+                context.moveTo(
+                    numberOr(node.getAttribute && node.getAttribute('x1')),
+                    numberOr(node.getAttribute && node.getAttribute('y1'))
+                );
+                context.lineTo(
+                    numberOr(node.getAttribute && node.getAttribute('x2')),
+                    numberOr(node.getAttribute && node.getAttribute('y2'))
+                );
+                context.stroke();
+            } else if (tagName === 'circle' || tagName === 'rect') {
+                const x = numberOr(node.getAttribute && node.getAttribute('x'));
+                const y = numberOr(node.getAttribute && node.getAttribute('y'));
+                const width = numberOr(node.getAttribute && node.getAttribute('width'),
+                    numberOr(node.getAttribute && node.getAttribute('r')) * 2);
+                const height = numberOr(node.getAttribute && node.getAttribute('height'), width);
+                const cx = numberOr(node.getAttribute && node.getAttribute('cx'), x + (width / 2));
+                const cy = numberOr(node.getAttribute && node.getAttribute('cy'), y + (height / 2));
+                context.beginPath();
+                if (tagName === 'circle') context.arc(cx, cy, width / 2, 0, Math.PI * 2);
+                else context.rect(x, y, width, height);
+                if (fill && fill !== 'none') {
+                    context.fillStyle = fill;
+                    context.fill();
+                }
+                if (stroke && stroke !== 'none') {
+                    context.strokeStyle = stroke;
+                    context.stroke();
+                }
+            } else if (tagName === 'image') {
+                const source = node.getAttribute && (
+                    node.getAttribute('href') || node.getAttribute('xlink:href')
+                );
+                if (source) {
+                    let image = this.imageCache.get(source);
+                    if (!image && typeof Image !== 'undefined') {
+                        image = new Image();
+                        image.onload = () => this.scheduleDraw();
+                        image.src = source;
+                        this.imageCache.set(source, image);
+                    }
+                    if (image && image.complete && image.naturalWidth) {
+                        context.drawImage(
+                            image,
+                            numberOr(node.getAttribute('x')),
+                            numberOr(node.getAttribute('y')),
+                            numberOr(node.getAttribute('width')),
+                            numberOr(node.getAttribute('height'))
+                        );
+                    }
+                }
+            }
+            for (const child of node.childNodes || []) drawNode(child);
+            context.restore();
+        };
+        context.save();
+        context.translate(geometry.x, geometry.y);
+        for (const node of root.childNodes) drawNode(node);
+        context.restore();
+    }
+
+    hasReplacementGlow (node) {
+        if (!node) return false;
+        const filter = node.getAttribute && node.getAttribute('filter');
+        return !!filter || !!(node.classList && node.classList.contains('blocklyReplaceable'));
+    }
+
+    drawReplacementGlow (context, path) {
+        if (!path) return;
+        const colours = this.ScratchBlocks.Colours || {};
+        context.save();
+        context.globalAlpha *= numberOr(colours.replacementGlowOpacity, 1);
+        context.strokeStyle = colours.replacementGlow || '#fff';
+        context.lineWidth = Math.max(2, numberOr(colours.replacementGlowSize, 2) * 2);
+        context.lineJoin = 'round';
+        context.lineCap = 'round';
+        context.stroke(path);
+        context.restore();
+    }
+
+    drawGeometry (context, geometry, rootPosition) {
+        if (!geometry || !this.isLiveBlock(geometry.block)) return;
+        context.save();
+        context.translate(rootPosition.x, rootPosition.y);
+        const block = geometry.block;
+        const pathNode = block.svgPath_;
+        const groupNode = block.svgGroup_;
+        const isHidden = node => !!(
+            node && node.getAttribute && (
+                node.getAttribute('display') === 'none' ||
+                node.getAttribute('visibility') === 'hidden' ||
+                node.getAttribute('visibility') === 'collapse'
+            )
+        );
+        // Blockly hides insertion markers with SVG visibility. Canvas has no
+        // browser SVG layout to do this for us, so honor the same model state.
+        // Without this guard an unused marker is painted at its initial (0, 0)
+        // position and looks like a grey block in the workspace corner.
+        if (isHidden(groupNode) || isHidden(pathNode)) {
+            context.restore();
+            return;
+        }
+        // InsertionMarkerManager creates marker blocks as ordinary top-level
+        // blocks and only sets visibility when a connection preview is active.
+        // A Canvas model node has no native SVG/CSS default, so treat the
+        // missing visibility attribute as hidden to avoid painting the marker
+        // at its initial (0, 0) position during the first flyout drag.
+        if (block.isInsertionMarker && block.isInsertionMarker() &&
+            (!groupNode || groupNode.getAttribute('visibility') !== 'visible')) {
+            context.restore();
+            return;
+        }
+        let fill = block.getColour ? block.getColour() : '#4c97ff';
+        const styleFill = pathNode && (
+            (pathNode.getAttribute && pathNode.getAttribute('fill')) ||
+            (pathNode.style && pathNode.style.fill)
+        );
+        if (styleFill) fill = styleFill;
+        context.fillStyle = fill;
+        const styleStroke = pathNode && (
+            (pathNode.getAttribute && pathNode.getAttribute('stroke')) ||
+            (pathNode.style && pathNode.style.stroke)
+        );
+        context.strokeStyle = styleStroke ||
+            (block.getColourTertiary ? block.getColourTertiary() : 'rgba(0,0,0,.2)');
+        const styleOpacity = pathNode && (
+            (pathNode.getAttribute && pathNode.getAttribute('opacity')) ||
+            (pathNode.style && pathNode.style.opacity)
+        );
+        const blockAlpha = context.globalAlpha;
+        if (styleOpacity) context.globalAlpha *= Math.max(0, Math.min(1, numberOr(styleOpacity, 1)));
+        const styleStrokeWidth = pathNode && (
+            (pathNode.getAttribute && pathNode.getAttribute('stroke-width')) ||
+            (pathNode.style && pathNode.style.strokeWidth)
+        );
+        if (styleStrokeWidth) context.lineWidth = numberOr(styleStrokeWidth, context.lineWidth);
+        const isSelected = this.ScratchBlocks.selected === block ||
+            (groupNode && groupNode.classList && groupNode.classList.contains('blocklySelected'));
+        context.lineWidth = isSelected ? 3 : 1;
+        if (styleStrokeWidth) context.lineWidth = numberOr(styleStrokeWidth, context.lineWidth);
+        if (block.disabled) context.globalAlpha = 0.5;
+        if (groupNode && groupNode.classList && groupNode.classList.contains('blocklyDraggingDelete')) {
+            context.globalAlpha *= 0.35;
+        }
+        if (block.isInsertionMarker && block.isInsertionMarker()) context.globalAlpha = 0.35;
+        const nativePath = this.getPath(geometry.pathData);
+        if (nativePath) {
+            context.save();
+            context.translate(geometry.x, geometry.y);
+            const pathScale = parseTransformScale(pathNode && pathNode.getAttribute &&
+                pathNode.getAttribute('transform'));
+            context.scale(pathScale.x, pathScale.y);
+            if (this.hasReplacementGlow(pathNode)) this.drawReplacementGlow(context, nativePath);
+            context.fill(nativePath, 'evenodd');
+            context.stroke(nativePath);
+            context.restore();
+        } else {
+            const path = this.blockPath(context, geometry);
+            if (this.hasReplacementGlow(pathNode)) this.drawReplacementGlow(context, path);
+            context.fill(path, geometry.statementInputs && geometry.statementInputs.length ? 'evenodd' : 'nonzero');
+            context.stroke(path);
+        }
+        context.globalAlpha = blockAlpha;
+        this.drawModelDecorations(context, geometry);
+        for (const input of geometry.valueInputs) {
+            context.save();
+            context.fillStyle = block.getColourQuaternary ? block.getColourQuaternary() : '#fff';
+            context.strokeStyle = block.getColourTertiary ? block.getColourTertiary() : 'rgba(0,0,0,.2)';
+            const inputPath = this.getPath(input.pathData);
+            context.translate(input.x, input.y);
+            if (inputPath) {
+                if (this.hasReplacementGlow(input.outlineNode)) {
+                    this.drawReplacementGlow(context, inputPath);
+                }
+                context.fill(inputPath);
+                context.stroke(inputPath);
+            } else {
+                const fallbackPath = new Path2D();
+                if (input.shape === this.ScratchBlocks.OUTPUT_SHAPE_HEXAGONAL) {
+                    const point = input.height / 2;
+                    fallbackPath.moveTo(point, 0);
+                    fallbackPath.lineTo(input.width - point, 0);
+                    fallbackPath.lineTo(input.width, point);
+                    fallbackPath.lineTo(input.width - point, input.height);
+                    fallbackPath.lineTo(point, input.height);
+                    fallbackPath.lineTo(0, point);
+                    fallbackPath.closePath();
+                } else {
+                    fallbackPath.roundRect(0, 0, input.width, input.height, input.height / 2);
+                }
+                if (this.hasReplacementGlow(input.outlineNode)) {
+                    this.drawReplacementGlow(context, fallbackPath);
+                }
+                context.fill(fallbackPath);
+                context.stroke(fallbackPath);
+            }
+            context.restore();
+        }
+        for (const field of geometry.fields) this.drawField(context, field);
+        context.restore();
+    }
+
+    drawConnectionHighlight (context) {
+        const connection = this.highlightedConnection;
+        if (!connection || !connection.sourceBlock_) return;
+        const block = connection.sourceBlock_;
+        const root = rootOf(block);
+        const position = getRootPosition(root);
+        const geometry = this.blockGeometry.get(block.id);
+        if (!geometry) return;
+        const x = position.x + geometry.x + numberOr(connection.offsetInBlock_ && connection.offsetInBlock_.x);
+        const y = position.y + geometry.y + numberOr(connection.offsetInBlock_ && connection.offsetInBlock_.y);
+        context.save();
+        context.strokeStyle = '#fff200';
+        context.lineWidth = 4;
+        context.beginPath();
+        context.moveTo(x - 18, y);
+        context.lineTo(x + 22, y);
+        context.stroke();
+        context.restore();
+    }
+
+    drawLoadingIndicator (context, rect, completed, total) {
+        if (!total || completed >= total) {
+            this.loadingIndicatorStartedAt = 0;
+            return;
+        }
+        if (!this.loadingIndicatorStartedAt) this.loadingIndicatorStartedAt = now();
+        // Normal edits commonly need one layout frame. Avoid flashing a status
+        // card for those fast paths while still reporting genuinely slow loads.
+        if (now() - this.loadingIndicatorStartedAt < 120) return;
+        const width = Math.min(240, Math.max(160, rect.width * 0.28));
+        const height = 30;
+        const x = Math.max(8, rect.width - width - 14);
+        const y = 12;
+        const progress = Math.max(0, Math.min(1, completed / total));
+        const message = (this.ScratchBlocks.Msg &&
+            (this.ScratchBlocks.Msg.BLOCKS_LOADING || this.ScratchBlocks.Msg.LOADING)) ||
+            'Loading blocks';
+        context.save();
+        context.fillStyle = 'rgba(255, 255, 255, 0.94)';
+        context.strokeStyle = 'rgba(0, 186, 173, 0.55)';
+        context.lineWidth = 1;
+        context.beginPath();
+        context.roundRect(x, y, width, height, 6);
+        context.fill();
+        context.stroke();
+        context.fillStyle = '#00a99d';
+        context.font = '500 12px "Helvetica Neue", Helvetica, sans-serif';
+        context.textBaseline = 'middle';
+        context.textAlign = 'left';
+        context.fillText(`${message} ${Math.round(progress * 100)}%`, x + 10, y + 11);
+        context.fillStyle = 'rgba(0, 186, 173, 0.18)';
+        context.beginPath();
+        context.roundRect(x + 10, y + 20, width - 20, 4, 2);
+        context.fill();
+        context.fillStyle = '#00baad';
+        context.beginPath();
+        context.roundRect(x + 10, y + 20, (width - 20) * progress, 4, 2);
+        context.fill();
+        context.restore();
+    }
+
+    resizeCanvas () {
+        if (!this.canvas) return false;
+        const rect = this.injection.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return false;
+        const ratio = window.devicePixelRatio || 1;
+        const width = Math.max(1, Math.round(rect.width * ratio));
+        const height = Math.max(1, Math.round((rect.height + CANVAS_TOP_PADDING) * ratio));
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+        }
+        this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        return true;
+    }
+
+    scheduleDraw () {
+        if (!this.enabled) return;
+        if (this.layoutSuspended) {
+            this.pendingDraw = true;
+            return;
+        }
+        if (this.frame !== null) return;
+        this.frame = requestAnimationFrame(() => {
+            this.frame = null;
+            this.draw();
+        });
+    }
+
+    draw () {
+        if (!this.enabled || this.layoutSuspended || !this.context || !this.resizeCanvas()) return;
+        const started = now();
+        const rect = this.getWorkspaceRect();
+        const transform = this.getTransform();
+        const visible = this.getVisibleWorldBounds();
+        const layouts = this.ensureLayoutsAsync(visible).sort((a, b) =>
+            numberOr(a.root.__02CanvasZ) - numberOr(b.root.__02CanvasZ));
+        this.context.clearRect(0, 0, rect.width, rect.height + CANVAS_TOP_PADDING);
+        this.context.save();
+        // The Canvas is extended above the injection by the hat height. This
+        // keeps negative hat-path coordinates visible without changing the
+        // workspace coordinate system used by Blockly and addons.
+        this.context.translate(transform.x, transform.y + CANVAS_TOP_PADDING);
+        this.context.scale(transform.scale, transform.scale);
+        this.visibleBlockCount = 0;
+        let loadingTotal = 0;
+        let loadingCompleted = 0;
+        for (const layout of layouts) {
+            const position = getRootPosition(layout.root);
+            const bounds = layout.projectionBounds || layout.bounds;
+            if (layout.root !== this.draggingRoot && bounds && !rectsIntersect({
+                left: bounds.left,
+                top: bounds.top,
+                right: bounds.right,
+                bottom: bounds.bottom
+            }, visible)) continue;
+            loadingTotal += layout.visibleIds.size;
+            const geometries = this.queryLayout(layout, visible);
+            const paintedIds = new Set();
+            for (const geometry of geometries) {
+                if (!this.isLiveBlock(geometry.block)) continue;
+                this.drawGeometry(this.context, geometry, position);
+                paintedIds.add(geometry.block.id);
+                this.visibleBlockCount++;
+            }
+            for (const id of paintedIds) {
+                if (layout.visibleIds.has(id)) loadingCompleted++;
+            }
+        }
+        this.drawConnectionHighlight(this.context);
+        this.context.restore();
+        this.drawLoadingIndicator(this.context, rect, loadingCompleted, loadingTotal);
+        this.lastDrawDuration = now() - started;
+    }
+
+    clear () {
+        if (this.context && this.canvas) this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    hitTest (event) {
+        if (!this.canvas) return null;
+        const rect = this.getWorkspaceRect() || this.canvas.getBoundingClientRect();
+        if (!rect) return null;
+        const transform = this.getTransform();
+        const worldX = (event.clientX - rect.left - transform.x) / transform.scale;
+        const worldY = (event.clientY - rect.top - transform.y) / transform.scale;
+        const pointBounds = {left: worldX, top: worldY, right: worldX, bottom: worldY};
+        const layouts = this.ensureLayoutsAsync(this.getVisibleWorldBounds());
+        // Only complete the script under the pointer. A click must remain
+        // responsive even when another visible script is still being built.
+        for (const layout of layouts) {
+            if (layout.dirty && this.rootMayIntersect(layout.root, pointBounds)) {
+                this.ensureLayoutsForRoot(pointBounds, layout.root);
+            }
+        }
+        const readyLayouts = layouts.filter(layout => !layout.dirty && !layout.inProgress);
+        const orderedLayouts = readyLayouts.sort((a, b) =>
+            numberOr(a.root.__02CanvasZ) - numberOr(b.root.__02CanvasZ));
+
+        // A broadcast block stores its menu in a shadow reporter below an
+        // INPUT_VALUE. That field is not part of the parent block's outline,
+        // so outline-first hit testing could let the parent consume the click
+        // before the FieldVariable saw it. Test materialized fields directly
+        // first. This also keeps dynamically-created dropdowns consistent
+        // with ordinary variable fields.
+        for (let layoutIndex = orderedLayouts.length - 1; layoutIndex >= 0; layoutIndex--) {
+            const layout = orderedLayouts[layoutIndex];
+            const position = getRootPosition(layout.root);
+            const fields = (layout.fields || []).slice().sort((a, b) =>
+                blockGraphDepth(b.block) - blockGraphDepth(a.block) ||
+                (a.width * a.height) - (b.width * b.height));
+            for (const candidate of fields) {
+                const field = candidate && candidate.field;
+                const block = candidate && candidate.block;
+                if (!field || !this.isLiveBlock(block)) continue;
+                const isBroadcastMenuField = this.isBroadcastMenuField(field, block);
+                if (!layout.visibleIds.has(block.id) &&
+                    !this.forceMaterializedIds.has(block.id) && !isBroadcastMenuField) continue;
+                const interactive = !!field.EDITABLE ||
+                    typeof field.getOptions === 'function' ||
+                    typeof field.positionArrow === 'function' ||
+                    (typeof field.showEditor_ === 'function' && typeof field.state_ !== 'undefined');
+                if (!interactive) continue;
+                const localX = worldX - position.x;
+                const localY = worldY - position.y;
+                if (this.fieldHitContains(candidate, localX, localY,
+                    this.blockGeometry.get(block.id))) {
+                    return {block, field, icon: null};
+                }
+            }
+        }
+        for (let i = orderedLayouts.length - 1; i >= 0; i--) {
+            const layout = orderedLayouts[i];
+            const position = getRootPosition(layout.root);
+            const localX = worldX - position.x;
+            const localY = worldY - position.y;
+            const key = `${Math.floor(localX / SPATIAL_CELL_SIZE)}:${Math.floor(localY / SPATIAL_CELL_SIZE)}`;
+            const indices = layout.buckets.get(key) || [];
+            const geometries = indices
+                .map(index => layout.geometries[index])
+                .filter(Boolean)
+                .sort((a, b) => b.depth - a.depth ||
+                    (a.width * a.height) - (b.width * b.height));
+            for (const geometry of geometries) {
+                let field = null;
+                for (const candidate of geometry.fields) {
+                    const isInteractive = candidate.field.isCurrentlyEditable &&
+                        candidate.field.isCurrentlyEditable();
+                    const hasEditor = candidate.field.EDITABLE !== false &&
+                        typeof candidate.field.showEditor_ === 'function';
+                    if (this.fieldHitContains(candidate, localX, localY, geometry) &&
+                        (isInteractive || hasEditor || typeof candidate.field.state_ !== 'undefined')) {
+                        field = candidate.field;
+                        break;
+                    }
+                }
+                // Resolve fields before testing the block outline. The outline
+                // is a paint path, not an interaction mask: custom shapes and
+                // insertion markers can legitimately omit the field area from
+                // their path while the field remains clickable in Blockly.
+                if (field) return {block: geometry.block, field, icon: null};
+                if (!this.pointIntersectsGeometry(geometry, localX, localY)) continue;
+                let icon = null;
+                for (const candidate of geometry.icons || []) {
+                    if (localX >= candidate.x && localX <= candidate.x + candidate.width &&
+                        localY >= candidate.y && localY <= candidate.y + candidate.height) {
+                        icon = candidate.icon;
+                        break;
+                    }
+                }
+                return {block: geometry.block, field, icon};
+            }
+        }
+        return null;
+    }
+
+    handleMouseDown (event) {
+        if (!this.isMainWorkspaceEvent(event)) return;
+        if (typeof event.button !== 'undefined' && event.button !== 0) return;
+        // Native block mousedown handlers are installed through
+        // bindEventWithChecks_, which captures the active mouse/touch stream.
+        // Canvas hit testing bypasses that wrapper, so capture it here before
+        // Blockly binds document move/up handlers. Without this, every move
+        // and mouseup is rejected and the workspace is left with a stuck
+        // gesture that cannot click fields or drag blocks.
+        const Touch = this.ScratchBlocks.Touch;
+        if (Touch && typeof Touch.shouldHandleEvent === 'function' && !Touch.shouldHandleEvent(event)) return;
+        const hit = this.hitTest(event);
+        if (!hit) return;
+        if (hit.icon && typeof hit.icon.iconClick_ === 'function') {
+            hit.icon.iconClick_(event);
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+        }
+        const gesture = this.workspace.getGesture(event);
+        if (!gesture) return;
+        if (hit.field) gesture.setStartField(hit.field);
+        gesture.handleBlockStart(event, hit.block);
+        gesture.handleWsStart(event, this.workspace);
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    handleContextMenu (event) {
+        if (!this.isMainWorkspaceEvent(event)) return;
+        const hit = this.hitTest(event);
+        if (!hit || !hit.block || typeof hit.block.showContextMenu_ !== 'function') return;
+        hit.block.showContextMenu_(event);
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    isMainWorkspaceEvent (event) {
+        const target = event && event.target;
+        if (!target || !this.injection || !this.injection.contains(target)) return false;
+        if (!target.closest) return true;
+        return !target.closest([
+            '.blocklyFlyout',
+            '.blocklyToolboxDiv',
+            '.blocklyScrollbarVertical',
+            '.blocklyScrollbarHorizontal',
+            '.blocklyZoom',
+            '.blocklyWidgetDiv',
+            '.blocklyDropDownDiv',
+            '.blocklyTooltipDiv'
+        ].join(','));
+    }
+
+    handleDocumentPaint () {
+        if (this.workspace && this.workspace.currentGesture_) this.scheduleDraw();
+    }
+
+    captureBlockCanvas (block, scale = 1) {
+        const root = rootOf(block);
+        const layout = this.getRootLayout(root).dirty ? this.layoutRoot(root) : this.getRootLayout(root);
+        if (!layout.bounds) return null;
+        const width = Math.max(1, Math.ceil(layout.bounds.right - layout.bounds.left));
+        const height = Math.max(1, Math.ceil(layout.bounds.bottom - layout.bounds.top));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(width * scale);
+        canvas.height = Math.ceil(height * scale);
+        const context = canvas.getContext('2d');
+        context.scale(scale, scale);
+        context.translate(-layout.bounds.left, -layout.bounds.top);
+        const geometries = layout.geometries.slice().sort((a, b) => a.depth - b.depth);
+        for (const geometry of geometries) this.drawGeometry(context, geometry, {x: 0, y: 0});
+        return canvas;
+    }
+
+    captureBlock (block, scale = 1) {
+        const canvas = this.captureBlockCanvas(block, scale);
+        return canvas ? canvas.toDataURL('image/png') : null;
+    }
+
+    captureWorkspaceCanvas (scale = 1) {
+        const layouts = this.ensureLayouts();
+        let bounds = null;
+        for (const layout of layouts) {
+            if (!layout.bounds) continue;
+            const position = getRootPosition(layout.root);
+            bounds = unionRect(bounds, {
+                left: layout.bounds.left + position.x,
+                top: layout.bounds.top + position.y,
+                right: layout.bounds.right + position.x,
+                bottom: layout.bounds.bottom + position.y
+            });
+        }
+        if (!bounds) return null;
+        const width = Math.max(1, Math.ceil(bounds.right - bounds.left));
+        const height = Math.max(1, Math.ceil(bounds.bottom - bounds.top));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(width * scale);
+        canvas.height = Math.ceil(height * scale);
+        const context = canvas.getContext('2d');
+        context.scale(scale, scale);
+        context.translate(-bounds.left, -bounds.top);
+        for (const layout of layouts) {
+            const position = getRootPosition(layout.root);
+            const geometries = layout.geometries.slice().sort((a, b) => a.depth - b.depth);
+            for (const geometry of geometries) this.drawGeometry(context, geometry, position);
+        }
+        return canvas;
+    }
+
+    getStats () {
+        return {
+            lastDrawDuration: this.lastDrawDuration,
+            lastLayoutDuration: this.lastLayoutDuration,
+            visibleBlockCount: this.visibleBlockCount,
+            layoutCount: this.rootLayouts.size
+        };
+    }
+}
+
+export {CanvasModelNode, installBlocklyCanvasMode};
+export default ModelCanvasBlockRenderer;

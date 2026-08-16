@@ -1289,6 +1289,7 @@ const GUIComponent = props => {
                         <Blocks
                             key={`${blocksId}/${theme.id}`}
                             canUseCloud={canUseCloud}
+                            canvasRenderer={customUI}
                             grow={1}
                             isVisible={blocksTabVisible}
                             options={{

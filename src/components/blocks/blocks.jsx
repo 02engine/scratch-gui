@@ -10,6 +10,7 @@ const BlocksComponent = props => {
         dragOver,
         editorBackgroundActive,
         editorBackgroundStyle,
+        canvasRenderer: _canvasRenderer,
         flyoutResizeHandleStyle,
         onFlyoutResizeMouseDown,
         style,
@@ -41,6 +42,7 @@ BlocksComponent.propTypes = {
     dragOver: PropTypes.bool,
     editorBackgroundActive: PropTypes.bool,
     editorBackgroundStyle: PropTypes.shape({}),
+    canvasRenderer: PropTypes.bool,
     flyoutResizeHandleStyle: PropTypes.shape({}),
     onFlyoutResizeMouseDown: PropTypes.func,
     style: PropTypes.shape({})

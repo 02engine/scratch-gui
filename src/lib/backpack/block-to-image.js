@@ -10,6 +10,17 @@ export default function (blockId) {
     // Not sure any better way to access the scratch-blocks workspace than this...
     const ScratchBlocks = LazyScratchBlocks.get();
     const block = ScratchBlocks.getMainWorkspace().getBlockById(blockId);
+    if (!block) return Promise.resolve(null);
+    if (block && block.workspace && block.workspace.ensureBlockRendered) {
+        block.workspace.ensureBlockRendered(blockId);
+    }
+    // Canvas workspaces intentionally keep block roots out of the DOM, so the
+    // old SVG-clone export path cannot append the virtual node to a native
+    // SVG element. Use the renderer's visual snapshot instead.
+    const canvasRenderer = block.workspace && block.workspace.canvasBlockRenderer;
+    if (canvasRenderer) {
+        return Promise.resolve(canvasRenderer.captureBlock(block));
+    }
     const blockSvg = block.getSvgRoot().cloneNode(true /* deep */);
 
     // Once we have the cloned SVG, do the rest in a setTimeout to prevent

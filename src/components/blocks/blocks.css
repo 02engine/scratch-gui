@@ -61,6 +61,11 @@
     stroke: none;
 }
 
+/* Ordinary blocks are not inserted into the SVG tree in Canvas mode. */
+.blocks :global(.blocklyCanvasRenderCanvas) {
+    contain: strict;
+}
+
 .blocks.custom-background :global(.blocklySvg) {
     background: transparent;
 }

@@ -630,10 +630,12 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         const finish = wasCancelled => {
             if (ownsWorkspace()) {
                 setLoadFlags(false);
-                if (!wasCancelled) {
+                if (!wasCancelled && !workspace.canvasBlockRenderer) {
                     workspace.resizeContents();
                     if (workspace.renderVisibleTopBlocks) workspace.renderVisibleTopBlocks();
                     if (workspace.queueIntersectionCheck) workspace.queueIntersectionCheck();
+                } else if (!wasCancelled && workspace.canvasBlockRenderer) {
+                    workspace.canvasBlockRenderer.scheduleDraw();
                 }
             }
             return {cancelled: wasCancelled, blockIds};
@@ -687,17 +689,21 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                             processBlockFrame(blockTask);
                             if (blockTask.stack.length === 0) {
                                 const {topBlock, element, blockCount} = blockTask;
-                                topBlock.setConnectionsHidden(true);
-                                topBlock.deferredRenderPending_ = true;
-                                topBlock.deferredSvgInitPending_ = true;
+                                const canvasWorkspace = !!workspace.canvasBlockRenderer;
+                                topBlock.setConnectionsHidden(!canvasWorkspace);
+                                topBlock.deferredRenderPending_ = !canvasWorkspace;
+                                topBlock.deferredSvgInitPending_ = !canvasWorkspace;
                                 topBlock.lazyEstimatedWidth_ = 1200;
-                                topBlock.lazyEstimatedHeight_ = Math.max(160, blockCount * 5);
+                                topBlock.lazyEstimatedHeight_ = Math.max(
+                                    160,
+                                    blockCount * (canvasWorkspace ? 40 : 5)
+                                );
                                 const position = getPosition(element);
                                 topBlock.translate(
                                     workspace.RTL ? workspace.getWidth() - position.x : position.x,
                                     position.y
                                 );
-                                if (topBlock.createLazySvgPlaceholder) {
+                                if (topBlock.createLazySvgPlaceholder && !canvasWorkspace) {
                                     topBlock.createLazySvgPlaceholder();
                                 }
                                 topBlock.updateDisabled();
@@ -712,8 +718,12 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                     return;
                 }
 
-                if (workspace.renderVisibleTopBlocks) workspace.renderVisibleTopBlocks();
-                if (workspace.queueIntersectionCheck) workspace.queueIntersectionCheck();
+                if (!workspace.canvasBlockRenderer && workspace.renderVisibleTopBlocks) {
+                    workspace.renderVisibleTopBlocks();
+                }
+                if (!workspace.canvasBlockRenderer && workspace.queueIntersectionCheck) {
+                    workspace.queueIntersectionCheck();
+                }
                 if (index >= scripts.length && !blockTask) {
                     resolve(finish(false));
                 } else {
@@ -757,14 +767,14 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                             }
                         }, 1);
                     }
-                    workspace.resizeContents();
+                    if (!workspace.canvasBlockRenderer) workspace.resizeContents();
                 } else {
                     topBlock.deferredRenderPending_ = true;
                     if (deferSvgInitialization) {
                         topBlock.deferredSvgInitPending_ = true;
                         topBlock.lazyEstimatedWidth_ = 1200;
                         topBlock.lazyEstimatedHeight_ = Math.max(160, blocks.length * 5);
-                        if (topBlock.createLazySvgPlaceholder) {
+                        if (topBlock.createLazySvgPlaceholder && !workspace.canvasBlockRenderer) {
                             topBlock.createLazySvgPlaceholder();
                         }
                     }

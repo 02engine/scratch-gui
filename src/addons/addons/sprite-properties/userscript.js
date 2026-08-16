@@ -102,6 +102,7 @@ export default async function ({ addon, console, msg }) {
   }
 
   function updateWideLocaleMode() {
+    if (!propertiesPanel || !propertiesPanel.isConnected) return;
     // Certain "wide" languages such as Japanese use a different layout for the sprite info panel
     // Easiest way to detect this is with this selector that only exists when the sprite info panel
     // is using the layout with text above the input.

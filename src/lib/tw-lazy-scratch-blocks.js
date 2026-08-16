@@ -1,6 +1,6 @@
 let _ScratchBlocks = null;
 
-const OFFSCREEN_CULLING_SCREEN_MARGIN = 480;
+const OFFSCREEN_CULLING_SCREEN_MARGIN = 240;
 
 const patchOffscreenTopBlockCulling = ScratchBlocks => {
     if (ScratchBlocks.__twOffscreenTopBlockCullingPatched) {
@@ -11,24 +11,49 @@ const patchOffscreenTopBlockCulling = ScratchBlocks => {
 
     const WorkspaceSvg = ScratchBlocks.WorkspaceSvg;
     if (WorkspaceSvg && WorkspaceSvg.prototype && WorkspaceSvg.prototype.isBlockInViewport_) {
-        WorkspaceSvg.prototype.isBlockInViewport_ = function (block) {
-            const metrics = this.getMetrics && this.getMetrics();
-            if (!metrics) {
+        WorkspaceSvg.prototype.getLazyViewportBounds_ = function () {
+            const parentSvg = this.getParentSvg && this.getParentSvg();
+            const canvas = this.isDragSurfaceActive_ && this.workspaceDragSurface_ ?
+                this.workspaceDragSurface_.SVG_ : this.getCanvas && this.getCanvas();
+            if (!parentSvg || !canvas) {
+                return null;
+            }
+
+            const scale = this.scale || 1;
+            const canvasPos = ScratchBlocks.utils.getRelativeXY(canvas);
+            const width = Number(parentSvg.width && parentSvg.width.baseVal && parentSvg.width.baseVal.value) ||
+                parentSvg.clientWidth || 0;
+            const height = Number(parentSvg.height && parentSvg.height.baseVal && parentSvg.height.baseVal.value) ||
+                parentSvg.clientHeight || 0;
+            const padding = OFFSCREEN_CULLING_SCREEN_MARGIN / scale;
+            const left = (-canvasPos.x / scale) - padding;
+            const right = ((width - canvasPos.x) / scale) + padding;
+            const top = (-canvasPos.y / scale) - padding;
+            const bottom = ((height - canvasPos.y) / scale) + padding;
+            return {
+                left,
+                right,
+                top,
+                bottom,
+                centerX: (left + right) / 2,
+                centerY: (top + bottom) / 2
+            };
+        };
+
+        WorkspaceSvg.prototype.isBlockInViewport_ = function (block, viewport) {
+            const bounds = viewport || this.getLazyViewportBounds_();
+            if (!bounds) {
                 return true;
             }
 
-            const blockRect = block.getBoundingRectangle();
-            const scale = this.scale || 1;
-            const padding = OFFSCREEN_CULLING_SCREEN_MARGIN / scale;
-            const viewLeft = (metrics.viewLeft / scale) - padding;
-            const viewRight = ((metrics.viewLeft + metrics.viewWidth) / scale) + padding;
-            const viewTop = (metrics.viewTop / scale) - padding;
-            const viewBottom = ((metrics.viewTop + metrics.viewHeight) / scale) + padding;
-
-            return !(blockRect.bottomRight.x < viewLeft ||
-                blockRect.topLeft.x > viewRight ||
-                blockRect.bottomRight.y < viewTop ||
-                blockRect.topLeft.y > viewBottom);
+            const rootBlock = typeof block.getRootBlock === 'function' ?
+                block.getRootBlock() : block;
+            const blockRect = typeof rootBlock.getScriptBoundingRectangle === 'function' ?
+                rootBlock.getScriptBoundingRectangle() : rootBlock.getBoundingRectangle();
+            return !(blockRect.bottomRight.x < bounds.left ||
+                blockRect.topLeft.x > bounds.right ||
+                blockRect.bottomRight.y < bounds.top ||
+                blockRect.topLeft.y > bounds.bottom);
         };
     }
 
@@ -44,43 +69,31 @@ const patchOffscreenTopBlockCulling = ScratchBlocks => {
 
             const workspace = this.workspace;
             const workspaceScale = workspace.scale;
-            const RTL = workspace.RTL;
             const workspaceHeight = workspace.getParentSvg().height.baseVal.value;
             const workspaceWidth = workspace.getParentSvg().width.baseVal.value;
-            const canvasPos = workspace.isDragSurfaceActive_ ?
-                ScratchBlocks.utils.getRelativeXY(workspace.workspaceDragSurface_.SVG_) :
-                ScratchBlocks.utils.getRelativeXY(workspace.getCanvas());
+            const canvas = workspace.isDragSurfaceActive_ && workspace.workspaceDragSurface_ ?
+                workspace.workspaceDragSurface_.SVG_ : workspace.getCanvas();
+            const canvasPos = ScratchBlocks.utils.getRelativeXY(canvas);
             const margin = OFFSCREEN_CULLING_SCREEN_MARGIN;
 
             for (let i = 0; i < this.observing.length; i++) {
                 const block = this.observing[i];
-                const blockPos = block.getRelativeToSurfaceXY();
-                let blockSize = null;
-                if (RTL) {
-                    blockSize = block.getHeightWidth();
-                    blockPos.x -= blockSize.width;
-                    blockSize.width *= workspaceScale;
-                    blockSize.height *= workspaceScale;
-                }
-                blockPos.x *= workspaceScale;
-                blockPos.y *= workspaceScale;
+                const rootBlock = typeof block.getRootBlock === 'function' ?
+                    block.getRootBlock() : block;
+                const blockBounds = typeof rootBlock.getScriptBoundingRectangle === 'function' ?
+                    rootBlock.getScriptBoundingRectangle() : rootBlock.getBoundingRectangle();
+                const blockLeft = canvasPos.x + (blockBounds.topLeft.x * workspaceScale);
+                const blockTop = canvasPos.y + (blockBounds.topLeft.y * workspaceScale);
+                const blockRight = canvasPos.x + (blockBounds.bottomRight.x * workspaceScale);
+                const blockBottom = canvasPos.y + (blockBounds.bottomRight.y * workspaceScale);
 
                 let visible = true;
-                if (canvasPos.y + blockPos.y - margin > workspaceHeight) {
+                if (blockTop - margin > workspaceHeight) {
                     visible = false;
-                } else if (canvasPos.x + blockPos.x - margin > workspaceWidth) {
+                } else if (blockLeft - margin > workspaceWidth) {
                     visible = false;
-                } else {
-                    if (!blockSize) {
-                        blockSize = block.getHeightWidth();
-                        blockSize.width *= workspaceScale;
-                        blockSize.height *= workspaceScale;
-                    }
-                    if (canvasPos.x + blockPos.x + blockSize.width + margin < 0) {
-                        visible = false;
-                    } else if (canvasPos.y + blockPos.y + blockSize.height + margin < 0) {
-                        visible = false;
-                    }
+                } else if (blockRight + margin < 0 || blockBottom + margin < 0) {
+                    visible = false;
                 }
 
                 block.setIntersects(visible);

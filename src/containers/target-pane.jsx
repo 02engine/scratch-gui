@@ -353,6 +353,7 @@ class TargetPane extends React.Component {
             onReceivedBlocks,
             onShowImporting,
             workspaceMetrics,
+            onRequestSelectTarget,
             ...componentProps
         } = this.props;
         /* eslint-enable no-unused-vars */
