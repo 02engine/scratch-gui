@@ -824,6 +824,16 @@ const installBlocklyCanvasMode = ScratchBlocks => {
         const renderer = this.workspace.canvasBlockRenderer;
         if (renderer && !renderer.renderingNative) {
             renderer.invalidateBlock(this);
+            // ScratchBlockComment.setCommentText() calls render() and then
+            // immediately opens the bubble. Canvas rendering is normally
+            // deferred, so a newly-created comment has no iconXY_ yet and
+            // ScratchBlockComment.autoPosition_ would dereference null.
+            // Materialize this block synchronously before the native bubble
+            // code continues. Existing comments keep the normal deferred path.
+            if (this.comment && typeof this.comment.getIconLocation === 'function' &&
+                !this.comment.getIconLocation()) {
+                renderer.materializeBlock(this.id, true);
+            }
             // InsertionMarkerManager reads this block's connection offsets in
             // the same call stack as render(). Ordinary Canvas layout may be
             // deferred, but a marker must be measured synchronously or its
