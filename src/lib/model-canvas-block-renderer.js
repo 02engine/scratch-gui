@@ -28,6 +28,9 @@ import canvasLayoutWorkerMain from './canvas-layout-worker';
 const LAYOUT_FRAME_BUDGET = 12;
 const LAYOUT_SINGLE_ROOT_BUDGET = 10;
 const LAYOUT_MULTI_ROOT_BUDGET = 6;
+const LAYOUT_FAST_FRAME_BUDGET = 16;
+const LAYOUT_FAST_ROOT_BUDGET = 14;
+const LAYOUT_FAST_MULTI_ROOT_BUDGET = 8;
 const LAYOUT_MAX_RATE = 16;
 const PROJECTION_WORKER_MIN_BLOCKS = 48;
 const VIRTUAL_UNLOAD_SCREENS = 2;
@@ -1489,7 +1492,7 @@ class ModelCanvasBlockRenderer {
         const mode = document.createElement('select');
         mode.innerHTML = '<option value="frame">Batched frames</option>' +
             '<option value="continuous">Continuous batches</option>' +
-            '<option value="sync">Load all now</option>';
+            '<option value="sync">Fast loading (responsive)</option>';
         mode.value = this.loadingMode;
         mode.style.maxWidth = '135px';
         mode.addEventListener('change', () => {
@@ -3012,15 +3015,14 @@ class ModelCanvasBlockRenderer {
             this.layoutFrame = null;
             this.loadingTimer = null;
             const frameStarted = now();
-            const synchronous = this.loadingMode === 'sync';
-            const deadline = synchronous ? Number.POSITIVE_INFINITY :
-                frameStarted + LAYOUT_FRAME_BUDGET;
-            // The frame budget is the hard limit; do not artificially stop
-            // after one slice of a single root because that makes a large
-            // script take hundreds of animation frames even when the
-            // remaining frame time is unused.
-            const maxSlices = synchronous ? Infinity : (this.layoutTasks.size > 1 ?
-                Math.max(this.layoutTasks.size, 2) : 16);
+            const fastMode = this.loadingMode === 'sync';
+            // Even the fastest mode yields at the end of a bounded frame.
+            // The old sync path used an infinite deadline and could freeze
+            // the browser for tens of seconds on one large script.
+            const deadline = frameStarted + (fastMode ?
+                LAYOUT_FAST_FRAME_BUDGET : LAYOUT_FRAME_BUDGET);
+            const maxSlices = this.layoutTasks.size > 1 ?
+                Math.max(this.layoutTasks.size, 2) : 16;
             let processedSlices = 0;
             while (this.layoutTasks.size && processedSlices < maxSlices &&
                 now() < deadline) {
@@ -3033,12 +3035,11 @@ class ModelCanvasBlockRenderer {
                 if (!nextEntry) break;
                 const [id, task] = nextEntry;
                 this.layoutTasks.delete(id);
-                const remaining = synchronous ? Number.POSITIVE_INFINITY :
-                    Math.max(1, deadline - now());
+                const remaining = Math.max(1, deadline - now());
                 const defaultRate = this.layoutTasks.size > 0 ?
-                    LAYOUT_MULTI_ROOT_BUDGET : LAYOUT_SINGLE_ROOT_BUDGET;
-                const preferredBudget = synchronous ? Number.POSITIVE_INFINITY :
-                    Math.max(1, this.loadingRate || defaultRate);
+                    (fastMode ? LAYOUT_FAST_MULTI_ROOT_BUDGET : LAYOUT_MULTI_ROOT_BUDGET) :
+                    (fastMode ? LAYOUT_FAST_ROOT_BUDGET : LAYOUT_SINGLE_ROOT_BUDGET);
+                const preferredBudget = Math.max(1, this.loadingRate || defaultRate);
                 const taskBudget = Math.min(preferredBudget, remaining);
                 let completed = false;
                 task.layout.processing = true;
