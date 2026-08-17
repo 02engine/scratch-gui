@@ -105,7 +105,10 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
 
         workspaceProto.scheduleWheelZoom_ = function (x, y, delta) {
             this.pendingWheelZoomDelta_ += delta;
-            this.pendingWheelZoomPosition_ = new ScratchBlocks.goog.math.Coordinate(x, y);
+            // Apply a burst of wheel events around one stable anchor.
+            if (!this.pendingWheelZoomPosition_) {
+                this.pendingWheelZoomPosition_ = new ScratchBlocks.goog.math.Coordinate(x, y);
+            }
             this.scheduleWheelUpdate_();
         };
 

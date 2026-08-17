@@ -1163,6 +1163,7 @@ class ModelCanvasBlockRenderer {
         this.lastDrawDuration = 0;
         this.lastLayoutDuration = 0;
         this.visibleBlockCount = 0;
+        this.loadingWorkPending = false;
         this.estimateCache = new Map();
         this.viewportKey = null;
         this.workspaceMethodRestores = [];
@@ -1595,6 +1596,7 @@ class ModelCanvasBlockRenderer {
         this.fieldGeometry = new WeakMap();
         this.estimateCache.clear();
         this.loadingIndicatorStartedAt = 0;
+        this.loadingWorkPending = false;
         this.viewportKey = null;
         if (this.layoutSuspended) this.pendingDraw = true;
         else this.invalidateAll();
@@ -1788,6 +1790,18 @@ class ModelCanvasBlockRenderer {
             if (!state.dirty && !hasUninitializedField && block.svgPath_ &&
                 block.svgPath_.getAttribute('d')) return;
             if (typeof block.renderCompute_ !== 'function' || typeof block.renderDraw_ !== 'function') return;
+            // A definition hat calculates its right edge from the measured
+            // procedure prototype. Compile that header dependency first so a
+            // viewport pass cannot permanently use its cheap projection width.
+            if (block.type === this.ScratchBlocks.PROCEDURES_DEFINITION_BLOCK_TYPE) {
+                const customBlockInput = block.getInput && block.getInput('custom_block');
+                const prototype = customBlockInput && customBlockInput.connection &&
+                    customBlockInput.connection.targetBlock &&
+                    customBlockInput.connection.targetBlock();
+                if (prototype && prototype !== block) {
+                    this.renderNativeModel(prototype, new Set([block.id]));
+                }
+            }
             // A custom block-shape addon can change FIELD_HEIGHT and padding
             // without changing the field value. Force ordinary fields through
             // Blockly's normal render_ path so cached dimensions do not survive a
@@ -2041,7 +2055,12 @@ class ModelCanvasBlockRenderer {
             const block = layout.projectedBlocks.get(id);
             if (!this.isLiveBlock(block)) continue;
             for (const input of block.inputList || []) {
-                if (!input.connection || input.connection.type !== this.ScratchBlocks.INPUT_VALUE) continue;
+                if (!input.connection) continue;
+                // The custom_block statement of a procedure definition is part
+                // of its visible header. It must be measured with the header,
+                // while ordinary C-block statement children remain deferred.
+                if (input.connection.type !== this.ScratchBlocks.INPUT_VALUE &&
+                    !this.isProcedureHeaderBlock(block)) continue;
                 const child = input.connection.targetBlock && input.connection.targetBlock();
                 if (!this.isLiveBlock(child) || visibleIds.has(child.id)) continue;
                 visibleIds.add(child.id);
@@ -2050,6 +2069,15 @@ class ModelCanvasBlockRenderer {
         }
         layout.visibleIds = visibleIds;
         return visibleIds;
+    }
+
+    isProcedureHeaderBlock (block) {
+        if (!block) return false;
+        return [
+            this.ScratchBlocks.PROCEDURES_DEFINITION_BLOCK_TYPE,
+            this.ScratchBlocks.PROCEDURES_PROTOTYPE_BLOCK_TYPE,
+            'procedures_declaration'
+        ].includes(block.type);
     }
 
     layoutRoot (root, worldBounds = null) {
@@ -2106,7 +2134,9 @@ class ModelCanvasBlockRenderer {
             if (!this.isLiveBlock(block) || result.has(block.id)) continue;
             result.set(block.id, block);
             for (const input of block.inputList || []) {
-                if (!input.connection || input.connection.type !== this.ScratchBlocks.INPUT_VALUE) continue;
+                if (!input.connection) continue;
+                if (input.connection.type !== this.ScratchBlocks.INPUT_VALUE &&
+                    !this.isProcedureHeaderBlock(block)) continue;
                 const child = input.connection && input.connection.targetBlock &&
                     input.connection.targetBlock();
                 if (child && !result.has(child.id)) pending.push(child);
@@ -3060,9 +3090,14 @@ class ModelCanvasBlockRenderer {
             field.fieldGroup_ && field.fieldGroup_.getAttribute && field.fieldGroup_.getAttribute('class'),
             field.className_
         ].join(' ');
-        if (textClasses.includes('blocklyDropdownText') ||
+        const isArgumentReporter = block.type === 'argument_reporter_boolean' ||
+            block.type === 'argument_reporter_string_number';
+        if (isArgumentReporter || textClasses.includes('blocklyDropdownText') ||
             textClasses.includes('blocklyEditableLabel')) {
             context.fillStyle = Colours.text || '#fff';
+        } else if (textClasses.includes('blocklyNonEditableText') ||
+            textClasses.includes('blocklyEditableText')) {
+            context.fillStyle = Colours.textFieldText || '#575e75';
         } else if (block.isShadow && block.isShadow()) {
             context.fillStyle = Colours.textFieldText || '#575e75';
         } else {
@@ -3419,6 +3454,27 @@ class ModelCanvasBlockRenderer {
         context.restore();
     }
 
+    clipZoomControls (context, rect) {
+        const zoomControls = this.injection && this.injection.querySelector &&
+            this.injection.querySelector('.blocklyZoom');
+        if (!zoomControls || !zoomControls.getBoundingClientRect) return false;
+        const canvasRect = this.canvas && this.canvas.getBoundingClientRect();
+        const controlRect = zoomControls.getBoundingClientRect();
+        if (!canvasRect || controlRect.width <= 0 || controlRect.height <= 0) return false;
+        const left = Math.max(0, controlRect.left - canvasRect.left - 2);
+        const top = Math.max(0, controlRect.top - canvasRect.top - 2);
+        const right = Math.min(rect.width, controlRect.right - canvasRect.left + 2);
+        const bottom = Math.min(rect.height + CANVAS_TOP_PADDING, controlRect.bottom - canvasRect.top + 2);
+        if (right <= left || bottom <= top) return false;
+        // Keep the native SVG controls visible and clickable without moving
+        // them or placing a second control layer over Blockly.
+        context.beginPath();
+        context.rect(0, 0, rect.width, rect.height + CANVAS_TOP_PADDING);
+        context.rect(left, top, right - left, bottom - top);
+        context.clip('evenodd');
+        return true;
+    }
+
     resizeCanvas () {
         if (!this.canvas) return false;
         const rect = this.injection.getBoundingClientRect();
@@ -3457,6 +3513,7 @@ class ModelCanvasBlockRenderer {
             numberOr(a.root.__02CanvasZ) - numberOr(b.root.__02CanvasZ));
         this.context.clearRect(0, 0, rect.width, rect.height + CANVAS_TOP_PADDING);
         this.context.save();
+        this.clipZoomControls(this.context, rect);
         // The Canvas is extended above the injection by the hat height. This
         // keeps negative hat-path coordinates visible without changing the
         // workspace coordinate system used by Blockly and addons.
@@ -3474,7 +3531,6 @@ class ModelCanvasBlockRenderer {
                 right: bounds.right,
                 bottom: bounds.bottom
             }, visible)) continue;
-            loadingTotal += layout.visibleIds.size;
             // Keep the last committed scene visible while an edit or zoom is
             // being recalculated. A brand-new workspace has no committed
             // scene, so it may paint the progressively-built staging scene.
@@ -3487,13 +3543,24 @@ class ModelCanvasBlockRenderer {
                 paintedIds.add(geometry.block.id);
                 this.visibleBlockCount++;
             }
-            for (const id of paintedIds) {
-                if (layout.visibleIds.has(id)) loadingCompleted++;
+            const materializedIds = new Set((paintScene.geometries || [])
+                .map(geometry => geometry && geometry.block && geometry.block.id)
+                .filter(Boolean));
+            const missingVisible = Array.from(layout.visibleIds)
+                .filter(id => !materializedIds.has(id));
+            loadingTotal += layout.visibleIds.size;
+            loadingCompleted += layout.visibleIds.size - missingVisible.length;
+            if (layout.dirty || layout.inProgress || missingVisible.length) {
+                this.loadingWorkPending = true;
             }
         }
         this.drawConnectionHighlight(this.context);
         this.context.restore();
+        if (!this.loadingWorkPending) {
+            loadingCompleted = loadingTotal;
+        }
         this.drawLoadingIndicator(this.context, rect, loadingCompleted, loadingTotal);
+        this.loadingWorkPending = false;
         this.lastDrawDuration = now() - started;
     }
 
