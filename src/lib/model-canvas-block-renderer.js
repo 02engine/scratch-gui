@@ -19,6 +19,14 @@ const STATEMENT_INDENT = 16;
 const NOTCH_X = 16;
 const NOTCH_WIDTH = 32;
 const NOTCH_DEPTH = 8;
+// Keep layout work in the animation frame, but use a larger quantum so large
+// scripts do not need hundreds of nearly-empty frames to finish. The deadline
+// is still checked inside processLayoutTask, so a slow native block cannot
+// consume an unbounded frame.
+const LAYOUT_FRAME_BUDGET = 14;
+const LAYOUT_SINGLE_ROOT_BUDGET = 12;
+const LAYOUT_MULTI_ROOT_BUDGET = 7;
+const SVG_NS = 'http://www.w3.org/2000/svg';
 const BLOCK_TEXT_FONT = '500 16px "Helvetica Neue", Helvetica, sans-serif';
 const BLOCK_TEXT_FONT_SIZE = '12pt';
 
@@ -845,6 +853,81 @@ const installBlocklyCanvasMode = ScratchBlocks => {
         return this;
     };
 
+    // XML loading can create a block comment before the workspace SVG and its
+    // bubble canvas are ready. Keep the graph/comment data, but do not let
+    // Blockly construct a bubble in the middle of an async import.
+    const originalSetCommentText = blockProto.setCommentText;
+    if (originalSetCommentText && !blockProto.__02CanvasSetCommentTextPatched) {
+        blockProto.setCommentText = function (...args) {
+            if (!isCanvasWorkspace(this.workspace) || !this.workspace.__02CanvasXmlLoading) {
+                return originalSetCommentText.apply(this, args);
+            }
+            // ScratchBlockComment extends Blockly.Icon. Its constructor
+            // appends the icon group to block.getSvgRoot(), even when the
+            // block is not rendered. During async XML import a new block has
+            // no root yet, so initialize the Canvas model node first. This is
+            // model-only in Canvas mode and does not create SVG DOM.
+            if (!this.svgGroup_ && typeof this.initSvg === 'function') this.initSvg();
+            const wasRendered = this.rendered;
+            this.rendered = false;
+            try {
+                return originalSetCommentText.apply(this, args);
+            } finally {
+                this.rendered = wasRendered;
+            }
+        };
+        blockProto.__02CanvasSetCommentTextPatched = true;
+    }
+
+    const commentProto = ScratchBlocks.ScratchBlockComment &&
+        ScratchBlocks.ScratchBlockComment.prototype;
+    if (commentProto && commentProto.setVisible && !commentProto.__02CanvasSetVisiblePatched) {
+        const originalCommentSetVisible = commentProto.setVisible;
+        commentProto.setVisible = function (visible) {
+            const workspace = this.block_ && this.block_.workspace;
+            // A comment can outlive its renderer briefly while a target is
+            // being switched. Blockly's native implementation immediately
+            // constructs ScratchBubble and appends it to getBubbleCanvas(),
+            // which is no longer valid after renderer disposal. The graph is
+            // disposed with the workspace, so there is nothing useful to
+            // render during this lifecycle transition.
+            if (workspace && (workspace.__02CanvasRendererDisposing ||
+                workspace.__02CanvasRendererDisposed)) {
+                this.__02CanvasPendingVisible = !!visible;
+                return;
+            }
+            if (visible && isCanvasWorkspace(workspace)) {
+                const bubbleCanvas = workspace.getBubbleCanvas && workspace.getBubbleCanvas();
+                if (workspace.__02CanvasXmlLoading || !bubbleCanvas || !bubbleCanvas.parentNode) {
+                    this.__02CanvasPendingVisible = true;
+                    return;
+                }
+            }
+            try {
+                const result = originalCommentSetVisible.call(this, visible);
+                this.__02CanvasPendingVisible = false;
+                return result;
+            } catch (error) {
+                // A workspace switch can detach the old SVG between the
+                // readiness check and ScratchBubble's appendChild call.
+                // Defer that one visibility transition until the new layer is
+                // attached instead of breaking the whole workspace update.
+                if (visible && isCanvasWorkspace(workspace) &&
+                    error && /appendChild|parentNode|undefined|null/i.test(String(error.message))) {
+                    this.__02CanvasPendingVisible = true;
+                    return;
+                }
+                if (workspace && (workspace.__02CanvasRendererDisposing ||
+                    workspace.__02CanvasRendererDisposed)) {
+                    this.__02CanvasPendingVisible = !!visible;
+                    return;
+                }
+                throw error;
+            }
+        };
+        commentProto.__02CanvasSetVisiblePatched = true;
+    }
+
     // BlockSvg.setParent normally moves the block's SVG root between the
     // workspace canvas and its new parent. Canvas workspaces deliberately use
     // model nodes instead of DOM nodes, so that final appendChild would throw
@@ -1215,6 +1298,11 @@ class ModelCanvasBlockRenderer {
         this.lastLayoutDuration = 0;
         this.visibleBlockCount = 0;
         this.loadingWorkPending = false;
+        this.loadingMode = 'frame';
+        this.loadingRate = LAYOUT_SINGLE_ROOT_BUDGET;
+        this.loadingPanel = null;
+        this.loadingPanelStatus = null;
+        this.loadingTimer = null;
         this.estimateCache = new Map();
         this.activeLayoutTask = null;
         this.viewportKey = null;
@@ -1253,6 +1341,8 @@ class ModelCanvasBlockRenderer {
             zIndex: '1'
         });
         injection.appendChild(this.canvas);
+        this.attachCommentLayer();
+        this.createTuningPanel();
         this.context = this.canvas.getContext('2d', {alpha: true, desynchronized: true});
         this.workspace.canvasBlockRenderer = this;
         this.workspace.ensureBlockRendered = blockId => this.materializeBlock(blockId);
@@ -1270,6 +1360,174 @@ class ModelCanvasBlockRenderer {
             this.resizeObserver.observe(injection);
         }
         this.setEnabled(true);
+    }
+
+    attachCommentLayer () {
+        const bubbleCanvas = this.workspace && this.workspace.getBubbleCanvas &&
+            this.workspace.getBubbleCanvas();
+        const originalParent = bubbleCanvas && bubbleCanvas.parentNode;
+        const originalNextSibling = bubbleCanvas && bubbleCanvas.nextSibling;
+        if (!bubbleCanvas || !originalParent || !this.injection || this.commentLayer) return;
+
+        const layer = document.createElementNS(SVG_NS, 'svg');
+        layer.setAttribute('class', 'blocklyCanvasCommentLayer');
+        layer.setAttribute('x', '0');
+        layer.setAttribute('y', '0');
+        layer.setAttribute('width', '100%');
+        layer.setAttribute('height', '100%');
+        layer.setAttribute('preserveAspectRatio', 'none');
+        Object.assign(layer.style, {
+            position: 'absolute',
+            left: '0',
+            top: '0',
+            width: '100%',
+            height: '100%',
+            overflow: 'visible',
+            pointerEvents: 'none',
+            zIndex: '2'
+        });
+        bubbleCanvas.style.pointerEvents = 'auto';
+        this.injection.appendChild(layer);
+        layer.appendChild(bubbleCanvas);
+        this.commentLayer = layer;
+        this.commentLayerBubbleCanvas = bubbleCanvas;
+        this.commentLayerOriginalParent = originalParent;
+        this.commentLayerOriginalNextSibling = originalNextSibling;
+    }
+
+    restoreCommentLayer () {
+        const bubbleCanvas = this.commentLayerBubbleCanvas;
+        const originalParent = this.commentLayerOriginalParent;
+        if (bubbleCanvas && originalParent && bubbleCanvas.parentNode !== originalParent) {
+            const nextSibling = this.commentLayerOriginalNextSibling;
+            if (nextSibling && nextSibling.parentNode === originalParent) {
+                originalParent.insertBefore(bubbleCanvas, nextSibling);
+            } else {
+                originalParent.appendChild(bubbleCanvas);
+            }
+        }
+        if (bubbleCanvas) bubbleCanvas.style.pointerEvents = '';
+        if (this.commentLayer) this.commentLayer.remove();
+        this.commentLayer = null;
+        this.commentLayerBubbleCanvas = null;
+        this.commentLayerOriginalParent = null;
+        this.commentLayerOriginalNextSibling = null;
+    }
+
+    createTuningPanel () {
+        if (!this.injection || this.loadingPanel) return;
+        const panel = document.createElement('div');
+        panel.className = 'blocklyCanvasLoadingTuning';
+        Object.assign(panel.style, {
+            position: 'absolute',
+            left: '8px',
+            top: '8px',
+            zIndex: '3',
+            padding: '7px 9px',
+            minWidth: '190px',
+            color: '#575e75',
+            background: 'rgba(255, 255, 255, .94)',
+            border: '1px solid rgba(87, 94, 117, .25)',
+            borderRadius: '6px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, .16)',
+            font: '12px sans-serif',
+            pointerEvents: 'auto'
+        });
+        const injectionRect = this.injection.getBoundingClientRect();
+        const toolboxRight = Array.from(this.injection.querySelectorAll(
+            '.blocklyToolboxDiv, .blocklyFlyout'
+        )).reduce((right, element) => Math.max(right, element.getBoundingClientRect().right),
+            injectionRect.left);
+        panel.style.left = `${Math.max(8, toolboxRight - injectionRect.left + 8)}px`;
+        const title = document.createElement('strong');
+        title.textContent = 'Canvas loading';
+        title.style.display = 'block';
+        title.style.marginBottom = '5px';
+        panel.appendChild(title);
+
+        const modeLabel = document.createElement('label');
+        modeLabel.textContent = 'Mode ';
+        const mode = document.createElement('select');
+        mode.innerHTML = '<option value="frame">Batched frames</option>' +
+            '<option value="continuous">Continuous batches</option>' +
+            '<option value="sync">Load all now</option>';
+        mode.value = this.loadingMode;
+        mode.style.maxWidth = '135px';
+        mode.addEventListener('change', () => {
+            this.loadingMode = mode.value;
+            this.scheduleLayoutWork();
+            this.scheduleDraw();
+            this.updateTuningPanel();
+        });
+        modeLabel.appendChild(mode);
+        panel.appendChild(modeLabel);
+
+        const rateLabel = document.createElement('label');
+        rateLabel.style.display = 'block';
+        rateLabel.style.marginTop = '5px';
+        const rateText = document.createElement('span');
+        const rate = document.createElement('input');
+        rate.type = 'range';
+        rate.min = '2';
+        rate.max = '24';
+        rate.step = '1';
+        rate.value = String(this.loadingRate);
+        rate.style.width = '105px';
+        rate.addEventListener('input', () => {
+            this.loadingRate = Math.max(1, Number(rate.value) || LAYOUT_SINGLE_ROOT_BUDGET);
+            this.updateTuningPanel();
+        });
+        rateLabel.append('Rate ', rate, rateText);
+        panel.appendChild(rateLabel);
+
+        const status = document.createElement('div');
+        status.style.marginTop = '5px';
+        status.style.lineHeight = '1.3';
+        panel.appendChild(status);
+        this.injection.appendChild(panel);
+        this.loadingPanel = panel;
+        this.loadingPanelMode = mode;
+        this.loadingPanelRate = rate;
+        this.loadingPanelRateText = rateText;
+        this.loadingPanelStatus = status;
+        this.updateTuningPanel();
+    }
+
+    updateTuningPanel (completed, total) {
+        if (!this.loadingPanel) return;
+        const active = this.activeLayoutTask || this.layoutTasks.values().next().value;
+        const done = typeof completed === 'number' ? completed : this.lastLoadingCompleted || 0;
+        const all = typeof total === 'number' ? total : this.lastLoadingTotal || 0;
+        const percent = all ? Math.round((done / all) * 100) : 100;
+        const phase = active ? active.phase : (this.loadingWorkPending ? 'queued' : 'idle');
+        const root = active && active.root ? `${active.root.type || 'block'}:${active.root.id}` : '-';
+        this.loadingPanelRateText.textContent = `${this.loadingRate} ms/slice`;
+        this.loadingPanelStatus.textContent = `${phase} ${percent}% | ${this.layoutTasks.size} queue | ${root}`;
+    }
+
+    restorePendingComments () {
+        const pending = this.workspace && this.workspace.__02CanvasPendingComments;
+        if (!pending || !pending.length || !this.workspace) return;
+        this.workspace.__02CanvasPendingComments = [];
+        const roots = new Set();
+        for (const item of pending) {
+            const block = item && item.block;
+            if (this.isLiveBlock(block) && block.comment) roots.add(rootOf(block));
+        }
+        for (const root of roots) {
+            if (root) this.ensureExactDragLayout(root);
+        }
+        for (const item of pending) {
+            const block = item && item.block;
+            const comment = block && block.comment;
+            if (!this.isLiveBlock(block) || !comment || !comment.setVisible) continue;
+            if (item.visible === false) {
+                if (comment.isVisible && comment.isVisible()) comment.setVisible(false);
+            } else {
+                comment.setVisible(true);
+            }
+        }
+        this.scheduleDraw();
     }
 
     patchWorkspaceViewportMethods () {
@@ -1534,6 +1792,10 @@ class ModelCanvasBlockRenderer {
 
     dispose () {
         if (!this.workspace) return;
+        // Invalidate comment and rendering callbacks before detaching any DOM
+        // owned by this renderer. The old workspace may still receive a final
+        // Blockly event while React is mounting the next target.
+        this.workspace.__02CanvasRendererDisposing = true;
         this.workspace.removeChangeListener(this.handleChange);
         for (const restore of this.workspaceMethodRestores) restore();
         this.workspaceMethodRestores = [];
@@ -1544,6 +1806,9 @@ class ModelCanvasBlockRenderer {
         window.removeEventListener('resize', this.boundResize);
         if (this.resizeObserver) this.resizeObserver.disconnect();
         if (this.frame !== null) cancelAnimationFrame(this.frame);
+        if (this.loadingTimer !== null) clearTimeout(this.loadingTimer);
+        this.restoreCommentLayer();
+        if (this.loadingPanel) this.loadingPanel.remove();
         if (this.canvas) this.canvas.remove();
         delete this.workspace.canvasBlockRenderer;
         delete this.workspace.__02CanvasRendererEnabled;
@@ -1556,6 +1821,8 @@ class ModelCanvasBlockRenderer {
         this.draggingRoot = null;
         this.layoutTasks.clear();
         if (this.layoutFrame !== null) cancelAnimationFrame(this.layoutFrame);
+        this.workspace.__02CanvasRendererDisposed = true;
+        delete this.workspace.__02CanvasRendererDisposing;
         this.workspace = null;
     }
 
@@ -1663,8 +1930,15 @@ class ModelCanvasBlockRenderer {
                 cancelAnimationFrame(this.layoutFrame);
                 this.layoutFrame = null;
             }
+            if (this.loadingTimer !== null) {
+                clearTimeout(this.loadingTimer);
+                this.loadingTimer = null;
+            }
             this.layoutTasks.clear();
-            for (const layout of this.rootLayouts.values()) layout.inProgress = false;
+            for (const layout of this.rootLayouts.values()) {
+                layout.inProgress = false;
+                layout.processing = false;
+            }
             this.clear();
             return;
         }
@@ -1679,6 +1953,10 @@ class ModelCanvasBlockRenderer {
             cancelAnimationFrame(this.layoutFrame);
             this.layoutFrame = null;
         }
+        if (this.loadingTimer !== null) {
+            clearTimeout(this.loadingTimer);
+            this.loadingTimer = null;
+        }
         this.layoutTasks.clear();
         this.rootLayouts.clear();
         this.nativeBlockCache.clear();
@@ -1687,6 +1965,8 @@ class ModelCanvasBlockRenderer {
         this.estimateCache.clear();
         this.loadingIndicatorStartedAt = 0;
         this.loadingWorkPending = false;
+        this.lastLoadingCompleted = 0;
+        this.lastLoadingTotal = 0;
         this.viewportKey = null;
         if (this.layoutSuspended) this.pendingDraw = true;
         else this.invalidateAll();
@@ -1710,6 +1990,7 @@ class ModelCanvasBlockRenderer {
             layout.version = numberOr(layout.version) + 1;
             if (layout.inProgress) {
                 layout.inProgress = false;
+                layout.processing = false;
                 this.layoutTasks.delete(layout.root.id);
                 layout.pendingScene = null;
             }
@@ -1750,6 +2031,7 @@ class ModelCanvasBlockRenderer {
             // layout computed from stale connections.
             if (layout.inProgress) {
                 layout.inProgress = false;
+                layout.processing = false;
                 this.layoutTasks.delete(root.id);
                 layout.pendingScene = null;
             }
@@ -1851,6 +2133,9 @@ class ModelCanvasBlockRenderer {
                 buckets: new Map(),
                 bounds: null,
                 pendingScene: null,
+                processing: false,
+                skippedIds: new Set(),
+                skippedVersion: -1,
                 projectionBounds: null,
                 projectedPositions: new Map(),
                 projectedPaintBounds: new Map(),
@@ -2382,10 +2667,15 @@ class ModelCanvasBlockRenderer {
         if (!this.isLiveBlock(root)) return null;
         const layout = this.getRootLayout(root);
         this.updateVisibleProjection(layout, worldBounds);
+        if (layout.skippedVersion !== layout.version) {
+            layout.skippedIds.clear();
+            layout.skippedVersion = layout.version;
+        }
         const rebuilding = !!layout.dirty;
         const scene = this.createLayoutScene(layout, rebuilding);
         const existingIds = new Set(scene.geometries.map(geometry => geometry.block && geometry.block.id));
-        const targetIds = Array.from(layout.visibleIds).filter(id => rebuilding || !existingIds.has(id));
+        const targetIds = Array.from(layout.visibleIds).filter(id =>
+            !layout.skippedIds.has(id) && (rebuilding || !existingIds.has(id)));
         const viewportCenter = worldBounds ? {
             x: (worldBounds.left + worldBounds.right) / 2,
             y: (worldBounds.top + worldBounds.bottom) / 2
@@ -2442,30 +2732,76 @@ class ModelCanvasBlockRenderer {
             reprojected: false,
             measurementChanged: false,
             measurementPasses: 0,
+            failedNativeBlocks: new Set(),
             seen: new Set(),
             onlyVisible: true,
             phase: 'native',
-            started: now()
+            started: now(),
+            errorCount: 0
         };
     }
 
     scheduleLayoutWork () {
-        if (this.layoutFrame !== null || !this.layoutTasks.size) return;
-        this.layoutFrame = requestAnimationFrame(() => {
+        if (this.layoutFrame !== null || this.loadingTimer !== null || !this.layoutTasks.size) return;
+        const run = () => {
             this.layoutFrame = null;
+            this.loadingTimer = null;
             const frameStarted = now();
-            // Rotate unfinished roots to the end of the Map. A single very
-            // large script must not monopolize every frame while other visible
-            // scripts remain blank.
-            const rootsThisFrame = this.layoutTasks.size;
-            let processedRoots = 0;
-            while (this.layoutTasks.size && processedRoots < rootsThisFrame &&
-                now() - frameStarted < 7) {
+            const synchronous = this.loadingMode === 'sync';
+            const deadline = synchronous ? Number.POSITIVE_INFINITY :
+                frameStarted + LAYOUT_FRAME_BUDGET;
+            // Rotate unfinished roots to the end of the Map. The frame budget
+            // is the hard limit; do not artificially stop after one slice of a
+            // single root because that makes a large script take hundreds of
+            // animation frames even when the remaining frame time is unused.
+            const maxSlices = synchronous ? Infinity : (this.layoutTasks.size > 1 ?
+                Math.max(this.layoutTasks.size, 2) : 16);
+            let processedSlices = 0;
+            while (this.layoutTasks.size && processedSlices < maxSlices &&
+                now() < deadline) {
                 const [id, task] = this.layoutTasks.entries().next().value;
                 this.layoutTasks.delete(id);
-                const remaining = Math.max(1, 6 - (now() - frameStarted));
-                const taskBudget = rootsThisFrame > 1 ? Math.min(2, remaining) : remaining;
-                const completed = this.processLayoutTask(task, taskBudget);
+                const remaining = synchronous ? Number.POSITIVE_INFINITY :
+                    Math.max(1, deadline - now());
+                const defaultRate = this.layoutTasks.size > 0 ?
+                    LAYOUT_MULTI_ROOT_BUDGET : LAYOUT_SINGLE_ROOT_BUDGET;
+                const preferredBudget = synchronous ? Number.POSITIVE_INFINITY :
+                    Math.max(1, this.loadingRate || defaultRate);
+                const taskBudget = Math.min(preferredBudget, remaining);
+                let completed = false;
+                task.layout.processing = true;
+                try {
+                    completed = this.processLayoutTask(task, taskBudget);
+                } catch (error) {
+                    // A malformed/custom block must not strand the task in
+                    // an inProgress state. The task has already advanced its
+                    // cursor before invoking each expensive operation, so it
+                    // can safely continue on the next frame.
+                    task.layout.inProgress = true;
+                    task.layout.dirty = true;
+                    task.layout.pendingScene = task.scene;
+                    task.errorCount = numberOr(task.errorCount) + 1;
+                    task.errorMessage = error && error.message;
+                    // Repeated errors are contained below so a malformed
+                    // custom block cannot permanently occupy the queue.
+                    if (task.errorCount >= 3) {
+                        task.nativeBlocks = [];
+                        task.nativeIndex = 0;
+                        task.pendingPositions.length = 0;
+                        // Treat this viewport slice as complete after the
+                        // retry limit. The committed scene remains intact;
+                        // marking its attempted IDs skipped prevents the
+                        // loading indicator from re-queueing the same broken
+                        // slice forever.
+                        for (const skippedId of task.layout.visibleIds) {
+                            task.layout.skippedIds.add(skippedId);
+                        }
+                        task.layout.dirty = false;
+                        task.layout.pendingScene = null;
+                        completed = true;
+                    }
+                }
+                task.layout.processing = false;
                 if (completed) {
                     task.layout.inProgress = false;
                 } else {
@@ -2475,10 +2811,17 @@ class ModelCanvasBlockRenderer {
                 // stays blank until its whole viewport task finishes, which
                 // makes the editor look frozen even though work is progressing.
                 this.scheduleDraw();
-                processedRoots++;
+                this.updateTuningPanel();
+                processedSlices++;
             }
             if (this.layoutTasks.size) this.scheduleLayoutWork();
-        });
+            else this.updateTuningPanel();
+        };
+        if (this.loadingMode === 'continuous') {
+            this.loadingTimer = setTimeout(run, 0);
+        } else {
+            this.layoutFrame = requestAnimationFrame(run);
+        }
     }
 
     processLayoutTask (task, budget = 4) {
@@ -2504,7 +2847,17 @@ class ModelCanvasBlockRenderer {
             try {
                 while (task.nativeIndex < task.nativeBlocks.length && now() - started < budget) {
                     const block = task.nativeBlocks[task.nativeIndex++];
-                    if (this.isLiveBlock(block)) this.renderNativeBlock(block);
+                    if (!this.isLiveBlock(block) || task.failedNativeBlocks.has(block.id)) continue;
+                    try {
+                        this.renderNativeBlock(block);
+                    } catch (error) {
+                        // Keep the graph walk and the rest of the viewport
+                        // usable when one custom field/shape cannot be
+                        // compiled. The geometry pass will use its estimate.
+                        task.lastError = error && error.message;
+                        task.failedNativeBlocks.add(block.id);
+                        task.layout.skippedIds.add(block.id);
+                    }
                 }
             } finally {
                 if (Field && Field.stopCache) Field.stopCache();
@@ -2528,10 +2881,14 @@ class ModelCanvasBlockRenderer {
                 this.resetLayoutScene(task.scene, task.layout.visibleIds);
                 const visibleBlocks = Array.from(task.layout.visibleIds)
                     .map(id => task.layout.projectedBlocks.get(id))
-                    .filter(block => this.isLiveBlock(block));
+                    .filter(block => this.isLiveBlock(block) &&
+                        !task.failedNativeBlocks.has(block.id));
                 task.nativeBlocks = this.collectMeasurementBlocks(visibleBlocks);
                 task.nativeIndex = 0;
-                task.pendingPositions = Array.from(task.layout.visibleIds).map(id => ({
+                const pendingIds = Array.from(task.layout.visibleIds)
+                    .filter(id => !task.layout.skippedIds.has(id) &&
+                        !task.failedNativeBlocks.has(id));
+                task.pendingPositions = pendingIds.map(id => ({
                     block: task.layout.projectedBlocks.get(id),
                     ...(task.layout.projectedPositions.get(id) || {x: 0, y: 0})
                 }));
@@ -2598,6 +2955,7 @@ class ModelCanvasBlockRenderer {
             this.viewportKey = viewportKey;
             for (const task of this.layoutTasks.values()) {
                 task.layout.inProgress = false;
+                task.layout.processing = false;
                 if (task.layout.pendingScene === task.scene) task.layout.pendingScene = null;
             }
             this.layoutTasks.clear();
@@ -2616,9 +2974,17 @@ class ModelCanvasBlockRenderer {
         }
         for (const root of roots) {
             const layout = this.getRootLayout(root);
+            // A failed animation-frame callback or an interrupted navigation
+            // can leave a layout marked inProgress without a queue entry.
+            // Clear that orphaned state so the next draw can recreate the
+            // task instead of leaving the loading indicator frozen forever.
+            if (layout.inProgress && !layout.processing && !this.layoutTasks.has(root.id)) {
+                layout.inProgress = false;
+            }
             this.updateVisibleProjection(layout, worldBounds);
             const materialized = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
-            const hasMissingVisible = Array.from(layout.visibleIds).some(id => !materialized.has(id));
+            const hasMissingVisible = Array.from(layout.visibleIds).some(id =>
+                !materialized.has(id) && !layout.skippedIds.has(id));
             if ((layout.dirty || hasMissingVisible) && !layout.inProgress &&
                 this.rootMayIntersect(root, worldBounds)) {
                 const task = this.createLayoutTask(root, worldBounds);
@@ -2882,7 +3248,8 @@ class ModelCanvasBlockRenderer {
             const layout = this.getRootLayout(root);
             this.updateVisibleProjection(layout, worldBounds);
             const materialized = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
-            const hasMissingVisible = Array.from(layout.visibleIds).some(id => !materialized.has(id));
+            const hasMissingVisible = Array.from(layout.visibleIds).some(id =>
+                !materialized.has(id) && !layout.skippedIds.has(id));
             if ((layout.dirty || hasMissingVisible) &&
                 (requestedRoot === root || this.rootMayIntersect(root, worldBounds))) {
                 this.layoutTasks.delete(root.id);
@@ -3802,7 +4169,7 @@ class ModelCanvasBlockRenderer {
                 .map(geometry => geometry && geometry.block && geometry.block.id)
                 .filter(Boolean));
             const missingVisible = Array.from(layout.visibleIds)
-                .filter(id => !materializedIds.has(id));
+                .filter(id => !materializedIds.has(id) && !layout.skippedIds.has(id));
             loadingTotal += layout.visibleIds.size;
             loadingCompleted += layout.visibleIds.size - missingVisible.length;
             if (layout.dirty || layout.inProgress || missingVisible.length) {
@@ -3814,6 +4181,9 @@ class ModelCanvasBlockRenderer {
         if (!this.loadingWorkPending) {
             loadingCompleted = loadingTotal;
         }
+        this.lastLoadingCompleted = loadingCompleted;
+        this.lastLoadingTotal = loadingTotal;
+        this.updateTuningPanel(loadingCompleted, loadingTotal);
         this.drawLoadingIndicator(this.context, rect, loadingCompleted, loadingTotal);
         this.loadingWorkPending = false;
         this.lastDrawDuration = now() - started;

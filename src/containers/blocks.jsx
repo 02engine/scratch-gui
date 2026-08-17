@@ -1278,6 +1278,10 @@ class Blocks extends React.Component {
             if (this.canvasBlockRenderer) {
                 this.canvasBlockRenderer.reset();
                 this.canvasBlockRenderer.setLoading(false);
+                // Comments are kept as data while the async XML loader builds
+                // the graph. Restore their native bubbles only after the
+                // Canvas and Blockly bubble layers are attached and stable.
+                this.canvasBlockRenderer.restorePendingComments();
                 // The async loader intentionally skips Blockly's normal
                 // resize pass in Canvas mode. Refresh scrollbars once after
                 // the complete graph is attached so large-coordinate targets

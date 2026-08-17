@@ -577,7 +577,12 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                     (element.getAttribute('minimized') || false) === 'true'
                 );
                 const visible = element.getAttribute('pinned');
-                if (visible && !block.isInFlyout) {
+                if (workspace.canvasBlockRenderer && workspace.__02CanvasPendingComments) {
+                    workspace.__02CanvasPendingComments.push({
+                        block,
+                        visible: visible ? visible === 'true' : true
+                    });
+                } else if (visible && !block.isInFlyout) {
                     setTimeout(() => {
                         if (block.comment && block.comment.setVisible) {
                             block.comment.setVisible(visible === 'true');
@@ -643,6 +648,8 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         const finish = wasCancelled => {
             if (ownsWorkspace()) {
                 setLoadFlags(false);
+                workspace.__02CanvasXmlLoading = false;
+                if (wasCancelled) workspace.__02CanvasPendingComments = [];
                 if (!wasCancelled && !workspace.canvasBlockRenderer) {
                     workspace.resizeContents();
                     if (workspace.renderVisibleTopBlocks) workspace.renderVisibleTopBlocks();
@@ -655,6 +662,10 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         };
 
         setLoadFlags(true);
+        if (workspace.canvasBlockRenderer) {
+            workspace.__02CanvasXmlLoading = true;
+            workspace.__02CanvasPendingComments = [];
+        }
         runWithoutEvents(() => {
             workspace.clear();
             for (const variableElement of variables) {
