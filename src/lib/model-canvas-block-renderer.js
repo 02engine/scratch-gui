@@ -26,6 +26,9 @@ const NOTCH_DEPTH = 8;
 const LAYOUT_FRAME_BUDGET = 14;
 const LAYOUT_SINGLE_ROOT_BUDGET = 12;
 const LAYOUT_MULTI_ROOT_BUDGET = 7;
+const VIRTUAL_UNLOAD_SCREENS = 2;
+const VIRTUAL_UNLOAD_DELAY_MS = 20000;
+const TEXT_METRICS_CACHE_LIMIT = 4096;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const BLOCK_TEXT_FONT = '500 16px "Helvetica Neue", Helvetica, sans-serif';
 const BLOCK_TEXT_FONT_SIZE = '12pt';
@@ -36,9 +39,34 @@ const numberOr = (value, fallback = 0) => {
     return Number.isFinite(number) ? number : fallback;
 };
 
+const textMetricsCache = new Map();
+
+const measureTextCached = (context, font, text) => {
+    const value = String(text || '');
+    const key = `${font}\u0000${value}`;
+    const cached = textMetricsCache.get(key);
+    if (typeof cached !== 'undefined') return cached;
+    context.font = font;
+    const width = context.measureText(value).width;
+    if (textMetricsCache.size >= TEXT_METRICS_CACHE_LIMIT) {
+        const oldest = textMetricsCache.keys().next().value;
+        if (typeof oldest !== 'undefined') textMetricsCache.delete(oldest);
+    }
+    textMetricsCache.set(key, width);
+    return width;
+};
+
 const rectsIntersect = (a, b) => !(
     a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom
 );
+
+const rectDistance = (a, b) => {
+    const dx = a.right < b.left ? b.left - a.right :
+        a.left > b.right ? a.left - b.right : 0;
+    const dy = a.bottom < b.top ? b.top - a.bottom :
+        a.top > b.bottom ? a.top - b.bottom : 0;
+    return dx + dy;
+};
 
 const unionRect = (a, b) => {
     if (!a) return Object.assign({}, b);
@@ -511,8 +539,11 @@ class CanvasModelNode {
             const fontWeight = this.getAttribute('font-weight') || this.style.fontWeight || '500';
             const fontFamily = this.getAttribute('font-family') || this.style.fontFamily ||
                 '"Helvetica Neue", Helvetica, sans-serif';
-            renderer.context.font = `${fontWeight} ${fontSize} ${fontFamily}`;
-            const width = renderer.context.measureText(String(this.textContent || '')).width;
+            const width = measureTextCached(
+                renderer.context,
+                `${fontWeight} ${fontSize} ${fontFamily}`,
+                this.textContent
+            );
             renderer.context.restore();
             return width;
         }
@@ -1817,6 +1848,7 @@ class ModelCanvasBlockRenderer {
         this.pathCache.clear();
         this.nativeBlockCache.clear();
         this.estimateCache.clear();
+        textMetricsCache.clear();
         this.forceMaterializedIds.clear();
         this.draggingRoot = null;
         this.layoutTasks.clear();
@@ -1968,11 +2000,13 @@ class ModelCanvasBlockRenderer {
         this.lastLoadingCompleted = 0;
         this.lastLoadingTotal = 0;
         this.viewportKey = null;
+        textMetricsCache.clear();
         if (this.layoutSuspended) this.pendingDraw = true;
         else this.invalidateAll();
     }
 
     invalidateStyles () {
+        textMetricsCache.clear();
         this.invalidateAll();
     }
 
@@ -1987,6 +2021,8 @@ class ModelCanvasBlockRenderer {
         for (const layout of this.rootLayouts.values()) {
             layout.dirty = true;
             layout.projectionDirty = true;
+            layout.cachedRootBounds = null;
+            layout.projectionBounds = null;
             layout.version = numberOr(layout.version) + 1;
             if (layout.inProgress) {
                 layout.inProgress = false;
@@ -2025,6 +2061,8 @@ class ModelCanvasBlockRenderer {
             const layout = this.getRootLayout(root);
             layout.dirty = true;
             layout.projectionDirty = true;
+            layout.cachedRootBounds = null;
+            layout.projectionBounds = null;
             layout.version = numberOr(layout.version) + 1;
             // A structure or field change invalidates the partial task. Let
             // the next frame build a fresh graph instead of committing a
@@ -2137,11 +2175,15 @@ class ModelCanvasBlockRenderer {
                 skippedIds: new Set(),
                 skippedVersion: -1,
                 projectionBounds: null,
+                cachedRootBounds: null,
                 projectedPositions: new Map(),
                 projectedPaintBounds: new Map(),
                 projectedBuckets: new Map(),
                 projectedBlocks: new Map(),
-                visibleIds: new Set()
+                visibleIds: new Set(),
+                lastNearAt: now(),
+                lastViewportDistance: Infinity,
+                projectionBuiltAt: 0
             };
             this.rootLayouts.set(root.id, layout);
         }
@@ -2475,7 +2517,9 @@ class ModelCanvasBlockRenderer {
         layout.projectedPaintBounds = projection.projectedPaintBounds;
         layout.projectedBuckets = projection.projectedBuckets;
         layout.projectionBounds = projection.bounds;
+        layout.cachedRootBounds = projection.bounds ? Object.assign({}, projection.bounds) : null;
         layout.projectionDirty = false;
+        layout.projectionBuiltAt = now();
     }
 
     updateVisibleProjection (layout, worldBounds) {
@@ -2488,9 +2532,7 @@ class ModelCanvasBlockRenderer {
             right: worldBounds.right - rootPosition.x,
             bottom: worldBounds.bottom - rootPosition.y
         };
-        if (!localWorldBounds) {
-            for (const id of layout.projectedPaintBounds.keys()) visibleIds.add(id);
-        } else {
+        if (localWorldBounds) {
             const candidateIds = new Set();
             const minX = Math.floor(localWorldBounds.left / SPATIAL_CELL_SIZE);
             const maxX = Math.floor(localWorldBounds.right / SPATIAL_CELL_SIZE);
@@ -2506,6 +2548,8 @@ class ModelCanvasBlockRenderer {
                 const paintBounds = layout.projectedPaintBounds.get(id);
                 if (paintBounds && rectsIntersect(paintBounds, localWorldBounds)) visibleIds.add(id);
             }
+        } else {
+            for (const id of layout.projectedPaintBounds.keys()) visibleIds.add(id);
         }
         // Forced blocks are normally just the root currently being dragged or
         // one block requested by a compatibility API. Add them directly rather
@@ -2685,8 +2729,8 @@ class ModelCanvasBlockRenderer {
             const bounds = layout.projectedPaintBounds.get(id);
             if (!bounds) return 0;
             const rootPosition = getRootPosition(layout.root);
-            const x = ((bounds.left + bounds.right) / 2 + rootPosition.x) - viewportCenter.x;
-            const y = ((bounds.top + bounds.bottom) / 2 + rootPosition.y) - viewportCenter.y;
+            const x = (((bounds.left + bounds.right) / 2) + rootPosition.x) - viewportCenter.x;
+            const y = (((bounds.top + bounds.bottom) / 2) + rootPosition.y) - viewportCenter.y;
             return (x * x) + (y * y);
         };
         // Materialize the blocks closest to the user's view first. This only
@@ -2719,6 +2763,10 @@ class ModelCanvasBlockRenderer {
         return {
             root,
             layout,
+            // Bilup's deferred renderer prioritizes scripts nearest the
+            // viewport. Keep that priority on the task so queue insertion
+            // order cannot make a distant large script block the visible one.
+            priority: this.draggingRoot === root ? 0 : this.getRootViewportDistance(root, worldBounds),
             version: layout.version,
             viewportKey: this.viewportKey,
             scene,
@@ -2750,16 +2798,23 @@ class ModelCanvasBlockRenderer {
             const synchronous = this.loadingMode === 'sync';
             const deadline = synchronous ? Number.POSITIVE_INFINITY :
                 frameStarted + LAYOUT_FRAME_BUDGET;
-            // Rotate unfinished roots to the end of the Map. The frame budget
-            // is the hard limit; do not artificially stop after one slice of a
-            // single root because that makes a large script take hundreds of
-            // animation frames even when the remaining frame time is unused.
+            // The frame budget is the hard limit; do not artificially stop
+            // after one slice of a single root because that makes a large
+            // script take hundreds of animation frames even when the
+            // remaining frame time is unused.
             const maxSlices = synchronous ? Infinity : (this.layoutTasks.size > 1 ?
                 Math.max(this.layoutTasks.size, 2) : 16);
             let processedSlices = 0;
             while (this.layoutTasks.size && processedSlices < maxSlices &&
                 now() < deadline) {
-                const [id, task] = this.layoutTasks.entries().next().value;
+                let nextEntry = null;
+                for (const entry of this.layoutTasks.entries()) {
+                    if (!nextEntry || entry[1].priority < nextEntry[1].priority) {
+                        nextEntry = entry;
+                    }
+                }
+                if (!nextEntry) break;
+                const [id, task] = nextEntry;
                 this.layoutTasks.delete(id);
                 const remaining = synchronous ? Number.POSITIVE_INFINITY :
                     Math.max(1, deadline - now());
@@ -2899,8 +2954,8 @@ class ModelCanvasBlockRenderer {
                     // script forever. The last pass still commits the latest
                     // complete measurements and the next invalidation can
                     // request another bounded refresh.
-                    if (!task.measurementPasses) task.measurementPasses = 1;
-                    else task.measurementPasses++;
+                    task.measurementPasses = task.measurementPasses ?
+                        task.measurementPasses + 1 : 1;
                     if (task.measurementPasses <= 2) return false;
                     task.nativeBlocks = [];
                 }
@@ -2974,6 +3029,11 @@ class ModelCanvasBlockRenderer {
         }
         for (const root of roots) {
             const layout = this.getRootLayout(root);
+            const timestamp = now();
+            const isForcedRoot = this.draggingRoot === root || this.isRootSelected(root) ||
+                this.forceMaterializedIds.has(root.id);
+            const nearViewport = isForcedRoot || this.rootMayIntersect(root, worldBounds);
+            layout.lastViewportDistance = this.getRootViewportDistance(root, worldBounds);
             // A failed animation-frame callback or an interrupted navigation
             // can leave a layout marked inProgress without a queue entry.
             // Clear that orphaned state so the next draw can recreate the
@@ -2981,6 +3041,21 @@ class ModelCanvasBlockRenderer {
             if (layout.inProgress && !layout.processing && !this.layoutTasks.has(root.id)) {
                 layout.inProgress = false;
             }
+            if (!nearViewport) {
+                // Do not build a full projection or native shape scene for a
+                // distant root. Its complete Blockly graph remains available
+                // for serialization and connection matching; only the Canvas
+                // paint cache is allowed to go cold.
+                layout.visibleIds.clear();
+                if (layout.inProgress && !layout.processing) {
+                    layout.inProgress = false;
+                    layout.pendingScene = null;
+                    this.layoutTasks.delete(root.id);
+                }
+                this.evictOffscreenProjection(layout, worldBounds, timestamp);
+                continue;
+            }
+            layout.lastNearAt = timestamp;
             this.updateVisibleProjection(layout, worldBounds);
             const materialized = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
             const hasMissingVisible = Array.from(layout.visibleIds).some(id =>
@@ -3195,7 +3270,7 @@ class ModelCanvasBlockRenderer {
 
     getEstimatedRootBounds (root) {
         const layout = this.rootLayouts.get(root && root.id);
-        if (layout && layout.projectionBounds) {
+        if (layout && !layout.projectionDirty && layout.projectionBounds) {
             const position = getRootPosition(root);
             return {
                 left: layout.projectionBounds.left + position.x,
@@ -3204,14 +3279,29 @@ class ModelCanvasBlockRenderer {
                 bottom: layout.projectionBounds.bottom + position.y
             };
         }
+        if (layout && layout.cachedRootBounds) {
+            const position = getRootPosition(root);
+            return {
+                left: layout.cachedRootBounds.left + position.x,
+                top: layout.cachedRootBounds.top + position.y,
+                right: layout.cachedRootBounds.right + position.x,
+                bottom: layout.cachedRootBounds.bottom + position.y
+            };
+        }
         const position = getRootPosition(root);
+        const measuredWidth = numberOr(root.width);
+        const measuredHeight = numberOr(root.height);
+        const estimatedWidth = measuredWidth > 0 ? measuredWidth :
+            numberOr(root.lazyEstimatedWidth_, 320);
+        const estimatedHeight = measuredHeight > 0 ? measuredHeight :
+            numberOr(root.lazyEstimatedHeight_, 160);
         const width = Math.max(
             160,
-            numberOr(root.width, numberOr(root.lazyEstimatedWidth_, 320))
+            estimatedWidth
         );
         const height = Math.max(
             STACK_HEIGHT,
-            numberOr(root.height, numberOr(root.lazyEstimatedHeight_, 160))
+            estimatedHeight
         );
         return {
             left: position.x - 4,
@@ -3224,6 +3314,61 @@ class ModelCanvasBlockRenderer {
     rootMayIntersect (root, worldBounds) {
         if (!worldBounds) return true;
         return rectsIntersect(this.getEstimatedRootBounds(root), worldBounds);
+    }
+
+    getRootViewportDistance (root, worldBounds) {
+        if (!worldBounds) return 0;
+        return rectDistance(this.getEstimatedRootBounds(root), worldBounds);
+    }
+
+    isRootSelected (root) {
+        const selected = this.ScratchBlocks && this.ScratchBlocks.selected;
+        return !!(selected && selected.workspace === this.workspace &&
+            selected.getRootBlock && selected.getRootBlock() === root);
+    }
+
+    evictOffscreenProjection (layout, worldBounds, timestamp) {
+        if (!layout || !worldBounds || layout.projectionDirty ||
+            !layout.projectedPositions.size || layout.root === this.draggingRoot ||
+            this.isRootSelected(layout.root) || this.forceMaterializedIds.has(layout.root.id)) {
+            return;
+        }
+        const viewportSpan = Math.max(
+            1,
+            (worldBounds.right - worldBounds.left) +
+            (worldBounds.bottom - worldBounds.top)
+        );
+        const distance = this.getRootViewportDistance(layout.root, worldBounds);
+        if (distance <= viewportSpan * VIRTUAL_UNLOAD_SCREENS ||
+            timestamp - layout.lastNearAt < VIRTUAL_UNLOAD_DELAY_MS) return;
+
+        // Keep an exact wake-up rectangle but release the Canvas-only index.
+        // The Blockly graph and all fields remain alive for addons, comments,
+        // serialization and connection matching.
+        if (layout.projectionBounds) {
+            layout.cachedRootBounds = Object.assign({}, layout.projectionBounds);
+        }
+        // Release only Canvas-derived geometry. Blockly's block graph, fields,
+        // variables, comments and connections remain untouched, so returning
+        // to this root can rebuild its paint scene without changing project
+        // semantics or serialization.
+        for (const geometry of layout.geometries) {
+            if (geometry && geometry.block &&
+                this.blockGeometry.get(geometry.block.id) === geometry) {
+                this.blockGeometry.delete(geometry.block.id);
+            }
+        }
+        layout.geometries = [];
+        layout.fields = [];
+        layout.buckets = new Map();
+        layout.bounds = null;
+        layout.projectedPositions.clear();
+        layout.projectedPaintBounds.clear();
+        layout.projectedBuckets.clear();
+        layout.projectedBlocks.clear();
+        layout.visibleIds.clear();
+        layout.projectionDirty = true;
+        layout.projectionBuiltAt = 0;
     }
 
     ensureLayouts (worldBounds = null) {
@@ -4075,7 +4220,7 @@ class ModelCanvasBlockRenderer {
             for (const buttonRect of buttons) {
                 const centerX = buttonRect.left - canvasRect.left + (buttonRect.width / 2);
                 const centerY = buttonRect.top - canvasRect.top + (buttonRect.height / 2);
-                const radius = Math.max(buttonRect.width, buttonRect.height) / 2 + 2;
+                const radius = (Math.max(buttonRect.width, buttonRect.height) / 2) + 2;
                 context.moveTo(centerX + radius, centerY);
                 context.arc(centerX, centerY, radius, 0, Math.PI * 2);
             }
