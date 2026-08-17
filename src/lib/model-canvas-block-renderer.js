@@ -1015,18 +1015,42 @@ const installBlocklyCanvasMode = ScratchBlocks => {
     // workspaces intentionally have no SVG drag surface, so keep the same
     // lifecycle but notify the Canvas renderer on every drag phase.
     const draggerProto = ScratchBlocks.BlockDragger && ScratchBlocks.BlockDragger.prototype;
+    const gestureProto = ScratchBlocks.Gesture && ScratchBlocks.Gesture.prototype;
+    if (gestureProto && gestureProto.startDraggingBlock_ &&
+        !gestureProto.__02CanvasDragPreparationPatched) {
+        const originalStartDraggingBlock = gestureProto.startDraggingBlock_;
+        gestureProto.startDraggingBlock_ = function (...args) {
+            // BlockDragger constructs InsertionMarkerManager before its start
+            // method runs. Make sure that manager snapshots the exact model
+            // coordinates for the complete dragged stack, including blocks
+            // which are currently outside the Canvas viewport.
+            const renderer = this.startWorkspace_ && this.startWorkspace_.canvasBlockRenderer;
+            if (renderer && this.targetBlock_) {
+                renderer.prepareBlockDrag(this.targetBlock_);
+            }
+            return originalStartDraggingBlock.apply(this, args);
+        };
+        gestureProto.__02CanvasDragPreparationPatched = true;
+    }
     if (draggerProto && !draggerProto.__02CanvasDragPatched) {
         const originalStart = draggerProto.startBlockDrag;
         const originalDrag = draggerProto.dragBlock;
         const originalEnd = draggerProto.endBlockDrag;
         draggerProto.startBlockDrag = function (...args) {
             const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
+            const connectionSnapshot = renderer &&
+                renderer.captureDragConnectionPositions(this.draggedConnectionManager_);
             const result = originalStart.apply(this, args);
             if (renderer && this.draggingBlock_) {
                 // The native method has now completed unplug/translate. The
                 // dragged root must be measured after that graph transition.
                 renderer.prepareBlockDrag(this.draggingBlock_);
                 renderer.beginBlockDrag(this.draggingBlock_);
+                // Canvas layout owns painting coordinates, while Blockly's
+                // insertion manager owns drag coordinates. During a native
+                // drag the latter must remain at its start snapshot because
+                // InsertionMarkerManager adds currentDragDeltaXY_ to it.
+                renderer.restoreDragConnectionPositions(connectionSnapshot);
             }
             if (renderer) renderer.scheduleDraw();
             return result;
@@ -1106,19 +1130,6 @@ const installBlocklyCanvasMode = ScratchBlocks => {
             const renderer = block.workspace.canvasBlockRenderer;
             if (renderer) renderer.setHighlightedConnection(null);
         };
-    }
-
-    const insertionProto = ScratchBlocks.InsertionMarkerManager &&
-        ScratchBlocks.InsertionMarkerManager.prototype;
-    if (insertionProto && insertionProto.initAvailableConnections_ &&
-        !insertionProto.__02CanvasConnectionsPatched) {
-        const originalInitAvailableConnections = insertionProto.initAvailableConnections_;
-        insertionProto.initAvailableConnections_ = function (...args) {
-            const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
-            if (renderer && this.topBlock_) renderer.prepareBlockDrag(this.topBlock_);
-            return originalInitAvailableConnections.apply(this, args);
-        };
-        insertionProto.__02CanvasConnectionsPatched = true;
     }
 
     const fieldProto = ScratchBlocks.Field && ScratchBlocks.Field.prototype;
@@ -1543,6 +1554,29 @@ class ModelCanvasBlockRenderer {
         else this.clear();
     }
 
+    captureDragConnectionPositions (connectionManager) {
+        const topBlock = connectionManager && connectionManager.topBlock_;
+        if (!topBlock || typeof topBlock.getDescendants !== 'function') return null;
+        const connections = new Set();
+        for (const block of topBlock.getDescendants(false)) {
+            if (!block || typeof block.getConnections_ !== 'function') continue;
+            for (const connection of block.getConnections_(false)) connections.add(connection);
+        }
+        return Array.from(connections)
+            .filter(connection => connection && Number.isFinite(connection.x_) &&
+                Number.isFinite(connection.y_))
+            .map(connection => ({connection, x: connection.x_, y: connection.y_}));
+    }
+
+    restoreDragConnectionPositions (snapshot) {
+        if (!snapshot) return;
+        for (const item of snapshot) {
+            const connection = item.connection;
+            if (!connection || typeof connection.moveTo !== 'function') continue;
+            connection.moveTo(item.x, item.y);
+        }
+    }
+
     beginBlockDrag (block) {
         const root = rootOf(block);
         this.draggingRoot = root && root.id ? root : null;
@@ -1597,8 +1631,11 @@ class ModelCanvasBlockRenderer {
     }
 
     endBlockDrag (block) {
-        const root = rootOf(block);
-        if (this.draggingRoot === root) this.draggingRoot = null;
+        // The native end phase may connect the dragged block before this
+        // renderer callback runs. In that case rootOf(block) is already the
+        // destination stack, not the root that was protected during drag.
+        const root = this.draggingRoot || rootOf(block);
+        this.draggingRoot = null;
         if (root && root.id) this.forceMaterializedIds.delete(root.id);
         this.invalidateBlock(root || block);
     }
@@ -2693,6 +2730,13 @@ class ModelCanvasBlockRenderer {
 
     updateConnectionPositions (layout) {
         if (!layout || !this.isLiveBlock(layout.root)) return;
+        // Native Blockly keeps the dragged connections at their drag-start
+        // coordinates. InsertionMarkerManager applies the current pointer
+        // delta to those coordinates on every move. Canvas paints the moving
+        // root through __02CanvasDragPosition, so updating the connection
+        // database here would replace the native baseline with the current
+        // visual position and make the next delta count twice.
+        if (this.draggingRoot === layout.root) return;
         const rootPosition = getRootPosition(layout.root);
         for (const geometry of layout.geometries) {
             const block = geometry.block;
