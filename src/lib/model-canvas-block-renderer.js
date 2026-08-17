@@ -23,9 +23,13 @@ const NOTCH_DEPTH = 8;
 // scripts do not need hundreds of nearly-empty frames to finish. The deadline
 // is still checked inside processLayoutTask, so a slow native block cannot
 // consume an unbounded frame.
-const LAYOUT_FRAME_BUDGET = 14;
-const LAYOUT_SINGLE_ROOT_BUDGET = 12;
-const LAYOUT_MULTI_ROOT_BUDGET = 7;
+import canvasLayoutWorkerMain from './canvas-layout-worker';
+
+const LAYOUT_FRAME_BUDGET = 12;
+const LAYOUT_SINGLE_ROOT_BUDGET = 10;
+const LAYOUT_MULTI_ROOT_BUDGET = 6;
+const LAYOUT_MAX_RATE = 16;
+const PROJECTION_WORKER_MIN_BLOCKS = 48;
 const VIRTUAL_UNLOAD_SCREENS = 2;
 const VIRTUAL_UNLOAD_DELAY_MS = 20000;
 const TEXT_METRICS_CACHE_LIMIT = 4096;
@@ -1319,6 +1323,10 @@ class ModelCanvasBlockRenderer {
         this.frame = null;
         this.layoutFrame = null;
         this.layoutTasks = new Map();
+        this.projectionWorker = null;
+        this.projectionWorkerURL = null;
+        this.projectionWorkerDisabled = false;
+        this.projectionRequestCounter = 0;
         this.renderingNative = false;
         this.loadingIndicatorStartedAt = 0;
         this.resizeObserver = null;
@@ -1500,12 +1508,15 @@ class ModelCanvasBlockRenderer {
         const rate = document.createElement('input');
         rate.type = 'range';
         rate.min = '2';
-        rate.max = '24';
+        rate.max = String(LAYOUT_MAX_RATE);
         rate.step = '1';
         rate.value = String(this.loadingRate);
         rate.style.width = '105px';
         rate.addEventListener('input', () => {
-            this.loadingRate = Math.max(1, Number(rate.value) || LAYOUT_SINGLE_ROOT_BUDGET);
+            this.loadingRate = Math.min(
+                LAYOUT_MAX_RATE,
+                Math.max(1, Number(rate.value) || LAYOUT_SINGLE_ROOT_BUDGET)
+            );
             this.updateTuningPanel();
         });
         rateLabel.append('Rate ', rate, rateText);
@@ -1527,10 +1538,13 @@ class ModelCanvasBlockRenderer {
     updateTuningPanel (completed, total) {
         if (!this.loadingPanel) return;
         const active = this.activeLayoutTask || this.layoutTasks.values().next().value;
+        const workerPending = Array.from(this.rootLayouts.values())
+            .some(layout => layout.projectionPending);
         const done = typeof completed === 'number' ? completed : this.lastLoadingCompleted || 0;
         const all = typeof total === 'number' ? total : this.lastLoadingTotal || 0;
         const percent = all ? Math.round((done / all) * 100) : 100;
-        const phase = active ? active.phase : (this.loadingWorkPending ? 'queued' : 'idle');
+        const phase = active ? active.phase :
+            (workerPending ? 'worker' : (this.loadingWorkPending ? 'queued' : 'idle'));
         const root = active && active.root ? `${active.root.type || 'block'}:${active.root.id}` : '-';
         this.loadingPanelRateText.textContent = `${this.loadingRate} ms/slice`;
         this.loadingPanelStatus.textContent = `${phase} ${percent}% | ${this.layoutTasks.size} queue | ${root}`;
@@ -1849,6 +1863,10 @@ class ModelCanvasBlockRenderer {
         this.nativeBlockCache.clear();
         this.estimateCache.clear();
         textMetricsCache.clear();
+        if (this.projectionWorker) this.projectionWorker.terminate();
+        if (this.projectionWorkerURL) URL.revokeObjectURL(this.projectionWorkerURL);
+        this.projectionWorker = null;
+        this.projectionWorkerURL = null;
         this.forceMaterializedIds.clear();
         this.draggingRoot = null;
         this.layoutTasks.clear();
@@ -2023,6 +2041,7 @@ class ModelCanvasBlockRenderer {
             layout.projectionDirty = true;
             layout.cachedRootBounds = null;
             layout.projectionBounds = null;
+            layout.projectionWorkerFailed = false;
             layout.version = numberOr(layout.version) + 1;
             if (layout.inProgress) {
                 layout.inProgress = false;
@@ -2063,6 +2082,7 @@ class ModelCanvasBlockRenderer {
             layout.projectionDirty = true;
             layout.cachedRootBounds = null;
             layout.projectionBounds = null;
+            layout.projectionWorkerFailed = false;
             layout.version = numberOr(layout.version) + 1;
             // A structure or field change invalidates the partial task. Let
             // the next frame build a fresh graph instead of committing a
@@ -2183,7 +2203,12 @@ class ModelCanvasBlockRenderer {
                 visibleIds: new Set(),
                 lastNearAt: now(),
                 lastViewportDistance: Infinity,
-                projectionBuiltAt: 0
+                projectionBuiltAt: 0,
+                projectionPending: false,
+                projectionRequestId: 0,
+                projectionRequestVersion: -1,
+                projectionSnapshotBlocks: null,
+                projectionWorkerFailed: false
             };
             this.rootLayouts.set(root.id, layout);
         }
@@ -2408,6 +2433,196 @@ class ModelCanvasBlockRenderer {
         }
     }
 
+    createProjectionSnapshot (root) {
+        const blocks = [];
+        const indexes = new Map();
+        const pending = [];
+        const addBlock = block => {
+            if (!this.isLiveBlock(block)) return -1;
+            if (indexes.has(block.id)) return indexes.get(block.id);
+            const index = blocks.length;
+            indexes.set(block.id, index);
+            blocks.push(block);
+            pending.push(block);
+            return index;
+        };
+        addBlock(root);
+        const nodes = [];
+        while (pending.length) {
+            const block = pending.pop();
+            if (!this.isLiveBlock(block)) continue;
+            const index = indexes.get(block.id);
+            const size = this.getProjectionBlockSize(block);
+            const edges = [];
+            const addEdge = (child, connection, fallback, childConnection) => {
+                if (!this.isLiveBlock(child)) return;
+                const childIndex = addBlock(child);
+                const connectionOffset = this.getConnectionOffset(connection, fallback);
+                const childOffset = this.getConnectionOffset(childConnection, {x: 0, y: 0});
+                edges.push([
+                    childIndex,
+                    numberOr(connectionOffset.x) - numberOr(childOffset.x),
+                    numberOr(connectionOffset.y) - numberOr(childOffset.y)
+                ]);
+            };
+            for (const input of block.inputList || []) {
+                const connection = input.connection;
+                const child = connection && connection.targetBlock &&
+                    connection.targetBlock();
+                if (!child) continue;
+                if (connection.type === this.ScratchBlocks.NEXT_STATEMENT) {
+                    addEdge(child, connection, {
+                        x: STATEMENT_INDENT,
+                        y: size.height - NOTCH_DEPTH
+                    }, child.previousConnection || child.outputConnection);
+                } else if (connection.type === this.ScratchBlocks.INPUT_VALUE) {
+                    addEdge(child, connection, {
+                        x: BLOCK_PADDING_X,
+                        y: size.height / 2
+                    }, child.outputConnection || child.previousConnection);
+                }
+            }
+            const next = block.getNextBlock && block.getNextBlock();
+            if (next) {
+                addEdge(next, block.nextConnection, {
+                    x: NOTCH_X,
+                    y: size.height - NOTCH_DEPTH
+                }, next.previousConnection || next.outputConnection);
+            }
+            nodes[index] = {
+                width: size.width,
+                height: size.height,
+                startHat: !!block.startHat_,
+                edges
+            };
+        }
+        return {
+            blocks,
+            nodes,
+            rootIndex: indexes.get(root && root.id)
+        };
+    }
+
+    getProjectionWorker () {
+        if (this.projectionWorker || this.projectionWorkerDisabled) return this.projectionWorker;
+        if (typeof Worker === 'undefined' || typeof Blob === 'undefined' ||
+            typeof URL === 'undefined' || !URL.createObjectURL) {
+            this.projectionWorkerDisabled = true;
+            return null;
+        }
+        try {
+            const source = `(${canvasLayoutWorkerMain.toString()})()`;
+            this.projectionWorkerURL = URL.createObjectURL(new Blob([source], {
+                type: 'text/javascript'
+            }));
+            this.projectionWorker = new Worker(this.projectionWorkerURL);
+            this.projectionWorker.onmessage = event => this.handleProjectionWorkerMessage(event);
+            this.projectionWorker.onerror = () => this.disableProjectionWorker();
+        } catch (error) {
+            this.disableProjectionWorker();
+        }
+        return this.projectionWorker;
+    }
+
+    disableProjectionWorker () {
+        this.projectionWorkerDisabled = true;
+        if (this.projectionWorker) this.projectionWorker.terminate();
+        if (this.projectionWorkerURL) URL.revokeObjectURL(this.projectionWorkerURL);
+        this.projectionWorker = null;
+        this.projectionWorkerURL = null;
+        for (const layout of this.rootLayouts.values()) {
+            layout.projectionPending = false;
+            layout.projectionSnapshotBlocks = null;
+        }
+        this.scheduleDraw();
+    }
+
+    handleProjectionWorkerMessage (event) {
+        const result = event && event.data;
+        if (!result || (result.type !== 'projected' && result.type !== 'error')) return;
+        const layout = this.rootLayouts.get(result.rootId);
+        if (!layout || !layout.projectionPending ||
+            layout.projectionRequestId !== result.requestId ||
+            layout.projectionRequestVersion !== result.version) return;
+        layout.projectionPending = false;
+        const blocks = layout.projectionSnapshotBlocks || [];
+        layout.projectionSnapshotBlocks = null;
+        if (result.type === 'error') {
+            layout.projectionWorkerFailed = true;
+            this.scheduleDraw();
+            return;
+        }
+        const positions = new Map();
+        const projectedBlocks = new Map();
+        const projectedPaintBounds = new Map();
+        const projectedBuckets = new Map();
+        for (const item of result.positions || []) {
+            const block = blocks[item[0]];
+            if (!this.isLiveBlock(block)) continue;
+            positions.set(block.id, {x: numberOr(item[1]), y: numberOr(item[2])});
+            projectedBlocks.set(block.id, block);
+        }
+        for (const item of result.paintBounds || []) {
+            const block = blocks[item[0]];
+            if (!this.isLiveBlock(block)) continue;
+            projectedPaintBounds.set(block.id, {
+                left: numberOr(item[1]),
+                top: numberOr(item[2]),
+                right: numberOr(item[3]),
+                bottom: numberOr(item[4])
+            });
+        }
+        for (const item of result.buckets || []) {
+            const ids = (item[1] || []).map(index => blocks[index])
+                .filter(block => this.isLiveBlock(block))
+                .map(block => block.id);
+            projectedBuckets.set(item[0], ids);
+        }
+        layout.projectedPositions = positions;
+        layout.projectedBlocks = projectedBlocks;
+        layout.projectedPaintBounds = projectedPaintBounds;
+        layout.projectedBuckets = projectedBuckets;
+        layout.projectionBounds = result.bounds || null;
+        layout.cachedRootBounds = result.bounds ? Object.assign({}, result.bounds) : null;
+        layout.projectionDirty = false;
+        layout.projectionBuiltAt = now();
+        layout.projectionWorkerFailed = false;
+        this.updateVisibleProjection(layout, this.getVisibleWorldBounds());
+        this.ensureLayoutsAsync(this.getVisibleWorldBounds());
+        this.scheduleDraw();
+    }
+
+    requestProjection (layout) {
+        if (!layout || !this.isLiveBlock(layout.root) || layout.projectionWorkerFailed) return false;
+        const worker = this.getProjectionWorker();
+        if (!worker) return false;
+        if (layout.projectionPending && layout.projectionRequestVersion === layout.version) return true;
+        const snapshot = this.createProjectionSnapshot(layout.root);
+        if (snapshot.blocks.length < PROJECTION_WORKER_MIN_BLOCKS) return false;
+        const requestId = ++this.projectionRequestCounter;
+        layout.projectionPending = true;
+        layout.projectionRequestId = requestId;
+        layout.projectionRequestVersion = layout.version;
+        layout.projectionSnapshotBlocks = snapshot.blocks;
+        try {
+            worker.postMessage({
+                type: 'project',
+                requestId,
+                rootId: layout.root.id,
+                version: layout.version,
+                rootIndex: snapshot.rootIndex,
+                cellSize: SPATIAL_CELL_SIZE,
+                nodes: snapshot.nodes
+            });
+        } catch (error) {
+            layout.projectionPending = false;
+            layout.projectionSnapshotBlocks = null;
+            layout.projectionWorkerFailed = true;
+            return false;
+        }
+        return true;
+    }
+
     getConnectionOffset (connection, fallback) {
         return connection && connection.offsetInBlock_ ? connection.offsetInBlock_ : fallback;
     }
@@ -2511,6 +2726,8 @@ class ModelCanvasBlockRenderer {
     ensureProjection (layout) {
         if (!layout || !this.isLiveBlock(layout.root)) return;
         if (!layout.projectionDirty && layout.projectedPositions.size) return;
+        layout.projectionPending = false;
+        layout.projectionSnapshotBlocks = null;
         const projection = this.projectBlockPositions(layout.root);
         layout.projectedPositions = projection.positions;
         layout.projectedBlocks = projection.blocks;
@@ -3047,6 +3264,8 @@ class ModelCanvasBlockRenderer {
                 // for serialization and connection matching; only the Canvas
                 // paint cache is allowed to go cold.
                 layout.visibleIds.clear();
+                layout.projectionPending = false;
+                layout.projectionSnapshotBlocks = null;
                 if (layout.inProgress && !layout.processing) {
                     layout.inProgress = false;
                     layout.pendingScene = null;
@@ -3056,6 +3275,17 @@ class ModelCanvasBlockRenderer {
                 continue;
             }
             layout.lastNearAt = timestamp;
+            // Build the cheap graph projection off the main thread. Keep the
+            // previous committed scene visible while it is pending; the
+            // native Blockly measurement task starts as soon as the result
+            // arrives instead of waiting for a complete script pass here.
+            if (layout.projectionDirty) {
+                if (!layout.projectionPending && !this.requestProjection(layout)) {
+                    this.ensureProjection(layout);
+                }
+                if (layout.projectionPending) continue;
+                if (layout.projectionDirty && !layout.projectedPositions.size) continue;
+            }
             this.updateVisibleProjection(layout, worldBounds);
             const materialized = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
             const hasMissingVisible = Array.from(layout.visibleIds).some(id =>
@@ -4287,6 +4517,13 @@ class ModelCanvasBlockRenderer {
         let loadingTotal = 0;
         let loadingCompleted = 0;
         for (const layout of layouts) {
+            if (layout.projectionPending) {
+                // Keep the loading state visible while the worker builds the
+                // geometry snapshot. The previous committed scene, if any,
+                // is still painted below without waiting for this result.
+                loadingTotal += Math.max(1, layout.visibleIds.size);
+                this.loadingWorkPending = true;
+            }
             const position = getRootPosition(layout.root);
             const bounds = layout.projectionBounds || layout.bounds;
             if (layout.root !== this.draggingRoot && bounds) {
