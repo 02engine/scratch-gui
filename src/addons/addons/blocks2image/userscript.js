@@ -128,7 +128,8 @@ export default async function ({ addon, console, msg }) {
     // replace external images with data URIs
     await Promise.all(
       Array.from(svg.querySelectorAll("image")).map(async (item) => {
-        const iconUrl = item.getAttribute("xlink:href");
+        const iconUrl = item.getAttribute("href") || item.getAttribute("xlink:href");
+        if (!iconUrl) return;
         if (iconUrl.startsWith("data:")) return;
         const blob = await (await fetch(iconUrl)).blob();
         const reader = new FileReader();

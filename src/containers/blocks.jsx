@@ -903,8 +903,11 @@ class Blocks extends React.Component {
         if (!this.workspace) {
             return;
         }
-        const blocks = this.workspace.getAllBlocks ? this.workspace.getAllBlocks(false) : [];
-        this.isLargeWorkspace = blocks.length >= OFFSCREEN_CULLING_BLOCK_THRESHOLD;
+        const targetBlocks = this.canvasBlockRenderer && this.props.vm.editingTarget &&
+            this.props.vm.editingTarget.blocks && this.props.vm.editingTarget.blocks._blocks;
+        const blockCount = targetBlocks ? Object.keys(targetBlocks).length :
+            (this.workspace.getAllBlocks ? this.workspace.getAllBlocks(false).length : 0);
+        this.isLargeWorkspace = blockCount >= OFFSCREEN_CULLING_BLOCK_THRESHOLD;
         if (this.canvasBlockRenderer) {
             this.canvasBlockRenderer.setEnabled(this.props.isVisible !== false);
         }
@@ -1285,6 +1288,16 @@ class Blocks extends React.Component {
             this.lastEditingTargetId = editingTargetId;
             this.updateWorkspaceMetricsCache(editingTargetId);
             this.flushWorkspaceMetrics();
+            // Dynamic categories (especially My Blocks) must be generated from
+            // the workspace after the new target's async XML load has finished.
+            // The pre-load refresh only sees the previous target's procedures.
+            this.toolboxDirty = true;
+            this.requestToolboxStateSync(true);
+            this.requestToolboxUpdate();
+            // The toolbox XML is usually identical across targets. Refresh the
+            // selected dynamic category after the async workspace import so
+            // My Blocks is rebuilt from the new target's procedures.
+            this.scheduleWorkspaceChromeRefresh();
         };
         const handleWorkspaceLoadError = error => {
             if (this.unmounted || loadGeneration !== this.workspaceLoadGeneration) return;

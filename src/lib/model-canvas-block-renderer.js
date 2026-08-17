@@ -119,26 +119,26 @@ class CanvasModelNode {
         this.ownerDocument = typeof document === 'undefined' ? null : document;
         this.dataset = Object.create(null);
         this.className = {baseVal: '', animVal: ''};
-        this.classList = makeClassList(() => this.invalidate());
+        this.classList = makeClassList(() => this.invalidatePaint());
         this.styleValues = Object.create(null);
         this.style = new Proxy(this.styleValues, {
             set: (target, key, value) => {
                 target[key] = String(value);
-                this.invalidate();
+                this.invalidatePaint();
                 return true;
             },
             get: (target, key) => {
                 if (key === 'setProperty') {
                     return (name, value) => {
                         target[name.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase())] = String(value);
-                        this.invalidate();
+                        this.invalidatePaint();
                     };
                 }
                 if (key === 'getPropertyValue') return name => target[name] || '';
                 if (key === 'removeProperty') {
                     return name => {
                         delete target[name];
-                        this.invalidate();
+                        this.invalidatePaint();
                     };
                 }
                 return target[key] || '';
@@ -150,6 +150,11 @@ class CanvasModelNode {
         const block = this.owner && (this.owner.sourceBlock_ || this.owner);
         const renderer = block && block.workspace && block.workspace.canvasBlockRenderer;
         if (renderer && !renderer.renderingNative) renderer.invalidateBlock(block);
+    }
+    invalidatePaint () {
+        const block = this.owner && (this.owner.sourceBlock_ || this.owner);
+        const renderer = block && block.workspace && block.workspace.canvasBlockRenderer;
+        if (renderer && !renderer.renderingNative) renderer.scheduleDraw();
     }
     setAttribute (name, value) {
         const text = String(value);
@@ -175,7 +180,17 @@ class CanvasModelNode {
                 this.styleValues[property] = declaration.slice(separator + 1).trim();
             }
         }
-        this.invalidate();
+        if (['class', 'fill', 'stroke', 'stroke-width', 'opacity', 'filter',
+            'visibility', 'display', 'style'].includes(name)) {
+            this.invalidatePaint();
+        } else if (name === 'transform' && this.kind === 'block') {
+            const block = this.owner && (this.owner.sourceBlock_ || this.owner);
+            const renderer = block && block.workspace && block.workspace.canvasBlockRenderer;
+            const root = block && block.getRootBlock ? block.getRootBlock() : block;
+            if (renderer && !renderer.renderingNative) renderer.invalidatePosition(root);
+        } else {
+            this.invalidate();
+        }
     }
     setAttributeNS (namespace, name, value) {
         this.setAttribute(name, value);
@@ -188,7 +203,9 @@ class CanvasModelNode {
     }
     removeAttribute (name) {
         delete this.attributes[name];
-        this.invalidate();
+        if (['class', 'fill', 'stroke', 'stroke-width', 'opacity', 'filter',
+            'visibility', 'display', 'style'].includes(name)) this.invalidatePaint();
+        else this.invalidate();
     }
     appendChild (child) {
         if (!child) return child;
@@ -877,6 +894,19 @@ const installBlocklyCanvasMode = ScratchBlocks => {
         };
         workspaceProto.__02CanvasGetSvgXYPatched = true;
     }
+    if (workspaceProto && workspaceProto.startDragWithFakeEvent &&
+        !workspaceProto.__02CanvasFakeDragPatched) {
+        const originalStartDragWithFakeEvent = workspaceProto.startDragWithFakeEvent;
+        workspaceProto.startDragWithFakeEvent = function (event, block) {
+            const renderer = this.canvasBlockRenderer;
+            if (renderer && block) {
+                renderer.materializeBlock(block.id, true);
+                renderer.prepareBlockDrag(block);
+            }
+            return originalStartDragWithFakeEvent.call(this, event, block);
+        };
+        workspaceProto.__02CanvasFakeDragPatched = true;
+    }
 
     const originalGetRelative = blockProto.getRelativeToSurfaceXY;
     blockProto.getRelativeToSurfaceXY = function () {
@@ -963,7 +993,9 @@ const installBlocklyCanvasMode = ScratchBlocks => {
         const originalEnd = draggerProto.endBlockDrag;
         draggerProto.startBlockDrag = function (...args) {
             const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
-            if (renderer && this.draggingBlock_) renderer.prepareBlockDrag(this.draggingBlock_);
+            if (renderer && this.draggingBlock_) {
+                renderer.prepareBlockDrag(this.draggingBlock_, this.startXY_);
+            }
             const result = originalStart.apply(this, args);
             if (renderer && this.draggingBlock_) renderer.beginBlockDrag(this.draggingBlock_);
             if (renderer) renderer.scheduleDraw();
@@ -1044,6 +1076,19 @@ const installBlocklyCanvasMode = ScratchBlocks => {
             const renderer = block.workspace.canvasBlockRenderer;
             if (renderer) renderer.setHighlightedConnection(null);
         };
+    }
+
+    const insertionProto = ScratchBlocks.InsertionMarkerManager &&
+        ScratchBlocks.InsertionMarkerManager.prototype;
+    if (insertionProto && insertionProto.initAvailableConnections_ &&
+        !insertionProto.__02CanvasConnectionsPatched) {
+        const originalInitAvailableConnections = insertionProto.initAvailableConnections_;
+        insertionProto.initAvailableConnections_ = function (...args) {
+            const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
+            if (renderer && this.topBlock_) renderer.prepareBlockDrag(this.topBlock_);
+            return originalInitAvailableConnections.apply(this, args);
+        };
+        insertionProto.__02CanvasConnectionsPatched = true;
     }
 
     const fieldProto = ScratchBlocks.Field && ScratchBlocks.Field.prototype;
@@ -1482,14 +1527,23 @@ class ModelCanvasBlockRenderer {
         this.materializeBlock(root.id, true);
     }
 
-    prepareBlockDrag (block) {
+    prepareBlockDrag (block, startPosition = null) {
         if (!this.isLiveBlock(block) || this.layoutSuspended) return;
+        const root = rootOf(block);
+        // Flyout placement uses SVG surface origins to derive startXY_. The
+        // model-only root position does not inherit that DOM transform, so use
+        // BlockDragger's authoritative start coordinate before connection
+        // matching begins. Existing workspace drags already have equal values.
+        if (startPosition && root === block) {
+            root.__02CanvasPosition = {x: startPosition.x, y: startPosition.y};
+            root.__02CanvasDragPosition = null;
+            this.invalidatePosition(root);
+        }
         // The insertion manager snapshots both the dragged connections and the
         // nearby workspace connection database before the first drag frame.
         // Finish only viewport layouts here; offscreen scripts remain deferred.
         const visible = this.getVisibleWorldBounds();
         this.ensureLayoutsForRoot(visible);
-        const root = rootOf(block);
         const layout = root && this.rootLayouts.get(root.id);
         if (layout) this.updateConnectionPositions(layout);
     }
@@ -1542,7 +1596,8 @@ class ModelCanvasBlockRenderer {
         this.estimateCache.clear();
         this.loadingIndicatorStartedAt = 0;
         this.viewportKey = null;
-        this.invalidateAll();
+        if (this.layoutSuspended) this.pendingDraw = true;
+        else this.invalidateAll();
     }
 
     invalidateStyles () {
@@ -1550,16 +1605,13 @@ class ModelCanvasBlockRenderer {
     }
 
     invalidateAll () {
-        const blocks = this.workspace && this.workspace.getAllBlocks ? this.workspace.getAllBlocks(false) : [];
         // Estimate entries have mode and stack suffixes in their keys. A
         // bare block id never matched those keys, so stale nested dimensions
         // survived imports and later field/mutation changes.
         this.estimateCache.clear();
-        for (const block of blocks) {
-            const state = this.nativeBlockCache.get(block.id) || {dirty: true};
-            state.dirty = true;
-            this.nativeBlockCache.set(block.id, state);
-        }
+        // Dropping the measurement cache is equivalent to marking every entry
+        // dirty, without a synchronous getAllBlocks() walk on a huge target.
+        this.nativeBlockCache.clear();
         for (const layout of this.rootLayouts.values()) {
             layout.dirty = true;
             layout.projectionDirty = true;
@@ -1567,6 +1619,7 @@ class ModelCanvasBlockRenderer {
             if (layout.inProgress) {
                 layout.inProgress = false;
                 this.layoutTasks.delete(layout.root.id);
+                layout.pendingScene = null;
             }
         }
         const roots = this.workspace && this.workspace.getTopBlocks ? this.workspace.getTopBlocks(false) : [];
@@ -1576,6 +1629,13 @@ class ModelCanvasBlockRenderer {
 
     invalidateBlock (block) {
         if (!block) return;
+        // XML import can attach thousands of descendants. The complete Canvas
+        // state is reset when loading finishes, so maintaining partial root
+        // layouts here only adds quadratic work without producing a frame.
+        if (this.layoutSuspended) {
+            this.pendingDraw = true;
+            return;
+        }
         let current = block;
         while (current) {
             const state = this.nativeBlockCache.get(current.id) || {dirty: true};
@@ -1599,6 +1659,7 @@ class ModelCanvasBlockRenderer {
             if (layout.inProgress) {
                 layout.inProgress = false;
                 this.layoutTasks.delete(root.id);
+                layout.pendingScene = null;
             }
         }
         this.scheduleDraw();
@@ -1697,6 +1758,7 @@ class ModelCanvasBlockRenderer {
                 fields: [],
                 buckets: new Map(),
                 bounds: null,
+                pendingScene: null,
                 projectionBounds: null,
                 projectedPositions: new Map(),
                 projectedPaintBounds: new Map(),
@@ -2053,14 +2115,51 @@ class ModelCanvasBlockRenderer {
         return Array.from(result.values());
     }
 
-    resetLayoutGeometry (layout) {
-        for (const geometry of layout.geometries || []) {
-            this.blockGeometry.delete(geometry.block && geometry.block.id);
+    createLayoutScene (layout, rebuilding) {
+        const scene = {
+            root: layout.root,
+            visibleIds: new Set(layout.visibleIds),
+            geometries: [],
+            fields: [],
+            buckets: new Map(),
+            bounds: null
+        };
+        if (!rebuilding) {
+            for (const geometry of layout.geometries) {
+                if (!geometry || !this.isLiveBlock(geometry.block) ||
+                    (!scene.visibleIds.has(geometry.block.id) &&
+                    !this.forceMaterializedIds.has(geometry.block.id))) continue;
+                scene.geometries.push(geometry);
+                scene.fields.push(...(geometry.fields || []));
+                this.indexGeometry(scene, geometry);
+            }
         }
-        layout.geometries = [];
-        layout.fields = [];
-        layout.buckets = new Map();
-        layout.bounds = null;
+        return scene;
+    }
+
+    resetLayoutScene (scene, visibleIds) {
+        scene.visibleIds = new Set(visibleIds || []);
+        scene.geometries = [];
+        scene.fields = [];
+        scene.buckets = new Map();
+        scene.bounds = null;
+    }
+
+    commitLayoutScene (layout, scene) {
+        for (const geometry of layout.geometries || []) {
+            if (this.blockGeometry.get(geometry.block && geometry.block.id) === geometry) {
+                this.blockGeometry.delete(geometry.block.id);
+            }
+        }
+        layout.geometries = scene.geometries;
+        layout.fields = scene.fields;
+        layout.buckets = scene.buckets;
+        layout.bounds = scene.bounds;
+        layout.pendingScene = null;
+        for (const geometry of layout.geometries) {
+            this.blockGeometry.set(geometry.block.id, geometry);
+            for (const field of geometry.fields || []) this.fieldGeometry.set(field.field, field);
+        }
     }
 
     createLayoutTask (root, worldBounds = null) {
@@ -2068,8 +2167,8 @@ class ModelCanvasBlockRenderer {
         const layout = this.getRootLayout(root);
         this.updateVisibleProjection(layout, worldBounds);
         const rebuilding = !!layout.dirty;
-        if (rebuilding) this.resetLayoutGeometry(layout);
-        const existingIds = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
+        const scene = this.createLayoutScene(layout, rebuilding);
+        const existingIds = new Set(scene.geometries.map(geometry => geometry.block && geometry.block.id));
         const targetIds = Array.from(layout.visibleIds).filter(id => rebuilding || !existingIds.has(id));
         const viewportCenter = worldBounds ? {
             x: (worldBounds.left + worldBounds.right) / 2,
@@ -2109,10 +2208,13 @@ class ModelCanvasBlockRenderer {
         nativeBlocks.sort((a, b) => depth(b) - depth(a) ||
             distanceToViewport(a.id) - distanceToViewport(b.id));
         layout.inProgress = true;
+        layout.pendingScene = scene;
         return {
             root,
             layout,
             version: layout.version,
+            viewportKey: this.viewportKey,
+            scene,
             nativeBlocks,
             nativeIndex: 0,
             pendingPositions: targetIds.map(id => ({
@@ -2163,12 +2265,16 @@ class ModelCanvasBlockRenderer {
     processLayoutTask (task, budget = 4) {
         if (!task || !this.isLiveBlock(task.root) ||
             this.rootLayouts.get(task.root.id) !== task.layout) {
-            if (task && task.layout) task.layout.inProgress = false;
+            if (task && task.layout) {
+                task.layout.inProgress = false;
+                if (task.layout.pendingScene === task.scene) task.layout.pendingScene = null;
+            }
             return true;
         }
-        if (task.version !== task.layout.version) {
+        if (task.version !== task.layout.version || task.viewportKey !== this.viewportKey) {
             task.layout.dirty = true;
             task.layout.inProgress = false;
+            if (task.layout.pendingScene === task.scene) task.layout.pendingScene = null;
             return true;
         }
         const started = now();
@@ -2192,7 +2298,7 @@ class ModelCanvasBlockRenderer {
                 task.layout.projectionDirty = true;
                 this.ensureProjection(task.layout);
                 this.updateVisibleProjection(task.layout, task.worldBounds);
-                this.resetLayoutGeometry(task.layout);
+                this.resetLayoutScene(task.scene, task.layout.visibleIds);
                 const visibleBlocks = Array.from(task.layout.visibleIds)
                     .map(id => task.layout.projectedBlocks.get(id))
                     .filter(block => this.isLiveBlock(block));
@@ -2215,18 +2321,20 @@ class ModelCanvasBlockRenderer {
                 position.block,
                 position.x,
                 position.y,
-                task.layout,
+                task.scene,
                 task.seen,
                 task.pendingPositions,
                 task.onlyVisible
             );
         }
         if (task.pendingPositions.length) return false;
-        if (task.version !== task.layout.version) {
+        if (task.version !== task.layout.version || task.viewportKey !== this.viewportKey) {
             task.layout.dirty = true;
             task.layout.inProgress = false;
+            if (task.layout.pendingScene === task.scene) task.layout.pendingScene = null;
             return true;
         }
+        this.commitLayoutScene(task.layout, task.scene);
         task.layout.dirty = false;
         task.layout.positionDirty = false;
         task.layout.inProgress = false;
@@ -2252,6 +2360,11 @@ class ModelCanvasBlockRenderer {
         ].join(':') : null;
         if (viewportKey !== this.viewportKey) {
             this.viewportKey = viewportKey;
+            for (const task of this.layoutTasks.values()) {
+                task.layout.inProgress = false;
+                if (task.layout.pendingScene === task.scene) task.layout.pendingScene = null;
+            }
+            this.layoutTasks.clear();
         }
         const roots = this.workspace.getTopBlocks ? this.workspace.getTopBlocks(false) : [];
         const live = new Set(roots.map(root => root.id));
@@ -2341,7 +2454,6 @@ class ModelCanvasBlockRenderer {
                     };
                     fields.push(fieldGeometry);
                     layout.fields.push(fieldGeometry);
-                    this.fieldGeometry.set(field, fieldGeometry);
                 }
             }
 
@@ -2414,7 +2526,6 @@ class ModelCanvasBlockRenderer {
             };
             layout.geometries.push(geometry);
             this.indexGeometry(layout, geometry);
-            this.blockGeometry.set(block.id, geometry);
         }
 
         const next = block.getNextBlock && block.getNextBlock();
@@ -2517,7 +2628,8 @@ class ModelCanvasBlockRenderer {
             this.updateVisibleProjection(layout, worldBounds);
             const materialized = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
             const hasMissingVisible = Array.from(layout.visibleIds).some(id => !materialized.has(id));
-            if ((layout.dirty || hasMissingVisible) && this.rootMayIntersect(root, worldBounds)) {
+            if ((layout.dirty || hasMissingVisible) &&
+                (requestedRoot === root || this.rootMayIntersect(root, worldBounds))) {
                 this.layoutTasks.delete(root.id);
                 this.layoutRoot(root, worldBounds);
                 this.updateConnectionPositions(layout);
@@ -3275,7 +3387,10 @@ class ModelCanvasBlockRenderer {
         const width = Math.min(240, Math.max(160, rect.width * 0.28));
         const height = 30;
         const x = Math.max(8, rect.width - width - 14);
-        const y = 12;
+        // The Canvas extends above the injection for hat blocks. Screen-space
+        // UI starts below that extension rather than being clipped above the
+        // workspace's top edge.
+        const y = CANVAS_TOP_PADDING + 12;
         const progress = Math.max(0, Math.min(1, completed / total));
         const message = (this.ScratchBlocks.Msg &&
             (this.ScratchBlocks.Msg.BLOCKS_LOADING || this.ScratchBlocks.Msg.LOADING)) ||
@@ -3360,7 +3475,11 @@ class ModelCanvasBlockRenderer {
                 bottom: bounds.bottom
             }, visible)) continue;
             loadingTotal += layout.visibleIds.size;
-            const geometries = this.queryLayout(layout, visible);
+            // Keep the last committed scene visible while an edit or zoom is
+            // being recalculated. A brand-new workspace has no committed
+            // scene, so it may paint the progressively-built staging scene.
+            const paintScene = layout.geometries.length ? layout : (layout.pendingScene || layout);
+            const geometries = this.queryLayout(paintScene, visible);
             const paintedIds = new Set();
             for (const geometry of geometries) {
                 if (!this.isLiveBlock(geometry.block)) continue;
@@ -3481,7 +3600,7 @@ class ModelCanvasBlockRenderer {
 
     handleMouseDown (event) {
         if (!this.isMainWorkspaceEvent(event)) return;
-        if (typeof event.button !== 'undefined' && event.button !== 0) return;
+        if (typeof event.button !== 'undefined' && event.button !== 0 && event.button !== 2) return;
         // Native block mousedown handlers are installed through
         // bindEventWithChecks_, which captures the active mouse/touch stream.
         // Canvas hit testing bypasses that wrapper, so capture it here before
@@ -3509,9 +3628,11 @@ class ModelCanvasBlockRenderer {
 
     handleContextMenu (event) {
         if (!this.isMainWorkspaceEvent(event)) return;
-        const hit = this.hitTest(event);
-        if (!hit || !hit.block || typeof hit.block.showContextMenu_ !== 'function') return;
-        hit.block.showContextMenu_(event);
+        // Right-click mousedown is routed through Gesture.handleWsStart above.
+        // That keeps currentGesture_ alive while ContextMenu.show runs, which
+        // is required by addon context-menu callbacks and duplicate-and-drag.
+        // The later browser contextmenu event must only suppress the native
+        // menu; calling showContextMenu_ directly here loses that gesture.
         event.preventDefault();
         event.stopPropagation();
     }
@@ -3538,7 +3659,10 @@ class ModelCanvasBlockRenderer {
 
     captureBlockCanvas (block, scale = 1) {
         const root = rootOf(block);
-        const layout = this.getRootLayout(root).dirty ? this.layoutRoot(root) : this.getRootLayout(root);
+        // Interactive layouts retain only viewport geometry. Export is an
+        // explicit operation, so synchronously materialize the complete script.
+        this.ensureLayoutsForRoot(null, root);
+        const layout = this.getRootLayout(root);
         if (!layout.bounds) return null;
         const width = Math.max(1, Math.ceil(layout.bounds.right - layout.bounds.left));
         const height = Math.max(1, Math.ceil(layout.bounds.bottom - layout.bounds.top));
