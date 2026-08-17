@@ -1206,6 +1206,7 @@ class ModelCanvasBlockRenderer {
         this.visibleBlockCount = 0;
         this.loadingWorkPending = false;
         this.estimateCache = new Map();
+        this.activeLayoutTask = null;
         this.viewportKey = null;
         this.workspaceMethodRestores = [];
         this.forceMaterializedIds = new Set();
@@ -1856,6 +1857,7 @@ class ModelCanvasBlockRenderer {
     renderNativeBlock (block) {
         if (!this.isLiveBlock(block)) return;
         const state = this.nativeBlockCache.get(block.id) || {dirty: true};
+        const beforeMeasurement = this.getBlockMeasurementSignature(block);
         const wasRenderingNative = this.renderingNative;
         this.renderingNative = true;
         try {
@@ -1966,6 +1968,41 @@ class ModelCanvasBlockRenderer {
         });
         this.estimateCache.delete(this.getEstimateKey(block, false, true));
         this.estimateCache.delete(this.getEstimateKey(block, true, true));
+        const afterMeasurement = this.getBlockMeasurementSignature(block);
+        if (beforeMeasurement !== afterMeasurement) {
+            this.invalidateAncestorMeasurements(block);
+            if (this.activeLayoutTask) this.activeLayoutTask.measurementChanged = true;
+        }
+    }
+
+    getBlockMeasurementSignature (block) {
+        if (!block) return '';
+        const connections = block.getConnections_ ? block.getConnections_(true) : [];
+        const connectionSignature = connections.map(connection => [
+            connection && connection.type,
+            numberOr(connection && connection.offsetInBlock_ && connection.offsetInBlock_.x),
+            numberOr(connection && connection.offsetInBlock_ && connection.offsetInBlock_.y)
+        ].join(',')).join(';');
+        return [
+            numberOr(block.width),
+            numberOr(block.height),
+            block.svgPath_ && block.svgPath_.getAttribute && block.svgPath_.getAttribute('d'),
+            connectionSignature
+        ].join('|');
+    }
+
+    invalidateAncestorMeasurements (block) {
+        let parent = block && block.getParent && block.getParent();
+        while (parent) {
+            const state = this.nativeBlockCache.get(parent.id) || {dirty: true};
+            state.dirty = true;
+            this.nativeBlockCache.set(parent.id, state);
+            const prefix = `${parent.id}:`;
+            for (const key of this.estimateCache.keys()) {
+                if (key.startsWith(prefix)) this.estimateCache.delete(key);
+            }
+            parent = parent.getParent && parent.getParent();
+        }
     }
 
     renderNativeModel (block, seen = new Set()) {
@@ -2393,6 +2430,8 @@ class ModelCanvasBlockRenderer {
             })),
             worldBounds,
             reprojected: false,
+            measurementChanged: false,
+            measurementPasses: 0,
             seen: new Set(),
             onlyVisible: true,
             phase: 'native',
@@ -2450,6 +2489,7 @@ class ModelCanvasBlockRenderer {
         const started = now();
         if (task.phase === 'native') {
             const Field = this.ScratchBlocks.Field;
+            this.activeLayoutTask = task;
             if (Field && Field.startCache) Field.startCache();
             try {
                 while (task.nativeIndex < task.nativeBlocks.length && now() - started < budget) {
@@ -2458,9 +2498,16 @@ class ModelCanvasBlockRenderer {
                 }
             } finally {
                 if (Field && Field.stopCache) Field.stopCache();
+                this.activeLayoutTask = null;
             }
             if (task.nativeIndex < task.nativeBlocks.length) return false;
-            if (!task.reprojected) {
+            // The first pass resolves cheap estimates. A second pass is
+            // required after that projection because rendering a child can
+            // change the measured size of its C-shaped parent. If that second
+            // pass still changes a measurement, perform one final bounded
+            // convergence pass instead of committing stale geometry.
+            if (!task.reprojected || task.measurementChanged) {
+                if (task.reprojected) task.measurementChanged = false;
                 // Native measurement may have replaced several estimates in a
                 // nested C stack. Rebuild the projection before assigning
                 // Canvas geometry, otherwise visible children keep the old
@@ -2480,7 +2527,16 @@ class ModelCanvasBlockRenderer {
                 }));
                 task.seen = new Set();
                 task.reprojected = true;
-                if (task.nativeBlocks.length) return false;
+                if (task.nativeBlocks.length) {
+                    // Avoid an unstable addon repeatedly restarting a large
+                    // script forever. The last pass still commits the latest
+                    // complete measurements and the next invalidation can
+                    // request another bounded refresh.
+                    if (!task.measurementPasses) task.measurementPasses = 1;
+                    else task.measurementPasses++;
+                    if (task.measurementPasses <= 2) return false;
+                    task.nativeBlocks = [];
+                }
             }
             task.phase = 'layout';
         }

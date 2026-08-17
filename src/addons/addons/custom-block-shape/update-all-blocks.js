@@ -16,6 +16,11 @@ export function updateAllBlocks(vm, workspace, blockly) {
       workspace.getToolbox().refreshSelection();
       workspace.toolboxRefreshEnabled_ = true;
     }
+    // Canvas rendering keeps lightweight Blockly model nodes instead of
+    // native SVG. Explicitly invalidate its measurements when this addon
+    // changes Blockly's global shape constants, otherwise C-block geometry
+    // can retain the previous style until an unrelated edit.
+    if (workspace.canvasBlockRenderer) workspace.canvasBlockRenderer.invalidateStyles();
   }
 
   // There's no particular reason for checking whether events were originally enabled.

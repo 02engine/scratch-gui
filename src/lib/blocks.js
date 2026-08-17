@@ -104,7 +104,14 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
         };
 
         workspaceProto.scheduleWheelZoom_ = function (x, y, delta) {
-            this.pendingWheelZoomDelta_ += delta;
+            // A physical wheel event should have the same one-step effect as
+            // a zoom button click. Browser deltaY values commonly represent
+            // more than one button step, so callers normalize them before
+            // they reach this queue. Keep the queue signed and bounded so a
+            // burst delivered in one frame cannot turn one gesture into a
+            // multi-step jump.
+            this.pendingWheelZoomDelta_ = Math.max(-1, Math.min(1,
+                this.pendingWheelZoomDelta_ + (delta > 0 ? 1 : delta < 0 ? -1 : 0)));
             // Apply a burst of wheel events around one stable anchor.
             if (!this.pendingWheelZoomPosition_) {
                 this.pendingWheelZoomPosition_ = new ScratchBlocks.goog.math.Coordinate(x, y);
@@ -211,7 +218,10 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
 
             const multiplier = e.deltaMode === 0x1 ? ScratchBlocks.LINE_SCROLL_MULTIPLIER : 1;
             if (e.ctrlKey && !this.isFlyout) {
-                const delta = (-e.deltaY / 50) * multiplier;
+                // Match zoomCenter(+/-1): one wheel event means one zoom step.
+                // Do not scale this by the browser's pixel delta because a
+                // single event may contain 50, 100 or high-resolution values.
+                const delta = e.deltaY === 0 ? 0 : (e.deltaY < 0 ? 1 : -1);
                 const position = ScratchBlocks.utils.mouseToSvg(
                     e,
                     this.getParentSvg(),
