@@ -847,6 +847,12 @@ const installBlocklyCanvasMode = ScratchBlocks => {
             }
             const oldParent = this.parentBlock_;
             if (newParent === oldParent) return;
+            const renderer = this.workspace.canvasBlockRenderer;
+            // SVG setParent preserves a child block's absolute position when
+            // it is unplugged. Canvas has no SVG parent to translate, so save
+            // that position before Blockly changes the graph.
+            const detachedPosition = !newParent && oldParent && renderer ?
+                renderer.getBlockWorkspacePosition(this) : null;
             const Field = ScratchBlocks.Field;
             if (Field && Field.startCache) Field.startCache();
             try {
@@ -869,7 +875,14 @@ const installBlocklyCanvasMode = ScratchBlocks => {
                     this.getColourQuaternary()
                 );
             }
-            const renderer = this.workspace.canvasBlockRenderer;
+            if (!newParent && oldParent && detachedPosition) {
+                this.__02CanvasPosition = {
+                    x: detachedPosition.x,
+                    y: detachedPosition.y
+                };
+                this.__02CanvasDragPosition = null;
+                this.deferredXY_ = null;
+            }
             if (renderer) renderer.invalidateBlock(this);
         };
         blockProto.__02CanvasSetParentPatched = true;
@@ -1008,11 +1021,13 @@ const installBlocklyCanvasMode = ScratchBlocks => {
         const originalEnd = draggerProto.endBlockDrag;
         draggerProto.startBlockDrag = function (...args) {
             const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
-            if (renderer && this.draggingBlock_) {
-                renderer.prepareBlockDrag(this.draggingBlock_, this.startXY_);
-            }
             const result = originalStart.apply(this, args);
-            if (renderer && this.draggingBlock_) renderer.beginBlockDrag(this.draggingBlock_);
+            if (renderer && this.draggingBlock_) {
+                // The native method has now completed unplug/translate. The
+                // dragged root must be measured after that graph transition.
+                renderer.prepareBlockDrag(this.draggingBlock_);
+                renderer.beginBlockDrag(this.draggingBlock_);
+            }
             if (renderer) renderer.scheduleDraw();
             return result;
         };
