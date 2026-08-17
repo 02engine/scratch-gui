@@ -217,6 +217,7 @@ class CanvasModelNode {
             child.parentNode = this;
             child.parentElement = this;
         }
+        this.syncTextContent();
         return child;
     }
     insertBefore (child, reference) {
@@ -233,6 +234,7 @@ class CanvasModelNode {
             child.parentNode = this;
             child.parentElement = this;
         }
+        this.syncTextContent();
         return child;
     }
     removeChild (child) {
@@ -242,6 +244,7 @@ class CanvasModelNode {
             child.parentNode = null;
             child.parentElement = null;
         }
+        this.syncTextContent();
         return child;
     }
     remove () {
@@ -272,6 +275,18 @@ class CanvasModelNode {
         if (!siblings) return null;
         const index = siblings.indexOf(this);
         return index <= 0 ? null : siblings[index - 1];
+    }
+    syncTextContent () {
+        // FieldLabelSerializable appends a real DOM Text node to the model
+        // text element. Keep the same textContent contract as SVG so Blockly's
+        // native field measurement can see that text in Canvas mode.
+        if (this.kind !== 'text' && this.tagName !== 'text') return;
+        this.textContent = this.childNodes.map(child => {
+            if (!child) return '';
+            if (typeof child.textContent === 'string') return child.textContent;
+            if (typeof child.nodeValue === 'string') return child.nodeValue;
+            return '';
+        }).join('');
     }
     matches (selector) {
         return String(selector || '')
