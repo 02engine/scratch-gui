@@ -1516,14 +1516,12 @@ class ModelCanvasBlockRenderer {
     beginBlockDrag (block) {
         const root = rootOf(block);
         this.draggingRoot = root && root.id ? root : null;
-        if (!root || !this.workspace || !root.getDescendants) return;
-        // A dragged stack must remain paintable even when its old projection is
-        // outside the viewport. Keep every descendant materialized for the
-        // duration of the gesture so connection previews never fall back to a
-        // stale SVG/model position.
-        for (const descendant of root.getDescendants(false)) {
-            if (descendant && descendant.id) this.forceMaterializedIds.add(descendant.id);
-        }
+        if (!root || !this.workspace) return;
+        // Keep the dragged root paintable outside the old viewport. Descendants
+        // still participate in Blockly's graph and connection calculations,
+        // but painting every descendant made starting a drag of a large stack
+        // an O(N) synchronous operation. The normal viewport dependency pass
+        // adds only the visible inline children.
         if (root.id) this.forceMaterializedIds.add(root.id);
         this.materializeBlock(root.id, true);
     }
@@ -1544,7 +1542,11 @@ class ModelCanvasBlockRenderer {
         // nearby workspace connection database before the first drag frame.
         // Finish only viewport layouts here; offscreen scripts remain deferred.
         const visible = this.getVisibleWorldBounds();
-        this.ensureLayoutsForRoot(visible);
+        // The other roots already have connection positions from their last
+        // committed scene. Building every visible root synchronously here
+        // caused a noticeable hitch as soon as a large script was dragged.
+        // The dragged root is the only new layout that must be ready now.
+        this.ensureLayoutsForRoot(visible, root);
         const layout = root && this.rootLayouts.get(root.id);
         if (layout) this.updateConnectionPositions(layout);
     }
@@ -1552,11 +1554,6 @@ class ModelCanvasBlockRenderer {
     endBlockDrag (block) {
         const root = rootOf(block);
         if (this.draggingRoot === root) this.draggingRoot = null;
-        if (root && root.getDescendants) {
-            for (const descendant of root.getDescendants(false)) {
-                if (descendant && descendant.id) this.forceMaterializedIds.delete(descendant.id);
-            }
-        }
         if (root && root.id) this.forceMaterializedIds.delete(root.id);
         this.invalidateBlock(root || block);
     }
@@ -1764,6 +1761,7 @@ class ModelCanvasBlockRenderer {
                 projectionBounds: null,
                 projectedPositions: new Map(),
                 projectedPaintBounds: new Map(),
+                projectedBuckets: new Map(),
                 projectedBlocks: new Map(),
                 visibleIds: new Set()
             };
@@ -1787,12 +1785,11 @@ class ModelCanvasBlockRenderer {
             const hasUninitializedField = (block.inputList || []).some(input =>
                 (input.fieldRow || []).some(field => !field.fieldGroup_ && !field.textElement_)
             );
-            if (!state.dirty && !hasUninitializedField && block.svgPath_ &&
-                block.svgPath_.getAttribute('d')) return;
-            if (typeof block.renderCompute_ !== 'function' || typeof block.renderDraw_ !== 'function') return;
-            // A definition hat calculates its right edge from the measured
-            // procedure prototype. Compile that header dependency first so a
-            // viewport pass cannot permanently use its cheap projection width.
+            // A definition hat derives its right edge from the connected
+            // procedure prototype. Track that dependency explicitly: some
+            // procedure mutations invalidate the prototype before Blockly has
+            // emitted a parent event, so a clean cached hat can otherwise keep
+            // its old width and field colour/layout until the next click.
             if (block.type === this.ScratchBlocks.PROCEDURES_DEFINITION_BLOCK_TYPE) {
                 const customBlockInput = block.getInput && block.getInput('custom_block');
                 const prototype = customBlockInput && customBlockInput.connection &&
@@ -1800,8 +1797,21 @@ class ModelCanvasBlockRenderer {
                     customBlockInput.connection.targetBlock();
                 if (prototype && prototype !== block) {
                     this.renderNativeModel(prototype, new Set([block.id]));
+                    const headerSignature = [
+                        prototype.id,
+                        numberOr(prototype.width),
+                        numberOr(prototype.height),
+                        prototype.svgPath_ && prototype.svgPath_.getAttribute('d')
+                    ].join(':');
+                    if (state.procedureHeaderSignature !== headerSignature) {
+                        state.dirty = true;
+                        state.procedureHeaderSignature = headerSignature;
+                    }
                 }
             }
+            if (!state.dirty && !hasUninitializedField && block.svgPath_ &&
+                block.svgPath_.getAttribute('d')) return;
+            if (typeof block.renderCompute_ !== 'function' || typeof block.renderDraw_ !== 'function') return;
             // A custom block-shape addon can change FIELD_HEIGHT and padding
             // without changing the field value. Force ordinary fields through
             // Blockly's normal render_ path so cached dimensions do not survive a
@@ -1950,9 +1960,16 @@ class ModelCanvasBlockRenderer {
         const positions = new Map();
         const blocks = new Map();
         const projectedPaintBounds = new Map();
+        const projectedBuckets = new Map();
         const visibleIds = new Set();
         let bounds = null;
         const rootPosition = getRootPosition(root);
+        const localWorldBounds = worldBounds && {
+            left: worldBounds.left - rootPosition.x,
+            top: worldBounds.top - rootPosition.y,
+            right: worldBounds.right - rootPosition.x,
+            bottom: worldBounds.bottom - rootPosition.y
+        };
         const stack = [{block: root, x: 0, y: 0}];
         while (stack.length) {
             const current = stack.pop();
@@ -1962,14 +1979,25 @@ class ModelCanvasBlockRenderer {
             blocks.set(block.id, block);
             const size = this.getProjectionBlockSize(block);
             const paintBounds = {
-                left: rootPosition.x + current.x - 4,
-                top: rootPosition.y + current.y - (block.startHat_ ? HAT_HEIGHT + 4 : 4),
-                right: rootPosition.x + current.x + size.width + 4,
-                bottom: rootPosition.y + current.y + size.height + 4
+                left: current.x - 4,
+                top: current.y - (block.startHat_ ? HAT_HEIGHT + 4 : 4),
+                right: current.x + size.width + 4,
+                bottom: current.y + size.height + 4
             };
             projectedPaintBounds.set(block.id, paintBounds);
+            const minX = Math.floor(paintBounds.left / SPATIAL_CELL_SIZE);
+            const maxX = Math.floor(paintBounds.right / SPATIAL_CELL_SIZE);
+            const minY = Math.floor(paintBounds.top / SPATIAL_CELL_SIZE);
+            const maxY = Math.floor(paintBounds.bottom / SPATIAL_CELL_SIZE);
+            for (let bucketX = minX; bucketX <= maxX; bucketX++) {
+                for (let bucketY = minY; bucketY <= maxY; bucketY++) {
+                    const key = `${bucketX}:${bucketY}`;
+                    if (!projectedBuckets.has(key)) projectedBuckets.set(key, []);
+                    projectedBuckets.get(key).push(block.id);
+                }
+            }
             bounds = unionRect(bounds, paintBounds);
-            if (!worldBounds || rectsIntersect(paintBounds, worldBounds) ||
+            if (!localWorldBounds || rectsIntersect(paintBounds, localWorldBounds) ||
                 this.forceMaterializedIds.has(block.id)) visibleIds.add(block.id);
 
             const childLayouts = [];
@@ -2021,7 +2049,7 @@ class ModelCanvasBlockRenderer {
                 stack.push(childLayouts[index]);
             }
         }
-        return {positions, blocks, projectedPaintBounds, visibleIds, bounds};
+        return {positions, blocks, projectedPaintBounds, projectedBuckets, visibleIds, bounds};
     }
 
     ensureProjection (layout) {
@@ -2031,6 +2059,7 @@ class ModelCanvasBlockRenderer {
         layout.projectedPositions = projection.positions;
         layout.projectedBlocks = projection.blocks;
         layout.projectedPaintBounds = projection.projectedPaintBounds;
+        layout.projectedBuckets = projection.projectedBuckets;
         layout.projectionBounds = projection.bounds;
         layout.projectionDirty = false;
     }
@@ -2038,9 +2067,37 @@ class ModelCanvasBlockRenderer {
     updateVisibleProjection (layout, worldBounds) {
         this.ensureProjection(layout);
         const visibleIds = new Set();
-        for (const [id, paintBounds] of layout.projectedPaintBounds) {
-            if (!worldBounds || rectsIntersect(paintBounds, worldBounds) ||
-                this.forceMaterializedIds.has(id)) visibleIds.add(id);
+        const rootPosition = getRootPosition(layout.root);
+        const localWorldBounds = worldBounds && {
+            left: worldBounds.left - rootPosition.x,
+            top: worldBounds.top - rootPosition.y,
+            right: worldBounds.right - rootPosition.x,
+            bottom: worldBounds.bottom - rootPosition.y
+        };
+        if (!localWorldBounds) {
+            for (const id of layout.projectedPaintBounds.keys()) visibleIds.add(id);
+        } else {
+            const candidateIds = new Set();
+            const minX = Math.floor(localWorldBounds.left / SPATIAL_CELL_SIZE);
+            const maxX = Math.floor(localWorldBounds.right / SPATIAL_CELL_SIZE);
+            const minY = Math.floor(localWorldBounds.top / SPATIAL_CELL_SIZE);
+            const maxY = Math.floor(localWorldBounds.bottom / SPATIAL_CELL_SIZE);
+            for (let bucketX = minX; bucketX <= maxX; bucketX++) {
+                for (let bucketY = minY; bucketY <= maxY; bucketY++) {
+                    const bucket = layout.projectedBuckets.get(`${bucketX}:${bucketY}`);
+                    if (bucket) bucket.forEach(id => candidateIds.add(id));
+                }
+            }
+            for (const id of candidateIds) {
+                const paintBounds = layout.projectedPaintBounds.get(id);
+                if (paintBounds && rectsIntersect(paintBounds, localWorldBounds)) visibleIds.add(id);
+            }
+        }
+        // Forced blocks are normally just the root currently being dragged or
+        // one block requested by a compatibility API. Add them directly rather
+        // than scanning all projected blocks on every viewport frame.
+        for (const id of this.forceMaterializedIds) {
+            if (layout.projectedBlocks.has(id)) visibleIds.add(id);
         }
 
         // A visible inline expression must be complete. Testing each nested
@@ -2208,8 +2265,9 @@ class ModelCanvasBlockRenderer {
             if (!viewportCenter) return 0;
             const bounds = layout.projectedPaintBounds.get(id);
             if (!bounds) return 0;
-            const x = ((bounds.left + bounds.right) / 2) - viewportCenter.x;
-            const y = ((bounds.top + bounds.bottom) / 2) - viewportCenter.y;
+            const rootPosition = getRootPosition(layout.root);
+            const x = ((bounds.left + bounds.right) / 2 + rootPosition.x) - viewportCenter.x;
+            const y = ((bounds.top + bounds.bottom) / 2 + rootPosition.y) - viewportCenter.y;
             return (x * x) + (y * y);
         };
         // Materialize the blocks closest to the user's view first. This only
@@ -2479,7 +2537,11 @@ class ModelCanvasBlockRenderer {
                         y: y + (nativePosition ? nativePosition.y : Math.max(
                             8, (ownHeight - size.height) / 2
                         )),
-                        width: size.width,
+                        // renderCompute_ stores the exact width consumed by
+                        // renderFields_. This is authoritative for procedure
+                        // labels and argument reporters whose visual width can
+                        // differ from a plain text measurement.
+                        width: numberOr(field.renderWidth, size.width),
                         height: size.height
                     };
                     fields.push(fieldGeometry);
@@ -2612,7 +2674,15 @@ class ModelCanvasBlockRenderer {
 
     getEstimatedRootBounds (root) {
         const layout = this.rootLayouts.get(root && root.id);
-        if (layout && layout.projectionBounds) return layout.projectionBounds;
+        if (layout && layout.projectionBounds) {
+            const position = getRootPosition(root);
+            return {
+                left: layout.projectionBounds.left + position.x,
+                top: layout.projectionBounds.top + position.y,
+                right: layout.projectionBounds.right + position.x,
+                bottom: layout.projectionBounds.bottom + position.y
+            };
+        }
         const position = getRootPosition(root);
         const width = Math.max(
             160,
@@ -2672,8 +2742,16 @@ class ModelCanvasBlockRenderer {
         const root = rootOf(block);
         const rootPosition = getRootPosition(root);
         const geometry = this.blockGeometry.get(block.id);
-        const x = rootPosition.x + (geometry ? geometry.x : 0);
-        const y = rootPosition.y + (geometry ? geometry.y : 0);
+        // During the first native pass a nested block may not have a committed
+        // Canvas geometry yet. Blockly still asks for its connection position
+        // while constructing insertion markers, so use the cheap projected
+        // graph position instead of treating it as the root at (0, 0). This
+        // keeps flyout and nested-block snapping aligned with native Blockly.
+        const layout = this.rootLayouts.get(root && root.id);
+        const projected = layout && layout.projectedPositions &&
+            layout.projectedPositions.get(block.id);
+        const x = rootPosition.x + (geometry ? geometry.x : (projected ? projected.x : 0));
+        const y = rootPosition.y + (geometry ? geometry.y : (projected ? projected.y : 0));
         const Coordinate = this.ScratchBlocks.goog && this.ScratchBlocks.goog.math &&
             this.ScratchBlocks.goog.math.Coordinate;
         return Coordinate ? new Coordinate(x, y) : {x, y};
@@ -2705,11 +2783,12 @@ class ModelCanvasBlockRenderer {
         const layout = this.getRootLayout(root);
         this.ensureProjection(layout);
         const projected = layout.projectedPaintBounds.get(block.id);
+        const rootPosition = getRootPosition(root);
         const targetBounds = projected ? {
-            left: projected.left - 1,
-            top: projected.top - 1,
-            right: projected.right + 1,
-            bottom: projected.bottom + 1
+            left: projected.left + rootPosition.x - 1,
+            top: projected.top + rootPosition.y - 1,
+            right: projected.right + rootPosition.x + 1,
+            bottom: projected.bottom + rootPosition.y + 1
         } : this.getVisibleWorldBounds();
 
         // Compatibility APIs frequently ask for one model node's rectangle.
@@ -3461,16 +3540,34 @@ class ModelCanvasBlockRenderer {
         const canvasRect = this.canvas && this.canvas.getBoundingClientRect();
         const controlRect = zoomControls.getBoundingClientRect();
         if (!canvasRect || controlRect.width <= 0 || controlRect.height <= 0) return false;
-        const left = Math.max(0, controlRect.left - canvasRect.left - 2);
-        const top = Math.max(0, controlRect.top - canvasRect.top - 2);
-        const right = Math.min(rect.width, controlRect.right - canvasRect.left + 2);
-        const bottom = Math.min(rect.height + CANVAS_TOP_PADDING, controlRect.bottom - canvasRect.top + 2);
-        if (right <= left || bottom <= top) return false;
         // Keep the native SVG controls visible and clickable without moving
-        // them or placing a second control layer over Blockly.
+        // them or placing a second control layer over Blockly. The controls
+        // are circular, so punch out one circular hole per button instead of
+        // the old rectangular gap around the whole group.
         context.beginPath();
         context.rect(0, 0, rect.width, rect.height + CANVAS_TOP_PADDING);
-        context.rect(left, top, right - left, bottom - top);
+        const buttons = Array.from(zoomControls.querySelectorAll('image'))
+            .map(button => button.getBoundingClientRect())
+            .filter(buttonRect => buttonRect.width > 0 && buttonRect.height > 0);
+        if (buttons.length) {
+            for (const buttonRect of buttons) {
+                const centerX = buttonRect.left - canvasRect.left + (buttonRect.width / 2);
+                const centerY = buttonRect.top - canvasRect.top + (buttonRect.height / 2);
+                const radius = Math.max(buttonRect.width, buttonRect.height) / 2 + 2;
+                context.moveTo(centerX + radius, centerY);
+                context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            }
+        } else {
+            const left = Math.max(0, controlRect.left - canvasRect.left - 2);
+            const top = Math.max(0, controlRect.top - canvasRect.top - 2);
+            const width = Math.min(rect.width, controlRect.right - canvasRect.left + 2) - left;
+            const height = Math.min(
+                rect.height + CANVAS_TOP_PADDING,
+                controlRect.bottom - canvasRect.top + 2
+            ) - top;
+            if (width <= 0 || height <= 0) return false;
+            context.roundRect(left, top, width, height, Math.min(width, height) / 2);
+        }
         context.clip('evenodd');
         return true;
     }
@@ -3525,12 +3622,15 @@ class ModelCanvasBlockRenderer {
         for (const layout of layouts) {
             const position = getRootPosition(layout.root);
             const bounds = layout.projectionBounds || layout.bounds;
-            if (layout.root !== this.draggingRoot && bounds && !rectsIntersect({
-                left: bounds.left,
-                top: bounds.top,
-                right: bounds.right,
-                bottom: bounds.bottom
-            }, visible)) continue;
+            if (layout.root !== this.draggingRoot && bounds) {
+                const positionedBounds = {
+                    left: bounds.left + position.x,
+                    top: bounds.top + position.y,
+                    right: bounds.right + position.x,
+                    bottom: bounds.bottom + position.y
+                };
+                if (!rectsIntersect(positionedBounds, visible)) continue;
+            }
             // Keep the last committed scene visible while an edit or zoom is
             // being recalculated. A brand-new workspace has no committed
             // scene, so it may paint the progressively-built staging scene.
