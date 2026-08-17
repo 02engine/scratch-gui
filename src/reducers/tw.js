@@ -5,6 +5,8 @@ import {
 import {
     getPersistentCustomUI,
     setPersistentCustomUI,
+    getPersistentCanvasRenderer,
+    setPersistentCanvasRenderer,
     getPersistentEditorBackground,
     setPersistentEditorBackground,
     getPersistentToolboxLayout,
@@ -15,6 +17,7 @@ const SET_FRAMERATE = 'tw/SET_FRAMERATE';
 const SET_OPSPERFRAME = 'tw/SET_OPSPERFRAME';
 const SET_INTERPOLATION = 'tw/SET_INTERPOLATION';
 const SET_CUSTOM_UI = 'tw/SET_CUSTOM_UI';
+const SET_CANVAS_RENDERER = 'tw/SET_CANVAS_RENDERER';
 const SET_EDITOR_BACKGROUND = 'tw/SET_EDITOR_BACKGROUND';
 const SET_TOOLBOX_LAYOUT = 'tw/SET_TOOLBOX_LAYOUT';
 const SET_COMPILER_OPTIONS = 'tw/SET_COMPILER_OPTIONS';
@@ -40,6 +43,7 @@ export const initialState = {
     opsPerFrame: 1,
     interpolation: false,
     customUI: getPersistentCustomUI(true),
+    canvasRenderer: getPersistentCanvasRenderer(true),
     editorBackground: getPersistentEditorBackground(defaultEditorBackground),
     toolboxLayout: getPersistentToolboxLayout({
         enabled: false,
@@ -95,6 +99,10 @@ const reducer = function (state, action) {
     case SET_CUSTOM_UI:
         return Object.assign({}, state, {
             customUI: action.customUI
+        });
+    case SET_CANVAS_RENDERER:
+        return Object.assign({}, state, {
+            canvasRenderer: action.canvasRenderer
         });
     case SET_EDITOR_BACKGROUND:
         return Object.assign({}, state, {
@@ -206,6 +214,14 @@ const setCustomUIState = function (customUI) {
     return {
         type: SET_CUSTOM_UI,
         customUI: customUI
+    };
+};
+
+const setCanvasRendererState = function (canvasRenderer) {
+    setPersistentCanvasRenderer(canvasRenderer);
+    return {
+        type: SET_CANVAS_RENDERER,
+        canvasRenderer: canvasRenderer
     };
 };
 
@@ -357,6 +373,7 @@ export {
     setFramerateState,
     setOpsPerFrameState,
     setCustomUIState,
+    setCanvasRendererState,
     setEditorBackgroundState,
     setToolboxLayoutState,
     setInterpolationState,

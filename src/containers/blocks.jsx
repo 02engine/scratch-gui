@@ -231,8 +231,8 @@ class Blocks extends React.Component {
         Msg.PROCEDURES_TO_STATEMENT = this.props.intl.formatMessage(messages.PROCEDURES_TO_STATEMENT);
         Msg.PROCEDURES_DOCS = this.props.intl.formatMessage(messages.PROCEDURES_DOCS);
 
-        // Canvas is a newUI-only renderer. Legacy UI intentionally keeps the
-        // native Scratch Blocks SVG renderer and addon contract unchanged.
+        // Canvas is optional and applies to both UI layouts. Legacy SVG mode
+        // remains available for compatibility with addons that require it.
         if (this.props.canvasRenderer) {
             CanvasBlockRenderer.enableBlocklyCanvasMode(this.ScratchBlocks);
         }

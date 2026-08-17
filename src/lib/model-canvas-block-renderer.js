@@ -1553,17 +1553,32 @@ class ModelCanvasBlockRenderer {
             root.__02CanvasDragPosition = null;
             this.invalidatePosition(root);
         }
-        // The insertion manager snapshots both the dragged connections and the
-        // nearby workspace connection database before the first drag frame.
-        // Finish only viewport layouts here; offscreen scripts remain deferred.
-        const visible = this.getVisibleWorldBounds();
-        // The other roots already have connection positions from their last
-        // committed scene. Building every visible root synchronously here
-        // caused a noticeable hitch as soon as a large script was dragged.
-        // The dragged root is the only new layout that must be ready now.
-        this.ensureLayoutsForRoot(visible, root);
+        // The insertion manager snapshots the dragged connections before the
+        // first drag frame. Its connection database must contain the exact
+        // coordinates for the whole dragged stack, including blocks currently
+        // outside the viewport. Build only this root completely; other roots
+        // remain viewport-cancelled and are still painted lazily.
+        this.ensureExactDragLayout(root);
         const layout = root && this.rootLayouts.get(root.id);
         if (layout) this.updateConnectionPositions(layout);
+    }
+
+    ensureExactDragLayout (root) {
+        if (!this.isLiveBlock(root) || this.layoutSuspended) return;
+        const layout = this.getRootLayout(root);
+        this.ensureProjection(layout);
+        const projectedCount = layout.projectedBlocks.size;
+        const materializedCount = layout.geometries.reduce((count, geometry) =>
+            count + (geometry && this.isLiveBlock(geometry.block) ? 1 : 0), 0);
+        if (layout.dirty || layout.inProgress || materializedCount < projectedCount) {
+            // A null world bounds intentionally materializes this one root in
+            // full. Blockly addons can change connection offsets and block
+            // shapes, so estimated viewport geometry is not sufficient for
+            // snapping a long stack.
+            this.ensureLayoutsForRoot(null, root);
+        } else {
+            this.updateConnectionPositions(layout);
+        }
     }
 
     endBlockDrag (block) {

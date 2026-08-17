@@ -9,6 +9,7 @@ import {
 } from './editor-background-storage';
 
 const CUSTOM_UI_KEY = 'tw:customUI';
+const CANVAS_RENDERER_KEY = 'tw:canvasRenderer';
 const EDITOR_BACKGROUND_KEY = 'tw:editorBackground';
 const TOOLBOX_LAYOUT_KEY = 'tw:toolboxLayout';
 const BLOCK_FLYOUT_WIDTH_KEY = 'tw:blockFlyoutWidth';
@@ -46,6 +47,18 @@ const getPersistentCustomUI = (fallback = true) => {
 
 const setPersistentCustomUI = customUI => (
     setLocalStorageItem(CUSTOM_UI_KEY, customUI === true ? 'true' : 'false')
+);
+
+const getPersistentCanvasRenderer = (fallback = true) => {
+    const stored = getLocalStorageItem(CANVAS_RENDERER_KEY);
+    if (stored === null) {
+        return fallback;
+    }
+    return stored === 'true';
+};
+
+const setPersistentCanvasRenderer = canvasRenderer => (
+    setLocalStorageItem(CANVAS_RENDERER_KEY, canvasRenderer === true ? 'true' : 'false')
 );
 
 const serializePersistentEditorBackground = editorBackground => {
@@ -132,11 +145,14 @@ const hydratePersistentEditorBackground = async background => {
 
 export {
     CUSTOM_UI_KEY,
+    CANVAS_RENDERER_KEY,
     EDITOR_BACKGROUND_KEY,
     TOOLBOX_LAYOUT_KEY,
     BLOCK_FLYOUT_WIDTH_KEY,
     getPersistentCustomUI,
     setPersistentCustomUI,
+    getPersistentCanvasRenderer,
+    setPersistentCanvasRenderer,
     getPersistentEditorBackground,
     hydratePersistentEditorBackground,
     setPersistentEditorBackground,

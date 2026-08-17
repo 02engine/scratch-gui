@@ -6,7 +6,12 @@ import {connect} from 'react-redux';
 import {close02EngineSettingsModal, closeSettingsModal, openToolboxLayoutModal} from '../reducers/modals';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
 import {defaultStageSize} from '../reducers/custom-stage-size';
-import { setOpsPerFrameState, setCustomUIState, setEditorBackgroundState } from '../reducers/tw';
+import {
+    setOpsPerFrameState,
+    setCustomUIState,
+    setCanvasRendererState,
+    setEditorBackgroundState
+} from '../reducers/tw';
 import windowStateStorage from '../lib/window-state-storage';
 import {
     EDITOR_BACKGROUND_IMAGE_STORAGE,
@@ -225,6 +230,7 @@ class UsernameModal extends React.Component {
             'handleStageHeightChange',
             'handleDisableCompilerChange',
             'handleCustomUIChange',
+            'handleCanvasRendererChange',
             'handleBackgroundImageChange',
             'handleBackgroundBlurChange',
             'handleBackgroundTargetChange',
@@ -305,6 +311,9 @@ class UsernameModal extends React.Component {
     handleCustomUIChange (e) {
         // store the preference in redux. UI wiring elsewhere should observe this state.
         if (this.props.setCustomUI) this.props.setCustomUI(e.target.checked);
+    }
+    handleCanvasRendererChange (e) {
+        if (this.props.setCanvasRenderer) this.props.setCanvasRenderer(e.target.checked);
     }
     async handleBackgroundImageChange (e) {
         const file = e.target.files && e.target.files[0];
@@ -425,6 +434,8 @@ class UsernameModal extends React.Component {
                 onOpsPerFrameChange={this.handleOpsPerFrameChange}
                 onCustomizeOpsPerFrame={this.handleCustomizeOpsPerFrame}
                 onCustomUIChange={this.handleCustomUIChange}
+                canvasRenderer={this.props.canvasRenderer}
+                onCanvasRendererChange={this.handleCanvasRendererChange}
                 editorBackground={this.props.editorBackground}
                 onBackgroundImageChange={this.handleBackgroundImageChange}
                 onBackgroundBlurChange={this.handleBackgroundBlurChange}
@@ -482,6 +493,7 @@ UsernameModal.propTypes = {
     highQualityPen: PropTypes.bool,
     interpolation: PropTypes.bool,
     customUI: PropTypes.bool,
+    canvasRenderer: PropTypes.bool,
     editorBackground: PropTypes.shape({
         image: PropTypes.string,
         blur: PropTypes.number,
@@ -498,6 +510,7 @@ UsernameModal.propTypes = {
     }),
     disableCompiler: PropTypes.bool,
     setEditorBackground: PropTypes.func,
+    setCanvasRenderer: PropTypes.func,
     onOpenToolboxLayout: PropTypes.func
 };
 
@@ -507,6 +520,7 @@ const mapStateToProps = state => ({
     framerate: state.scratchGui.tw.framerate,
     opsPerFrame: state.scratchGui.tw.opsPerFrame,
     customUI: !!state.scratchGui.tw.customUI,
+    canvasRenderer: state.scratchGui.tw.canvasRenderer !== false,
     editorBackground: normalizeEditorBackground(state.scratchGui.tw.editorBackground),
     highQualityPen: state.scratchGui.tw.highQualityPen,
     interpolation: state.scratchGui.tw.interpolation,
@@ -523,6 +537,7 @@ const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeSettingsModal()),
     setOpsPerFrame: (value) => dispatch(setOpsPerFrameState(value)),
     setCustomUI: value => dispatch(setCustomUIState(value)),
+    setCanvasRenderer: value => dispatch(setCanvasRendererState(value)),
     setEditorBackground: value => dispatch(setEditorBackgroundState(value)),
     onOpenToolboxLayout: () => dispatch(openToolboxLayoutModal())
 });

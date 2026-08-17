@@ -69,6 +69,16 @@
     "defaultMessage": "Switches between the custom separated-window stage/targets UI and the original single-window UI."
   },
   {
+    "id": "tw.settingsModal.canvasRenderer",
+    "description": "Canvas blocks renderer toggle",
+    "defaultMessage": "Use Canvas renderer for the blocks workspace"
+  },
+  {
+    "id": "tw.settingsModal.canvasRendererHelp",
+    "description": "Help text for Canvas blocks renderer toggle",
+    "defaultMessage": "Render the blocks workspace with Canvas in both the new and original UI. Turn this off to use the native SVG renderer."
+  },
+  {
     "id": "tw.settingsModal.backgroundEditor",
     "description": "Custom editor background setting title",
     "defaultMessage": "Editor Background"

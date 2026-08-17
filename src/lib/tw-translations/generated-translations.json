@@ -9022,6 +9022,8 @@
     "tw.settingsModal.customStageSizeHelp": "改变 Scratch 的屏幕大小，原大小为 480x360。例如，将分辨率改为 640x360 可实现宽屏作品。但是只有极少作品能在修改尺寸后正常运行。",
     "tw.settingsModal.customUI": "使用新 UI（分离窗口/角色面板）",
     "tw.settingsModal.customUIHelp": "切换到新的分离窗口舞台/角色面板界面（替代原始单窗口布局）。",
+    "tw.settingsModal.canvasRenderer": "使用 Canvas 渲染积木编辑区",
+    "tw.settingsModal.canvasRendererHelp": "在新 UI 和旧 UI 中都使用 Canvas 渲染积木编辑区。关闭后使用原生 SVG 渲染。",
     "tw.settingsModal.dangerZone": "危险功能",
     "tw.settingsModal.disableCompiler": "禁用编译器",
     "tw.settingsModal.disableCompilerHelp": "禁用 {APP_NAME} 编译器。您可能在编辑作品时希望启用此项以及时更新脚本。除此之外，您永远不应该启用此项。",

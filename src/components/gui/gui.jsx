@@ -336,6 +336,7 @@ const GUIComponent = props => {
     onRequestCloseCollaborationModal,
     vm,
         customUI,
+        canvasRenderer,
         editorBackground,
         editingTargetId,
         sprites,
@@ -1287,9 +1288,9 @@ const GUIComponent = props => {
                 <TabPanel className={tabClassNames.tabPanel}>
                     <Box className={styles.blocksWrapper}>
                         <Blocks
-                            key={`${blocksId}/${theme.id}`}
+                            key={`${blocksId}/${theme.id}/${canvasRenderer ? 'canvas' : 'svg'}`}
                             canUseCloud={canUseCloud}
-                            canvasRenderer={customUI}
+                            canvasRenderer={canvasRenderer}
                             grow={1}
                             isVisible={blocksTabVisible}
                             options={{
@@ -1875,6 +1876,7 @@ GUIComponent.propTypes = {
         height: PropTypes.number
     }),
     customUI: PropTypes.bool,
+    canvasRenderer: PropTypes.bool,
     editorBackground: PropTypes.shape({
         image: PropTypes.string,
         blur: PropTypes.number,
@@ -1980,6 +1982,7 @@ const mapStateToProps = state => ({
     editorBackground: state.scratchGui.tw.editorBackground,
     isWindowFullScreen: state.scratchGui.tw.isWindowFullScreen,
     customUI: !!state.scratchGui.tw.customUI,
+    canvasRenderer: state.scratchGui.tw.canvasRenderer !== false,
     editingTargetId: state.scratchGui.targets.editingTarget,
     sprites: state.scratchGui.targets.sprites,
     stage: state.scratchGui.targets.stage,

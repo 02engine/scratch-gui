@@ -267,6 +267,32 @@ CustomUI.propTypes = {
     onChange: PropTypes.func
 };
 
+const CanvasRenderer = props => (
+    <BooleanSetting
+        value={props.canvasRenderer}
+        onChange={props.onChange}
+        label={(
+            <FormattedMessage
+                defaultMessage="Use Canvas renderer for the blocks workspace"
+                description="Canvas blocks renderer toggle"
+                id="tw.settingsModal.canvasRenderer"
+            />
+        )}
+        help={(
+            <FormattedMessage
+                defaultMessage="Render the blocks workspace with Canvas in both the new and original UI. Turn this off to use the native SVG renderer."
+                description="Help text for Canvas blocks renderer toggle"
+                id="tw.settingsModal.canvasRendererHelp"
+            />
+        )}
+        slug="canvas-renderer"
+    />
+);
+CanvasRenderer.propTypes = {
+    canvasRenderer: PropTypes.bool,
+    onChange: PropTypes.func
+};
+
 const BackgroundSettings = props => {
     const background = normalizeEditorBackground(props.editorBackground);
     return (
@@ -880,6 +906,10 @@ const SettingsModalComponent = props => (
                         customUI={props.customUI}
                         onChange={props.onCustomUIChange}
                     />
+                    <CanvasRenderer
+                        canvasRenderer={props.canvasRenderer}
+                        onChange={props.onCanvasRendererChange}
+                    />
                     <CustomizeToolbox
                         onOpenToolboxLayout={props.onOpenToolboxLayout}
                     />
@@ -954,6 +984,8 @@ SettingsModalComponent.propTypes = {
     onDisableCompilerChange: PropTypes.func,
     customUI: PropTypes.bool,
     onCustomUIChange: PropTypes.func,
+    canvasRenderer: PropTypes.bool,
+    onCanvasRendererChange: PropTypes.func,
     editorBackground: PropTypes.shape({
         image: PropTypes.string,
         blur: PropTypes.number,
