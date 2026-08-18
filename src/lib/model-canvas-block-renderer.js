@@ -2792,7 +2792,6 @@ class ModelCanvasBlockRenderer {
         const afterMeasurement = this.getBlockMeasurementSignature(block);
         if (beforeMeasurement !== afterMeasurement) {
             this.invalidateAncestorMeasurements(block);
-            if (this.activeLayoutTask) this.activeLayoutTask.measurementChanged = true;
         }
     }
 
@@ -2821,6 +2820,33 @@ class ModelCanvasBlockRenderer {
             this.invalidateEstimateCacheForBlock(parent);
             parent = parent.getParent && parent.getParent();
         }
+
+        // A native measurement may happen outside a layout task (for example
+        // while a field or a compatibility API materializes one block). The
+        // old code dirtied only the measurement cache, so the committed Canvas
+        // scene kept the old C-shape until a drag or zoom happened to trigger a
+        // fresh layout. Keep the active task on its bounded convergence path;
+        // otherwise invalidate the owning root and enqueue a new layout.
+        const root = rootOf(block);
+        const layout = root && this.rootLayouts.get(root.id);
+        const activeTask = this.activeLayoutTask &&
+            this.activeLayoutTask.layout === layout ? this.activeLayoutTask : null;
+        if (activeTask) {
+            activeTask.measurementChanged = true;
+            return;
+        }
+        if (!layout) return;
+        layout.dirty = true;
+        layout.projectionDirty = true;
+        layout.projectionBounds = null;
+        layout.version = numberOr(layout.version) + 1;
+        if (layout.inProgress) {
+            layout.inProgress = false;
+            layout.processing = false;
+            this.layoutTasks.delete(root.id);
+            layout.pendingScene = null;
+        }
+        this.scheduleDraw();
     }
 
     renderNativeModel (block, seen = new Set()) {
@@ -3331,13 +3357,36 @@ class ModelCanvasBlockRenderer {
             const block = pending.pop();
             if (!this.isLiveBlock(block) || result.has(block.id)) continue;
             result.set(block.id, block);
+
+            // A C-shaped parent derives its native outline from the complete
+            // stack connected to its NEXT_STATEMENT input. Include only those
+            // statement parents in the dependency closure. Ordinary NEXT
+            // chains are deliberately not added, so large scripts retain the
+            // fast viewport scheduler while every affected C parent is
+            // remeasured when a visible child changes size.
+            let parent = block.getSurroundParent ?
+                block.getSurroundParent() : (block.getParent && block.getParent());
+            while (parent) {
+                let ownsStatementInput = false;
+                for (const input of parent.inputList || []) {
+                    const connection = input && input.connection;
+                    if (connection && connection.type === this.ScratchBlocks.NEXT_STATEMENT &&
+                        connection.targetBlock) {
+                        ownsStatementInput = true;
+                        break;
+                    }
+                }
+                if (ownsStatementInput && !result.has(parent.id)) pending.push(parent);
+                parent = parent.getSurroundParent ?
+                    parent.getSurroundParent() : (parent.getParent && parent.getParent());
+            }
             for (const input of block.inputList || []) {
                 if (!input.connection) continue;
                 if (input.connection.type !== this.ScratchBlocks.INPUT_VALUE &&
                     !this.isProcedureHeaderBlock(block)) continue;
-                const child = input.connection && input.connection.targetBlock &&
+                const inputChild = input.connection && input.connection.targetBlock &&
                     input.connection.targetBlock();
-                if (child && !result.has(child.id)) pending.push(child);
+                if (inputChild && !result.has(inputChild.id)) pending.push(inputChild);
             }
         }
         return Array.from(result.values());

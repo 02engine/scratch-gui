@@ -144,6 +144,15 @@ const applyScratchBlocksPerformancePatches = ScratchBlocks => {
                 if (this.pendingWheelScrollDelta_) {
                     const scrollDelta = this.pendingWheelScrollDelta_;
                     this.pendingWheelScrollDelta_ = null;
+                    // Canvas layout can change the content bounds while a
+                    // wheel gesture is in progress. Refresh the scrollbar's
+                    // ratio before converting the requested pixel delta to a
+                    // workspace position; otherwise the ratio from the
+                    // previous content height can make scrolling slow down or
+                    // appear to reverse when a large C block finishes.
+                    if (this.scrollbar && typeof this.scrollbar.resize === 'function') {
+                        this.scrollbar.resize();
+                    }
                     this.startDragMetrics = this.getMetrics();
                     this.scroll(this.scrollX - scrollDelta.x, this.scrollY - scrollDelta.y);
                 }
