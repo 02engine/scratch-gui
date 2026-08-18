@@ -919,6 +919,49 @@ const installBlocklyCanvasMode = ScratchBlocks => {
 
     const commentProto = ScratchBlocks.ScratchBlockComment &&
         ScratchBlocks.ScratchBlockComment.prototype;
+    const bubbleProto = ScratchBlocks.Bubble && ScratchBlocks.Bubble.prototype;
+    if (bubbleProto && bubbleProto.bubbleMouseDown_ &&
+        !bubbleProto.__02CanvasBubbleMouseDownPatched) {
+        const originalBubbleMouseDown = bubbleProto.bubbleMouseDown_;
+        bubbleProto.bubbleMouseDown_ = function (event) {
+            const workspace = this.workspace_;
+            if (!isCanvasWorkspace(workspace)) {
+                return originalBubbleMouseDown.call(this, event);
+            }
+
+            const gesture = workspace.getGesture(event);
+            if (!gesture) return;
+            gesture.handleBubbleStart(event, this);
+
+            // Canvas comments live in a sibling SVG layer, so the original
+            // workspace mousedown listener cannot receive this event through
+            // DOM bubbling. Complete the same two-step initialization that
+            // Blockly's workspace listener normally performs, including the
+            // document-level move/up handlers needed by BubbleDragger.
+            if (!gesture.hasStarted()) gesture.handleWsStart(event, workspace);
+        };
+        bubbleProto.__02CanvasBubbleMouseDownPatched = true;
+    }
+
+    const workspaceCommentProto = ScratchBlocks.WorkspaceCommentSvg &&
+        ScratchBlocks.WorkspaceCommentSvg.prototype;
+    if (workspaceCommentProto && workspaceCommentProto.pathMouseDown_ &&
+        !workspaceCommentProto.__02CanvasCommentMouseDownPatched) {
+        const originalCommentMouseDown = workspaceCommentProto.pathMouseDown_;
+        workspaceCommentProto.pathMouseDown_ = function (event) {
+            const workspace = this.workspace;
+            if (!isCanvasWorkspace(workspace)) {
+                return originalCommentMouseDown.call(this, event);
+            }
+
+            const gesture = workspace.getGesture(event);
+            if (!gesture) return;
+            gesture.handleBubbleStart(event, this);
+            if (!gesture.hasStarted()) gesture.handleWsStart(event, workspace);
+        };
+        workspaceCommentProto.__02CanvasCommentMouseDownPatched = true;
+    }
+
     if (commentProto && commentProto.setVisible && !commentProto.__02CanvasSetVisiblePatched) {
         const originalCommentSetVisible = commentProto.setVisible;
         commentProto.setVisible = function (visible) {
@@ -1725,6 +1768,7 @@ class ModelCanvasBlockRenderer {
             const block = item && item.block;
             const comment = block && block.comment;
             if (!this.isLiveBlock(block) || !comment || !comment.setVisible) continue;
+            if (item.visible !== false) this.materializeBlock(block.id, true);
             if (item.visible === false) {
                 if (comment.isVisible && comment.isVisible()) comment.setVisible(false);
             } else {
@@ -1769,6 +1813,14 @@ class ModelCanvasBlockRenderer {
         patch('setScale', (original, args) => {
             const result = original.apply(workspace, args);
             renderer.scheduleDraw();
+            return result;
+        });
+        patch('undo', (original, args) => {
+            const result = original.apply(workspace, args);
+            // Undo and redo can restore an old graph using the same block IDs.
+            // Targeted invalidation is not sufficient because native model
+            // nodes and geometry may belong to the previous object graph.
+            renderer.invalidateAll(true);
             return result;
         });
         workspace.__02CanvasViewportMethodsPatched = true;
@@ -2326,7 +2378,7 @@ class ModelCanvasBlockRenderer {
         this.invalidateAll();
     }
 
-    invalidateAll () {
+    invalidateAll (resetGeometry = false) {
         // Estimate entries have mode and stack suffixes in their keys. A
         // bare block id never matched those keys, so stale nested dimensions
         // survived imports and later field/mutation changes.
@@ -2334,6 +2386,10 @@ class ModelCanvasBlockRenderer {
         // Dropping the measurement cache is equivalent to marking every entry
         // dirty, without a synchronous getAllBlocks() walk on a huge target.
         this.nativeBlockCache.clear();
+        if (resetGeometry) {
+            this.blockGeometry.clear();
+            this.fieldGeometry = new WeakMap();
+        }
         for (const layout of this.rootLayouts.values()) {
             layout.dirty = true;
             layout.projectionDirty = true;
@@ -2414,6 +2470,14 @@ class ModelCanvasBlockRenderer {
 
     handleChange (event) {
         const eventType = String((event && event.type) || '').toLowerCase();
+        if (event && event.recordUndo === false && !['ui', 'finished_loading'].includes(eventType)) {
+            // Blockly emits fresh events with recordUndo=false while replaying
+            // undo/redo. The replay may recreate blocks with IDs that still
+            // exist in the Canvas caches, so targeted invalidation can reuse
+            // geometry from the previous graph.
+            this.invalidateAll(true);
+            return;
+        }
         const block = event && event.blockId && this.workspace.getBlockById(event.blockId);
         if (eventType === 'move' && (event.oldParentId || event.newParentId)) {
             // Disconnecting or inserting a stack changes both sides of the
@@ -5201,6 +5265,11 @@ class ModelCanvasBlockRenderer {
         const target = event && event.target;
         if (!target || !this.injection || !this.injection.contains(target)) return false;
         if (!target.closest) return true;
+        // Bubble canvases are moved above the Canvas layer, but their native
+        // ScratchBubble handlers still own the gesture. Do not hit-test the
+        // block painted underneath a comment, or the capture listener will
+        // start a block gesture and prevent the bubble dragger from running.
+        if (target.closest('.blocklyBubbleCanvas')) return false;
         return !target.closest([
             '.blocklyFlyout',
             '.blocklyToolboxDiv',
