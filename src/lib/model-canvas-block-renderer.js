@@ -2389,8 +2389,26 @@ class ModelCanvasBlockRenderer {
     }
 
     handleChange (event) {
+        const eventType = String((event && event.type) || '').toLowerCase();
         const block = event && event.blockId && this.workspace.getBlockById(event.blockId);
-        if (block && String(event.type).toLowerCase() === 'move' &&
+        if (eventType === 'move' && (event.oldParentId || event.newParentId)) {
+            // Disconnecting or inserting a stack changes both sides of the
+            // graph. Looking up blockId after Blockly applies the event only
+            // finds its new root, so the old script used to keep stale
+            // projection/geometry until another unrelated edit refreshed it.
+            const affectedRoots = new Set();
+            const addRoot = candidate => {
+                const root = this.isLiveBlock(candidate) && rootOf(candidate);
+                if (root) affectedRoots.add(root);
+            };
+            addRoot(block);
+            addRoot(event.oldParentId && this.workspace.getBlockById(event.oldParentId));
+            addRoot(event.newParentId && this.workspace.getBlockById(event.newParentId));
+            for (const root of affectedRoots) this.invalidateBlock(root);
+            this.lastInteractionAt = now();
+            return;
+        }
+        if (block && eventType === 'move' &&
             this.isDraggedBlock(block)) {
             this.lastInteractionAt = now();
             // Pointer movement changes only the root transform. Blockly's
@@ -2399,12 +2417,12 @@ class ModelCanvasBlockRenderer {
             this.invalidatePosition(this.draggingRoot);
             return;
         }
-        if (block && String(event.type).toLowerCase() === 'move' &&
+        if (block && eventType === 'move' &&
             !event.oldParentId && !event.newParentId) this.invalidatePosition(rootOf(block));
         else if (block) this.invalidateBlock(block);
         else if (!event || !event.type || [
             'create', 'delete', 'change', 'move', 'finished_loading'
-        ].includes(String(event.type).toLowerCase())) this.invalidateAll();
+        ].includes(eventType)) this.invalidateAll();
         else this.scheduleDraw();
     }
 
