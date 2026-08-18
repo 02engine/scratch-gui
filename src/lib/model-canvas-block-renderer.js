@@ -1169,6 +1169,12 @@ const installBlocklyCanvasMode = ScratchBlocks => {
         const originalEnd = draggerProto.endBlockDrag;
         draggerProto.startBlockDrag = function (...args) {
             const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
+            if (renderer && this.draggingBlock_) {
+                // Populate the native connection baseline from the cheap graph
+                // projection before the dragger snapshots it. This avoids
+                // forcing a complete native shape pass for a long stack.
+                renderer.prepareDragConnections(this.draggingBlock_);
+            }
             const connectionSnapshot = renderer &&
                 renderer.captureDragConnectionPositions(this.draggedConnectionManager_);
             const result = originalStart.apply(this, args);
@@ -1245,7 +1251,9 @@ const installBlocklyCanvasMode = ScratchBlocks => {
             const block = this.sourceBlock_;
             if (!isCanvasWorkspace(block && block.workspace)) return originalTighten.call(this);
             const renderer = block.workspace.canvasBlockRenderer;
-            if (renderer && !renderer.renderingNative) renderer.invalidateBlock(block);
+            if (renderer && !renderer.renderingNative && !renderer.updatingConnections) {
+                renderer.invalidateBlock(block);
+            }
         };
         const originalHighlight = connectionProto.highlight;
         connectionProto.highlight = function () {
@@ -1336,15 +1344,49 @@ class ModelCanvasBlockRenderer {
         this.highlightedConnection = null;
         this.zCounter = 1;
         this.draggingRoot = null;
+        this.dragStarted = false;
         this.lastDrawDuration = 0;
         this.lastLayoutDuration = 0;
+        this.performanceTimer = null;
+        this.performance = {
+            startedAt: now(),
+            draws: 0,
+            drawTime: 0,
+            drawMax: 0,
+            layouts: 0,
+            layoutTime: 0,
+            layoutMax: 0,
+            layoutBlocks: 0,
+            nativeMeasurements: 0,
+            nativeTime: 0,
+            nativeMax: 0,
+            projections: 0,
+            projectionTime: 0,
+            projectionMax: 0,
+            projectionBlocks: 0,
+            nativeReasons: {
+                dirty: 0,
+                notReady: 0,
+                procedureHeader: 0,
+                fieldNodes: 0
+            },
+            errors: 0
+        };
         this.visibleBlockCount = 0;
+        // Production rendering stays viewport-cropped. The isolated test page
+        // can enable this flag to measure a complete scene in one pass.
+        this.renderAllBlocks = false;
+        this.deferFullRenderDraw = false;
         this.loadingWorkPending = false;
-        this.loadingMode = 'frame';
+        // Use continuous batches while idle, then yield to animation frames
+        // as soon as the user interacts with the workspace.
+        this.loadingMode = 'adaptive';
         this.loadingRate = LAYOUT_SINGLE_ROOT_BUDGET;
+        this.lastInteractionAt = 0;
         this.loadingPanel = null;
         this.loadingPanelStatus = null;
         this.loadingTimer = null;
+        this.benchmarkWaitFrame = null;
         this.estimateCache = new Map();
         this.activeLayoutTask = null;
         this.viewportKey = null;
@@ -1402,6 +1444,96 @@ class ModelCanvasBlockRenderer {
             this.resizeObserver.observe(injection);
         }
         this.setEnabled(true);
+        this.startPerformanceMonitor();
+    }
+
+    startPerformanceMonitor () {
+        if (this.performanceTimer || typeof setInterval !== 'function') return;
+        this.performanceTimer = setInterval(() => {
+            if (!this.workspace || !this.performance) return;
+            const metrics = this.performance;
+            const elapsed = Math.max(1, now() - metrics.startedAt);
+            const snapshot = {
+                elapsed: Math.round(elapsed),
+                fps: Number((metrics.draws * 1000 / elapsed).toFixed(1)),
+                draws: metrics.draws,
+                drawMs: Number(metrics.drawTime.toFixed(1)),
+                drawMaxMs: Number(metrics.drawMax.toFixed(1)),
+                layouts: metrics.layouts,
+                layoutMs: Number(metrics.layoutTime.toFixed(1)),
+                layoutMaxMs: Number(metrics.layoutMax.toFixed(1)),
+                layoutBlocks: metrics.layoutBlocks,
+                nativeMeasurements: metrics.nativeMeasurements,
+                nativeMs: Number(metrics.nativeTime.toFixed(1)),
+                nativeMaxMs: Number(metrics.nativeMax.toFixed(1)),
+                projections: metrics.projections,
+                projectionMs: Number(metrics.projectionTime.toFixed(1)),
+                projectionMaxMs: Number(metrics.projectionMax.toFixed(1)),
+                projectionBlocks: metrics.projectionBlocks,
+                nativeReasons: metrics.nativeReasons,
+                visibleBlocks: this.visibleBlockCount,
+                queue: this.layoutTasks.size,
+                errors: metrics.errors
+            };
+            if (typeof console !== 'undefined' && console.info) {
+                console.info('[02CanvasPerf]', JSON.stringify(snapshot));
+            }
+            this.updateTuningPanel();
+        }, 1000);
+    }
+
+    recordPerformance (kind, duration, count = 0) {
+        const metrics = this.performance;
+        if (!metrics || !Number.isFinite(duration)) return;
+        if (kind === 'draw') {
+            metrics.draws++;
+            metrics.drawTime += duration;
+            metrics.drawMax = Math.max(metrics.drawMax, duration);
+        } else if (kind === 'layout') {
+            metrics.layouts++;
+            metrics.layoutTime += duration;
+            metrics.layoutMax = Math.max(metrics.layoutMax, duration);
+            metrics.layoutBlocks += count;
+        } else if (kind === 'native') {
+            metrics.nativeMeasurements++;
+            metrics.nativeTime += duration;
+            metrics.nativeMax = Math.max(metrics.nativeMax, duration);
+        } else if (kind === 'projection') {
+            metrics.projections++;
+            metrics.projectionTime += duration;
+            metrics.projectionMax = Math.max(metrics.projectionMax, duration);
+            metrics.projectionBlocks += count;
+        }
+    }
+
+    recordNativeReason (reason) {
+        if (this.performance && this.performance.nativeReasons &&
+            Object.prototype.hasOwnProperty.call(this.performance.nativeReasons, reason)) {
+            this.performance.nativeReasons[reason]++;
+        }
+    }
+
+    resetPerformance () {
+        if (!this.performance) return;
+        this.performance.startedAt = now();
+        this.performance.draws = 0;
+        this.performance.drawTime = 0;
+        this.performance.drawMax = 0;
+        this.performance.layouts = 0;
+        this.performance.layoutTime = 0;
+        this.performance.layoutMax = 0;
+        this.performance.layoutBlocks = 0;
+        this.performance.nativeMeasurements = 0;
+        this.performance.nativeTime = 0;
+        this.performance.nativeMax = 0;
+        this.performance.projections = 0;
+        this.performance.projectionTime = 0;
+        this.performance.projectionMax = 0;
+        this.performance.projectionBlocks = 0;
+        this.performance.errors = 0;
+        for (const reason of Object.keys(this.performance.nativeReasons || {})) {
+            this.performance.nativeReasons[reason] = 0;
+        }
     }
 
     attachCommentLayer () {
@@ -1490,7 +1622,8 @@ class ModelCanvasBlockRenderer {
         const modeLabel = document.createElement('label');
         modeLabel.textContent = 'Mode ';
         const mode = document.createElement('select');
-        mode.innerHTML = '<option value="frame">Batched frames</option>' +
+        mode.innerHTML = '<option value="adaptive">Adaptive (idle fast)</option>' +
+            '<option value="frame">Batched frames</option>' +
             '<option value="continuous">Continuous batches</option>' +
             '<option value="sync">Fast loading (responsive)</option>';
         mode.value = this.loadingMode;
@@ -1529,12 +1662,18 @@ class ModelCanvasBlockRenderer {
         status.style.marginTop = '5px';
         status.style.lineHeight = '1.3';
         panel.appendChild(status);
+        const metrics = document.createElement('div');
+        metrics.style.marginTop = '5px';
+        metrics.style.lineHeight = '1.3';
+        metrics.style.opacity = '0.8';
+        panel.appendChild(metrics);
         this.injection.appendChild(panel);
         this.loadingPanel = panel;
         this.loadingPanelMode = mode;
         this.loadingPanelRate = rate;
         this.loadingPanelRateText = rateText;
         this.loadingPanelStatus = status;
+        this.loadingPanelMetrics = metrics;
         this.updateTuningPanel();
     }
 
@@ -1549,8 +1688,20 @@ class ModelCanvasBlockRenderer {
         const phase = active ? active.phase :
             (workerPending ? 'worker' : (this.loadingWorkPending ? 'queued' : 'idle'));
         const root = active && active.root ? `${active.root.type || 'block'}:${active.root.id}` : '-';
+        const nativeProgress = active && active.phase === 'native' ?
+            ` | native ${active.nativeIndex}/${active.nativeBlocks.length}` : '';
         this.loadingPanelRateText.textContent = `${this.loadingRate} ms/slice`;
-        this.loadingPanelStatus.textContent = `${phase} ${percent}% | ${this.layoutTasks.size} queue | ${root}`;
+        this.loadingPanelStatus.textContent = `${phase} ${percent}%${nativeProgress} | ` +
+            `${this.layoutTasks.size} queue | ${root}`;
+        if (this.loadingPanelMetrics && this.performance) {
+            const metrics = this.performance;
+            this.loadingPanelMetrics.textContent = [
+                `draw ${this.lastDrawDuration.toFixed(1)}ms / ${this.visibleBlockCount}`,
+                `layout ${this.lastLayoutDuration.toFixed(1)}ms`,
+                `native ${metrics.nativeMeasurements} (${metrics.nativeTime.toFixed(1)}ms)`,
+                `projection ${metrics.projections} (${metrics.projectionTime.toFixed(1)}ms)`
+            ].join(' | ');
+        }
     }
 
     restorePendingComments () {
@@ -1623,6 +1774,14 @@ class ModelCanvasBlockRenderer {
 
     getEstimateKey (block, ignoreFields, stack = false) {
         return `${block.id}:${ignoreFields ? 'no-fields' : 'fields'}${stack ? ':stack' : ''}`;
+    }
+
+    invalidateEstimateCacheForBlock (block) {
+        if (!block || !block.id) return;
+        this.estimateCache.delete(this.getEstimateKey(block, false));
+        this.estimateCache.delete(this.getEstimateKey(block, true));
+        this.estimateCache.delete(this.getEstimateKey(block, false, true));
+        this.estimateCache.delete(this.getEstimateKey(block, true, true));
     }
 
     getEstimatedBaseSize (block, ignoreFields = false) {
@@ -1855,6 +2014,11 @@ class ModelCanvasBlockRenderer {
         if (this.resizeObserver) this.resizeObserver.disconnect();
         if (this.frame !== null) cancelAnimationFrame(this.frame);
         if (this.loadingTimer !== null) clearTimeout(this.loadingTimer);
+        if (this.benchmarkWaitFrame !== null) cancelAnimationFrame(this.benchmarkWaitFrame);
+        this.benchmarkWaitFrame = null;
+        this.deferFullRenderDraw = false;
+        if (this.performanceTimer !== null) clearInterval(this.performanceTimer);
+        this.performanceTimer = null;
         this.restoreCommentLayer();
         if (this.loadingPanel) this.loadingPanel.remove();
         if (this.canvas) this.canvas.remove();
@@ -1872,6 +2036,7 @@ class ModelCanvasBlockRenderer {
         this.projectionWorkerURL = null;
         this.forceMaterializedIds.clear();
         this.draggingRoot = null;
+        this.dragStarted = false;
         this.layoutTasks.clear();
         if (this.layoutFrame !== null) cancelAnimationFrame(this.layoutFrame);
         this.workspace.__02CanvasRendererDisposed = true;
@@ -1883,6 +2048,74 @@ class ModelCanvasBlockRenderer {
         this.enabled = !!enabled && !!this.context;
         if (this.enabled) this.invalidateAll();
         else this.clear();
+    }
+
+    setRenderAllBlocks (enabled) {
+        this.renderAllBlocks = enabled === true;
+        this.viewportKey = null;
+        for (const task of this.layoutTasks.values()) {
+            task.layout.inProgress = false;
+            task.layout.processing = false;
+            if (task.layout.pendingScene === task.scene) task.layout.pendingScene = null;
+        }
+        this.layoutTasks.clear();
+        this.invalidateAll();
+    }
+
+    materializeAllBlocksForBenchmark () {
+        if (!this.workspace || this.layoutSuspended) return Promise.resolve(false);
+        this.renderAllBlocks = true;
+        this.deferFullRenderDraw = true;
+        if (this.frame !== null) cancelAnimationFrame(this.frame);
+        if (this.layoutFrame !== null) cancelAnimationFrame(this.layoutFrame);
+        if (this.loadingTimer !== null) clearTimeout(this.loadingTimer);
+        this.frame = null;
+        this.layoutFrame = null;
+        this.loadingTimer = null;
+        for (const task of this.layoutTasks.values()) {
+            task.layout.inProgress = false;
+            task.layout.processing = false;
+            if (task.layout.pendingScene === task.scene) task.layout.pendingScene = null;
+        }
+        this.layoutTasks.clear();
+        this.invalidateAll();
+
+        // Keep the benchmark on the same yielding queue as the editor. The
+        // previous implementation called layoutRoot(..., Infinity), which
+        // made a large procedure script monopolize the event loop and made
+        // the page appear frozen even though the work was finite.
+        return new Promise(resolve => {
+            const deadline = now() + 180000;
+            const waitForLayouts = () => {
+                this.benchmarkWaitFrame = null;
+                if (!this.enabled || now() >= deadline) {
+                    this.deferFullRenderDraw = false;
+                    resolve(false);
+                    return;
+                }
+                const roots = this.workspace.getTopBlocks ?
+                    this.workspace.getTopBlocks(false) : [];
+                const layouts = roots.map(root => this.rootLayouts.get(root.id)).filter(Boolean);
+                const complete = layouts.length === roots.length && layouts.every(layout => {
+                    const projectedCount = layout.projectedBlocks ? layout.projectedBlocks.size : 0;
+                    return !layout.projectionPending && !layout.inProgress &&
+                        !layout.dirty && layout.geometries.length >= projectedCount;
+                });
+                if (complete && this.layoutTasks.size === 0) {
+                    this.deferFullRenderDraw = false;
+                    this.pendingDraw = false;
+                    this.draw();
+                    resolve(true);
+                    return;
+                }
+                this.scheduleDraw();
+                this.benchmarkWaitFrame = requestAnimationFrame(waitForLayouts);
+            };
+            // Seed the queue once. Subsequent slices intentionally do not
+            // repaint the growing full scene until every layout is complete.
+            this.draw();
+            this.benchmarkWaitFrame = requestAnimationFrame(waitForLayouts);
+        });
     }
 
     captureDragConnectionPositions (connectionManager) {
@@ -1911,6 +2144,7 @@ class ModelCanvasBlockRenderer {
     beginBlockDrag (block) {
         const root = rootOf(block);
         this.draggingRoot = root && root.id ? root : null;
+        this.dragStarted = false;
         if (!root || !this.workspace) return;
         // Keep the dragged root paintable outside the old viewport. Descendants
         // still participate in Blockly's graph and connection calculations,
@@ -1919,6 +2153,7 @@ class ModelCanvasBlockRenderer {
         // adds only the visible inline children.
         if (root.id) this.forceMaterializedIds.add(root.id);
         this.materializeBlock(root.id, true);
+        this.dragStarted = true;
     }
 
     prepareBlockDrag (block, startPosition = null) {
@@ -1934,13 +2169,20 @@ class ModelCanvasBlockRenderer {
             this.invalidatePosition(root);
         }
         // The insertion manager snapshots the dragged connections before the
-        // first drag frame. Its connection database must contain the exact
-        // coordinates for the whole dragged stack, including blocks currently
-        // outside the viewport. Build only this root completely; other roots
-        // remain viewport-cancelled and are still painted lazily.
-        this.ensureExactDragLayout(root);
+        // first drag frame. Project the complete graph and update only its
+        // connection coordinates. Native shape compilation remains viewport
+        // driven and can continue asynchronously after the gesture starts.
+        this.prepareDragConnections(root);
         const layout = root && this.rootLayouts.get(root.id);
         if (layout) this.updateConnectionPositions(layout);
+    }
+
+    prepareDragConnections (block) {
+        if (!this.isLiveBlock(block) || this.layoutSuspended) return;
+        const root = rootOf(block);
+        const layout = this.getRootLayout(root);
+        this.ensureProjection(layout);
+        this.updateProjectedConnectionPositions(layout);
     }
 
     ensureExactDragLayout (root) {
@@ -1951,13 +2193,36 @@ class ModelCanvasBlockRenderer {
         const materializedCount = layout.geometries.reduce((count, geometry) =>
             count + (geometry && this.isLiveBlock(geometry.block) ? 1 : 0), 0);
         if (layout.dirty || layout.inProgress || materializedCount < projectedCount) {
-            // A null world bounds intentionally materializes this one root in
-            // full. Blockly addons can change connection offsets and block
-            // shapes, so estimated viewport geometry is not sufficient for
-            // snapping a long stack.
-            this.ensureLayoutsForRoot(null, root);
+            // Comments only need the current projected position. Do not turn
+            // restoring one comment into a synchronous native render of the
+            // entire script; the normal viewport task will refine its shape.
+            this.updateVisibleProjection(layout, this.getVisibleWorldBounds());
+            this.scheduleDraw();
         } else {
             this.updateConnectionPositions(layout);
+        }
+    }
+
+    updateProjectedConnectionPositions (layout) {
+        if (!layout || !this.isLiveBlock(layout.root) ||
+            !layout.projectedPositions || !layout.projectedBlocks) return;
+        const rootPosition = getRootPosition(layout.root);
+        this.updatingConnections = true;
+        try {
+            for (const [id, block] of layout.projectedBlocks) {
+                if (!this.isLiveBlock(block)) continue;
+                const position = layout.projectedPositions.get(id);
+                if (!position) continue;
+                const topLeft = {
+                    x: rootPosition.x + position.x,
+                    y: rootPosition.y + position.y
+                };
+                for (const connection of block.getConnections_ ? block.getConnections_(true) : []) {
+                    if (connection && connection.moveToOffset) connection.moveToOffset(topLeft);
+                }
+            }
+        } finally {
+            this.updatingConnections = false;
         }
     }
 
@@ -1967,6 +2232,7 @@ class ModelCanvasBlockRenderer {
         // destination stack, not the root that was protected during drag.
         const root = this.draggingRoot || rootOf(block);
         this.draggingRoot = null;
+        this.dragStarted = false;
         if (root && root.id) this.forceMaterializedIds.delete(root.id);
         this.invalidateBlock(root || block);
     }
@@ -2002,6 +2268,8 @@ class ModelCanvasBlockRenderer {
     }
 
     reset () {
+        this.resetPerformance();
+        this.deferFullRenderDraw = false;
         if (this.layoutFrame !== null) {
             cancelAnimationFrame(this.layoutFrame);
             this.layoutFrame = null;
@@ -2011,6 +2279,9 @@ class ModelCanvasBlockRenderer {
             this.loadingTimer = null;
         }
         this.layoutTasks.clear();
+        this.draggingRoot = null;
+        this.dragStarted = false;
+        this.lastInteractionAt = 0;
         this.rootLayouts.clear();
         this.nativeBlockCache.clear();
         this.blockGeometry.clear();
@@ -2067,15 +2338,16 @@ class ModelCanvasBlockRenderer {
             this.pendingDraw = true;
             return;
         }
+        if (this.isDraggedBlock(block)) {
+            this.invalidatePosition(this.draggingRoot);
+            return;
+        }
         let current = block;
         while (current) {
             const state = this.nativeBlockCache.get(current.id) || {dirty: true};
             state.dirty = true;
             this.nativeBlockCache.set(current.id, state);
-            const prefix = `${current.id}:`;
-            for (const key of this.estimateCache.keys()) {
-                if (key.startsWith(prefix)) this.estimateCache.delete(key);
-            }
+            this.invalidateEstimateCacheForBlock(current);
             current = current.getParent && current.getParent();
         }
         const root = rootOf(block);
@@ -2105,8 +2377,28 @@ class ModelCanvasBlockRenderer {
         this.scheduleDraw();
     }
 
+    isDraggedBlock (block) {
+        return !!(this.dragStarted && this.draggingRoot && block &&
+            rootOf(block) === this.draggingRoot);
+    }
+
+    isUserInteracting () {
+        return !!(this.draggingRoot ||
+            (this.workspace && this.workspace.currentGesture_) ||
+            now() - this.lastInteractionAt < 150);
+    }
+
     handleChange (event) {
         const block = event && event.blockId && this.workspace.getBlockById(event.blockId);
+        if (block && String(event.type).toLowerCase() === 'move' &&
+            this.isDraggedBlock(block)) {
+            this.lastInteractionAt = now();
+            // Pointer movement changes only the root transform. Blockly's
+            // dragger still owns graph changes; defer shape invalidation until
+            // the gesture ends so each mouse event cannot restart layout work.
+            this.invalidatePosition(this.draggingRoot);
+            return;
+        }
         if (block && String(event.type).toLowerCase() === 'move' &&
             !event.oldParentId && !event.newParentId) this.invalidatePosition(rootOf(block));
         else if (block) this.invalidateBlock(block);
@@ -2219,9 +2511,52 @@ class ModelCanvasBlockRenderer {
         return layout;
     }
 
+    needsNativeMeasurement (block) {
+        if (!this.isLiveBlock(block)) return false;
+        if (typeof block.renderCompute_ !== 'function' ||
+            typeof block.renderDraw_ !== 'function') {
+            this.recordNativeReason('notReady');
+            return false;
+        }
+        const state = this.nativeBlockCache.get(block.id);
+        if (!state || state.dirty || !block.rendered || !block.svgPath_ ||
+            !block.svgPath_.getAttribute('d')) {
+            this.recordNativeReason('dirty');
+            return true;
+        }
+        if (block.type === this.ScratchBlocks.PROCEDURES_DEFINITION_BLOCK_TYPE) {
+            const customBlockInput = block.getInput && block.getInput('custom_block');
+            const prototype = customBlockInput && customBlockInput.connection &&
+                customBlockInput.connection.targetBlock &&
+                customBlockInput.connection.targetBlock();
+            if (!prototype || prototype === block) return false;
+            const headerSignature = [
+                prototype.id,
+                numberOr(prototype.width),
+                numberOr(prototype.height),
+                prototype.svgPath_ && prototype.svgPath_.getAttribute('d')
+            ].join(':');
+            if (state.procedureHeaderSignature !== headerSignature) {
+                this.recordNativeReason('procedureHeader');
+                return true;
+            }
+            return false;
+        }
+        for (const input of block.inputList || []) {
+            for (const field of input.fieldRow || []) {
+                if (!field.fieldGroup_ && !field.textElement_) {
+                    this.recordNativeReason('fieldNodes');
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     renderNativeBlock (block) {
         if (!this.isLiveBlock(block)) return;
         const state = this.nativeBlockCache.get(block.id) || {dirty: true};
+        if (!this.needsNativeMeasurement(block)) return;
         const beforeMeasurement = this.getBlockMeasurementSignature(block);
         const wasRenderingNative = this.renderingNative;
         this.renderingNative = true;
@@ -2362,10 +2697,15 @@ class ModelCanvasBlockRenderer {
             const state = this.nativeBlockCache.get(parent.id) || {dirty: true};
             state.dirty = true;
             this.nativeBlockCache.set(parent.id, state);
-            const prefix = `${parent.id}:`;
-            for (const key of this.estimateCache.keys()) {
-                if (key.startsWith(prefix)) this.estimateCache.delete(key);
+            // Native blocks are rendered child-first. If an ancestor has
+            // already been rendered in this pass, it really does need a
+            // second measurement; ancestors that have not run yet will see
+            // the child's final dimensions in their first render.
+            if (this.activeLayoutTask && this.activeLayoutTask.renderedNativeIds &&
+                this.activeLayoutTask.renderedNativeIds.has(parent.id)) {
+                this.activeLayoutTask.remeasureIds.add(parent.id);
             }
+            this.invalidateEstimateCacheForBlock(parent);
             parent = parent.getParent && parent.getParent();
         }
     }
@@ -2548,6 +2888,14 @@ class ModelCanvasBlockRenderer {
             layout.projectionRequestId !== result.requestId ||
             layout.projectionRequestVersion !== result.version) return;
         layout.projectionPending = false;
+        if (layout.projectionStartedAt) {
+            this.recordPerformance(
+                'projection',
+                now() - layout.projectionStartedAt,
+                (layout.projectionSnapshotBlocks || []).length
+            );
+            layout.projectionStartedAt = 0;
+        }
         const blocks = layout.projectionSnapshotBlocks || [];
         layout.projectionSnapshotBlocks = null;
         if (result.type === 'error') {
@@ -2600,6 +2948,7 @@ class ModelCanvasBlockRenderer {
         const worker = this.getProjectionWorker();
         if (!worker) return false;
         if (layout.projectionPending && layout.projectionRequestVersion === layout.version) return true;
+        const projectionStarted = now();
         const snapshot = this.createProjectionSnapshot(layout.root);
         if (snapshot.blocks.length < PROJECTION_WORKER_MIN_BLOCKS) return false;
         const requestId = ++this.projectionRequestCounter;
@@ -2607,6 +2956,7 @@ class ModelCanvasBlockRenderer {
         layout.projectionRequestId = requestId;
         layout.projectionRequestVersion = layout.version;
         layout.projectionSnapshotBlocks = snapshot.blocks;
+        layout.projectionStartedAt = projectionStarted;
         try {
             worker.postMessage({
                 type: 'project',
@@ -2731,6 +3081,7 @@ class ModelCanvasBlockRenderer {
         if (!layout.projectionDirty && layout.projectedPositions.size) return;
         layout.projectionPending = false;
         layout.projectionSnapshotBlocks = null;
+        const projectionStarted = now();
         const projection = this.projectBlockPositions(layout.root);
         layout.projectedPositions = projection.positions;
         layout.projectedBlocks = projection.blocks;
@@ -2740,6 +3091,7 @@ class ModelCanvasBlockRenderer {
         layout.cachedRootBounds = projection.bounds ? Object.assign({}, projection.bounds) : null;
         layout.projectionDirty = false;
         layout.projectionBuiltAt = now();
+        this.recordPerformance('projection', now() - projectionStarted, projection.blocks.size);
     }
 
     updateVisibleProjection (layout, worldBounds) {
@@ -2960,7 +3312,8 @@ class ModelCanvasBlockRenderer {
         let nativeBlocks = targetIds
             .map(id => layout.projectedBlocks.get(id))
             .filter(block => this.isLiveBlock(block));
-        nativeBlocks = this.collectMeasurementBlocks(nativeBlocks);
+        nativeBlocks = this.collectMeasurementBlocks(nativeBlocks)
+            .filter(block => this.needsNativeMeasurement(block));
         // Child dimensions are needed before a parent is laid out. Sorting the
         // dependency closure by graph depth preserves that dependency while
         // keeping unrelated roots out of the native shape compiler.
@@ -3001,6 +3354,8 @@ class ModelCanvasBlockRenderer {
             measurementChanged: false,
             measurementPasses: 0,
             failedNativeBlocks: new Set(),
+            renderedNativeIds: new Set(),
+            remeasureIds: new Set(),
             seen: new Set(),
             onlyVisible: true,
             phase: 'native',
@@ -3011,18 +3366,22 @@ class ModelCanvasBlockRenderer {
 
     scheduleLayoutWork () {
         if (this.layoutFrame !== null || this.loadingTimer !== null || !this.layoutTasks.size) return;
+        const continuousMode = this.loadingMode === 'continuous' ||
+            (this.loadingMode === 'adaptive' && !this.isUserInteracting());
         const run = () => {
             this.layoutFrame = null;
             this.loadingTimer = null;
             const frameStarted = now();
             const fastMode = this.loadingMode === 'sync';
+            const fullSceneMode = this.renderAllBlocks && this.deferFullRenderDraw;
             // Even the fastest mode yields at the end of a bounded frame.
             // The old sync path used an infinite deadline and could freeze
             // the browser for tens of seconds on one large script.
-            const deadline = frameStarted + (fastMode ?
-                LAYOUT_FAST_FRAME_BUDGET : LAYOUT_FRAME_BUDGET);
-            const maxSlices = this.layoutTasks.size > 1 ?
-                Math.max(this.layoutTasks.size, 2) : 16;
+            const deadline = frameStarted + (fullSceneMode ? 40 : (fastMode ?
+                LAYOUT_FAST_FRAME_BUDGET : LAYOUT_FRAME_BUDGET));
+            const maxSlices = fullSceneMode ?
+                Math.max(this.layoutTasks.size, 8) :
+                (this.layoutTasks.size > 1 ? Math.max(this.layoutTasks.size, 2) : 16);
             let processedSlices = 0;
             while (this.layoutTasks.size && processedSlices < maxSlices &&
                 now() < deadline) {
@@ -3036,11 +3395,12 @@ class ModelCanvasBlockRenderer {
                 const [id, task] = nextEntry;
                 this.layoutTasks.delete(id);
                 const remaining = Math.max(1, deadline - now());
-                const defaultRate = this.layoutTasks.size > 0 ?
+                const defaultRate = fullSceneMode ? 24 : (this.layoutTasks.size > 0 ?
                     (fastMode ? LAYOUT_FAST_MULTI_ROOT_BUDGET : LAYOUT_MULTI_ROOT_BUDGET) :
-                    (fastMode ? LAYOUT_FAST_ROOT_BUDGET : LAYOUT_SINGLE_ROOT_BUDGET);
+                    (fastMode ? LAYOUT_FAST_ROOT_BUDGET : LAYOUT_SINGLE_ROOT_BUDGET));
                 const preferredBudget = Math.max(1, this.loadingRate || defaultRate);
-                const taskBudget = Math.min(preferredBudget, remaining);
+                const taskBudget = Math.min(fullSceneMode ?
+                    Math.max(preferredBudget, defaultRate) : preferredBudget, remaining);
                 let completed = false;
                 task.layout.processing = true;
                 try {
@@ -3055,6 +3415,7 @@ class ModelCanvasBlockRenderer {
                     task.layout.pendingScene = task.scene;
                     task.errorCount = numberOr(task.errorCount) + 1;
                     task.errorMessage = error && error.message;
+                    this.performance.errors++;
                     // Repeated errors are contained below so a malformed
                     // custom block cannot permanently occupy the queue.
                     if (task.errorCount >= 3) {
@@ -3090,7 +3451,7 @@ class ModelCanvasBlockRenderer {
             if (this.layoutTasks.size) this.scheduleLayoutWork();
             else this.updateTuningPanel();
         };
-        if (this.loadingMode === 'continuous') {
+        if (continuousMode) {
             this.loadingTimer = setTimeout(run, 0);
         } else {
             this.layoutFrame = requestAnimationFrame(run);
@@ -3121,8 +3482,11 @@ class ModelCanvasBlockRenderer {
                 while (task.nativeIndex < task.nativeBlocks.length && now() - started < budget) {
                     const block = task.nativeBlocks[task.nativeIndex++];
                     if (!this.isLiveBlock(block) || task.failedNativeBlocks.has(block.id)) continue;
+                    const shouldMeasure = this.needsNativeMeasurement(block);
+                    const measurementStarted = now();
                     try {
                         this.renderNativeBlock(block);
+                        task.renderedNativeIds.add(block.id);
                     } catch (error) {
                         // Keep the graph walk and the rest of the viewport
                         // usable when one custom field/shape cannot be
@@ -3130,6 +3494,11 @@ class ModelCanvasBlockRenderer {
                         task.lastError = error && error.message;
                         task.failedNativeBlocks.add(block.id);
                         task.layout.skippedIds.add(block.id);
+                        this.performance.errors++;
+                    } finally {
+                        if (shouldMeasure) {
+                            this.recordPerformance('native', now() - measurementStarted);
+                        }
                     }
                 }
             } finally {
@@ -3156,7 +3525,9 @@ class ModelCanvasBlockRenderer {
                     .map(id => task.layout.projectedBlocks.get(id))
                     .filter(block => this.isLiveBlock(block) &&
                         !task.failedNativeBlocks.has(block.id));
-                task.nativeBlocks = this.collectMeasurementBlocks(visibleBlocks);
+                task.nativeBlocks = this.collectMeasurementBlocks(visibleBlocks)
+                    .filter(block => task.remeasureIds.has(block.id) &&
+                        this.needsNativeMeasurement(block));
                 task.nativeIndex = 0;
                 const pendingIds = Array.from(task.layout.visibleIds)
                     .filter(id => !task.layout.skippedIds.has(id) &&
@@ -3167,6 +3538,7 @@ class ModelCanvasBlockRenderer {
                 }));
                 task.seen = new Set();
                 task.reprojected = true;
+                task.remeasureIds.clear();
                 if (task.nativeBlocks.length) {
                     // Avoid an unstable addon repeatedly restarting a large
                     // script forever. The last pass still commits the latest
@@ -3204,8 +3576,13 @@ class ModelCanvasBlockRenderer {
         task.layout.dirty = false;
         task.layout.positionDirty = false;
         task.layout.inProgress = false;
-        this.updateConnectionPositions(task.layout);
+        // A full-scene benchmark does not perform a gesture or connection
+        // search. Re-indexing every connection after each root would dominate
+        // the result for a large project. Production viewport layouts still
+        // update Blockly's connection database normally.
+        if (!this.deferFullRenderDraw) this.updateConnectionPositions(task.layout);
         this.lastLayoutDuration = now() - task.started;
+        this.recordPerformance('layout', this.lastLayoutDuration, task.scene.geometries.length);
         return true;
     }
 
@@ -3680,26 +4057,74 @@ class ModelCanvasBlockRenderer {
         const root = rootOf(block);
         const layout = this.getRootLayout(root);
         this.ensureProjection(layout);
-        const projected = layout.projectedPaintBounds.get(block.id);
-        const rootPosition = getRootPosition(root);
-        const targetBounds = projected ? {
-            left: projected.left + rootPosition.x - 1,
-            top: projected.top + rootPosition.y - 1,
-            right: projected.right + rootPosition.x + 1,
-            bottom: projected.bottom + rootPosition.y + 1
-        } : this.getVisibleWorldBounds();
-
+        const projected = layout.projectedPositions.get(block.id);
         // Compatibility APIs frequently ask for one model node's rectangle.
-        // Compile that block and its inline inputs only; passing null here used
-        // to synchronously materialize the complete script.
-        this.forceMaterializedIds.add(block.id);
-        try {
-            this.ensureLayoutsForRoot(targetBounds, root);
-            geometry = this.blockGeometry.get(block.id);
-        } finally {
-            if (this.draggingRoot !== root) this.forceMaterializedIds.delete(block.id);
-        }
+        // Materialize only that block and its inline value dependencies. The
+        // complete graph projection is cheap and remains available for
+        // connection math, but native Blockly rendering of the whole root is
+        // not required to answer a single rectangle query.
+        geometry = this.materializeSingleBlock(block, layout, projected);
         return geometry || null;
+    }
+
+    materializeSingleBlock (block, layout, projected) {
+        if (!this.isLiveBlock(block) || !layout || !projected) return null;
+        const ids = new Set([block.id]);
+        const pending = [block];
+        while (pending.length) {
+            const current = pending.pop();
+            for (const input of current.inputList || []) {
+                if (!input.connection ||
+                    (input.connection.type !== this.ScratchBlocks.INPUT_VALUE &&
+                    !this.isProcedureHeaderBlock(current))) continue;
+                const child = input.connection.targetBlock && input.connection.targetBlock();
+                if (this.isLiveBlock(child) && !ids.has(child.id)) {
+                    ids.add(child.id);
+                    pending.push(child);
+                }
+            }
+        }
+
+        const previousVisible = layout.visibleIds;
+        layout.visibleIds = new Set(previousVisible);
+        for (const id of ids) layout.visibleIds.add(id);
+        const scene = this.createLayoutScene(layout, false);
+        const nativeBlocks = this.collectMeasurementBlocks([block])
+            .filter(candidate => this.needsNativeMeasurement(candidate));
+        nativeBlocks.sort((a, b) => {
+            const depth = candidate => {
+                let value = 0;
+                let current = candidate;
+                while (current && current.getParent && current.getParent()) {
+                    value++;
+                    current = current.getParent();
+                }
+                return value;
+            };
+            return depth(b) - depth(a);
+        });
+        const wasRenderingNative = this.renderingNative;
+        this.renderingNative = true;
+        try {
+            for (const candidate of nativeBlocks) this.renderNativeBlock(candidate);
+        } finally {
+            this.renderingNative = wasRenderingNative;
+        }
+
+        const seen = new Set(scene.geometries.map(geometry => geometry.block && geometry.block.id));
+        this.layoutModelBlock(
+            block,
+            projected.x,
+            projected.y,
+            scene,
+            seen,
+            null,
+            true
+        );
+        this.commitLayoutScene(layout, scene);
+        this.updateConnectionPositions(layout);
+        this.scheduleDraw();
+        return this.blockGeometry.get(block.id) || null;
     }
 
     getBlockClientRect (block) {
@@ -3866,6 +4291,11 @@ class ModelCanvasBlockRenderer {
     }
 
     queryLayout (layout, worldBounds) {
+        if (!worldBounds) {
+            return layout.geometries.slice()
+                .filter(geometry => geometry && this.isLiveBlock(geometry.block))
+                .sort((a, b) => a.depth - b.depth);
+        }
         const position = getRootPosition(layout.root);
         const local = {
             left: worldBounds.left - position.x,
@@ -4491,6 +4921,18 @@ class ModelCanvasBlockRenderer {
             this.pendingDraw = true;
             return;
         }
+        if (this.deferFullRenderDraw) {
+            this.pendingDraw = true;
+            if (this.frame !== null) return;
+            // Full-scene benchmarks defer paint, not state progression. A
+            // projection worker completion still needs a frame to consume its
+            // result and create the next native/layout task.
+            this.frame = requestAnimationFrame(() => {
+                this.frame = null;
+                if (this.enabled && !this.layoutSuspended) this.ensureLayoutsAsync(null);
+            });
+            return;
+        }
         if (this.frame !== null) return;
         this.frame = requestAnimationFrame(() => {
             this.frame = null;
@@ -4503,7 +4945,7 @@ class ModelCanvasBlockRenderer {
         const started = now();
         const rect = this.getWorkspaceRect();
         const transform = this.getTransform();
-        const visible = this.getVisibleWorldBounds();
+        const visible = this.renderAllBlocks ? null : this.getVisibleWorldBounds();
         const layouts = this.ensureLayoutsAsync(visible).sort((a, b) =>
             numberOr(a.root.__02CanvasZ) - numberOr(b.root.__02CanvasZ));
         this.context.clearRect(0, 0, rect.width, rect.height + CANVAS_TOP_PADDING);
@@ -4527,7 +4969,7 @@ class ModelCanvasBlockRenderer {
             }
             const position = getRootPosition(layout.root);
             const bounds = layout.projectionBounds || layout.bounds;
-            if (layout.root !== this.draggingRoot && bounds) {
+            if (visible && layout.root !== this.draggingRoot && bounds) {
                 const positionedBounds = {
                     left: bounds.left + position.x,
                     top: bounds.top + position.y,
@@ -4570,6 +5012,7 @@ class ModelCanvasBlockRenderer {
         this.drawLoadingIndicator(this.context, rect, loadingCompleted, loadingTotal);
         this.loadingWorkPending = false;
         this.lastDrawDuration = now() - started;
+        this.recordPerformance('draw', this.lastDrawDuration);
     }
 
     clear () {
@@ -4583,16 +5026,14 @@ class ModelCanvasBlockRenderer {
         const transform = this.getTransform();
         const worldX = (event.clientX - rect.left - transform.x) / transform.scale;
         const worldY = (event.clientY - rect.top - transform.y) / transform.scale;
-        const pointBounds = {left: worldX, top: worldY, right: worldX, bottom: worldY};
         const layouts = this.ensureLayoutsAsync(this.getVisibleWorldBounds());
-        // Only complete the script under the pointer. A click must remain
-        // responsive even when another visible script is still being built.
-        for (const layout of layouts) {
-            if (layout.dirty && this.rootMayIntersect(layout.root, pointBounds)) {
-                this.ensureLayoutsForRoot(pointBounds, layout.root);
-            }
-        }
-        const readyLayouts = layouts.filter(layout => !layout.dirty && !layout.inProgress);
+        // Never synchronously compile a dirty root from a pointer event. The
+        // old path could block for tens of seconds while hit-testing a block
+        // in a large script. Keep the last committed scene interactive while
+        // the async task catches up; newly visible blocks become clickable on
+        // the next frame after their geometry is committed.
+        const readyLayouts = layouts.filter(layout =>
+            layout.geometries.length && !layout.processing);
         const orderedLayouts = readyLayouts.sort((a, b) =>
             numberOr(a.root.__02CanvasZ) - numberOr(b.root.__02CanvasZ));
 
@@ -4729,7 +5170,10 @@ class ModelCanvasBlockRenderer {
     }
 
     handleDocumentPaint () {
-        if (this.workspace && this.workspace.currentGesture_) this.scheduleDraw();
+        if (this.workspace && this.workspace.currentGesture_) {
+            this.lastInteractionAt = now();
+            this.scheduleDraw();
+        }
     }
 
     captureBlockCanvas (block, scale = 1) {
