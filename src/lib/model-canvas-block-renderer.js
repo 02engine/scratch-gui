@@ -1222,12 +1222,19 @@ const installBlocklyCanvasMode = ScratchBlocks => {
                 rootOf(this.draggingBlock_) : null;
             const sourceParent = renderer && this.draggingBlock_ &&
                 this.draggingBlock_.getParent ? this.draggingBlock_.getParent() : null;
+            const sourceContainers = renderer && this.draggingBlock_ ?
+                renderer.captureDragContainerChain(this.draggingBlock_) : [];
             const result = originalStart.apply(this, args);
             if (renderer && this.draggingBlock_) {
                 // The native method has now completed unplug/translate. The
                 // dragged root must be measured after that graph transition.
                 renderer.prepareBlockDrag(this.draggingBlock_);
-                renderer.beginBlockDrag(this.draggingBlock_, sourceRoot, sourceParent);
+                renderer.beginBlockDrag(
+                    this.draggingBlock_,
+                    sourceRoot,
+                    sourceParent,
+                    sourceContainers
+                );
                 // Canvas layout owns painting coordinates, while Blockly's
                 // insertion manager owns drag coordinates. During a native
                 // drag the latter must remain at its start snapshot because
@@ -1391,6 +1398,7 @@ class ModelCanvasBlockRenderer {
         this.draggingRoot = null;
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
+        this.dragSourceContainers = [];
         this.dragStarted = false;
         this.draggedBlockIds = new Set();
         this.lastDrawDuration = 0;
@@ -2070,6 +2078,7 @@ class ModelCanvasBlockRenderer {
         this.draggingRoot = null;
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
+        this.dragSourceContainers = [];
         this.dragStarted = false;
         this.draggedBlockIds.clear();
         this.layoutTasks.clear();
@@ -2176,11 +2185,13 @@ class ModelCanvasBlockRenderer {
         }
     }
 
-    beginBlockDrag (block, sourceRoot = null, sourceParent = null) {
+    beginBlockDrag (block, sourceRoot = null, sourceParent = null, sourceContainers = []) {
         const root = rootOf(block);
         this.draggingRoot = root && root.id ? root : null;
         this.dragSourceRoot = sourceRoot && sourceRoot !== root ? sourceRoot : null;
         this.dragSourceParent = sourceParent && sourceParent !== root ? sourceParent : null;
+        this.dragSourceContainers = Array.isArray(sourceContainers) ?
+            sourceContainers.filter(container => this.isLiveBlock(container)) : [];
         this.dragStarted = false;
         this.draggedBlockIds.clear();
         if (!root || !this.workspace) return;
@@ -2273,6 +2284,54 @@ class ModelCanvasBlockRenderer {
         }
     }
 
+    captureDragContainerChain (block) {
+        const containers = [];
+        const seen = new Set();
+        let parent = block && block.getSurroundParent ?
+            block.getSurroundParent() : null;
+        while (this.isLiveBlock(parent) && !seen.has(parent.id)) {
+            seen.add(parent.id);
+            const isStatementContainer = (parent.inputList || []).some(input => {
+                const connection = input && input.connection;
+                return connection && connection.type === this.ScratchBlocks.NEXT_STATEMENT;
+            });
+            if (isStatementContainer) containers.push(parent);
+            parent = parent.getSurroundParent ? parent.getSurroundParent() : null;
+        }
+        return containers;
+    }
+
+    invalidateStackPositioning (root, containers = []) {
+        if (!this.isLiveBlock(root)) return;
+        const layout = this.rootLayouts.get(root.id);
+        if (!layout) return;
+
+        // The graph remains authoritative, but every cached estimate in this
+        // root can contain a position that depends on a changed C-shaped
+        // parent. Clear estimates once and keep native shape caches intact;
+        // only the captured C parents are remeasured below.
+        this.estimateCache.clear();
+        for (const container of containers) {
+            if (!this.isLiveBlock(container) || rootOf(container) !== root) continue;
+            const state = this.nativeBlockCache.get(container.id) || {dirty: true};
+            state.dirty = true;
+            this.nativeBlockCache.set(container.id, state);
+            this.invalidateEstimateCacheForBlock(container);
+        }
+
+        layout.dirty = true;
+        layout.projectionDirty = true;
+        layout.projectionBounds = null;
+        layout.projectionWorkerFailed = false;
+        layout.version = numberOr(layout.version) + 1;
+        if (layout.inProgress) {
+            layout.inProgress = false;
+            layout.processing = false;
+            this.layoutTasks.delete(root.id);
+            layout.pendingScene = null;
+        }
+    }
+
     endBlockDrag (block) {
         // The native end phase may connect the dragged block before this
         // renderer callback runs. In that case rootOf(block) is already the
@@ -2280,10 +2339,13 @@ class ModelCanvasBlockRenderer {
         const draggedRoot = this.draggingRoot || rootOf(block);
         const sourceRoot = this.dragSourceRoot;
         const sourceParent = this.dragSourceParent;
+        const sourceContainers = this.dragSourceContainers;
         const destinationRoot = rootOf(block);
+        const destinationContainers = this.captureDragContainerChain(block);
         this.draggingRoot = null;
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
+        this.dragSourceContainers = [];
         this.dragStarted = false;
         this.removeDraggedGeometry(draggedRoot);
         if (sourceRoot && sourceRoot !== draggedRoot) this.removeDraggedGeometry(sourceRoot);
@@ -2298,6 +2360,21 @@ class ModelCanvasBlockRenderer {
         if (destinationRoot && destinationRoot !== draggedRoot) {
             this.invalidateBlock(destinationRoot);
         }
+
+        // A move event is emitted after Blockly has unplugged and reconnected
+        // the stack. At that point the old parent chain cannot be recovered
+        // from getParent(), so explicitly refresh the complete old and new
+        // stack layouts using the chains captured at drag start/end.
+        for (const container of sourceContainers) this.invalidateBlock(container);
+        for (const container of destinationContainers) this.invalidateBlock(container);
+        const affectedRoots = new Set([sourceRoot, draggedRoot, destinationRoot]);
+        for (const root of affectedRoots) {
+            if (!this.isLiveBlock(root)) continue;
+            const containers = sourceContainers.concat(destinationContainers)
+                .filter(container => this.isLiveBlock(container) && rootOf(container) === root);
+            this.invalidateStackPositioning(root, containers);
+        }
+        this.scheduleDraw();
     }
 
     removeDraggedGeometry (root) {
@@ -2375,6 +2452,7 @@ class ModelCanvasBlockRenderer {
         this.draggingRoot = null;
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
+        this.dragSourceContainers = [];
         this.dragStarted = false;
         this.draggedBlockIds.clear();
         this.lastInteractionAt = 0;
