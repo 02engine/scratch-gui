@@ -1177,12 +1177,14 @@ const installBlocklyCanvasMode = ScratchBlocks => {
             }
             const connectionSnapshot = renderer &&
                 renderer.captureDragConnectionPositions(this.draggedConnectionManager_);
+            const sourceRoot = renderer && this.draggingBlock_ ?
+                rootOf(this.draggingBlock_) : null;
             const result = originalStart.apply(this, args);
             if (renderer && this.draggingBlock_) {
                 // The native method has now completed unplug/translate. The
                 // dragged root must be measured after that graph transition.
                 renderer.prepareBlockDrag(this.draggingBlock_);
-                renderer.beginBlockDrag(this.draggingBlock_);
+                renderer.beginBlockDrag(this.draggingBlock_, sourceRoot);
                 // Canvas layout owns painting coordinates, while Blockly's
                 // insertion manager owns drag coordinates. During a native
                 // drag the latter must remain at its start snapshot because
@@ -1344,6 +1346,7 @@ class ModelCanvasBlockRenderer {
         this.highlightedConnection = null;
         this.zCounter = 1;
         this.draggingRoot = null;
+        this.dragSourceRoot = null;
         this.dragStarted = false;
         this.lastDrawDuration = 0;
         this.lastLayoutDuration = 0;
@@ -1426,7 +1429,6 @@ class ModelCanvasBlockRenderer {
         });
         injection.appendChild(this.canvas);
         this.attachCommentLayer();
-        this.createTuningPanel();
         this.context = this.canvas.getContext('2d', {alpha: true, desynchronized: true});
         this.workspace.canvasBlockRenderer = this;
         this.workspace.ensureBlockRendered = blockId => this.materializeBlock(blockId);
@@ -2036,6 +2038,7 @@ class ModelCanvasBlockRenderer {
         this.projectionWorkerURL = null;
         this.forceMaterializedIds.clear();
         this.draggingRoot = null;
+        this.dragSourceRoot = null;
         this.dragStarted = false;
         this.layoutTasks.clear();
         if (this.layoutFrame !== null) cancelAnimationFrame(this.layoutFrame);
@@ -2141,9 +2144,10 @@ class ModelCanvasBlockRenderer {
         }
     }
 
-    beginBlockDrag (block) {
+    beginBlockDrag (block, sourceRoot = null) {
         const root = rootOf(block);
         this.draggingRoot = root && root.id ? root : null;
+        this.dragSourceRoot = sourceRoot && sourceRoot !== root ? sourceRoot : null;
         this.dragStarted = false;
         if (!root || !this.workspace) return;
         // Keep the dragged root paintable outside the old viewport. Descendants
@@ -2230,11 +2234,21 @@ class ModelCanvasBlockRenderer {
         // The native end phase may connect the dragged block before this
         // renderer callback runs. In that case rootOf(block) is already the
         // destination stack, not the root that was protected during drag.
-        const root = this.draggingRoot || rootOf(block);
+        const draggedRoot = this.draggingRoot || rootOf(block);
+        const sourceRoot = this.dragSourceRoot;
+        const destinationRoot = rootOf(block);
         this.draggingRoot = null;
+        this.dragSourceRoot = null;
         this.dragStarted = false;
-        if (root && root.id) this.forceMaterializedIds.delete(root.id);
-        this.invalidateBlock(root || block);
+        if (draggedRoot && draggedRoot.id) this.forceMaterializedIds.delete(draggedRoot.id);
+        // Refresh both sides after a substack is removed or inserted. The
+        // source root is kept separately because rootOf(block) now points at
+        // the detached or destination stack after Blockly finishes the drag.
+        if (sourceRoot && sourceRoot !== destinationRoot) this.invalidateBlock(sourceRoot);
+        if (draggedRoot) this.invalidateBlock(draggedRoot);
+        if (destinationRoot && destinationRoot !== draggedRoot) {
+            this.invalidateBlock(destinationRoot);
+        }
     }
 
     setLoading (loading) {
@@ -2280,6 +2294,7 @@ class ModelCanvasBlockRenderer {
         }
         this.layoutTasks.clear();
         this.draggingRoot = null;
+        this.dragSourceRoot = null;
         this.dragStarted = false;
         this.lastInteractionAt = 0;
         this.rootLayouts.clear();
