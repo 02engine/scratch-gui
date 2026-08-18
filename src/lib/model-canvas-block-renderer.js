@@ -2302,20 +2302,6 @@ class ModelCanvasBlockRenderer {
         const sourceRoot = this.dragSourceRoot;
         const sourceParent = this.dragSourceParent;
         const destinationRoot = rootOf(block);
-        const destinationParent = block && block.getParent && block.getParent();
-        const exactRoots = new Set();
-        const addExactRoot = candidate => {
-            if (candidate && this.hasStatementInput(candidate)) {
-                const candidateRoot = rootOf(candidate);
-                if (candidateRoot) exactRoots.add(candidateRoot);
-            }
-        };
-        // A move changes the height of the C-shaped parent on both sides of
-        // the connection. The async viewport pass deliberately avoids walking
-        // statement descendants, so force an exact pass only for roots whose
-        // C-shaped geometry was structurally affected.
-        addExactRoot(sourceParent);
-        addExactRoot(destinationParent);
         this.draggingRoot = null;
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
@@ -2330,7 +2316,6 @@ class ModelCanvasBlockRenderer {
         if (destinationRoot && destinationRoot !== draggedRoot) {
             this.invalidateBlock(destinationRoot);
         }
-        for (const exactRoot of exactRoots) this.ensureExactDragLayout(exactRoot);
     }
 
     setLoading (loading) {
@@ -2827,14 +2812,6 @@ class ModelCanvasBlockRenderer {
             const state = this.nativeBlockCache.get(parent.id) || {dirty: true};
             state.dirty = true;
             this.nativeBlockCache.set(parent.id, state);
-            // Native blocks are rendered child-first. If an ancestor has
-            // already been rendered in this pass, it really does need a
-            // second measurement; ancestors that have not run yet will see
-            // the child's final dimensions in their first render.
-            if (this.activeLayoutTask && this.activeLayoutTask.renderedNativeIds &&
-                this.activeLayoutTask.renderedNativeIds.has(parent.id)) {
-                this.activeLayoutTask.remeasureIds.add(parent.id);
-            }
             this.invalidateEstimateCacheForBlock(parent);
             parent = parent.getParent && parent.getParent();
         }
@@ -3297,13 +3274,6 @@ class ModelCanvasBlockRenderer {
         ].includes(block.type);
     }
 
-    hasStatementInput (block) {
-        return !!(block && (block.inputList || []).some(input =>
-            input && input.connection &&
-            input.connection.type === this.ScratchBlocks.NEXT_STATEMENT
-        ));
-    }
-
     layoutRoot (root, worldBounds = null) {
         const started = now();
         const task = this.createLayoutTask(root, worldBounds);
@@ -3491,8 +3461,6 @@ class ModelCanvasBlockRenderer {
             measurementChanged: false,
             measurementPasses: 0,
             failedNativeBlocks: new Set(),
-            renderedNativeIds: new Set(),
-            remeasureIds: new Set(),
             seen: new Set(),
             onlyVisible: true,
             phase: 'native',
@@ -3623,7 +3591,6 @@ class ModelCanvasBlockRenderer {
                     const measurementStarted = now();
                     try {
                         this.renderNativeBlock(block);
-                        task.renderedNativeIds.add(block.id);
                     } catch (error) {
                         // Keep the graph walk and the rest of the viewport
                         // usable when one custom field/shape cannot be
@@ -3662,9 +3629,12 @@ class ModelCanvasBlockRenderer {
                     .map(id => task.layout.projectedBlocks.get(id))
                     .filter(block => this.isLiveBlock(block) &&
                         !task.failedNativeBlocks.has(block.id));
-                task.nativeBlocks = this.collectMeasurementBlocks(visibleBlocks)
-                    .filter(block => task.remeasureIds.has(block.id) &&
-                        this.needsNativeMeasurement(block));
+                // Match the stable renderer's convergence pass: every visible
+                // dependency gets another chance to measure after projection
+                // changes. renderNativeBlock still skips clean cached blocks,
+                // so this restores C-shape correctness without discarding the
+                // native measurement cache or viewport scheduling gains.
+                task.nativeBlocks = this.collectMeasurementBlocks(visibleBlocks);
                 task.nativeIndex = 0;
                 const pendingIds = Array.from(task.layout.visibleIds)
                     .filter(id => !task.layout.skippedIds.has(id) &&
@@ -3675,7 +3645,6 @@ class ModelCanvasBlockRenderer {
                 }));
                 task.seen = new Set();
                 task.reprojected = true;
-                task.remeasureIds.clear();
                 if (task.nativeBlocks.length) {
                     // Avoid an unstable addon repeatedly restarting a large
                     // script forever. The last pass still commits the latest
