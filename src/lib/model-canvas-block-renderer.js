@@ -1762,7 +1762,10 @@ class ModelCanvasBlockRenderer {
             if (this.isLiveBlock(block) && block.comment) roots.add(rootOf(block));
         }
         for (const root of roots) {
-            if (root) this.ensureExactDragLayout(root);
+            // Comment restoration only needs the projected anchor. Keep this
+            // path lightweight; exact native layout is reserved for an active
+            // drag, where Blockly immediately needs reliable connections.
+            if (root) this.prepareDragConnections(root);
         }
         for (const item of pending) {
             const block = item && item.block;
@@ -2230,10 +2233,14 @@ class ModelCanvasBlockRenderer {
             this.invalidatePosition(root);
         }
         // The insertion manager snapshots the dragged connections before the
-        // first drag frame. Project the complete graph and update only its
-        // connection coordinates. Native shape compilation remains viewport
-        // driven and can continue asynchronously after the gesture starts.
+        // first drag frame. Use the projection as a cheap baseline, then
+        // materialize this root exactly. C-shaped blocks derive their height
+        // from statement children, so using only cached estimates here can
+        // leave insertion coordinates and the rendered C shape out of sync
+        // after a partial drag. This is intentionally scoped to the active
+        // root; other scripts remain viewport-driven and asynchronous.
         this.prepareDragConnections(root);
+        this.ensureExactDragLayout(root);
         const layout = root && this.rootLayouts.get(root.id);
         if (layout) this.updateConnectionPositions(layout);
     }
@@ -2254,11 +2261,11 @@ class ModelCanvasBlockRenderer {
         const materializedCount = layout.geometries.reduce((count, geometry) =>
             count + (geometry && this.isLiveBlock(geometry.block) ? 1 : 0), 0);
         if (layout.dirty || layout.inProgress || materializedCount < projectedCount) {
-            // Comments only need the current projected position. Do not turn
-            // restoring one comment into a synchronous native render of the
-            // entire script; the normal viewport task will refine its shape.
-            this.updateVisibleProjection(layout, this.getVisibleWorldBounds());
-            this.scheduleDraw();
+            // A null world bounds intentionally materializes this one root in
+            // full. Blockly addons can change connection offsets and block
+            // shapes, so estimated viewport geometry is not sufficient for
+            // snapping a long stack.
+            this.ensureLayoutsForRoot(null, root);
         } else {
             this.updateConnectionPositions(layout);
         }
@@ -2295,6 +2302,20 @@ class ModelCanvasBlockRenderer {
         const sourceRoot = this.dragSourceRoot;
         const sourceParent = this.dragSourceParent;
         const destinationRoot = rootOf(block);
+        const destinationParent = block && block.getParent && block.getParent();
+        const exactRoots = new Set();
+        const addExactRoot = candidate => {
+            if (candidate && this.hasStatementInput(candidate)) {
+                const candidateRoot = rootOf(candidate);
+                if (candidateRoot) exactRoots.add(candidateRoot);
+            }
+        };
+        // A move changes the height of the C-shaped parent on both sides of
+        // the connection. The async viewport pass deliberately avoids walking
+        // statement descendants, so force an exact pass only for roots whose
+        // C-shaped geometry was structurally affected.
+        addExactRoot(sourceParent);
+        addExactRoot(destinationParent);
         this.draggingRoot = null;
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
@@ -2309,6 +2330,7 @@ class ModelCanvasBlockRenderer {
         if (destinationRoot && destinationRoot !== draggedRoot) {
             this.invalidateBlock(destinationRoot);
         }
+        for (const exactRoot of exactRoots) this.ensureExactDragLayout(exactRoot);
     }
 
     setLoading (loading) {
@@ -3273,6 +3295,13 @@ class ModelCanvasBlockRenderer {
             this.ScratchBlocks.PROCEDURES_PROTOTYPE_BLOCK_TYPE,
             'procedures_declaration'
         ].includes(block.type);
+    }
+
+    hasStatementInput (block) {
+        return !!(block && (block.inputList || []).some(input =>
+            input && input.connection &&
+            input.connection.type === this.ScratchBlocks.NEXT_STATEMENT
+        ));
     }
 
     layoutRoot (root, worldBounds = null) {
