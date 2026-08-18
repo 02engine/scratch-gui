@@ -1394,6 +1394,7 @@ class ModelCanvasBlockRenderer {
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
         this.dragStarted = false;
+        this.draggedBlockIds = new Set();
         this.lastDrawDuration = 0;
         this.lastLayoutDuration = 0;
         this.performanceTimer = null;
@@ -1499,33 +1500,6 @@ class ModelCanvasBlockRenderer {
         if (this.performanceTimer || typeof setInterval !== 'function') return;
         this.performanceTimer = setInterval(() => {
             if (!this.workspace || !this.performance) return;
-            const metrics = this.performance;
-            const elapsed = Math.max(1, now() - metrics.startedAt);
-            const snapshot = {
-                elapsed: Math.round(elapsed),
-                fps: Number((metrics.draws * 1000 / elapsed).toFixed(1)),
-                draws: metrics.draws,
-                drawMs: Number(metrics.drawTime.toFixed(1)),
-                drawMaxMs: Number(metrics.drawMax.toFixed(1)),
-                layouts: metrics.layouts,
-                layoutMs: Number(metrics.layoutTime.toFixed(1)),
-                layoutMaxMs: Number(metrics.layoutMax.toFixed(1)),
-                layoutBlocks: metrics.layoutBlocks,
-                nativeMeasurements: metrics.nativeMeasurements,
-                nativeMs: Number(metrics.nativeTime.toFixed(1)),
-                nativeMaxMs: Number(metrics.nativeMax.toFixed(1)),
-                projections: metrics.projections,
-                projectionMs: Number(metrics.projectionTime.toFixed(1)),
-                projectionMaxMs: Number(metrics.projectionMax.toFixed(1)),
-                projectionBlocks: metrics.projectionBlocks,
-                nativeReasons: metrics.nativeReasons,
-                visibleBlocks: this.visibleBlockCount,
-                queue: this.layoutTasks.size,
-                errors: metrics.errors
-            };
-            if (typeof console !== 'undefined' && console.info) {
-                console.info('[02CanvasPerf]', JSON.stringify(snapshot));
-            }
             this.updateTuningPanel();
         }, 1000);
     }
@@ -2099,6 +2073,7 @@ class ModelCanvasBlockRenderer {
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
         this.dragStarted = false;
+        this.draggedBlockIds.clear();
         this.layoutTasks.clear();
         if (this.layoutFrame !== null) cancelAnimationFrame(this.layoutFrame);
         this.workspace.__02CanvasRendererDisposed = true;
@@ -2209,7 +2184,13 @@ class ModelCanvasBlockRenderer {
         this.dragSourceRoot = sourceRoot && sourceRoot !== root ? sourceRoot : null;
         this.dragSourceParent = sourceParent && sourceParent !== root ? sourceParent : null;
         this.dragStarted = false;
+        this.draggedBlockIds.clear();
         if (!root || !this.workspace) return;
+        this.draggedBlockIds.add(root.id);
+        for (const descendant of root.getDescendants ? root.getDescendants(false) : []) {
+            if (descendant && descendant.id) this.draggedBlockIds.add(descendant.id);
+        }
+        if (this.dragSourceRoot) this.removeDraggedGeometry(this.dragSourceRoot);
         // Keep the dragged root paintable outside the old viewport. Descendants
         // still participate in Blockly's graph and connection calculations,
         // but painting every descendant made starting a drag of a large stack
@@ -2306,6 +2287,9 @@ class ModelCanvasBlockRenderer {
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
         this.dragStarted = false;
+        this.removeDraggedGeometry(draggedRoot);
+        if (sourceRoot && sourceRoot !== draggedRoot) this.removeDraggedGeometry(sourceRoot);
+        this.draggedBlockIds.clear();
         if (draggedRoot && draggedRoot.id) this.forceMaterializedIds.delete(draggedRoot.id);
         // Refresh both sides after a substack is removed or inserted. The
         // source root is kept separately because rootOf(block) now points at
@@ -2316,6 +2300,37 @@ class ModelCanvasBlockRenderer {
         if (destinationRoot && destinationRoot !== draggedRoot) {
             this.invalidateBlock(destinationRoot);
         }
+    }
+
+    removeDraggedGeometry (root) {
+        if (!root || !root.id || !this.draggedBlockIds.size) return;
+        const layout = this.rootLayouts.get(root.id);
+        if (!layout || !layout.geometries.length) return;
+        const removed = layout.geometries.filter(geometry => geometry && geometry.block &&
+            this.draggedBlockIds.has(geometry.block.id));
+        if (!removed.length) return;
+        for (const geometry of removed) {
+            if (this.blockGeometry.get(geometry.block.id) === geometry) {
+                this.blockGeometry.delete(geometry.block.id);
+            }
+            for (const field of geometry.fields || []) this.fieldGeometry.delete(field.field);
+        }
+        layout.geometries = layout.geometries.filter(geometry => !removed.includes(geometry));
+        layout.fields = layout.geometries.flatMap(geometry => geometry.fields || []);
+        layout.buckets = new Map();
+        layout.bounds = null;
+        for (const geometry of layout.geometries) this.indexGeometry(layout, geometry);
+        layout.dirty = true;
+        layout.projectionDirty = true;
+        layout.cachedRootBounds = null;
+        layout.projectionBounds = null;
+        layout.version = numberOr(layout.version) + 1;
+        if (layout.inProgress || this.layoutTasks.has(root.id)) {
+            layout.inProgress = false;
+            layout.processing = false;
+            this.layoutTasks.delete(root.id);
+        }
+        layout.pendingScene = null;
     }
 
     setLoading (loading) {
@@ -2364,6 +2379,7 @@ class ModelCanvasBlockRenderer {
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
         this.dragStarted = false;
+        this.draggedBlockIds.clear();
         this.lastInteractionAt = 0;
         this.rootLayouts.clear();
         this.nativeBlockCache.clear();
