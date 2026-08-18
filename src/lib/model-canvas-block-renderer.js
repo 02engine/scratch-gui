@@ -1179,12 +1179,14 @@ const installBlocklyCanvasMode = ScratchBlocks => {
                 renderer.captureDragConnectionPositions(this.draggedConnectionManager_);
             const sourceRoot = renderer && this.draggingBlock_ ?
                 rootOf(this.draggingBlock_) : null;
+            const sourceParent = renderer && this.draggingBlock_ &&
+                this.draggingBlock_.getParent ? this.draggingBlock_.getParent() : null;
             const result = originalStart.apply(this, args);
             if (renderer && this.draggingBlock_) {
                 // The native method has now completed unplug/translate. The
                 // dragged root must be measured after that graph transition.
                 renderer.prepareBlockDrag(this.draggingBlock_);
-                renderer.beginBlockDrag(this.draggingBlock_, sourceRoot);
+                renderer.beginBlockDrag(this.draggingBlock_, sourceRoot, sourceParent);
                 // Canvas layout owns painting coordinates, while Blockly's
                 // insertion manager owns drag coordinates. During a native
                 // drag the latter must remain at its start snapshot because
@@ -1347,6 +1349,7 @@ class ModelCanvasBlockRenderer {
         this.zCounter = 1;
         this.draggingRoot = null;
         this.dragSourceRoot = null;
+        this.dragSourceParent = null;
         this.dragStarted = false;
         this.lastDrawDuration = 0;
         this.lastLayoutDuration = 0;
@@ -2039,6 +2042,7 @@ class ModelCanvasBlockRenderer {
         this.forceMaterializedIds.clear();
         this.draggingRoot = null;
         this.dragSourceRoot = null;
+        this.dragSourceParent = null;
         this.dragStarted = false;
         this.layoutTasks.clear();
         if (this.layoutFrame !== null) cancelAnimationFrame(this.layoutFrame);
@@ -2144,10 +2148,11 @@ class ModelCanvasBlockRenderer {
         }
     }
 
-    beginBlockDrag (block, sourceRoot = null) {
+    beginBlockDrag (block, sourceRoot = null, sourceParent = null) {
         const root = rootOf(block);
         this.draggingRoot = root && root.id ? root : null;
         this.dragSourceRoot = sourceRoot && sourceRoot !== root ? sourceRoot : null;
+        this.dragSourceParent = sourceParent && sourceParent !== root ? sourceParent : null;
         this.dragStarted = false;
         if (!root || !this.workspace) return;
         // Keep the dragged root paintable outside the old viewport. Descendants
@@ -2236,14 +2241,17 @@ class ModelCanvasBlockRenderer {
         // destination stack, not the root that was protected during drag.
         const draggedRoot = this.draggingRoot || rootOf(block);
         const sourceRoot = this.dragSourceRoot;
+        const sourceParent = this.dragSourceParent;
         const destinationRoot = rootOf(block);
         this.draggingRoot = null;
         this.dragSourceRoot = null;
+        this.dragSourceParent = null;
         this.dragStarted = false;
         if (draggedRoot && draggedRoot.id) this.forceMaterializedIds.delete(draggedRoot.id);
         // Refresh both sides after a substack is removed or inserted. The
         // source root is kept separately because rootOf(block) now points at
         // the detached or destination stack after Blockly finishes the drag.
+        if (sourceParent) this.invalidateBlock(sourceParent);
         if (sourceRoot && sourceRoot !== destinationRoot) this.invalidateBlock(sourceRoot);
         if (draggedRoot) this.invalidateBlock(draggedRoot);
         if (destinationRoot && destinationRoot !== draggedRoot) {
@@ -2295,6 +2303,7 @@ class ModelCanvasBlockRenderer {
         this.layoutTasks.clear();
         this.draggingRoot = null;
         this.dragSourceRoot = null;
+        this.dragSourceParent = null;
         this.dragStarted = false;
         this.lastInteractionAt = 0;
         this.rootLayouts.clear();
@@ -2411,15 +2420,17 @@ class ModelCanvasBlockRenderer {
             // graph. Looking up blockId after Blockly applies the event only
             // finds its new root, so the old script used to keep stale
             // projection/geometry until another unrelated edit refreshed it.
-            const affectedRoots = new Set();
-            const addRoot = candidate => {
-                const root = this.isLiveBlock(candidate) && rootOf(candidate);
-                if (root) affectedRoots.add(root);
+            // Invalidate the direct parents as well as their roots: a C-shaped
+            // parent derives its height from the removed child, and invalidating
+            // only the root does not dirty that parent's native measurement.
+            const affectedBlocks = new Set();
+            const addBlock = candidate => {
+                if (this.isLiveBlock(candidate)) affectedBlocks.add(candidate);
             };
-            addRoot(block);
-            addRoot(event.oldParentId && this.workspace.getBlockById(event.oldParentId));
-            addRoot(event.newParentId && this.workspace.getBlockById(event.newParentId));
-            for (const root of affectedRoots) this.invalidateBlock(root);
+            addBlock(block);
+            addBlock(event.oldParentId && this.workspace.getBlockById(event.oldParentId));
+            addBlock(event.newParentId && this.workspace.getBlockById(event.newParentId));
+            for (const affectedBlock of affectedBlocks) this.invalidateBlock(affectedBlock);
             this.lastInteractionAt = now();
             return;
         }
