@@ -33,8 +33,6 @@ const LAYOUT_FAST_ROOT_BUDGET = 14;
 const LAYOUT_FAST_MULTI_ROOT_BUDGET = 8;
 const LAYOUT_MAX_RATE = 16;
 const PROJECTION_WORKER_MIN_BLOCKS = 48;
-const VIRTUAL_UNLOAD_SCREENS = 2;
-const VIRTUAL_UNLOAD_DELAY_MS = 20000;
 const TEXT_METRICS_CACHE_LIMIT = 4096;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const BLOCK_TEXT_FONT = '500 16px "Helvetica Neue", Helvetica, sans-serif';
@@ -2322,7 +2320,6 @@ class ModelCanvasBlockRenderer {
         for (const geometry of layout.geometries) this.indexGeometry(layout, geometry);
         layout.dirty = true;
         layout.projectionDirty = true;
-        layout.cachedRootBounds = null;
         layout.projectionBounds = null;
         layout.version = numberOr(layout.version) + 1;
         if (layout.inProgress || this.layoutTasks.has(root.id)) {
@@ -2416,7 +2413,6 @@ class ModelCanvasBlockRenderer {
         for (const layout of this.rootLayouts.values()) {
             layout.dirty = true;
             layout.projectionDirty = true;
-            layout.cachedRootBounds = null;
             layout.projectionBounds = null;
             layout.projectionWorkerFailed = false;
             layout.version = numberOr(layout.version) + 1;
@@ -2458,7 +2454,6 @@ class ModelCanvasBlockRenderer {
             const layout = this.getRootLayout(root);
             layout.dirty = true;
             layout.projectionDirty = true;
-            layout.cachedRootBounds = null;
             layout.projectionBounds = null;
             layout.projectionWorkerFailed = false;
             layout.version = numberOr(layout.version) + 1;
@@ -2618,17 +2613,12 @@ class ModelCanvasBlockRenderer {
                 bounds: null,
                 pendingScene: null,
                 processing: false,
-                skippedIds: new Set(),
-                skippedVersion: -1,
                 projectionBounds: null,
-                cachedRootBounds: null,
                 projectedPositions: new Map(),
                 projectedPaintBounds: new Map(),
                 projectedBuckets: new Map(),
                 projectedBlocks: new Map(),
                 visibleIds: new Set(),
-                lastNearAt: now(),
-                lastViewportDistance: Infinity,
                 projectionBuiltAt: 0,
                 projectionPending: false,
                 projectionRequestId: 0,
@@ -3057,7 +3047,6 @@ class ModelCanvasBlockRenderer {
         layout.projectedPaintBounds = projectedPaintBounds;
         layout.projectedBuckets = projectedBuckets;
         layout.projectionBounds = result.bounds || null;
-        layout.cachedRootBounds = result.bounds ? Object.assign({}, result.bounds) : null;
         layout.projectionDirty = false;
         layout.projectionBuiltAt = now();
         layout.projectionWorkerFailed = false;
@@ -3211,7 +3200,6 @@ class ModelCanvasBlockRenderer {
         layout.projectedPaintBounds = projection.projectedPaintBounds;
         layout.projectedBuckets = projection.projectedBuckets;
         layout.projectionBounds = projection.bounds;
-        layout.cachedRootBounds = projection.bounds ? Object.assign({}, projection.bounds) : null;
         layout.projectionDirty = false;
         layout.projectionBuiltAt = now();
         this.recordPerformance('projection', now() - projectionStarted, projection.blocks.size);
@@ -3406,15 +3394,11 @@ class ModelCanvasBlockRenderer {
         if (!this.isLiveBlock(root)) return null;
         const layout = this.getRootLayout(root);
         this.updateVisibleProjection(layout, worldBounds);
-        if (layout.skippedVersion !== layout.version) {
-            layout.skippedIds.clear();
-            layout.skippedVersion = layout.version;
-        }
         const rebuilding = !!layout.dirty;
         const scene = this.createLayoutScene(layout, rebuilding);
         const existingIds = new Set(scene.geometries.map(geometry => geometry.block && geometry.block.id));
         const targetIds = Array.from(layout.visibleIds).filter(id =>
-            !layout.skippedIds.has(id) && (rebuilding || !existingIds.has(id)));
+            rebuilding || !existingIds.has(id));
         const viewportCenter = worldBounds ? {
             x: (worldBounds.left + worldBounds.right) / 2,
             y: (worldBounds.top + worldBounds.bottom) / 2
@@ -3545,12 +3529,9 @@ class ModelCanvasBlockRenderer {
                         task.pendingPositions.length = 0;
                         // Treat this viewport slice as complete after the
                         // retry limit. The committed scene remains intact;
-                        // marking its attempted IDs skipped prevents the
-                        // loading indicator from re-queueing the same broken
-                        // slice forever.
-                        for (const skippedId of task.layout.visibleIds) {
-                            task.layout.skippedIds.add(skippedId);
-                        }
+                        // Do not persist a skip marker in the root layout.
+                        // A later viewport layout must be able to retry the
+                        // block after a transient addon/native-render error.
                         task.layout.dirty = false;
                         task.layout.pendingScene = null;
                         completed = true;
@@ -3613,7 +3594,6 @@ class ModelCanvasBlockRenderer {
                         // compiled. The geometry pass will use its estimate.
                         task.lastError = error && error.message;
                         task.failedNativeBlocks.add(block.id);
-                        task.layout.skippedIds.add(block.id);
                         this.performance.errors++;
                     } finally {
                         if (shouldMeasure) {
@@ -3652,9 +3632,10 @@ class ModelCanvasBlockRenderer {
                 // native measurement cache or viewport scheduling gains.
                 task.nativeBlocks = this.collectMeasurementBlocks(visibleBlocks);
                 task.nativeIndex = 0;
-                const pendingIds = Array.from(task.layout.visibleIds)
-                    .filter(id => !task.layout.skippedIds.has(id) &&
-                        !task.failedNativeBlocks.has(id));
+                // Keep failed blocks in the scene using cached or estimated
+                // dimensions. The failure is local to this native pass and
+                // must not make the block disappear until another refresh.
+                const pendingIds = Array.from(task.layout.visibleIds);
                 task.pendingPositions = pendingIds.map(id => ({
                     block: task.layout.projectedBlocks.get(id),
                     ...(task.layout.projectedPositions.get(id) || {x: 0, y: 0})
@@ -3746,11 +3727,6 @@ class ModelCanvasBlockRenderer {
         }
         for (const root of roots) {
             const layout = this.getRootLayout(root);
-            const timestamp = now();
-            const isForcedRoot = this.draggingRoot === root || this.isRootSelected(root) ||
-                this.forceMaterializedIds.has(root.id);
-            const nearViewport = isForcedRoot || this.rootMayIntersect(root, worldBounds);
-            layout.lastViewportDistance = this.getRootViewportDistance(root, worldBounds);
             // A failed animation-frame callback or an interrupted navigation
             // can leave a layout marked inProgress without a queue entry.
             // Clear that orphaned state so the next draw can recreate the
@@ -3758,23 +3734,6 @@ class ModelCanvasBlockRenderer {
             if (layout.inProgress && !layout.processing && !this.layoutTasks.has(root.id)) {
                 layout.inProgress = false;
             }
-            if (!nearViewport) {
-                // Do not build a full projection or native shape scene for a
-                // distant root. Its complete Blockly graph remains available
-                // for serialization and connection matching; only the Canvas
-                // paint cache is allowed to go cold.
-                layout.visibleIds.clear();
-                layout.projectionPending = false;
-                layout.projectionSnapshotBlocks = null;
-                if (layout.inProgress && !layout.processing) {
-                    layout.inProgress = false;
-                    layout.pendingScene = null;
-                    this.layoutTasks.delete(root.id);
-                }
-                this.evictOffscreenProjection(layout, worldBounds, timestamp);
-                continue;
-            }
-            layout.lastNearAt = timestamp;
             // Build the cheap graph projection off the main thread. Keep the
             // previous committed scene visible while it is pending; the
             // native Blockly measurement task starts as soon as the result
@@ -3788,8 +3747,7 @@ class ModelCanvasBlockRenderer {
             }
             this.updateVisibleProjection(layout, worldBounds);
             const materialized = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
-            const hasMissingVisible = Array.from(layout.visibleIds).some(id =>
-                !materialized.has(id) && !layout.skippedIds.has(id));
+            const hasMissingVisible = Array.from(layout.visibleIds).some(id => !materialized.has(id));
             if ((layout.dirty || hasMissingVisible) && !layout.inProgress &&
                 this.rootMayIntersect(root, worldBounds)) {
                 const task = this.createLayoutTask(root, worldBounds);
@@ -4009,15 +3967,6 @@ class ModelCanvasBlockRenderer {
                 bottom: layout.projectionBounds.bottom + position.y
             };
         }
-        if (layout && layout.cachedRootBounds) {
-            const position = getRootPosition(root);
-            return {
-                left: layout.cachedRootBounds.left + position.x,
-                top: layout.cachedRootBounds.top + position.y,
-                right: layout.cachedRootBounds.right + position.x,
-                bottom: layout.cachedRootBounds.bottom + position.y
-            };
-        }
         const position = getRootPosition(root);
         const measuredWidth = numberOr(root.width);
         const measuredHeight = numberOr(root.height);
@@ -4051,56 +4000,6 @@ class ModelCanvasBlockRenderer {
         return rectDistance(this.getEstimatedRootBounds(root), worldBounds);
     }
 
-    isRootSelected (root) {
-        const selected = this.ScratchBlocks && this.ScratchBlocks.selected;
-        return !!(selected && selected.workspace === this.workspace &&
-            selected.getRootBlock && selected.getRootBlock() === root);
-    }
-
-    evictOffscreenProjection (layout, worldBounds, timestamp) {
-        if (!layout || !worldBounds || layout.projectionDirty ||
-            !layout.projectedPositions.size || layout.root === this.draggingRoot ||
-            this.isRootSelected(layout.root) || this.forceMaterializedIds.has(layout.root.id)) {
-            return;
-        }
-        const viewportSpan = Math.max(
-            1,
-            (worldBounds.right - worldBounds.left) +
-            (worldBounds.bottom - worldBounds.top)
-        );
-        const distance = this.getRootViewportDistance(layout.root, worldBounds);
-        if (distance <= viewportSpan * VIRTUAL_UNLOAD_SCREENS ||
-            timestamp - layout.lastNearAt < VIRTUAL_UNLOAD_DELAY_MS) return;
-
-        // Keep an exact wake-up rectangle but release the Canvas-only index.
-        // The Blockly graph and all fields remain alive for addons, comments,
-        // serialization and connection matching.
-        if (layout.projectionBounds) {
-            layout.cachedRootBounds = Object.assign({}, layout.projectionBounds);
-        }
-        // Release only Canvas-derived geometry. Blockly's block graph, fields,
-        // variables, comments and connections remain untouched, so returning
-        // to this root can rebuild its paint scene without changing project
-        // semantics or serialization.
-        for (const geometry of layout.geometries) {
-            if (geometry && geometry.block &&
-                this.blockGeometry.get(geometry.block.id) === geometry) {
-                this.blockGeometry.delete(geometry.block.id);
-            }
-        }
-        layout.geometries = [];
-        layout.fields = [];
-        layout.buckets = new Map();
-        layout.bounds = null;
-        layout.projectedPositions.clear();
-        layout.projectedPaintBounds.clear();
-        layout.projectedBuckets.clear();
-        layout.projectedBlocks.clear();
-        layout.visibleIds.clear();
-        layout.projectionDirty = true;
-        layout.projectionBuiltAt = 0;
-    }
-
     ensureLayouts (worldBounds = null) {
         return this.ensureLayoutsForRoot(worldBounds, null);
     }
@@ -4123,8 +4022,7 @@ class ModelCanvasBlockRenderer {
             const layout = this.getRootLayout(root);
             this.updateVisibleProjection(layout, worldBounds);
             const materialized = new Set(layout.geometries.map(geometry => geometry.block && geometry.block.id));
-            const hasMissingVisible = Array.from(layout.visibleIds).some(id =>
-                !materialized.has(id) && !layout.skippedIds.has(id));
+            const hasMissingVisible = Array.from(layout.visibleIds).some(id => !materialized.has(id));
             if ((layout.dirty || hasMissingVisible) &&
                 (requestedRoot === root || this.rootMayIntersect(root, worldBounds))) {
                 this.layoutTasks.delete(root.id);
@@ -5116,7 +5014,7 @@ class ModelCanvasBlockRenderer {
                 .map(geometry => geometry && geometry.block && geometry.block.id)
                 .filter(Boolean));
             const missingVisible = Array.from(layout.visibleIds)
-                .filter(id => !materializedIds.has(id) && !layout.skippedIds.has(id));
+                .filter(id => !materializedIds.has(id));
             loadingTotal += layout.visibleIds.size;
             loadingCompleted += layout.visibleIds.size - missingVisible.length;
             if (layout.dirty || layout.inProgress || missingVisible.length) {
