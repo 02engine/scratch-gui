@@ -144,6 +144,8 @@ class Blocks extends React.Component {
             'handleDeleteExtension',
             'onTargetsUpdate',
             'onVisualReport',
+            'onWorkspaceToolboxChange',
+            'flushDynamicToolboxRefresh',
             'onWorkspaceUpdate',
             'flushWorkspaceUpdate',
             'onWorkspaceMetricsChange',
@@ -196,6 +198,7 @@ class Blocks extends React.Component {
         this.toolboxUpdateFrame = null;
         this.monitorUpdateFrame = null;
         this.workspaceChromeRefreshFrame = null;
+        this.dynamicToolboxRefreshFrame = null;
         this.toolboxStateSyncFrame = null;
         this.procedureReturnsRefreshFrame = null;
         this.pendingToolboxStateSyncForce = false;
@@ -272,6 +275,11 @@ class Blocks extends React.Component {
             this.props.vm.runtime.emit('SCRATCH_BLOCKS_READY', this.ScratchBlocks);
         }
         AddonHooks.blocklyWorkspace = this.workspace;
+        // Dynamic categories are normally refreshed by Blockly itself. The
+        // toolbox refresh hook is intentionally disabled while the GUI owns
+        // toolbox updates, so keep variable and procedure categories in sync
+        // through a small, coalesced workspace listener instead.
+        this.workspace.addChangeListener(this.onWorkspaceToolboxChange);
         this.applyFlyoutWidth(this.flyoutWidth, false);
         this.installBlockDropTargetOutsideCheck();
         if (!this.canvasBlockRenderer) this.installBlockDragPortal();
@@ -475,6 +483,10 @@ class Blocks extends React.Component {
             cancelAnimationFrame(this.toolboxStateSyncFrame);
             this.toolboxStateSyncFrame = null;
         }
+        if (this.dynamicToolboxRefreshFrame) {
+            cancelAnimationFrame(this.dynamicToolboxRefreshFrame);
+            this.dynamicToolboxRefreshFrame = null;
+        }
         if (this.procedureReturnsRefreshFrame) {
             cancelAnimationFrame(this.procedureReturnsRefreshFrame);
             this.procedureReturnsRefreshFrame = null;
@@ -492,6 +504,7 @@ class Blocks extends React.Component {
             this.canvasBlockRenderer.dispose();
             this.canvasBlockRenderer = null;
         }
+        this.workspace.removeChangeListener(this.onWorkspaceToolboxChange);
         this.workspace.dispose();
 
         // Clear the flyout blocks so that they can be recreated on mount.
@@ -652,6 +665,59 @@ class Blocks extends React.Component {
             this.toolboxUpdateFrame = null;
             this.updateToolbox();
         });
+    }
+    onWorkspaceToolboxChange(event) {
+        if (!event || !this.workspace) return;
+
+        const isProcedureBlock = block => block && (
+            block.type === this.ScratchBlocks.PROCEDURES_DEFINITION_BLOCK_TYPE ||
+            block.type === this.ScratchBlocks.PROCEDURES_PROTOTYPE_BLOCK_TYPE ||
+            block.type === this.ScratchBlocks.PROCEDURES_CALL_BLOCK_TYPE
+        );
+        let dynamicCategoryChanged = event.type === 'var_create' ||
+            event.type === 'var_delete' ||
+            event.type === 'var_rename';
+
+        if (event.type === 'create' || event.type === 'change') {
+            dynamicCategoryChanged = dynamicCategoryChanged || isProcedureBlock(
+                this.workspace.getBlockById(event.blockId)
+            );
+        } else if (event.type === 'delete' && event.oldXml &&
+            typeof event.oldXml.getAttribute === 'function') {
+            dynamicCategoryChanged = dynamicCategoryChanged || isProcedureBlock({
+                type: event.oldXml.getAttribute('type')
+            });
+        }
+
+        if (!dynamicCategoryChanged) return;
+        this.toolboxDirty = true;
+        if (!this.props.isVisible) return;
+        if (this.dynamicToolboxRefreshFrame) return;
+        this.dynamicToolboxRefreshFrame = requestAnimationFrame(this.flushDynamicToolboxRefresh);
+    }
+    flushDynamicToolboxRefresh() {
+        this.dynamicToolboxRefreshFrame = null;
+        if (!this.workspace || !this.props.isVisible) return;
+
+        const toolbox = this.workspace.getToolbox ? this.workspace.getToolbox() : this.workspace.toolbox_;
+        if (!toolbox) return;
+
+        // Blockly's refresh guard is disabled by the GUI during normal
+        // operation. Temporarily open it for this one dynamic-category refresh
+        // and restore the previous value immediately afterwards.
+        const refreshEnabled = this.workspace.toolboxRefreshEnabled_;
+        this.workspace.toolboxRefreshEnabled_ = true;
+        try {
+            if (this.workspace.refreshToolboxSelection_) {
+                this.workspace.refreshToolboxSelection_();
+            } else if (toolbox.refreshSelection) {
+                toolbox.refreshSelection();
+            }
+        } finally {
+            this.workspace.toolboxRefreshEnabled_ = refreshEnabled;
+        }
+        this.toolboxDirty = false;
+        this.syncFlyoutCullingState();
     }
     requestToolboxStateSync(force = false) {
         if (!this.props.isVisible) {
