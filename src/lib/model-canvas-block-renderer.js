@@ -1210,27 +1210,31 @@ const installBlocklyCanvasMode = ScratchBlocks => {
         const originalEnd = draggerProto.endBlockDrag;
         draggerProto.startBlockDrag = function (...args) {
             const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
-            if (renderer && this.draggingBlock_) {
+            // BlockDragger may replace or clear draggingBlock_ while the
+            // native start method unplugs a partial stack. Keep the original
+            // model reference for the Canvas lifecycle.
+            const draggingBlock = this.draggingBlock_;
+            if (renderer && draggingBlock) {
                 // Populate the native connection baseline from the cheap graph
                 // projection before the dragger snapshots it. This avoids
                 // forcing a complete native shape pass for a long stack.
-                renderer.prepareDragConnections(this.draggingBlock_);
+                renderer.prepareDragConnections(draggingBlock);
             }
             const connectionSnapshot = renderer &&
                 renderer.captureDragConnectionPositions(this.draggedConnectionManager_);
-            const sourceRoot = renderer && this.draggingBlock_ ?
-                rootOf(this.draggingBlock_) : null;
-            const sourceParent = renderer && this.draggingBlock_ &&
-                this.draggingBlock_.getParent ? this.draggingBlock_.getParent() : null;
-            const sourceContainers = renderer && this.draggingBlock_ ?
-                renderer.captureDragContainerChain(this.draggingBlock_) : [];
+            const sourceRoot = renderer && draggingBlock ?
+                rootOf(draggingBlock) : null;
+            const sourceParent = renderer && draggingBlock &&
+                draggingBlock.getParent ? draggingBlock.getParent() : null;
+            const sourceContainers = renderer && draggingBlock ?
+                renderer.captureDragContainerChain(draggingBlock) : [];
             const result = originalStart.apply(this, args);
-            if (renderer && this.draggingBlock_) {
+            if (renderer && draggingBlock) {
                 // The native method has now completed unplug/translate. The
                 // dragged root must be measured after that graph transition.
-                renderer.prepareBlockDrag(this.draggingBlock_);
+                renderer.prepareBlockDrag(draggingBlock);
                 renderer.beginBlockDrag(
-                    this.draggingBlock_,
+                    draggingBlock,
                     sourceRoot,
                     sourceParent,
                     sourceContainers
@@ -1254,7 +1258,10 @@ const installBlocklyCanvasMode = ScratchBlocks => {
             const result = originalEnd.apply(this, args);
             const renderer = this.workspace_ && this.workspace_.canvasBlockRenderer;
             if (renderer) {
-                renderer.endBlockDrag(this.draggingBlock_);
+                // The native end method can clear draggingBlock_ after a
+                // partial extraction. The renderer still has the active root
+                // and can resolve its new component from that reference.
+                renderer.endBlockDrag(this.draggingBlock_ || renderer.draggingRoot);
                 renderer.scheduleDraw();
             }
             return result;
@@ -1824,158 +1831,187 @@ class ModelCanvasBlockRenderer {
         this.estimateCache.delete(this.getEstimateKey(block, true, true));
     }
 
-    getEstimatedBaseSize (block, ignoreFields = false) {
+    getEstimatedBaseSize (block) {
         if (!block) return {width: 64, height: STACK_HEIGHT};
         const BlockSvg = this.ScratchBlocks.BlockSvg || {};
-        let width = numberOr(block.width);
-        let height = numberOr(block.height);
-        if (width <= 0) {
-            width = block.outputConnection ?
-                numberOr(BlockSvg.MIN_BLOCK_X_OUTPUT, 48) :
-                numberOr(BlockSvg.MIN_BLOCK_X, 96);
-        }
-        if (height <= 0) {
-            height = block.outputConnection ?
-                numberOr(BlockSvg.FIELD_HEIGHT, REPORTER_HEIGHT) :
-                numberOr(BlockSvg.MIN_BLOCK_Y, STACK_HEIGHT);
-        }
-
-        if (!ignoreFields) {
-            for (const input of block.inputList || []) {
-                if (input.isVisible && !input.isVisible()) continue;
-                let rowWidth = 0;
-                let rowHeight = 0;
-                for (const field of input.fieldRow || []) {
-                    const size = field && field.size_;
-                    const fieldWidth = numberOr(size && size.width) ||
-                        Math.max(16, (fieldText(field).length * 8) + 16);
-                    const fieldHeight = numberOr(size && size.height) ||
-                        numberOr(BlockSvg.FIELD_HEIGHT, REPORTER_HEIGHT);
-                    rowWidth += fieldWidth + numberOr(BlockSvg.SEP_SPACE_X, 8);
-                    rowHeight = Math.max(rowHeight, fieldHeight);
-                }
-                width = Math.max(width, rowWidth + (BLOCK_PADDING_X * 2));
-                height = Math.max(height, rowHeight);
-            }
+        // A dirty block's old width/height belongs to the previous native
+        // render. It must not seed the new C-shape calculation, otherwise a
+        // removed child can leave a permanent gap until a later redraw.
+        const width = block.outputConnection ?
+            numberOr(BlockSvg.MIN_BLOCK_X_OUTPUT, 48) :
+            numberOr(BlockSvg.MIN_BLOCK_X, 96);
+        let height;
+        if (block.outputConnection) {
+            height = block.isShadow && block.isShadow() && block.inputList &&
+                block.inputList.length === 1 ?
+                numberOr(BlockSvg.MIN_BLOCK_Y_SINGLE_FIELD_OUTPUT, REPORTER_HEIGHT) :
+                numberOr(BlockSvg.MIN_BLOCK_Y_REPORTER, REPORTER_HEIGHT);
+        } else {
+            height = numberOr(BlockSvg.MIN_BLOCK_Y, STACK_HEIGHT);
         }
         return {width, height};
+    }
+
+    getEstimatedInputShapeWidth (connection) {
+        const BlockSvg = this.ScratchBlocks.BlockSvg || {};
+        if (!connection || connection.type !== this.ScratchBlocks.INPUT_VALUE ||
+            (connection.isConnected && connection.isConnected())) return 0;
+        if (typeof BlockSvg.getInputShapeInfo_ === 'function' &&
+            typeof connection.getOutputShape === 'function') {
+            const info = BlockSvg.getInputShapeInfo_(connection.getOutputShape());
+            if (info && Number.isFinite(info.width)) return info.width;
+        }
+        return numberOr(BlockSvg.INPUT_SHAPE_ROUND_WIDTH, 48);
     }
 
     getEstimatedBlockSize (block, ignoreFields = false, seen = new Set()) {
         if (!block) return {width: 64, height: STACK_HEIGHT};
         const key = this.getEstimateKey(block, ignoreFields);
         if (this.estimateCache.has(key)) return this.estimateCache.get(key);
-
-        // A malformed or partially constructed workspace must not make the
-        // recursive estimator loop forever. The base size is still a useful
-        // conservative value for the edge that closes the cycle.
         if (seen.has(block.id)) return this.getEstimatedBaseSize(block, ignoreFields);
-        seen.add(block.id);
 
-        // Once Blockly has measured a clean block, width/height already include
-        // all inline and statement inputs for that block. Re-walking those
-        // children here both double-counts them and turns a large nested graph
-        // into repeated recursive work.
         const nativeState = this.nativeBlockCache.get(block.id);
-        if (nativeState && !nativeState.dirty && numberOr(block.width) > 0 && numberOr(block.height) > 0) {
+        if (nativeState && !nativeState.dirty && numberOr(block.width) > 0 &&
+            numberOr(block.height) > 0) {
             const measured = {width: numberOr(block.width), height: numberOr(block.height)};
-            seen.delete(block.id);
             this.estimateCache.set(key, measured);
             return measured;
         }
 
         const BlockSvg = this.ScratchBlocks.BlockSvg || {};
-        const base = this.getEstimatedBaseSize(block, ignoreFields);
-        let width = base.width;
-        let height = base.height;
-        let currentRowHeight = 0;
-        let currentRowWidth = numberOr(BlockSvg.SEP_SPACE_X, 8);
-        let currentRowType = null;
-        let lastInputType = null;
-        let rowCount = 0;
-        let totalRowHeight = 0;
-        let hasStatement = false;
-        let lastRowWasStatement = false;
+        const sep = numberOr(BlockSvg.SEP_SPACE_X, 8);
+        const minBlockY = numberOr(BlockSvg.MIN_BLOCK_Y, STACK_HEIGHT);
+        const minStatementY = numberOr(BlockSvg.MIN_STATEMENT_INPUT_HEIGHT, STACK_HEIGHT);
+        const extraStatementY = numberOr(BlockSvg.EXTRA_STATEMENT_ROW_Y, 16);
+        const notchHeight = numberOr(BlockSvg.NOTCH_HEIGHT, NOTCH_DEPTH);
+        const rows = [];
+        let previousRow = null;
+        let lastType;
+        seen.add(block.id);
 
-        const finishInlineRow = () => {
-            if (currentRowType === 'inline') {
-                width = Math.max(width, currentRowWidth + numberOr(BlockSvg.SEP_SPACE_X, 8));
-            }
-            if (currentRowType) totalRowHeight += currentRowHeight;
-            currentRowHeight = 0;
-            currentRowWidth = numberOr(BlockSvg.SEP_SPACE_X, 8);
-            currentRowType = null;
-        };
-
+        // This mirrors renderCompute_ rather than approximating inputs as a
+        // flat list. In particular, the row after a statement input receives
+        // EXTRA_STATEMENT_ROW_Y, while the last/consecutive statement row gets
+        // the same divider in renderDrawRight_.
         for (const input of block.inputList || []) {
             if (input.isVisible && !input.isVisible()) continue;
+            const isSecondInputOnProcedure = block.type ===
+                this.ScratchBlocks.PROCEDURES_DEFINITION_BLOCK_TYPE &&
+                lastType === this.ScratchBlocks.NEXT_STATEMENT;
+            let row = rows[rows.length - 1];
+            if (!isSecondInputOnProcedure && (!lastType ||
+                lastType === this.ScratchBlocks.NEXT_STATEMENT ||
+                input.type === this.ScratchBlocks.NEXT_STATEMENT)) {
+                row = {
+                    type: input.type === this.ScratchBlocks.NEXT_STATEMENT ?
+                        this.ScratchBlocks.NEXT_STATEMENT : 'inline',
+                    height: 0,
+                    width: sep,
+                    fieldWidth: 0,
+                    fields: [],
+                    inputs: []
+                };
+                rows.push(row);
+            }
+            if (!row) continue;
+            row.inputs.push(input);
             const connection = input.connection;
             const isStatement = connection && connection.type === this.ScratchBlocks.NEXT_STATEMENT;
-            const rowType = isStatement ? 'statement' : 'inline';
-            const startsNewRow = isStatement || !currentRowType || lastInputType === this.ScratchBlocks.NEXT_STATEMENT;
-            if (startsNewRow) {
-                finishInlineRow();
-                currentRowType = rowType;
-                rowCount++;
-                currentRowHeight = 0;
-                currentRowWidth = numberOr(BlockSvg.SEP_SPACE_X, 8);
-            }
-            lastRowWasStatement = isStatement;
-
-            let fieldWidth = 0;
-            let fieldHeight = 0;
-            if (!ignoreFields) {
-                for (const field of input.fieldRow || []) {
-                    const size = field && field.size_;
-                    fieldWidth += numberOr(size && size.width) ||
-                        Math.max(16, (fieldText(field).length * 8) + 16);
-                    fieldWidth += numberOr(BlockSvg.SEP_SPACE_X, 8);
-                    fieldHeight = Math.max(fieldHeight,
-                        numberOr(size && size.height, numberOr(BlockSvg.FIELD_HEIGHT, REPORTER_HEIGHT)));
-                }
-            }
-            currentRowWidth += fieldWidth;
-            currentRowHeight = Math.max(currentRowHeight, fieldHeight,
-                isStatement ? numberOr(BlockSvg.MIN_STATEMENT_INPUT_HEIGHT, STACK_HEIGHT) :
-                    numberOr(BlockSvg.MIN_BLOCK_Y, STACK_HEIGHT));
-
+            const inputBaseHeight = block.inputList.length === 1 && block.outputConnection &&
+                block.isShadow && block.isShadow() ?
+                numberOr(BlockSvg.MIN_BLOCK_Y_SINGLE_FIELD_OUTPUT, REPORTER_HEIGHT) :
+                block.outputConnection ?
+                    numberOr(BlockSvg.MIN_BLOCK_Y_REPORTER, REPORTER_HEIGHT) :
+                    isStatement ? minStatementY :
+                        (previousRow && previousRow.type === this.ScratchBlocks.NEXT_STATEMENT ?
+                            extraStatementY : minBlockY);
+            let renderHeight = inputBaseHeight;
+            let renderWidth = 0;
             const child = connection && connection.targetBlock && connection.targetBlock();
             if (child) {
                 const childSize = isStatement ?
                     this.getEstimatedHeightWidth(child, ignoreFields, seen) :
                     this.getEstimatedBlockSize(child, ignoreFields, seen);
-                if (isStatement) {
-                    hasStatement = true;
-                    const canUseNotch = !child.lastConnectionInStack || child.lastConnectionInStack();
-                    const childHeight = childSize.height - (canUseNotch ?
-                        numberOr(BlockSvg.NOTCH_HEIGHT, NOTCH_DEPTH) : 0);
-                    currentRowHeight = Math.max(currentRowHeight, childHeight);
-                    width = Math.max(width,
-                        currentRowWidth + numberOr(BlockSvg.STATEMENT_INPUT_EDGE_WIDTH, STATEMENT_INDENT) +
-                            childSize.width);
-                } else if (connection.type === this.ScratchBlocks.INPUT_VALUE) {
-                    currentRowWidth += childSize.width + numberOr(BlockSvg.SEP_SPACE_X, 8);
-                    currentRowHeight = Math.max(currentRowHeight,
-                        childSize.height + (2 * numberOr(BlockSvg.INLINE_PADDING_Y, 4)));
+                renderHeight = Math.max(renderHeight,
+                    isStatement ? childSize.height - (
+                        child.lastConnectionInStack && child.lastConnectionInStack() ? notchHeight : 0
+                    ) : childSize.height + (2 * numberOr(BlockSvg.INLINE_PADDING_Y, 4)));
+                renderWidth = Math.max(renderWidth, childSize.width);
+            } else {
+                renderWidth = this.getEstimatedInputShapeWidth(connection);
+                if (connection && connection.type === this.ScratchBlocks.INPUT_VALUE) {
+                    renderHeight = Math.max(renderHeight,
+                        numberOr(BlockSvg.INPUT_SHAPE_HEIGHT, REPORTER_HEIGHT));
                 }
-            } else if (connection && connection.type === this.ScratchBlocks.INPUT_VALUE) {
-                currentRowWidth += numberOr(BlockSvg.INPUT_SHAPE_ROUND_WIDTH, 44) +
-                    numberOr(BlockSvg.SEP_SPACE_X, 8);
             }
+            row.height = Math.max(row.height, renderHeight);
+            let fieldWidth = 0;
+            let previousEditable = false;
+            if (!ignoreFields) {
+                for (const field of input.fieldRow || []) {
+                    const size = field && field.size_;
+                    const nativeFieldState = this.nativeBlockCache.get(block.id);
+                    const cachedWidth = nativeFieldState && !nativeFieldState.dirty ?
+                        field && field.renderWidth : 0;
+                    const width = numberOr(cachedWidth,
+                        numberOr(size && size.width) || Math.max(16,
+                            (fieldText(field).length * 8) + 16));
+                    const height = numberOr(size && size.height,
+                        numberOr(BlockSvg.FIELD_HEIGHT, REPORTER_HEIGHT));
+                    const renderSep = previousEditable && field.EDITABLE ? sep : 0;
+                    fieldWidth += renderSep + width;
+                    row.height = Math.max(row.height, height);
+                    previousEditable = !!field.EDITABLE;
+                }
+                if (input.fieldRow && input.fieldRow.length) {
+                    fieldWidth += sep * (input.fieldRow.length - 1);
+                }
+            }
+            // renderCompute_ adds iconWidth to the first row's fieldWidth. The
+            // exact icon is native-rendered when visible; this conservative
+            // value preserves the block's minimum edge before that pass.
+            if (rows.length === 1 && (block.getIcons ? block.getIcons().length : 0)) {
+                fieldWidth += numberOr(BlockSvg.SEP_SPACE_X, sep);
+            }
+            row.fieldWidth += fieldWidth;
+            row.width += fieldWidth;
+            if (!isStatement) row.width += renderWidth ? renderWidth + sep : 0;
+            previousRow = row;
+            lastType = input.type;
+        }
 
-            if (isStatement) {
-                finishInlineRow();
+        let width = block.outputConnection ?
+            (block.isShadow && block.isShadow() ?
+                numberOr(BlockSvg.MIN_BLOCK_X_SHADOW_OUTPUT, 40) :
+                numberOr(BlockSvg.MIN_BLOCK_X_OUTPUT, 48)) :
+            numberOr(BlockSvg.MIN_BLOCK_X, 64);
+        let height = 0;
+        let hasStatement = false;
+        for (let index = 0; index < rows.length; index++) {
+            const row = rows[index];
+            width = Math.max(width, row.width + sep);
+            if (row.type === this.ScratchBlocks.NEXT_STATEMENT) {
+                hasStatement = true;
+                const statementInput = row.inputs[0];
+                const child = statementInput && statementInput.connection &&
+                    statementInput.connection.targetBlock && statementInput.connection.targetBlock();
+                const childSize = child ? this.getEstimatedHeightWidth(child, ignoreFields, seen) : null;
+                const fieldWidth = row.fieldWidth;
+                const statementEdge = numberOr(BlockSvg.STATEMENT_INPUT_EDGE_WIDTH, STATEMENT_INDENT) + fieldWidth;
+                width = Math.max(width, statementEdge + (childSize ? childSize.width : 0));
+                if (block.type !== this.ScratchBlocks.PROCEDURES_DEFINITION_BLOCK_TYPE &&
+                    (index === rows.length - 1 || rows[index + 1].type === this.ScratchBlocks.NEXT_STATEMENT)) {
+                    height += extraStatementY;
+                }
             }
-            lastInputType = input.type;
+            height += row.height;
         }
-        finishInlineRow();
-        height = Math.max(height, totalRowHeight);
-        if (lastRowWasStatement && rowCount && block.type !== this.ScratchBlocks.PROCEDURES_DEFINITION_BLOCK_TYPE) {
-            height = Math.max(height, totalRowHeight + numberOr(BlockSvg.EXTRA_STATEMENT_ROW_Y, 16));
-        }
+        if (!rows.length) height = minBlockY;
         if (hasStatement) {
-            width = Math.max(width, numberOr(BlockSvg.MIN_BLOCK_X_WITH_STATEMENT, width));
+            width = Math.max(width,
+                numberOr(BlockSvg.MIN_BLOCK_X_WITH_STATEMENT, width));
         }
+        if (block.nextConnection) height += notchHeight;
         seen.delete(block.id);
         const result = {width, height};
         this.estimateCache.set(key, result);
@@ -1988,10 +2024,14 @@ class ModelCanvasBlockRenderer {
         if (state && !state.dirty && numberOr(block.width) > 0 && numberOr(block.height) > 0) {
             return {width: numberOr(block.width), height: numberOr(block.height)};
         }
-        // Projection only needs a conservative rectangle. Calling the full
-        // stack estimator here would walk every NEXT link before the first
-        // visible block can paint in a large project.
-        return this.getEstimatedBaseSize(block, false);
+        // The projection is also the source of the first connection offsets.
+        // A base rectangle is not sufficient for C-shaped blocks: it places
+        // the following block using MIN_BLOCK_Y before the statement stack has
+        // been measured, then that wrong position can survive the first scene
+        // commit. The estimator mirrors renderCompute_ and caches stack
+        // suffixes, so this remains linear for a long NEXT chain while keeping
+        // native SVG/model-node work deferred to the visible pass.
+        return this.getEstimatedBlockSize(block, false);
     }
 
     getEstimatedHeightWidth (block, ignoreFields = false, seen = new Set()) {
@@ -2301,78 +2341,251 @@ class ModelCanvasBlockRenderer {
         return containers;
     }
 
-    invalidateStackPositioning (root, containers = []) {
+    captureConnectedComponent (block) {
+        if (!this.isLiveBlock(block)) return [];
+        const root = rootOf(block);
+        if (!this.isLiveBlock(root)) return [];
+        const result = [];
+        const seen = new Set();
+        const pending = [root];
+        while (pending.length) {
+            const current = pending.pop();
+            if (!this.isLiveBlock(current) || seen.has(current.id)) continue;
+            seen.add(current.id);
+            result.push(current);
+            for (const input of current.inputList || []) {
+                const child = input && input.connection &&
+                    input.connection.targetBlock && input.connection.targetBlock();
+                if (child && !seen.has(child.id)) pending.push(child);
+            }
+            const next = current.getNextBlock && current.getNextBlock();
+            if (next && !seen.has(next.id)) pending.push(next);
+        }
+        return result;
+    }
+
+    collectConnectedMeasurementBlocks (blocks) {
+        const result = [];
+        const seen = new Set();
+        const pending = [];
+        for (const block of blocks || []) {
+            if (this.isLiveBlock(block)) {
+                // A measurement seed owns its inline inputs and statement
+                // inputs, but not its following NEXT sibling. NEXT siblings
+                // are only part of the dependency when the seed is already
+                // inside a statement input. This keeps an affected C block
+                // from pulling unrelated C blocks in the same top-level
+                // script into the native pass.
+                pending.push({block, expanded: false, includeNext: false});
+            }
+        }
+        // Post-order traversal is important: renderCompute_ for a C-shaped
+        // block reads the already measured size of its complete statement
+        // child and NEXT chain. This also avoids recursion limits on long
+        // Scratch scripts.
+        while (pending.length) {
+            const frame = pending.pop();
+            const block = frame.block;
+            if (!this.isLiveBlock(block)) continue;
+            if (frame.expanded) {
+                result.push(block);
+                continue;
+            }
+            if (seen.has(block.id)) continue;
+            seen.add(block.id);
+            pending.push({block, expanded: true, includeNext: frame.includeNext});
+            const children = [];
+            for (const input of block.inputList || []) {
+                const child = input && input.connection &&
+                    input.connection.targetBlock && input.connection.targetBlock();
+                if (child) {
+                    children.push({
+                        block: child,
+                        includeNext: input.connection.type === this.ScratchBlocks.NEXT_STATEMENT
+                    });
+                }
+            }
+            const next = frame.includeNext && block.getNextBlock && block.getNextBlock();
+            if (next) children.push({block: next, includeNext: true});
+            for (let index = children.length - 1; index >= 0; index--) {
+                if (!seen.has(children[index].block.id)) {
+                    pending.push({
+                        block: children[index].block,
+                        expanded: false,
+                        includeNext: children[index].includeNext
+                    });
+                }
+            }
+        }
+        return result;
+    }
+
+    isStatementContainerBlock (block) {
+        if (!block) return false;
+        return (block.inputList || []).some(input => {
+            const connection = input && input.connection;
+            return connection && connection.type === this.ScratchBlocks.NEXT_STATEMENT;
+        });
+    }
+
+    collectAffectedMeasurementBlocks (anchors) {
+        const affected = new Map();
+        const add = block => {
+            if (this.isLiveBlock(block)) affected.set(block.id, block);
+        };
+        for (const anchor of anchors || []) {
+            if (!this.isLiveBlock(anchor)) continue;
+            add(anchor);
+            // getParent() also walks the preceding NEXT chain. That would
+            // incorrectly mark unrelated C blocks which happen to be later
+            // in the same top-level script. getSurroundParent() follows only
+            // statement-input ownership, which is the dependency that can
+            // change a C-shaped outline.
+            const seenParents = new Set();
+            let parent = anchor.getSurroundParent ? anchor.getSurroundParent() : null;
+            while (this.isLiveBlock(parent) && !seenParents.has(parent.id)) {
+                seenParents.add(parent.id);
+                if (this.isStatementContainerBlock(parent)) add(parent);
+                parent = parent.getSurroundParent ? parent.getSurroundParent() : null;
+            }
+        }
+        return Array.from(affected.values());
+    }
+
+    invalidateConnectedComponents (components, measurementAnchors = null) {
+        const affected = new Map();
+        const allIds = new Set();
+        const measurementsByRoot = new Map();
+        if (measurementAnchors) {
+            for (const anchor of measurementAnchors) {
+                if (!this.isLiveBlock(anchor)) continue;
+                const root = rootOf(anchor);
+                if (!this.isLiveBlock(root)) continue;
+                if (!measurementsByRoot.has(root.id)) measurementsByRoot.set(root.id, []);
+                measurementsByRoot.get(root.id).push(anchor);
+            }
+        }
+        for (const component of components || []) {
+            for (const item of component || []) {
+                const id = item && item.id;
+                if (!id || allIds.has(id)) continue;
+                allIds.add(id);
+                if (this.isLiveBlock(item)) {
+                    const root = rootOf(item);
+                    if (!this.isLiveBlock(root)) continue;
+                    if (!affected.has(root.id)) affected.set(root.id, {root, blocks: []});
+                    affected.get(root.id).blocks.push(item);
+                } else {
+                    // A block can be disposed during a drag. Its old native
+                    // state must not survive under a reused ID.
+                    this.nativeBlockCache.delete(id);
+                    this.invalidateEstimateCacheForBlock({id});
+                    this.blockGeometry.delete(id);
+                }
+            }
+        }
+        if (!allIds.size) return;
+        // Structural changes invalidate stack estimates, including entries
+        // for NEXT chains which are no longer reachable from the same root.
+        this.clearNativeStackDimensionCache();
+        for (const {root, blocks} of affected.values()) {
+            const layout = this.getRootLayout(root);
+            if (measurementAnchors) {
+                // A new drag transition replaces the previous structural
+                // dependency set. Do not carry an old full-measurement ID
+                // into this pass and accidentally remeasure another group.
+                layout.fullMeasurementIds.clear();
+            }
+            // Only shape dependencies are measured natively. The complete
+            // root still receives a cheap position projection below, so
+            // offscreen blocks get the new coordinates without recompiling
+            // unrelated C-shaped groups. Drag completion supplies explicit
+            // C-shaped measurement anchors; ordinary change events retain
+            // the event blocks as their own anchors.
+            const measurementSeeds = measurementAnchors ?
+                (measurementsByRoot.get(root.id) || []) : blocks;
+            const blocksToMeasure = this.collectAffectedMeasurementBlocks(measurementSeeds);
+            for (const block of blocksToMeasure) {
+                const state = this.nativeBlockCache.get(block.id) || {dirty: true};
+                state.dirty = true;
+                this.nativeBlockCache.set(block.id, state);
+                layout.fullMeasurementIds.add(block.id);
+            }
+            layout.dirty = true;
+            layout.projectionDirty = true;
+            layout.projectionBounds = null;
+            layout.projectionWorkerFailed = false;
+            layout.version = numberOr(layout.version) + 1;
+            if (layout.inProgress) {
+                layout.inProgress = false;
+                layout.processing = false;
+                this.layoutTasks.delete(root.id);
+                layout.pendingScene = null;
+            }
+        }
+        this.scheduleDraw();
+    }
+
+    invalidateStackPositioning (root, containers = [], component = []) {
         if (!this.isLiveBlock(root)) return;
-        const layout = this.rootLayouts.get(root.id);
-        if (!layout) return;
-
-        // The graph remains authoritative, but every cached estimate in this
-        // root can contain a position that depends on a changed C-shaped
-        // parent. Clear estimates once and keep native shape caches intact;
-        // only the captured C parents are remeasured below.
-        this.estimateCache.clear();
-        for (const container of containers) {
-            if (!this.isLiveBlock(container) || rootOf(container) !== root) continue;
-            const state = this.nativeBlockCache.get(container.id) || {dirty: true};
-            state.dirty = true;
-            this.nativeBlockCache.set(container.id, state);
-            this.invalidateEstimateCacheForBlock(container);
-        }
-
-        layout.dirty = true;
-        layout.projectionDirty = true;
-        layout.projectionBounds = null;
-        layout.projectionWorkerFailed = false;
-        layout.version = numberOr(layout.version) + 1;
-        if (layout.inProgress) {
-            layout.inProgress = false;
-            layout.processing = false;
-            this.layoutTasks.delete(root.id);
-            layout.pendingScene = null;
-        }
+        const complete = component.length ? component :
+            this.captureConnectedComponent(root).concat(containers);
+        this.invalidateConnectedComponents([complete]);
     }
 
     endBlockDrag (block) {
         // The native end phase may connect the dragged block before this
         // renderer callback runs. In that case rootOf(block) is already the
         // destination stack, not the root that was protected during drag.
-        const draggedRoot = this.draggingRoot || rootOf(block);
+        const currentBlock = block || this.draggingRoot;
+        const draggedRoot = this.draggingRoot || rootOf(currentBlock);
+        const sourceContainers = this.dragSourceContainers;
         const sourceRoot = this.dragSourceRoot;
         const sourceParent = this.dragSourceParent;
-        const sourceContainers = this.dragSourceContainers;
-        const destinationRoot = rootOf(block);
-        const destinationContainers = this.captureDragContainerChain(block);
+        const destinationRoot = rootOf(currentBlock);
+        const destinationContainers = this.captureDragContainerChain(currentBlock);
         this.draggingRoot = null;
         this.dragSourceRoot = null;
         this.dragSourceParent = null;
         this.dragSourceContainers = [];
         this.dragStarted = false;
-        this.removeDraggedGeometry(draggedRoot);
-        if (sourceRoot && sourceRoot !== draggedRoot) this.removeDraggedGeometry(sourceRoot);
+        // Keep the last committed scene until the replacement layout is
+        // ready. Geometry was already detached from the source scene at drag
+        // start, and removing it again here creates a blank-frame flash.
         this.draggedBlockIds.clear();
         if (draggedRoot && draggedRoot.id) this.forceMaterializedIds.delete(draggedRoot.id);
-        // Refresh both sides after a substack is removed or inserted. The
-        // source root is kept separately because rootOf(block) now points at
-        // the detached or destination stack after Blockly finishes the drag.
-        if (sourceParent) this.invalidateBlock(sourceParent);
-        if (sourceRoot && sourceRoot !== destinationRoot) this.invalidateBlock(sourceRoot);
-        if (draggedRoot) this.invalidateBlock(draggedRoot);
-        if (destinationRoot && destinationRoot !== draggedRoot) {
-            this.invalidateBlock(destinationRoot);
-        }
-
-        // A move event is emitted after Blockly has unplugged and reconnected
-        // the stack. At that point the old parent chain cannot be recovered
-        // from getParent(), so explicitly refresh the complete old and new
-        // stack layouts using the chains captured at drag start/end.
-        for (const container of sourceContainers) this.invalidateBlock(container);
-        for (const container of destinationContainers) this.invalidateBlock(container);
-        const affectedRoots = new Set([sourceRoot, draggedRoot, destinationRoot]);
-        for (const root of affectedRoots) {
-            if (!this.isLiveBlock(root)) continue;
-            const containers = sourceContainers.concat(destinationContainers)
-                .filter(container => this.isLiveBlock(container) && rootOf(container) === root);
-            this.invalidateStackPositioning(root, containers);
+        const currentParent = currentBlock && currentBlock.getParent ?
+            currentBlock.getParent() : null;
+        const structureChanged = (sourceParent && sourceParent.id) !==
+            (currentParent && currentParent.id) ||
+            (sourceRoot && sourceRoot.id) !== (destinationRoot && destinationRoot.id);
+        if (structureChanged) {
+            // The move event has already changed the graph by this point. The
+            // old parent chain is no longer recoverable, so invalidate both
+            // roots for projection, but pass only the C-shaped containers as
+            // native measurement seeds. Treating a root as a measurement
+            // seed walks its entire NEXT chain and makes unrelated C groups
+            // participate in the expensive native pass.
+            const components = [];
+            if (this.isLiveBlock(sourceRoot)) components.push([sourceRoot]);
+            if (this.isLiveBlock(destinationRoot) && destinationRoot !== sourceRoot) {
+                components.push([destinationRoot]);
+            }
+            const measurementAnchors = [
+                ...sourceContainers.filter(container => this.isLiveBlock(container)),
+                ...destinationContainers.filter(container => this.isLiveBlock(container))
+            ];
+            if (this.isLiveBlock(sourceRoot) && this.isStatementContainerBlock(sourceRoot)) {
+                measurementAnchors.push(sourceRoot);
+            }
+            if (this.isLiveBlock(destinationRoot) &&
+                destinationRoot !== sourceRoot &&
+                this.isStatementContainerBlock(destinationRoot)) {
+                measurementAnchors.push(destinationRoot);
+            }
+            this.invalidateConnectedComponents(components, measurementAnchors);
+        } else {
+            this.invalidatePosition(destinationRoot || draggedRoot);
         }
         this.scheduleDraw();
     }
@@ -2480,6 +2693,7 @@ class ModelCanvasBlockRenderer {
         // Estimate entries have mode and stack suffixes in their keys. A
         // bare block id never matched those keys, so stale nested dimensions
         // survived imports and later field/mutation changes.
+        this.clearNativeStackDimensionCache();
         this.estimateCache.clear();
         // Dropping the measurement cache is equivalent to marking every entry
         // dirty, without a synchronous getAllBlocks() walk on a huge target.
@@ -2519,6 +2733,7 @@ class ModelCanvasBlockRenderer {
             this.invalidatePosition(this.draggingRoot);
             return;
         }
+        this.clearNativeStackDimensionCache();
         let current = block;
         while (current) {
             const state = this.nativeBlockCache.get(current.id) || {dirty: true};
@@ -2553,6 +2768,27 @@ class ModelCanvasBlockRenderer {
         this.scheduleDraw();
     }
 
+    clearNativeStackDimensionCache () {
+        if (this.workspace) this.workspace.lazyStackDimensionsCache_ = null;
+    }
+
+    beginNativeStackMeasurement (task) {
+        if (!task || task.nativeStackCacheInitialized) return;
+        task.nativeStackCacheInitialized = true;
+        task.nativeStackDimensionCache = typeof WeakMap === 'function' ?
+            new WeakMap() : null;
+        if (this.workspace) {
+            this.workspace.lazyStackDimensionsCache_ = task.nativeStackDimensionCache;
+        }
+    }
+
+    resetNativeStackMeasurement (task) {
+        if (!task) return;
+        task.nativeStackCacheInitialized = false;
+        task.nativeStackDimensionCache = null;
+        this.clearNativeStackDimensionCache();
+    }
+
     isDraggedBlock (block) {
         return !!(this.dragStarted && this.draggingRoot && block &&
             rootOf(block) === this.draggingRoot);
@@ -2576,21 +2812,26 @@ class ModelCanvasBlockRenderer {
         }
         const block = event && event.blockId && this.workspace.getBlockById(event.blockId);
         if (eventType === 'move' && (event.oldParentId || event.newParentId)) {
-            // Disconnecting or inserting a stack changes both sides of the
-            // graph. Looking up blockId after Blockly applies the event only
-            // finds its new root, so the old script used to keep stale
-            // projection/geometry until another unrelated edit refreshed it.
-            // Invalidate the direct parents as well as their roots: a C-shaped
-            // parent derives its height from the removed child, and invalidating
-            // only the root does not dirty that parent's native measurement.
-            const affectedBlocks = new Set();
-            const addBlock = candidate => {
-                if (this.isLiveBlock(candidate)) affectedBlocks.add(candidate);
+            // During an active drag, the dragger owns the intermediate graph
+            // transitions and endBlockDrag performs one complete refresh. Do
+            // not restart a large stack layout for every connection probe.
+            if (block && this.isDraggedBlock(block)) {
+                this.invalidatePosition(this.draggingRoot);
+                this.lastInteractionAt = now();
+                return;
+            }
+            const affectedComponents = [];
+            const addComponent = candidate => {
+                if (this.isLiveBlock(candidate)) {
+                    // Pass the actual structural anchor. Expanding this to
+                    // the whole root would make unrelated C groups dirty.
+                    affectedComponents.push([candidate]);
+                }
             };
-            addBlock(block);
-            addBlock(event.oldParentId && this.workspace.getBlockById(event.oldParentId));
-            addBlock(event.newParentId && this.workspace.getBlockById(event.newParentId));
-            for (const affectedBlock of affectedBlocks) this.invalidateBlock(affectedBlock);
+            addComponent(block);
+            addComponent(event.oldParentId && this.workspace.getBlockById(event.oldParentId));
+            addComponent(event.newParentId && this.workspace.getBlockById(event.newParentId));
+            this.invalidateConnectedComponents(affectedComponents);
             this.lastInteractionAt = now();
             return;
         }
@@ -2605,7 +2846,14 @@ class ModelCanvasBlockRenderer {
         }
         if (block && eventType === 'move' &&
             !event.oldParentId && !event.newParentId) this.invalidatePosition(rootOf(block));
-        else if (block) this.invalidateBlock(block);
+        else if (block && ['change', 'create'].includes(eventType)) {
+            // Field mutations can change an inline width or a nested C-shape
+            // height. Refresh the complete connected component so every
+            // downstream position is based on the same measurement pass.
+            this.invalidateConnectedComponents([
+                [block]
+            ]);
+        } else if (block) this.invalidateBlock(block);
         else if (!event || !event.type || [
             'create', 'delete', 'change', 'move', 'finished_loading'
         ].includes(eventType)) this.invalidateAll();
@@ -2697,6 +2945,7 @@ class ModelCanvasBlockRenderer {
                 projectedBuckets: new Map(),
                 projectedBlocks: new Map(),
                 visibleIds: new Set(),
+                fullMeasurementIds: new Set(),
                 projectionBuiltAt: 0,
                 projectionPending: false,
                 projectionRequestId: 0,
@@ -2890,13 +3139,19 @@ class ModelCanvasBlockRenderer {
     }
 
     invalidateAncestorMeasurements (block) {
-        let parent = block && block.getParent && block.getParent();
+        // Only statement-input ownership changes a C-shaped outline. Walking
+        // getParent() follows the whole preceding NEXT chain and needlessly
+        // dirties unrelated blocks and C groups whenever one child is
+        // measured. Keep this dependency chain structural and local.
+        let parent = block && block.getSurroundParent && block.getSurroundParent();
         while (parent) {
-            const state = this.nativeBlockCache.get(parent.id) || {dirty: true};
-            state.dirty = true;
-            this.nativeBlockCache.set(parent.id, state);
-            this.invalidateEstimateCacheForBlock(parent);
-            parent = parent.getParent && parent.getParent();
+            if (this.isStatementContainerBlock(parent)) {
+                const state = this.nativeBlockCache.get(parent.id) || {dirty: true};
+                state.dirty = true;
+                this.nativeBlockCache.set(parent.id, state);
+                this.invalidateEstimateCacheForBlock(parent);
+            }
+            parent = parent.getSurroundParent && parent.getSurroundParent();
         }
 
         // A native measurement may happen outside a layout task (for example
@@ -3425,10 +3680,10 @@ class ModelCanvasBlockRenderer {
     }
 
     collectMeasurementBlocks (blocks) {
-        // Exact inline child widths are needed before their visible parent is
-        // drawn. Statement stack sizes are supplied by the cached
-        // getEstimatedHeightWidth path, so do not materialize every descendant
-        // under a visible C block.
+        // Exact inline child widths and complete statement-stack dimensions are
+        // needed before their visible parent is drawn. The native SVG renderer
+        // renders a stack child-first for the same reason; Canvas keeps the
+        // expensive pass limited to the visible dependency closure.
         const result = new Map();
         const pending = blocks.slice();
         while (pending.length) {
@@ -3437,11 +3692,10 @@ class ModelCanvasBlockRenderer {
             result.set(block.id, block);
 
             // A C-shaped parent derives its native outline from the complete
-            // stack connected to its NEXT_STATEMENT input. Include only those
-            // statement parents in the dependency closure. Ordinary NEXT
-            // chains are deliberately not added, so large scripts retain the
-            // fast viewport scheduler while every affected C parent is
-            // remeasured when a visible child changes size.
+            // stack connected to its NEXT_STATEMENT input. Include that stack
+            // in the dependency closure, while ordinary NEXT chains outside a
+            // statement input remain deferred so the viewport scheduler stays
+            // bounded.
             let parent = block.getSurroundParent ?
                 block.getSurroundParent() : (block.getParent && block.getParent());
             while (parent) {
@@ -3460,11 +3714,29 @@ class ModelCanvasBlockRenderer {
             }
             for (const input of block.inputList || []) {
                 if (!input.connection) continue;
-                if (input.connection.type !== this.ScratchBlocks.INPUT_VALUE &&
-                    !this.isProcedureHeaderBlock(block)) continue;
                 const inputChild = input.connection && input.connection.targetBlock &&
                     input.connection.targetBlock();
-                if (inputChild && !result.has(inputChild.id)) pending.push(inputChild);
+                if (!inputChild) continue;
+                if (input.connection.type === this.ScratchBlocks.INPUT_VALUE ||
+                    this.isProcedureHeaderBlock(block)) {
+                    if (!result.has(inputChild.id)) pending.push(inputChild);
+                    continue;
+                }
+                if (input.connection.type === this.ScratchBlocks.NEXT_STATEMENT) {
+                    // A C-shaped outline reads the dimensions of its complete
+                    // statement stack through getHeightWidth(). Measure that
+                    // stack child-first; measuring only the first child leaves
+                    // the parent using stale heights for the rest of the
+                    // chain, which is the source of the initial/reload C-size
+                    // mismatch in Canvas mode.
+                    let current = inputChild;
+                    const stackSeen = new Set();
+                    while (this.isLiveBlock(current) && !stackSeen.has(current.id)) {
+                        stackSeen.add(current.id);
+                        if (!result.has(current.id)) pending.push(current);
+                        current = current.getNextBlock && current.getNextBlock();
+                    }
+                }
             }
         }
         return Array.from(result.values());
@@ -3543,11 +3815,25 @@ class ModelCanvasBlockRenderer {
         // changes Canvas scheduling; the Blockly graph and connection order
         // remain authoritative.
         targetIds.sort((a, b) => distanceToViewport(a) - distanceToViewport(b));
-        let nativeBlocks = targetIds
-            .map(id => layout.projectedBlocks.get(id))
-            .filter(block => this.isLiveBlock(block));
-        nativeBlocks = this.collectMeasurementBlocks(nativeBlocks)
-            .filter(block => this.needsNativeMeasurement(block));
+        let nativeBlocks;
+        const fullMeasurement = layout.fullMeasurementIds.size > 0;
+        if (fullMeasurement) {
+            // A structural edit changes the dimensions of every C-shaped
+            // ancestor that can reach the edited block through NEXT or a
+            // nested statement input. Measure the complete affected graph,
+            // even when some of it is outside the viewport. Painting remains
+            // viewport-cropped below.
+            const fullBlocks = Array.from(layout.fullMeasurementIds)
+                .map(id => this.workspace.getBlockById(id))
+                .filter(block => this.isLiveBlock(block));
+            nativeBlocks = this.collectConnectedMeasurementBlocks(fullBlocks);
+        } else {
+            nativeBlocks = targetIds
+                .map(id => layout.projectedBlocks.get(id))
+                .filter(block => this.isLiveBlock(block));
+            nativeBlocks = this.collectMeasurementBlocks(nativeBlocks);
+        }
+        nativeBlocks = nativeBlocks.filter(block => this.needsNativeMeasurement(block));
         // Child dimensions are needed before a parent is laid out. Sorting the
         // dependency closure by graph depth preserves that dependency while
         // keeping unrelated roots out of the native shape compiler.
@@ -3563,8 +3849,10 @@ class ModelCanvasBlockRenderer {
             depthCache.set(block.id, value);
             return value;
         };
-        nativeBlocks.sort((a, b) => depth(b) - depth(a) ||
-            distanceToViewport(a.id) - distanceToViewport(b.id));
+        if (!fullMeasurement) {
+            nativeBlocks.sort((a, b) => depth(b) - depth(a) ||
+                distanceToViewport(a.id) - distanceToViewport(b.id));
+        }
         layout.inProgress = true;
         layout.pendingScene = scene;
         return {
@@ -3589,6 +3877,8 @@ class ModelCanvasBlockRenderer {
             measurementPasses: 0,
             failedNativeBlocks: new Set(),
             seen: new Set(),
+            nativeStackCacheInitialized: false,
+            nativeStackDimensionCache: null,
             onlyVisible: true,
             phase: 'native',
             started: now(),
@@ -3659,6 +3949,7 @@ class ModelCanvasBlockRenderer {
                         // Do not persist a skip marker in the root layout.
                         // A later viewport layout must be able to retry the
                         // block after a transient addon/native-render error.
+                        task.layout.fullMeasurementIds.clear();
                         task.layout.dirty = false;
                         task.layout.pendingScene = null;
                         completed = true;
@@ -3694,16 +3985,19 @@ class ModelCanvasBlockRenderer {
                 task.layout.inProgress = false;
                 if (task.layout.pendingScene === task.scene) task.layout.pendingScene = null;
             }
+            this.resetNativeStackMeasurement(task);
             return true;
         }
         if (task.version !== task.layout.version || task.viewportKey !== this.viewportKey) {
             task.layout.dirty = true;
             task.layout.inProgress = false;
             if (task.layout.pendingScene === task.scene) task.layout.pendingScene = null;
+            this.resetNativeStackMeasurement(task);
             return true;
         }
         const started = now();
         if (task.phase === 'native') {
+            this.beginNativeStackMeasurement(task);
             const Field = this.ScratchBlocks.Field;
             this.activeLayoutTask = task;
             if (Field && Field.startCache) Field.startCache();
@@ -3757,8 +4051,18 @@ class ModelCanvasBlockRenderer {
                 // changes. renderNativeBlock still skips clean cached blocks,
                 // so this restores C-shape correctness without discarding the
                 // native measurement cache or viewport scheduling gains.
-                task.nativeBlocks = this.collectMeasurementBlocks(visibleBlocks);
+                if (task.layout.fullMeasurementIds.size) {
+                    const fullBlocks = Array.from(task.layout.fullMeasurementIds)
+                        .map(id => this.workspace.getBlockById(id))
+                        .filter(block => this.isLiveBlock(block));
+                    task.nativeBlocks = this.collectConnectedMeasurementBlocks(fullBlocks)
+                        .filter(block => this.needsNativeMeasurement(block));
+                } else {
+                    task.nativeBlocks = this.collectMeasurementBlocks(visibleBlocks)
+                        .filter(block => this.needsNativeMeasurement(block));
+                }
                 task.nativeIndex = 0;
+                this.resetNativeStackMeasurement(task);
                 // Keep failed blocks in the scene using cached or estimated
                 // dimensions. The failure is local to this native pass and
                 // must not make the block disappear until another refresh.
@@ -3770,16 +4074,18 @@ class ModelCanvasBlockRenderer {
                 task.seen = new Set();
                 task.reprojected = true;
                 if (task.nativeBlocks.length) {
-                    // Avoid an unstable addon repeatedly restarting a large
-                    // script forever. The last pass still commits the latest
-                    // complete measurements and the next invalidation can
-                    // request another bounded refresh.
+                    // Full component passes retain strict child-first order
+                    // and may need more than two rounds for nested C-shaped
+                    // blocks to converge. Ordinary viewport passes keep the
+                    // smaller bound to protect interactive performance.
                     task.measurementPasses = task.measurementPasses ?
                         task.measurementPasses + 1 : 1;
-                    if (task.measurementPasses <= 2) return false;
+                    const maxMeasurementPasses = task.layout.fullMeasurementIds.size ? 8 : 2;
+                    if (task.measurementPasses <= maxMeasurementPasses) return false;
                     task.nativeBlocks = [];
                 }
             }
+            this.resetNativeStackMeasurement(task);
             task.phase = 'layout';
         }
 
@@ -3800,9 +4106,12 @@ class ModelCanvasBlockRenderer {
             task.layout.dirty = true;
             task.layout.inProgress = false;
             if (task.layout.pendingScene === task.scene) task.layout.pendingScene = null;
+            this.resetNativeStackMeasurement(task);
             return true;
         }
+        this.resetNativeStackMeasurement(task);
         this.commitLayoutScene(task.layout, task.scene);
+        task.layout.fullMeasurementIds.clear();
         task.layout.dirty = false;
         task.layout.positionDirty = false;
         task.layout.inProgress = false;
