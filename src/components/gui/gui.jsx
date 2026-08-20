@@ -724,14 +724,14 @@ const GUIComponent = props => {
     }, [commitEditorWindowState, getEditorFullScreenGeometry, scheduleEditorLayoutRefresh]);
 
     React.useEffect(() => {
-        if (!customUI === UI_LAYOUT_MODES.NEW_02E || !activeEditorWindowId) {
+        if (customUI !== UI_LAYOUT_MODES.NEW_02E || !activeEditorWindowId) {
             return;
         }
         scheduleEditorLayoutRefresh();
     }, [activeEditorWindowId, customUI, scheduleEditorLayoutRefresh, theme.id]);
 
     React.useLayoutEffect(() => {
-        if (!customUI === UI_LAYOUT_MODES.NEW_02E) {
+        if (customUI !== UI_LAYOUT_MODES.NEW_02E) {
             return;
         }
         menuBarCollapsedRef.current = menuBarCollapsed;
@@ -739,7 +739,7 @@ const GUIComponent = props => {
     }, [customUI, menuBarCollapsed, syncFullScreenEditorWindowGeometry]);
 
     React.useEffect(() => {
-        if (!customUI === UI_LAYOUT_MODES.NEW_02E) {
+        if (customUI !== UI_LAYOUT_MODES.NEW_02E) {
             return undefined;
         }
 
@@ -799,7 +799,7 @@ const GUIComponent = props => {
     }, [activeTabIndex, onActivateTab, vm]);
 
     React.useLayoutEffect(() => {
-        if (!customUI === UI_LAYOUT_MODES.NEW_02E) {
+        if (customUI !== UI_LAYOUT_MODES.NEW_02E) {
             pendingEditorWindowSyncRef.current = null;
             return;
         }
@@ -1060,7 +1060,7 @@ const GUIComponent = props => {
 
     const handleActiveEditorTabSelect = React.useCallback(tabIndex => {
         onActivateTab(tabIndex);
-        if (!customUI === UI_LAYOUT_MODES.NEW_02E) {
+        if (customUI !== UI_LAYOUT_MODES.NEW_02E) {
             return;
         }
         const activeWindowId = activeEditorWindowIdRef.current;
@@ -1080,7 +1080,7 @@ const GUIComponent = props => {
     }, [scheduleEditorLayoutRefresh]);
 
     React.useEffect(() => {
-        if (!customUI === UI_LAYOUT_MODES.NEW_02E || !activeEditorWindowId) {
+        if (customUI !== UI_LAYOUT_MODES.NEW_02E || !activeEditorWindowId) {
             return;
         }
         const activeSession = editorWindowSessionsRef.current.find(
@@ -1106,7 +1106,7 @@ const GUIComponent = props => {
     }, [activeTabIndex, customUI, editingTargetId, handleEditorTargetSelection]);
 
     React.useEffect(() => {
-        if (!customUI === UI_LAYOUT_MODES.NEW_02E || !editingTargetId) {
+        if (customUI !== UI_LAYOUT_MODES.NEW_02E || !editingTargetId) {
             return;
         }
         if (lastRequestedEditingTargetIdRef.current === editingTargetId) {
@@ -1125,14 +1125,14 @@ const GUIComponent = props => {
     }, [customUI, editingTargetId, handleEditorTargetSelection]);
 
     React.useEffect(() => {
-        if (!customUI === UI_LAYOUT_MODES.NEW_02E || !activeEditorWindowId) {
+        if (customUI !== UI_LAYOUT_MODES.NEW_02E || !activeEditorWindowId) {
             return;
         }
         scheduleEditorLayoutRefresh();
     }, [activeEditorWindowId, activeTabIndex, customUI, scheduleEditorLayoutRefresh]);
 
     React.useEffect(() => {
-        if (!customUI === UI_LAYOUT_MODES.NEW_02E) {
+        if (customUI !== UI_LAYOUT_MODES.NEW_02E) {
             return;
         }
         const validTargetIds = new Set(Object.keys(sprites));
@@ -1218,7 +1218,7 @@ const GUIComponent = props => {
     const activeEditorSession = customUI === UI_LAYOUT_MODES.NEW_02E ?
         (editorWindowSessions.find(session => session.id === activeEditorWindowId) || null) :
         null;
-    const activeEditorSessionReady = !customUI === UI_LAYOUT_MODES.NEW_02E || !activeEditorSession ||
+    const activeEditorSessionReady = customUI !== UI_LAYOUT_MODES.NEW_02E || !activeEditorSession ||
         activeEditorSession.targetId === editingTargetId;
     const blocksLayoutToken = customUI === UI_LAYOUT_MODES.NEW_02E && activeEditorSession ?
         [
@@ -1733,7 +1733,7 @@ const GUIComponent = props => {
 
 
                 {LAYOUT_FEATURES[customUI]?.floatingMenuBar ? (
-                    <LayoutContainer menuCollapsed={effectiveMenuBarCollapsed}>
+                    <LayoutContainer>
                         {windowBackgroundActive ? (
                             <div
                                 className={styles.windowBackgroundLayer}
@@ -1747,6 +1747,7 @@ const GUIComponent = props => {
                                 renderEditorWrapper,
                                 renderEditorWindows,
                                 stageSize,
+                                customStageSize,
                                 vm,
                                 isFullScreen,
                                 isRtl,

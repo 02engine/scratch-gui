@@ -16,8 +16,10 @@ const STAGE_WINDOW_Z_INDEX = 475;
 const New02ELayout = ({
     renderEditorWindows,
     stageSize,
+    customStageSize,
     vm,
     isFullScreen,
+    isRtl,
     editorDesktopRef,
     hideFloatingWindows,
     minimizedWindows,
@@ -70,9 +72,11 @@ const New02ELayout = ({
             >
                 <StageWrapper
                     containerSize={stageWindowContentSize}
+                    customStageSize={customStageSize}
                     fitToContainer={stageWindowAutoFit}
                     isFullScreen={isFullScreen}
                     isRendererSupported={isRendererSupported()}
+                    isRtl={isRtl}
                     onRequestSelectTarget={handleEditorTargetSelection}
                     onToggleAutoFit={handleToggleStageWindowAutoFit}
                     showAutoFitButton

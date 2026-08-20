@@ -1,13 +1,10 @@
-import classNames from 'classnames';
 import React from 'react';
 import Box from '../../box/box.jsx';
 import styles from './layout-container.css';
 
-const LayoutContainer = ({ menuCollapsed, children, ...props }) => (
+const LayoutContainer = ({children, ...props}) => (
     <Box
-        className={classNames(styles.layoutContainer, {
-            [styles.menuCollapsed]: menuCollapsed
-        })}
+        className={styles.layoutContainer}
         {...props}
     >
         {children}
