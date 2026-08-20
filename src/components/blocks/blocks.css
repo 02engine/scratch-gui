@@ -71,6 +71,12 @@
     contain: strict;
 }
 
+/* Interaction-only SVG layers must never cover the workspace while dragging comments. */
+.blocks :global(.blocklyCanvasCommentLayer),
+.blocks :global(.blocklyBlockDragSurface) {
+    background: transparent !important;
+}
+
 .blocks.custom-background :global(.blocklySvg) {
     /* Blockly injects its theme CSS after the component stylesheet. */
     background: transparent !important;

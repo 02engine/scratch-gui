@@ -1489,7 +1489,13 @@ class ModelCanvasBlockRenderer {
         });
         injection.appendChild(this.canvas);
         this.attachCommentLayer();
-        this.context = this.canvas.getContext('2d', {alpha: true, desynchronized: true});
+        // The workspace background and Blockly grid are DOM/SVG layers below
+        // this transparent canvas. A desynchronized context can bypass normal
+        // compositing and expose an opaque black/white swap surface while the
+        // canvas is redrawn, most visibly in legacy layout and during comment
+        // drags. Keep hardware acceleration, but let Chromium composite the
+        // alpha channel with those layers normally.
+        this.context = this.canvas.getContext('2d', {alpha: true});
         this.workspace.canvasBlockRenderer = this;
         this.workspace.ensureBlockRendered = blockId => this.materializeBlock(blockId);
         this.workspace.ensureScriptRendered = blockId => this.materializeBlock(blockId);
