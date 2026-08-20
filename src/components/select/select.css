@@ -1,0 +1,57 @@
+@import "../../css/colors.css";
+@import "../../css/default-colors.css";
+
+$min-width: 120px;
+$height: 24px;
+$pad: 8px;
+$border: color-mix(in srgb, currentColor, 40% transparent) 1px solid;
+$pad-menu: 6px;
+
+.container{
+    min-width: $min-width;
+    background-color: transparent;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.text-container {
+    background-color: $menu-bar-background;
+    min-width: 48px;
+    height: $height;
+    padding: $pad;
+    background-color: $ui-modal-background;
+    border: $border;
+    border-radius: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.pulldown{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.menu-container{
+    position: absolute;
+    min-width: $min-width;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    left: 0;
+    border: $border;
+
+    padding-top: $pad-menu;
+    padding-bottom: $pad-menu;
+    top: $height;
+    background-color: $ui-modal-background;
+}
+.menu-container>*{
+    padding-left: $pad;
+    padding-right: $pad;
+    width: 100%;
+}
+.menu-container>*:hover{
+    background-color: $ui-primary-default;
+    color: rgb(45, 45, 45);
+}

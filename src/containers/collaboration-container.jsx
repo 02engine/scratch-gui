@@ -2,10 +2,49 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import {compose} from 'redux';
+import {defineMessages, injectIntl} from 'react-intl';
 
 import CollaborationModal from '../components/collaboration-modal/collaboration-modal.jsx';
 import CollaborationService from '../lib/collaboration-service.js';
 import NotificationSystem from '../lib/notification-manager.js';
+
+const messages = defineMessages({
+    userDisconnected: {
+        id: 'gui.collaboration.userDisconnected',
+        defaultMessage: '{username} disconnected',
+        description: 'Notification when a user disconnects'
+    },
+    hostLeft: {
+        id: 'gui.collaboration.hostLeft',
+        defaultMessage: 'The host has left the collaboration room. The room has been closed.',
+        description: 'Notification when host leaves'
+    },
+    disconnected: {
+        id: 'gui.collaboration.disconnected',
+        defaultMessage: 'Disconnected from collaboration room',
+        description: 'Notification when disconnected from room'
+    },
+    downloadFailed: {
+        id: 'gui.collaboration.downloadFailed',
+        defaultMessage: 'Failed to download project from host',
+        description: 'Notification when project download fails'
+    },
+    connectionTimeout: {
+        id: 'gui.collaboration.error.connectionTimeout',
+        defaultMessage: 'Connection to room "{roomId}" timed out. Host may not be available.',
+        description: 'Error when connection times out'
+    },
+    couldNotConnect: {
+        id: 'gui.collaboration.error.couldNotConnect',
+        defaultMessage: 'Could not connect to host. Room "{roomId}" may not exist or host may be offline.',
+        description: 'Error when cannot connect to host'
+    },
+    unknownError: {
+        id: 'gui.collaboration.error.unknown',
+        defaultMessage: 'An unknown error occurred',
+        description: 'Unknown error message'
+    }
+});
 
 import {
     closeCollaborationModal,
@@ -227,7 +266,7 @@ class CollaborationContainer extends Component {
     handleUserLeft (user) {
         console.log('User left:', user);
         const username = user.username || user.id || 'A user';
-        NotificationSystem.info(`${username} disconnected`, 3000);
+        NotificationSystem.info(this.props.intl.formatMessage(messages.userDisconnected, {username}), 3000);
         this.updateUsersList();
     }
 
@@ -239,11 +278,27 @@ class CollaborationContainer extends Component {
     handleConnectionFailed (data) {
         console.log('Connection failed:', data.error);
 
+        let errorMessage;
+        if (typeof data.error === 'object' && data.error.code) {
+            switch (data.error.code) {
+            case 'CONNECTION_TIMEOUT':
+                errorMessage = this.props.intl.formatMessage(messages.connectionTimeout, {roomId: data.error.roomId});
+                break;
+            case 'COULD_NOT_CONNECT':
+                errorMessage = this.props.intl.formatMessage(messages.couldNotConnect, {roomId: data.error.roomId});
+                break;
+            default:
+                errorMessage = this.props.intl.formatMessage(messages.unknownError);
+            }
+        } else {
+            errorMessage = data.error;
+        }
+
         // Immediately clear connection state and show error
         this.props.onSetConnected(false);
         this.props.onSetRoomId(null);
         this.props.onSetUsers([]);
-        this.props.onSetError(data.error);
+        this.props.onSetError(errorMessage);
     }
 
     handleUsernameChanged (user) {
@@ -278,7 +333,7 @@ class CollaborationContainer extends Component {
         this.props.onSetRoomId(null);
         this.props.onSetUsers([]);
 
-        NotificationSystem.warning('The host has left the collaboration room. The room has been closed.', 5000);
+        NotificationSystem.warning(this.props.intl.formatMessage(messages.hostLeft), 5000);
 
         this.props.onSetError('The host has left the collaboration room. The room has been closed.');
     }
@@ -306,7 +361,7 @@ class CollaborationContainer extends Component {
     handleDisconnected () {
         console.log('Disconnected from collaboration');
 
-        NotificationSystem.info('Disconnected from collaboration room', 3000);
+        NotificationSystem.info(this.props.intl.formatMessage(messages.disconnected), 3000);
 
         this.clearWaitingOverlay();
 
@@ -423,7 +478,7 @@ class CollaborationContainer extends Component {
     }
 
     handleProjectSyncDownloadError () {
-        NotificationSystem.error('Failed to download project from host', 5000);
+        NotificationSystem.error(this.props.intl.formatMessage(messages.downloadFailed), 5000);
         this.props.onSetCollabLoading(false);
     }
 
@@ -570,5 +625,6 @@ const mapDispatchToProps = dispatch => ({
 });
 
 export default compose(
+    injectIntl,
     connect(mapStateToProps, mapDispatchToProps)
 )(CollaborationContainer);

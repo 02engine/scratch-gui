@@ -308,9 +308,9 @@ class UsernameModal extends React.Component {
             enabled: !e.target.checked
         });
     }
-    handleCustomUIChange (e) {
+    handleCustomUIChange (mode) {
         // store the preference in redux. UI wiring elsewhere should observe this state.
-        if (this.props.setCustomUI) this.props.setCustomUI(e.target.checked);
+        if (this.props.setCustomUI) this.props.setCustomUI(mode);
     }
     handleCanvasRendererChange (e) {
         if (this.props.setCanvasRenderer) this.props.setCanvasRenderer(e.target.checked);
@@ -492,7 +492,7 @@ UsernameModal.propTypes = {
     opsPerFrame: PropTypes.number,
     highQualityPen: PropTypes.bool,
     interpolation: PropTypes.bool,
-    customUI: PropTypes.bool,
+    customUI: PropTypes.string,
     canvasRenderer: PropTypes.bool,
     editorBackground: PropTypes.shape({
         image: PropTypes.string,
@@ -519,7 +519,7 @@ const mapStateToProps = state => ({
     isEmbedded: state.scratchGui.mode.isEmbedded,
     framerate: state.scratchGui.tw.framerate,
     opsPerFrame: state.scratchGui.tw.opsPerFrame,
-    customUI: !!state.scratchGui.tw.customUI,
+    customUI: state.scratchGui.tw.customUI,
     canvasRenderer: state.scratchGui.tw.canvasRenderer !== false,
     editorBackground: normalizeEditorBackground(state.scratchGui.tw.editorBackground),
     highQualityPen: state.scratchGui.tw.highQualityPen,

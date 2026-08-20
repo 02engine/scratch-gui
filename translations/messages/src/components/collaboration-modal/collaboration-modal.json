@@ -1,5 +1,75 @@
 [
   {
+    "id": "gui.collaboration.error.enterRoomId",
+    "description": "Error when room ID is empty",
+    "defaultMessage": "Please enter a room ID"
+  },
+  {
+    "id": "gui.collaboration.error.joinFailed",
+    "description": "Error when failed to join room",
+    "defaultMessage": "Failed to join room"
+  },
+  {
+    "id": "gui.collaboration.error.createFailed",
+    "description": "Error when failed to create room",
+    "defaultMessage": "Failed to create room"
+  },
+  {
+    "id": "gui.collaboration.error.connectionTimeout",
+    "description": "Error when connection times out after multiple attempts",
+    "defaultMessage": "Unable to connect to the room. Please try again later."
+  },
+  {
+    "id": "gui.collaboration.error.noRoomCode",
+    "description": "Error when no room code is provided",
+    "defaultMessage": "No room code provided"
+  },
+  {
+    "id": "gui.collaboration.error.usernameNotAvailable",
+    "description": "Error when username is not available",
+    "defaultMessage": "Username not available"
+  },
+  {
+    "id": "gui.collaboration.error.roomNotExist",
+    "description": "Error when room doesn't exist and can't be created",
+    "defaultMessage": "Room \"{roomCode}\" doesn't exist and couldn't be created"
+  },
+  {
+    "id": "gui.collaboration.error.retryConnecting",
+    "description": "Error message while retrying connection",
+    "defaultMessage": "Unable to connect. Will retry in a moment... ({failureCount} attempts)"
+  },
+  {
+    "id": "gui.collaboration.error.approveFailed",
+    "description": "Error when failed to approve join request",
+    "defaultMessage": "Failed to approve join request"
+  },
+  {
+    "id": "gui.collaboration.error.denyFailed",
+    "description": "Error when failed to deny join request",
+    "defaultMessage": "Failed to deny join request"
+  },
+  {
+    "id": "gui.collaboration.error.changePrivacyFailed",
+    "description": "Error when failed to change room privacy",
+    "defaultMessage": "Failed to change room privacy"
+  },
+  {
+    "id": "gui.collaboration.error.joinDenied",
+    "description": "Error when join request is denied",
+    "defaultMessage": "Join request denied: {reason}"
+  },
+  {
+    "id": "gui.collaboration.changeUsername",
+    "description": "Title for change username button",
+    "defaultMessage": "Change username"
+  },
+  {
+    "id": "gui.collaboration.roomIdPlaceholder",
+    "description": "Placeholder for room ID input",
+    "defaultMessage": "Enter room ID..."
+  },
+  {
     "id": "gui.collaboration.title",
     "description": "Title for collaboration modal",
     "defaultMessage": "Live Collaboration"

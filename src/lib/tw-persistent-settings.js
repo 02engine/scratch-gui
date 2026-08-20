@@ -7,6 +7,10 @@ import {
     createPersistentEditorBackgroundURL,
     loadPersistentEditorBackgroundBlob
 } from './editor-background-storage';
+import {
+    UI_LAYOUT_MODES,
+    DEFAULT_UI_LAYOUT_MODE
+} from './ui-layout-modes';
 
 const CUSTOM_UI_KEY = 'tw:customUI';
 const CANVAS_RENDERER_KEY = 'tw:canvasRenderer';
@@ -37,16 +41,21 @@ const setLocalStorageItem = (key, value) => {
     }
 };
 
-const getPersistentCustomUI = (fallback = true) => {
+const getPersistentUILayoutMode = (fallback = DEFAULT_UI_LAYOUT_MODE) => {
     const stored = getLocalStorageItem(CUSTOM_UI_KEY);
     if (stored === null) {
         return fallback;
     }
-    return stored === 'true';
+    // Backward compat: old boolean values
+    if (stored === 'true') return UI_LAYOUT_MODES.NEW_02E;
+    if (stored === 'false') return UI_LAYOUT_MODES.LEGACY;
+    // New string-based mode
+    if (Object.values(UI_LAYOUT_MODES).includes(stored)) return stored;
+    return fallback;
 };
 
-const setPersistentCustomUI = customUI => (
-    setLocalStorageItem(CUSTOM_UI_KEY, customUI === true ? 'true' : 'false')
+const setPersistentUILayoutMode = mode => (
+    setLocalStorageItem(CUSTOM_UI_KEY, mode)
 );
 
 const getPersistentCanvasRenderer = (fallback = true) => {
@@ -149,8 +158,11 @@ export {
     EDITOR_BACKGROUND_KEY,
     TOOLBOX_LAYOUT_KEY,
     BLOCK_FLYOUT_WIDTH_KEY,
-    getPersistentCustomUI,
-    setPersistentCustomUI,
+    getPersistentUILayoutMode,
+    setPersistentUILayoutMode,
+    // Backward-compat aliases — prefer the new names above.
+    getPersistentUILayoutMode as getPersistentCustomUI,
+    setPersistentUILayoutMode as setPersistentCustomUI,
     getPersistentCanvasRenderer,
     setPersistentCanvasRenderer,
     getPersistentEditorBackground,

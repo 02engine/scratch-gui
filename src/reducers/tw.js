@@ -3,8 +3,8 @@ import {
     normalizeEditorBackground
 } from '../lib/editor-background';
 import {
-    getPersistentCustomUI,
-    setPersistentCustomUI,
+    getPersistentUILayoutMode,
+    setPersistentUILayoutMode,
     getPersistentCanvasRenderer,
     setPersistentCanvasRenderer,
     getPersistentEditorBackground,
@@ -42,7 +42,7 @@ export const initialState = {
     framerate: 30,
     opsPerFrame: 1,
     interpolation: false,
-    customUI: getPersistentCustomUI(true),
+    customUI: getPersistentUILayoutMode(),
     canvasRenderer: getPersistentCanvasRenderer(true),
     editorBackground: getPersistentEditorBackground(defaultEditorBackground),
     toolboxLayout: getPersistentToolboxLayout({
@@ -210,7 +210,7 @@ const setOpsPerFrameState = function (opsPerFrame) {
 };
 
 const setCustomUIState = function (customUI) {
-    setPersistentCustomUI(customUI);
+    setPersistentUILayoutMode(customUI);
     return {
         type: SET_CUSTOM_UI,
         customUI: customUI

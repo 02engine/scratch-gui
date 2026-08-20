@@ -1,0 +1,17 @@
+@import "../../../css/units.css";
+
+.layout-container {
+    position: absolute;
+    top: $menu-bar-height;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.menu-collapsed {
+    top: 0;
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "gui.collaboration.userDisconnected",
+    "description": "Notification when a user disconnects",
+    "defaultMessage": "{username} disconnected"
+  },
+  {
+    "id": "gui.collaboration.hostLeft",
+    "description": "Notification when host leaves",
+    "defaultMessage": "The host has left the collaboration room. The room has been closed."
+  },
+  {
+    "id": "gui.collaboration.disconnected",
+    "description": "Notification when disconnected from room",
+    "defaultMessage": "Disconnected from collaboration room"
+  },
+  {
+    "id": "gui.collaboration.downloadFailed",
+    "description": "Notification when project download fails",
+    "defaultMessage": "Failed to download project from host"
+  },
+  {
+    "id": "gui.collaboration.error.connectionTimeout",
+    "description": "Error when connection times out",
+    "defaultMessage": "Connection to room \"{roomId}\" timed out. Host may not be available."
+  },
+  {
+    "id": "gui.collaboration.error.couldNotConnect",
+    "description": "Error when cannot connect to host",
+    "defaultMessage": "Could not connect to host. Room \"{roomId}\" may not exist or host may be offline."
+  },
+  {
+    "id": "gui.collaboration.error.unknown",
+    "description": "Unknown error message",
+    "defaultMessage": "An unknown error occurred"
+  }
+]
