@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import {FormattedMessage, injectIntl} from 'react-intl';
+import {defineMessages, FormattedMessage, injectIntl} from 'react-intl';
 import classNames from 'classnames';
 
 import Modal from '../../containers/windowed-modal.jsx';
@@ -11,6 +11,84 @@ import Input from '../forms/input.jsx';
 import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 
 const BufferedInput = BufferedInputHOC(Input);
+
+const messages = defineMessages({
+    enterRoomId: {
+        id: 'gui.collaboration.error.enterRoomId',
+        defaultMessage: 'Please enter a room ID',
+        description: 'Error when room ID is empty'
+    },
+    joinFailed: {
+        id: 'gui.collaboration.error.joinFailed',
+        defaultMessage: 'Failed to join room',
+        description: 'Error when failed to join room'
+    },
+    createFailed: {
+        id: 'gui.collaboration.error.createFailed',
+        defaultMessage: 'Failed to create room',
+        description: 'Error when failed to create room'
+    },
+    connectionTimeout: {
+        id: 'gui.collaboration.error.connectionTimeout',
+        defaultMessage: 'Unable to connect to the room. Please try again later.',
+        description: 'Error when connection times out after multiple attempts'
+    },
+    noRoomCode: {
+        id: 'gui.collaboration.error.noRoomCode',
+        defaultMessage: 'No room code provided',
+        description: 'Error when no room code is provided'
+    },
+    usernameNotAvailable: {
+        id: 'gui.collaboration.error.usernameNotAvailable',
+        defaultMessage: 'Username not available',
+        description: 'Error when username is not available'
+    },
+    roomNotExist: {
+        id: 'gui.collaboration.error.roomNotExist',
+        defaultMessage: 'Room "{roomCode}" doesn\'t exist and couldn\'t be created',
+        description: 'Error when room doesn\'t exist and can\'t be created'
+    },
+    retryConnecting: {
+        id: 'gui.collaboration.error.retryConnecting',
+        defaultMessage: 'Unable to connect. Will retry in a moment... ({failureCount} attempts)',
+        description: 'Error message while retrying connection'
+    },
+    approveFailed: {
+        id: 'gui.collaboration.error.approveFailed',
+        defaultMessage: 'Failed to approve join request',
+        description: 'Error when failed to approve join request'
+    },
+    denyFailed: {
+        id: 'gui.collaboration.error.denyFailed',
+        defaultMessage: 'Failed to deny join request',
+        description: 'Error when failed to deny join request'
+    },
+    changePrivacyFailed: {
+        id: 'gui.collaboration.error.changePrivacyFailed',
+        defaultMessage: 'Failed to change room privacy',
+        description: 'Error when failed to change room privacy'
+    },
+    joinDenied: {
+        id: 'gui.collaboration.error.joinDenied',
+        defaultMessage: 'Join request denied: {reason}',
+        description: 'Error when join request is denied'
+    },
+    changeUsername: {
+        id: 'gui.collaboration.changeUsername',
+        defaultMessage: 'Change username',
+        description: 'Title for change username button'
+    },
+    roomIdPlaceholder: {
+        id: 'gui.collaboration.roomIdPlaceholder',
+        defaultMessage: 'Enter room ID...',
+        description: 'Placeholder for room ID input'
+    },
+    liveCollaboration: {
+        id: 'gui.collaboration.title',
+        defaultMessage: 'Live Collaboration',
+        description: 'Title for collaboration modal'
+    }
+});
 
 import styles from './collaboration-modal.css';
 
@@ -155,7 +233,7 @@ class CollaborationModal extends Component {
                 }, 100);
             } else if (failureCount >= 5) {
                 this.setState({
-                    error: 'Unable to connect to the room. Please try again later.',
+                    error: this.props.intl.formatMessage(messages.connectionTimeout),
                     connectionStep: 'join'
                 });
             }
@@ -231,7 +309,7 @@ class CollaborationModal extends Component {
 
     async handleJoinRoom () {
         if (!this.state.roomId.trim()) {
-            this.setState({error: 'Please enter a room ID'});
+            this.setState({error: this.props.intl.formatMessage(messages.enterRoomId)});
             return;
         }
 
@@ -245,7 +323,7 @@ class CollaborationModal extends Component {
             await this.props.onJoinRoom(this.state.roomId.trim(), this.props.currentUsername);
         } catch (error) {
             this.setState({
-                error: error.message || 'Failed to join room',
+                error: error.message || this.props.intl.formatMessage(messages.joinFailed),
                 isConnecting: false,
                 connectionStep: 'join'
             });
@@ -273,7 +351,7 @@ class CollaborationModal extends Component {
 
         } catch (error) {
             this.setState({
-                error: error.message || 'Failed to create room',
+                error: error.message || this.props.intl.formatMessage(messages.createFailed),
                 isConnecting: false,
                 connectionStep: 'join'
             });
@@ -356,7 +434,7 @@ class CollaborationModal extends Component {
         try {
             if (!roomCode || !username) {
                 this.setState({
-                    error: !roomCode ? 'No room code provided' : 'Username not available',
+                    error: !roomCode ? this.props.intl.formatMessage(messages.noRoomCode) : this.props.intl.formatMessage(messages.usernameNotAvailable),
                     isConnecting: false,
                     connectionStep: 'join'
                 });
@@ -385,13 +463,13 @@ class CollaborationModal extends Component {
                 this.autoJoinInProgress = false;
                 if (failureCount < 3) {
                     this.setState({
-                        error: `Room "${roomCode}" doesn't exist and couldn't be created`,
+                        error: this.props.intl.formatMessage(messages.roomNotExist, {roomCode}),
                         isConnecting: false,
                         connectionStep: 'join'
                     });
                 } else {
                     this.setState({
-                        error: `Unable to connect. Will retry in a moment... (${failureCount} attempts)`,
+                        error: this.props.intl.formatMessage(messages.retryConnecting, {failureCount}),
                         isConnecting: false,
                         connectionStep: 'join'
                     });
@@ -408,7 +486,7 @@ class CollaborationModal extends Component {
                 pendingRequests: prevState.pendingRequests.filter(req => req.id !== requesterId)
             }));
         } catch (error) {
-            this.setState({error: 'Failed to approve join request'});
+            this.setState({error: this.props.intl.formatMessage(messages.approveFailed)});
         }
     }
 
@@ -419,7 +497,7 @@ class CollaborationModal extends Component {
                 pendingRequests: prevState.pendingRequests.filter(req => req.id !== requesterId)
             }));
         } catch (error) {
-            this.setState({error: 'Failed to deny join request'});
+            this.setState({error: this.props.intl.formatMessage(messages.denyFailed)});
         }
     }
 
@@ -465,7 +543,7 @@ class CollaborationModal extends Component {
         this.setState({
             connectionStep: 'join',
             isConnecting: false,
-            error: `Join request denied: ${reason}`
+            error: this.props.intl.formatMessage(messages.joinDenied, {reason})
         });
     }
 
@@ -473,7 +551,7 @@ class CollaborationModal extends Component {
         try {
             await this.props.onChangeRoomPrivacy(newPrivacy);
         } catch (error) {
-            this.setState({error: 'Failed to change room privacy'});
+            this.setState({error: this.props.intl.formatMessage(messages.changePrivacyFailed)});
         }
     }
 
@@ -515,7 +593,7 @@ class CollaborationModal extends Component {
                     <button
                         className={styles.editUsernameButton}
                         onClick={this.props.onOpenChangeUsername}
-                        title="Change username"
+                        title={this.props.intl.formatMessage(messages.changeUsername)}
                     >
                         {/* PenLine 圖示已移除 */}
                     </button>
@@ -540,7 +618,7 @@ class CollaborationModal extends Component {
                             </label>
                             <BufferedInput
                                 className={styles.input}
-                                placeholder="Enter room ID..."
+                                placeholder={this.props.intl.formatMessage(messages.roomIdPlaceholder)}
                                 value={this.state.roomId}
                                 onSubmit={this.handleRoomIdChange}
                             />
@@ -955,7 +1033,7 @@ class CollaborationModal extends Component {
             <Modal
                 className={styles.modalContent}
                 onRequestClose={this.props.onRequestClose}
-                contentLabel="Live Collaboration"
+                contentLabel={this.props.intl.formatMessage(messages.liveCollaboration)}
                 id="collaborationModal"
             >
                 <Box className={styles.body}>

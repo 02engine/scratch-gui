@@ -169,7 +169,10 @@ const connectToHost = service => {
         });
         service.connectionTimeout = setTimeout(() => {
             if (!conn.open && !errorHandled) {
-                handleConnectionFailure(`Connection to room "${roomIdForError}" timed out. Host may not be available.`);
+                handleConnectionFailure({
+                    code: 'CONNECTION_TIMEOUT',
+                    roomId: roomIdForError
+                });
             }
         }, 15000);
         conn.on('open', () => {
@@ -195,9 +198,10 @@ const connectToHost = service => {
                     clearTimeout(service.connectionTimeout);
                     service.connectionTimeout = null;
                 }
-                handleConnectionFailure(
-                    `Could not connect to host. Room "${roomIdForError}" may not exist or host may be offline.`
-                );
+                handleConnectionFailure({
+                    code: 'COULD_NOT_CONNECT',
+                    roomId: roomIdForError
+                });
             }
         });
         let iceFailures = 0;
@@ -308,9 +312,10 @@ const connectToRoom = async (service, roomId, username, isHost = false, privacy 
                 const roomIdForError = service.roomId;
 
                 if (service.currentConnectionFailureHandler && !service.isHost && !service._reconnectTimer) {
-                    service.currentConnectionFailureHandler(
-                        `Could not connect to host. Room "${roomIdForError}" may not exist or host may be offline.`
-                    );
+                    service.currentConnectionFailureHandler({
+                        code: 'COULD_NOT_CONNECT',
+                        roomId: roomIdForError
+                    });
                     reject(error);
                     return;
                 }

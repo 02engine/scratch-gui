@@ -25,7 +25,9 @@ import {normalizeEditorBackground} from './editor-background';
 import {
     getPersistentEditorBackground,
     hydratePersistentEditorBackground,
-    setPersistentEditorBackground
+    setPersistentEditorBackground,
+    getPersistentUILayoutMode,
+    setPersistentUILayoutMode
 } from './tw-persistent-settings';
 
 /* eslint-disable no-alert */
@@ -44,7 +46,6 @@ const messages = defineMessages({
 });
 
 const USERNAME_KEY = 'tw:username';
-const CUSTOM_UI_KEY = 'tw:customUI';
 
 /**
  * The State Manager is responsible for managing persistent state and the URL.
@@ -348,11 +349,11 @@ const TWStateManager = function (WrappedComponent) {
                 });
             }
 
-                // Load persisted custom UI preference from localStorage (if present)
+                // Load persisted UI layout mode from localStorage (if present)
                 try {
-                    const persistedCustomUI = getLocalStorage(CUSTOM_UI_KEY);
-                    if (persistedCustomUI !== null && this.props.setCustomUI) {
-                        this.props.setCustomUI(persistedCustomUI === 'true');
+                    const persistedMode = getPersistentUILayoutMode();
+                    if (persistedMode && this.props.setCustomUI) {
+                        this.props.setCustomUI(persistedMode);
                     }
                 } catch (e) {
                     // ignore
@@ -512,10 +513,10 @@ const TWStateManager = function (WrappedComponent) {
                 setSearchParams(searchParams);
             }
 
-            // Persist customUI preference when it changes
+            // Persist UI layout mode when it changes
             if (this.props.customUI !== prevProps.customUI) {
                 try {
-                    setLocalStorage(CUSTOM_UI_KEY, this.props.customUI === true);
+                    setPersistentUILayoutMode(this.props.customUI);
                 } catch (e) {
                     // ignore
                 }
@@ -619,7 +620,7 @@ const TWStateManager = function (WrappedComponent) {
         highQualityPen: PropTypes.bool,
         framerate: PropTypes.number,
         interpolation: PropTypes.bool,
-        customUI: PropTypes.bool,
+        customUI: PropTypes.string,
         editorBackground: PropTypes.shape({
             image: PropTypes.string,
             blur: PropTypes.number,

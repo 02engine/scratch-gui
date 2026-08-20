@@ -2,10 +2,10 @@ import classNames from 'classnames';
 import omit from 'lodash.omit';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {defineMessages, FormattedMessage, injectIntl, intlShape} from 'react-intl';
-import {connect} from 'react-redux';
+import { defineMessages, FormattedMessage, injectIntl, intlShape } from 'react-intl';
+import { connect } from 'react-redux';
 import MediaQuery from 'react-responsive';
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import tabStyles from 'react-tabs/style/react-tabs.css';
 import VM from 'scratch-vm';
 
@@ -36,7 +36,7 @@ import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
 import TelemetryModal from '../telemetry-modal/telemetry-modal.jsx';
 import TWUsernameModal from '../../containers/tw-username-modal.jsx';
-import TWSettingsModal, {TW02EngineSettingsModal} from '../../containers/tw-settings-modal.jsx';
+import TWSettingsModal, { TW02EngineSettingsModal } from '../../containers/tw-settings-modal.jsx';
 import TWSecurityManager from '../../containers/tw-security-manager.jsx';
 import TWCustomExtensionModal from '../../containers/tw-custom-extension-modal.jsx';
 import TWCCWExtensionModal from '../../containers/tw-ccw-extension-modal.jsx';
@@ -51,18 +51,21 @@ import SpriteLayerModal from '../../containers/sprite-layer-modal.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
 import DebugWindow from '../../containers/debug-window.jsx';
 
-import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/layout-constants';
-import {resolveStageSize} from '../../lib/screen-utils';
+import { STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH } from '../../lib/layout-constants';
+import { resolveStageSize } from '../../lib/screen-utils';
 import getCostumeUrl from '../../lib/get-costume-url';
-import {Theme} from '../../lib/themes';
-import {BLOCKS_TAB_INDEX, COSTUMES_TAB_INDEX, SOUNDS_TAB_INDEX} from '../../reducers/editor-tab';
+import { Theme } from '../../lib/themes';
+import { BLOCKS_TAB_INDEX, COSTUMES_TAB_INDEX, SOUNDS_TAB_INDEX } from '../../reducers/editor-tab';
 import {
     EDITOR_BACKGROUND_TARGETS,
     getEditorBackgroundStyle,
     hasEditorBackgroundTarget
 } from '../../lib/editor-background';
+import { UI_LAYOUT_MODES, LAYOUT_FEATURES } from '../../lib/ui-layout-modes';
+import LAYOUT_REGISTRY from './layouts/index.js';
+import LayoutContainer from './layouts/layout-container.jsx';
 
-import {isRendererSupported, isBrowserSupported} from '../../lib/tw-environment-support-prober';
+import { isRendererSupported, isBrowserSupported } from '../../lib/tw-environment-support-prober';
 
 import styles from './gui.css';
 import addExtensionIcon from './icon--extensions.svg';
@@ -106,9 +109,9 @@ const messages = defineMessages({
 const EDITOR_WINDOW_BASE_Z_INDEX = 120;
 const TARGET_PANE_WINDOW_Z_INDEX = 470;
 const STAGE_WINDOW_Z_INDEX = 475;
-const EDITOR_WINDOW_DEFAULT_SIZE = {width: 760, height: 560};
-const UNBOUNDED_WINDOW_MIN_SIZE = {width: 0, height: 0};
-const UNBOUNDED_WINDOW_MAX_SIZE = {width: Number.MAX_SAFE_INTEGER, height: Number.MAX_SAFE_INTEGER};
+const EDITOR_WINDOW_DEFAULT_SIZE = { width: 760, height: 560 };
+const UNBOUNDED_WINDOW_MIN_SIZE = { width: 0, height: 0 };
+const UNBOUNDED_WINDOW_MAX_SIZE = { width: Number.MAX_SAFE_INTEGER, height: Number.MAX_SAFE_INTEGER };
 const EDITOR_WINDOW_INITIAL_MARGIN_X = 12;
 const EDITOR_WINDOW_INITIAL_MARGIN_BOTTOM = 12;
 const EDITOR_WINDOW_INITIAL_TOP_OFFSET = 40;
@@ -330,11 +333,11 @@ const GUIComponent = props => {
         fontsModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
-    gitModalVisible,
-    onRequestCloseGitModal,
-    collaborationModalVisible,
-    onRequestCloseCollaborationModal,
-    vm,
+        gitModalVisible,
+        onRequestCloseGitModal,
+        collaborationModalVisible,
+        onRequestCloseCollaborationModal,
+        vm,
         customUI,
         canvasRenderer,
         editorBackground,
@@ -344,16 +347,16 @@ const GUIComponent = props => {
         ...componentProps
     } = omit(props, 'dispatch');
 
-    const [stageWindowPosition, setStageWindowPosition] = React.useState({x: 350, y: 200}); //其实没什么实际含义
-    const [stageWindowSize, setStageWindowSize] = React.useState({width: 485, height: 483});
-    const [stageWindowContentSize, setStageWindowContentSize] = React.useState({width: 0, height: 0});
+    const [stageWindowPosition, setStageWindowPosition] = React.useState({ x: 350, y: 200 }); //其实没什么实际含义
+    const [stageWindowSize, setStageWindowSize] = React.useState({ width: 485, height: 483 });
+    const [stageWindowContentSize, setStageWindowContentSize] = React.useState({ width: 0, height: 0 });
     const [stageWindowAutoFit, setStageWindowAutoFit] = React.useState(() => {
         const savedStageWindowState = windowStateStorage.getWindowState('stage');
         return !!(savedStageWindowState && savedStageWindowState.autoFit);
     });
     const [stageWindowMinimized, setStageWindowMinimized] = React.useState(false);
-    const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({x: 400, y: 275}); //也没什么含义
-    const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({width: 485, height: 447});
+    const [targetPaneWindowPosition, setTargetPaneWindowPosition] = React.useState({ x: 400, y: 275 }); //也没什么含义
+    const [targetPaneWindowSize, setTargetPaneWindowSize] = React.useState({ width: 485, height: 447 });
     const [targetPaneWindowMinimized, setTargetPaneWindowMinimized] = React.useState(false);
     const [menuBarCollapsed, setMenuBarCollapsed] = React.useState(false);
     const [debugWindowVisible, setDebugWindowVisible] = React.useState(false);
@@ -650,7 +653,7 @@ const GUIComponent = props => {
             }
         });
 
-        computedStyleToInlineStyle(snapshotRoot, {recursive: true});
+        computedStyleToInlineStyle(snapshotRoot, { recursive: true });
         snapshotNamespaceCounterRef.current += 1;
         sanitizeSnapshotDom(snapshotRoot, `editor-snapshot-${snapshotNamespaceCounterRef.current}`);
 
@@ -660,7 +663,7 @@ const GUIComponent = props => {
 
         return {
             snapshotMarkup: snapshotRoot.outerHTML,
-            snapshotSize: {width, height},
+            snapshotSize: { width, height },
             snapshotThemeId: theme.id
         };
     }, [theme.id]);
@@ -721,14 +724,14 @@ const GUIComponent = props => {
     }, [commitEditorWindowState, getEditorFullScreenGeometry, scheduleEditorLayoutRefresh]);
 
     React.useEffect(() => {
-        if (!customUI || !activeEditorWindowId) {
+        if (!customUI === UI_LAYOUT_MODES.NEW_02E || !activeEditorWindowId) {
             return;
         }
         scheduleEditorLayoutRefresh();
     }, [activeEditorWindowId, customUI, scheduleEditorLayoutRefresh, theme.id]);
 
     React.useLayoutEffect(() => {
-        if (!customUI) {
+        if (!customUI === UI_LAYOUT_MODES.NEW_02E) {
             return;
         }
         menuBarCollapsedRef.current = menuBarCollapsed;
@@ -736,7 +739,7 @@ const GUIComponent = props => {
     }, [customUI, menuBarCollapsed, syncFullScreenEditorWindowGeometry]);
 
     React.useEffect(() => {
-        if (!customUI) {
+        if (!customUI === UI_LAYOUT_MODES.NEW_02E) {
             return undefined;
         }
 
@@ -779,7 +782,7 @@ const GUIComponent = props => {
         return orderedCandidates[0] || null;
     }, []);
 
-    const syncEditorWindowContext = React.useCallback((session, {syncVm = true, syncTab = true} = {}) => {
+    const syncEditorWindowContext = React.useCallback((session, { syncVm = true, syncTab = true } = {}) => {
         if (!session) {
             return;
         }
@@ -796,7 +799,7 @@ const GUIComponent = props => {
     }, [activeTabIndex, onActivateTab, vm]);
 
     React.useLayoutEffect(() => {
-        if (!customUI) {
+        if (!customUI === UI_LAYOUT_MODES.NEW_02E) {
             pendingEditorWindowSyncRef.current = null;
             return;
         }
@@ -1008,7 +1011,7 @@ const GUIComponent = props => {
     }, [updateEditorWindowSession]);
 
     const restoreEditorWindow = React.useCallback(windowId => {
-        updateEditorWindowSession(windowId, () => ({isMinimized: false}));
+        updateEditorWindowSession(windowId, () => ({ isMinimized: false }));
         activateEditorWindow(windowId);
     }, [activateEditorWindow, updateEditorWindowSession]);
 
@@ -1057,7 +1060,7 @@ const GUIComponent = props => {
 
     const handleActiveEditorTabSelect = React.useCallback(tabIndex => {
         onActivateTab(tabIndex);
-        if (!customUI) {
+        if (!customUI === UI_LAYOUT_MODES.NEW_02E) {
             return;
         }
         const activeWindowId = activeEditorWindowIdRef.current;
@@ -1065,7 +1068,7 @@ const GUIComponent = props => {
             return;
         }
         updateEditorWindowSession(activeWindowId, session => (
-            session.activeTabIndex === tabIndex ? null : {activeTabIndex: tabIndex}
+            session.activeTabIndex === tabIndex ? null : { activeTabIndex: tabIndex }
         ));
         scheduleEditorLayoutRefresh();
     }, [customUI, onActivateTab, scheduleEditorLayoutRefresh, updateEditorWindowSession]);
@@ -1077,7 +1080,7 @@ const GUIComponent = props => {
     }, [scheduleEditorLayoutRefresh]);
 
     React.useEffect(() => {
-        if (!customUI || !activeEditorWindowId) {
+        if (!customUI === UI_LAYOUT_MODES.NEW_02E || !activeEditorWindowId) {
             return;
         }
         const activeSession = editorWindowSessionsRef.current.find(
@@ -1092,9 +1095,9 @@ const GUIComponent = props => {
     }, [activeEditorWindowId, activeTabIndex, customUI, updateEditorWindowSession]);
 
     React.useEffect(() => {
-        const wasCustomUI = previousCustomUIRef.current;
+        const wasNewUI = previousCustomUIRef.current === UI_LAYOUT_MODES.NEW_02E;
         previousCustomUIRef.current = customUI;
-        if (customUI && !wasCustomUI && !editorWindowSessionsRef.current.length && editingTargetId) {
+        if (customUI === UI_LAYOUT_MODES.NEW_02E && !wasNewUI && !editorWindowSessionsRef.current.length && editingTargetId) {
             handleEditorTargetSelection(editingTargetId, {
                 activeTabIndex,
                 syncVm: false
@@ -1103,7 +1106,7 @@ const GUIComponent = props => {
     }, [activeTabIndex, customUI, editingTargetId, handleEditorTargetSelection]);
 
     React.useEffect(() => {
-        if (!customUI || !editingTargetId) {
+        if (!customUI === UI_LAYOUT_MODES.NEW_02E || !editingTargetId) {
             return;
         }
         if (lastRequestedEditingTargetIdRef.current === editingTargetId) {
@@ -1122,14 +1125,14 @@ const GUIComponent = props => {
     }, [customUI, editingTargetId, handleEditorTargetSelection]);
 
     React.useEffect(() => {
-        if (!customUI || !activeEditorWindowId) {
+        if (!customUI === UI_LAYOUT_MODES.NEW_02E || !activeEditorWindowId) {
             return;
         }
         scheduleEditorLayoutRefresh();
     }, [activeEditorWindowId, activeTabIndex, customUI, scheduleEditorLayoutRefresh]);
 
     React.useEffect(() => {
-        if (!customUI) {
+        if (!customUI === UI_LAYOUT_MODES.NEW_02E) {
             return;
         }
         const validTargetIds = new Set(Object.keys(sprites));
@@ -1212,12 +1215,12 @@ const GUIComponent = props => {
         </button>
     ), [handleEditorWindowLockToggle, intl]);
 
-    const activeEditorSession = customUI ?
+    const activeEditorSession = customUI === UI_LAYOUT_MODES.NEW_02E ?
         (editorWindowSessions.find(session => session.id === activeEditorWindowId) || null) :
         null;
-    const activeEditorSessionReady = !customUI || !activeEditorSession ||
+    const activeEditorSessionReady = !customUI === UI_LAYOUT_MODES.NEW_02E || !activeEditorSession ||
         activeEditorSession.targetId === editingTargetId;
-    const blocksLayoutToken = customUI && activeEditorSession ?
+    const blocksLayoutToken = customUI === UI_LAYOUT_MODES.NEW_02E && activeEditorSession ?
         [
             activeEditorSession.id,
             activeEditorSession.targetId || '',
@@ -1341,7 +1344,7 @@ const GUIComponent = props => {
                 <Box className={styles.editorWindowSnapshot}>
                     <div
                         className={styles.editorWindowSnapshotContent}
-                        dangerouslySetInnerHTML={{__html: session.snapshotMarkup}}
+                        dangerouslySetInnerHTML={{ __html: session.snapshotMarkup }}
                     />
                 </Box>
             );
@@ -1437,27 +1440,27 @@ const GUIComponent = props => {
         }
 
         return inactiveWindows.concat(
-                <DraggableWindow
-                    key={activeSession.id}
-                    allowMaximize
-                    allowMinimize={false}
-                    className={styles.editorDraggableWindow}
+            <DraggableWindow
+                key={activeSession.id}
+                allowMaximize
+                allowMinimize={false}
+                className={styles.editorDraggableWindow}
                 defaultPosition={activeSession.position}
                 defaultSize={activeSession.size}
-                    enableStatePersistence={false}
-                    headerActions={renderEditorWindowHeaderActions(activeSession)}
-                    isFullScreen={activeSession.isFullScreen}
-                    isMinimized={activeSession.isMinimized}
-                    maxSize={UNBOUNDED_WINDOW_MAX_SIZE}
-                    minSize={UNBOUNDED_WINDOW_MIN_SIZE}
-                    onActivate={activateEditorWindow}
-                    onClose={handleEditorWindowClose}
-                    onContentResize={handleEditorWindowContentResize}
-                    onDragStop={handleEditorWindowPositionChange}
-                    onFullScreenToggle={handleEditorWindowFullScreenToggle}
-                    onMinimizeToggle={handleEditorWindowMinimizeToggle}
-                    onResizeStop={handleEditorWindowSizeChange}
-                    position={activeSession.position}
+                enableStatePersistence={false}
+                headerActions={renderEditorWindowHeaderActions(activeSession)}
+                isFullScreen={activeSession.isFullScreen}
+                isMinimized={activeSession.isMinimized}
+                maxSize={UNBOUNDED_WINDOW_MAX_SIZE}
+                minSize={UNBOUNDED_WINDOW_MIN_SIZE}
+                onActivate={activateEditorWindow}
+                onClose={handleEditorWindowClose}
+                onContentResize={handleEditorWindowContentResize}
+                onDragStop={handleEditorWindowPositionChange}
+                onFullScreenToggle={handleEditorWindowFullScreenToggle}
+                onMinimizeToggle={handleEditorWindowMinimizeToggle}
+                onResizeStop={handleEditorWindowSizeChange}
+                position={activeSession.position}
                 size={activeSession.size}
                 title={renderEditorWindowTitle(activeSession)}
                 windowId={activeSession.id}
@@ -1497,8 +1500,8 @@ const GUIComponent = props => {
             title: 'Stage',
             icon: (
                 <svg width="22" height="22" viewBox="0 0 20 20" fill="white">
-                    <rect x="2" y="2" width="16" height="16" rx="2" stroke="white" strokeWidth="1" fill="none"/>
-                    <rect x="6" y="6" width="8" height="8" fill="white"/>
+                    <rect x="2" y="2" width="16" height="16" rx="2" stroke="white" strokeWidth="1" fill="none" />
+                    <rect x="6" y="6" width="8" height="8" fill="white" />
                 </svg>
             ),
             onRestore: () => setStageWindowMinimized(false)
@@ -1510,9 +1513,9 @@ const GUIComponent = props => {
             title: 'Sprites',
             icon: (
                 <svg width="22" height="22" viewBox="0 0 20 20" fill="white">
-                    <circle cx="10" cy="6" r="3" fill="white"/>
-                    <circle cx="5" cy="12" r="2.5" fill="white"/>
-                    <circle cx="15" cy="12" r="2.5" fill="white"/>
+                    <circle cx="10" cy="6" r="3" fill="white" />
+                    <circle cx="5" cy="12" r="2.5" fill="white" />
+                    <circle cx="15" cy="12" r="2.5" fill="white" />
                 </svg>
             ),
             onRestore: () => setTargetPaneWindowMinimized(false)
@@ -1532,7 +1535,7 @@ const GUIComponent = props => {
                         alt=""
                         draggable={false}
                         src={iconSource}
-                        style={{height: 18, width: 18}}
+                        style={{ height: 18, width: 18 }}
                     />
                 ),
                 onRestore: () => restoreEditorWindow(session.id)
@@ -1548,11 +1551,11 @@ const GUIComponent = props => {
         tabSelected: classNames(tabStyles.reactTabsTabSelected, styles.isSelected)
     };
     const hideFloatingWindows = loading || isCreating;
-    const windowBackgroundActive = customUI && hasEditorBackgroundTarget(
+    const windowBackgroundActive = LAYOUT_FEATURES[customUI]?.floatingMenuBar && hasEditorBackgroundTarget(
         editorBackground,
         EDITOR_BACKGROUND_TARGETS.WINDOW
     );
-    const effectiveMenuBarCollapsed = customUI && menuBarCollapsed;
+    const effectiveMenuBarCollapsed = LAYOUT_FEATURES[customUI]?.floatingMenuBar && menuBarCollapsed;
     const editorAlertsClassName = classNames(styles.alertsContainer, {
         [styles.alertsContainerHidden]: effectiveMenuBarCollapsed
     });
@@ -1576,8 +1579,8 @@ const GUIComponent = props => {
                 {spriteLayerModalVisible && <SpriteLayerModal />}
                 {customExtensionModalVisible && <TWCustomExtensionModal />}
                 {ccwExtensionModalVisible && <TWCCWExtensionModal />}
-                            {extensionImportMethodModalVisible && <TWExtensionImportModal vm={vm} />}
-                            {fontsModalVisible && <TWFontsModal />}                {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
+                {extensionImportMethodModalVisible && <TWExtensionImportModal vm={vm} />}
+                {fontsModalVisible && <TWFontsModal />}                {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
                 {invalidProjectModalVisible && <TWInvalidProjectModal />}
                 {gitModalVisible && <TWGitModal onClose={onRequestCloseGitModal} />}
                 <CollaborationContainer
@@ -1690,7 +1693,7 @@ const GUIComponent = props => {
                     authorUsername={authorUsername}
                     canChangeLanguage={canChangeLanguage}
                     canChangeTheme={canChangeTheme}
-                    canCollapseMenuBar={customUI}
+                    canCollapseMenuBar={LAYOUT_FEATURES[customUI]?.floatingMenuBar}
                     canCreateCopy={canCreateCopy}
                     canCreateNew={canCreateNew}
                     canEditTitle={canEditTitle}
@@ -1700,7 +1703,7 @@ const GUIComponent = props => {
                     canShare={canShare}
                     className={classNames(styles.menuBarPosition, {
                         [styles.fullscreenMenuBar]: isFullScreen,
-                        [styles['menu-bar-position-custom-ui']]: customUI
+                        [styles['menu-bar-position-custom-ui']]: LAYOUT_FEATURES[customUI]?.floatingMenuBar
                     })}
                     enableCommunity={enableCommunity}
                     isShared={isShared}
@@ -1729,115 +1732,78 @@ const GUIComponent = props => {
                 />
 
 
-                <Box
-                    className={classNames(styles.bodyWrapper, {
-                        [styles['body-wrapper-custom-ui']]: customUI,
-                        [styles.bodyWrapperMenuCollapsed]: effectiveMenuBarCollapsed
-                    })}
-                >
-                    <Box className={styles.flexWrapper}>
+                {LAYOUT_FEATURES[customUI]?.floatingMenuBar ? (
+                    <LayoutContainer menuCollapsed={effectiveMenuBarCollapsed}>
                         {windowBackgroundActive ? (
                             <div
                                 className={styles.windowBackgroundLayer}
                                 style={getEditorBackgroundStyle(editorBackground)}
                             />
                         ) : null}
-                        {!customUI ? renderEditorWrapper(stageSize) : null}
-
-                        {props.customUI ? (
-                        <>
-                            <Box
-                                className={classNames(styles.editorDesktop, {
-                                    [styles['editor-desktop-custom-ui']]: customUI
-                                })}
-                                componentRef={editorDesktopRef}
-                            >
-                                {!hideFloatingWindows && (
-                                    editorWindowSessions.length ? renderEditorWindows(stageSize) : null
-                                )}
-                            </Box>
-                            {!hideFloatingWindows && !stageWindowMinimized && (
-                                <DraggableWindow
-                                    windowId="stage"
-                                    title="Stage"
-                                    defaultPosition={stageWindowPosition}
-                                    defaultSize={stageWindowSize}
-                                    minSize={UNBOUNDED_WINDOW_MIN_SIZE}
-                                    maxSize={UNBOUNDED_WINDOW_MAX_SIZE}
-                                    allowResize={true}
-                                    allowMaximize={false}
-                                    onContentResize={handleStageWindowContentResize}
-                                    onDragStop={(id, position) => setStageWindowPosition(position)}
-                                    onResizeStop={(id, size) => setStageWindowSize(size)}
-                                    onMinimizeToggle={(id, minimized) => setStageWindowMinimized(minimized)}
-                                    zIndex={isFullScreen ? 500 : STAGE_WINDOW_Z_INDEX}
-                                    enableStatePersistence={true}
-                                >
-                                    <StageWrapper
-                                        containerSize={stageWindowContentSize}
-                                        customStageSize={customStageSize}
-                                        fitToContainer={stageWindowAutoFit}
-                                        isFullScreen={isFullScreen}
-                                        isRendererSupported={isRendererSupported()}
-                                        isRtl={isRtl}
-                                        onRequestSelectTarget={handleEditorTargetSelection}
-                                        onToggleAutoFit={handleToggleStageWindowAutoFit}
-                                        showAutoFitButton
-                                        stageSize={stageSize}
-                                        stageWindowAutoFit={stageWindowAutoFit}
-                                        vm={vm}
-                                    />
-                                </DraggableWindow>
-                            )}
-                            {!hideFloatingWindows && !targetPaneWindowMinimized && (
-                                <DraggableWindow
-                                    windowId="targets"
-                                    title="Sprites"
-                                    defaultPosition={targetPaneWindowPosition}
-                                    defaultSize={targetPaneWindowSize}
-                                    minSize={UNBOUNDED_WINDOW_MIN_SIZE}
-                                    maxSize={UNBOUNDED_WINDOW_MAX_SIZE}
-                                    onDragStop={(id, position) => setTargetPaneWindowPosition(position)}
-                                    onResizeStop={(id, size) => setTargetPaneWindowSize(size)}
-                                    onMinimizeToggle={(id, minimized) => setTargetPaneWindowMinimized(minimized)}
-                                    zIndex={TARGET_PANE_WINDOW_Z_INDEX}
-                                    enableStatePersistence={true}
-                                >
-                                    <TargetPane
-                                        onRequestSelectTarget={handleEditorTargetSelection}
-                                        stageSize={stageSize}
-                                        vm={vm}
-                                    />
-                                </DraggableWindow>
-                            )}
-                {/* 全局唯一最小化栏 */}
-                {!hideFloatingWindows ? <MinimizedBar windows={minimizedWindows} /> : null}
-                        </>
-                        ) : (
-                        /* 原版内嵌布局（使用原始样式容器） */
-                        <Box className={styles.stageAndTargetWrapper}>
-                            <StageWrapper
-                                isFullScreen={isFullScreen}
-                                isRendererSupported={isRendererSupported()}
-                                isRtl={isRtl}
-                                loading={loading}
-                                stageSize={stageSize}
-                                vm={vm}
-                            >
-                                {alertsVisible ? (
-                                    <Alerts className={editorAlertsClassName} />
-                                ) : null}
-                            </StageWrapper>
-                            <Box className={styles.targetWrapper}>
-                                <TargetPane
+                        {(() => {
+                            const LayoutComponent = LAYOUT_REGISTRY[customUI];
+                            if (!LayoutComponent) return null;
+                            const layoutProps = {
+                                renderEditorWrapper,
+                                renderEditorWindows,
+                                stageSize,
+                                vm,
+                                isFullScreen,
+                                isRtl,
+                                loading,
+                                alertsVisible,
+                                alertsClassName: editorAlertsClassName,
+                                Alerts,
+                                handleEditorTargetSelection,
+                                editorDesktopRef,
+                                hideFloatingWindows,
+                                minimizedWindows,
+                                stageWindowPosition,
+                                stageWindowSize,
+                                stageWindowContentSize,
+                                stageWindowAutoFit,
+                                stageWindowMinimized,
+                                handleStageWindowContentResize,
+                                handleToggleStageWindowAutoFit,
+                                setStageWindowPosition,
+                                setStageWindowSize,
+                                setStageWindowMinimized,
+                                targetPaneWindowPosition,
+                                targetPaneWindowSize,
+                                targetPaneWindowMinimized,
+                                setTargetPaneWindowPosition,
+                                setTargetPaneWindowSize,
+                                setTargetPaneWindowMinimized,
+                                editorWindowSessions
+                            };
+                            return <LayoutComponent {...layoutProps} />;
+                        })()}
+                    </LayoutContainer>
+                ) : (
+                    <Box
+                        className={classNames(styles.bodyWrapper, {
+                            [styles.bodyWrapperMenuCollapsed]: effectiveMenuBarCollapsed
+                        })}
+                    >
+                        <Box className={styles.flexWrapper}>
+                            {(() => {
+                                const LayoutComponent = LAYOUT_REGISTRY[customUI];
+                                if (!LayoutComponent) return null;
+                                return <LayoutComponent
+                                    renderEditorWrapper={renderEditorWrapper}
                                     stageSize={stageSize}
                                     vm={vm}
-                                />
-                            </Box>
+                                    isFullScreen={isFullScreen}
+                                    isRtl={isRtl}
+                                    loading={loading}
+                                    alertsVisible={alertsVisible}
+                                    alertsClassName={editorAlertsClassName}
+                                    Alerts={Alerts}
+                                />;
+                            })()}
                         </Box>
-                        )}
                     </Box>
-                </Box>
+                )}
                 <DragLayer />
 
             </Box>
@@ -1875,7 +1841,7 @@ GUIComponent.propTypes = {
         width: PropTypes.number,
         height: PropTypes.number
     }),
-    customUI: PropTypes.bool,
+    customUI: PropTypes.string,
     canvasRenderer: PropTypes.bool,
     editorBackground: PropTypes.shape({
         image: PropTypes.string,
@@ -1981,7 +1947,7 @@ const mapStateToProps = state => ({
     customStageSize: state.scratchGui.customStageSize,
     editorBackground: state.scratchGui.tw.editorBackground,
     isWindowFullScreen: state.scratchGui.tw.isWindowFullScreen,
-    customUI: !!state.scratchGui.tw.customUI,
+    customUI: state.scratchGui.tw.customUI,
     canvasRenderer: state.scratchGui.tw.canvasRenderer !== false,
     editingTargetId: state.scratchGui.targets.editingTarget,
     sprites: state.scratchGui.targets.sprites,

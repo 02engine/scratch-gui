@@ -1,4 +1,4 @@
-import {defineMessages, FormattedMessage, intlShape, injectIntl} from 'react-intl';
+import { defineMessages, FormattedMessage, intlShape, injectIntl } from 'react-intl';
 import PropTypes from 'prop-types';
 import React from 'react';
 import classNames from 'classnames';
@@ -11,9 +11,11 @@ import BufferedInputHOC from '../forms/buffered-input-hoc.jsx';
 import DocumentationLink from '../tw-documentation-link/documentation-link.jsx';
 import styles from './settings-modal.css';
 import helpIcon from './help-icon.svg';
-import {APP_NAME} from '../../lib/brand.js';
-import {EDITOR_BACKGROUND_TARGETS, normalizeEditorBackground} from '../../lib/editor-background';
- 
+import Select from '../select/select.tsx'
+import { APP_NAME } from '../../lib/brand.js';
+import { UI_LAYOUT_MODES, UI_LAYOUT_MODE_MESSAGES } from '../../lib/ui-layout-modes';
+import { EDITOR_BACKGROUND_TARGETS, normalizeEditorBackground } from '../../lib/editor-background';
+
 /* eslint-disable react/no-multi-comp */
 
 const BufferedInput = BufferedInputHOC(Input);
@@ -33,7 +35,7 @@ const messages = defineMessages({
         defaultMessage: 'Click for help',
         description: 'Hover text of help icon in settings',
         id: 'tw.settingsModal.help'
-    }
+    },
 });
 
 const LearnMore = props => (
@@ -49,7 +51,7 @@ const LearnMore = props => (
 );
 
 class UnwrappedSetting extends React.Component {
-    constructor (props) {
+    constructor(props) {
         super(props);
         bindAll(this, [
             'handleClickHelp'
@@ -58,7 +60,7 @@ class UnwrappedSetting extends React.Component {
             helpVisible: false
         };
     }
-    componentDidUpdate (prevProps) {
+    componentDidUpdate(prevProps) {
         if (this.props.active && !prevProps.active) {
             // eslint-disable-next-line react/no-did-update-set-state
             this.setState({
@@ -66,12 +68,12 @@ class UnwrappedSetting extends React.Component {
             });
         }
     }
-    handleClickHelp () {
+    handleClickHelp() {
         this.setState(prevState => ({
             helpVisible: !prevState.helpVisible
         }));
     }
-    render () {
+    render() {
         return (
             <div
                 className={classNames(styles.setting, {
@@ -112,7 +114,28 @@ UnwrappedSetting.propTypes = {
 };
 const Setting = injectIntl(UnwrappedSetting);
 
-const BooleanSetting = ({value, onChange, label, ...props}) => (
+
+/**
+ *
+ * @param {{
+ *  items: import("../select/select.tsx").SelectProps["items"],
+ *  label: React.ReactElement | string
+ * }} props
+ * @returns
+ */
+function SelectSetting(props) {
+
+    return <Setting
+        active={void 0}
+        primary={
+            <>
+                {props.label}
+                <Select items={props.items}></Select>
+            </>
+        }
+    ></Setting >
+}
+const BooleanSetting = ({ value, onChange, label, ...props }) => (
     <Setting
         {...props}
         active={value}
@@ -241,31 +264,41 @@ CustomOPF.propTypes = {
     onCustomizeOpsPerFrame: PropTypes.func
 };
 
-const CustomUI = props => (
-    <BooleanSetting
-        value={props.customUI}
-        onChange={props.onChange}
-        label={(
-            <FormattedMessage
-                defaultMessage="Use Custom UI (Separated Stage/Targets)"
-                description="Custom UI toggle"
-                id="tw.settingsModal.customUI"
-            />
-        )}
-        help={(
-            <FormattedMessage
-                defaultMessage="Switches between the custom separated-window stage/targets UI and the original single-window UI."
-                description="Help text for custom UI toggle"
-                id="tw.settingsModal.customUIHelp"
-            />
-        )}
-        slug="new-ui"
-    />
-);
-CustomUI.propTypes = {
-    customUI: PropTypes.bool,
+const UnwrappedCustomUI = props => {
+    const { intl, customUI, onChange } = props;
+    const items = Object.values(UI_LAYOUT_MODES).map(mode => ({
+        value: mode,
+        title: intl.formatMessage(UI_LAYOUT_MODE_MESSAGES[mode])
+    }));
+    const selectedIndex = items.findIndex(item => item.value === customUI);
+    return (
+        <Setting
+            active={void 0}
+            primary={
+                <>
+                    <FormattedMessage
+                        defaultMessage="UI Layout Mode"
+                        description="UI layout mode setting label"
+                        id="tw.settingsModal.uiLayoutMode"
+                    />
+                    <Select
+                        items={items.map(item => ({
+                            ...item,
+                            onSelect: () => onChange(item.value)
+                        }))}
+                        selectedIndex={selectedIndex >= 0 ? selectedIndex : 0}
+                    />
+                </>
+            }
+        />
+    );
+};
+UnwrappedCustomUI.propTypes = {
+    intl: intlShape,
+    customUI: PropTypes.string,
     onChange: PropTypes.func
 };
+const CustomUI = injectIntl(UnwrappedCustomUI);
 
 const CanvasRenderer = props => (
     <BooleanSetting
@@ -665,7 +698,7 @@ CustomStageSize.propTypes = {
     onStageHeightChange: PropTypes.func
 };
 
-const StoreProjectOptions = ({onStoreProjectOptions}) => (
+const StoreProjectOptions = ({ onStoreProjectOptions }) => (
     <div className={styles.setting}>
         <div>
             <button
@@ -693,7 +726,7 @@ StoreProjectOptions.propTypes = {
     onStoreProjectOptions: PropTypes.func
 };
 
-const ResetWindowCoefficients = ({onResetWindowCoefficients}) => (
+const ResetWindowCoefficients = ({ onResetWindowCoefficients }) => (
     <div className={styles.setting}>
         <div>
             <button
@@ -721,7 +754,7 @@ ResetWindowCoefficients.propTypes = {
     onResetWindowCoefficients: PropTypes.func
 };
 
-const CustomizeToolbox = ({onOpenToolboxLayout}) => (
+const CustomizeToolbox = ({ onOpenToolboxLayout }) => (
     <div className={styles.setting}>
         <div>
             <button
@@ -749,7 +782,7 @@ CustomizeToolbox.propTypes = {
     onOpenToolboxLayout: PropTypes.func
 };
 
-const ExtensionDebugging = ({isConnected, isConnectionFailed, onConnect}) => (
+const ExtensionDebugging = ({ isConnected, isConnectionFailed, onConnect }) => (
     <div className={styles.setting}>
         <div className={styles.label}>
             <FormattedMessage
@@ -915,7 +948,7 @@ const SettingsModalComponent = props => (
                     />
                 </React.Fragment>
             )}
-            {props.engineSettings && props.customUI && (
+            {props.engineSettings && props.customUI === UI_LAYOUT_MODES.NEW_02E && (
                 <ResetWindowCoefficients
                     onResetWindowCoefficients={props.onResetWindowCoefficients}
                 />
@@ -982,7 +1015,7 @@ SettingsModalComponent.propTypes = {
     onWarpTimerChange: PropTypes.func,
     disableCompiler: PropTypes.bool,
     onDisableCompilerChange: PropTypes.func,
-    customUI: PropTypes.bool,
+    customUI: PropTypes.string,
     onCustomUIChange: PropTypes.func,
     canvasRenderer: PropTypes.bool,
     onCanvasRendererChange: PropTypes.func,
