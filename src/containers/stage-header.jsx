@@ -34,8 +34,17 @@ class StageHeader extends React.Component {
     componentDidMount () {
         document.addEventListener('keydown', this.handleKeyPress);
     }
-    componentDidUpdate () {
+    componentDidUpdate (prevProps) {
         this.checkInvalidStageSizeMode();
+        if (
+            prevProps.showCoordinateControls &&
+            !this.props.showCoordinateControls &&
+            this.state.isShowCoordinate
+        ) {
+            this.props.vm.runtime.triggerCoordinate(false);
+            // eslint-disable-next-line react/no-did-update-set-state
+            this.setState({isShowCoordinate: false});
+        }
     }
     componentWillUnmount () {
         document.removeEventListener('keydown', this.handleKeyPress);
@@ -109,6 +118,7 @@ checkInvalidStageSizeMode () {
             <StageHeaderComponent
                 {...props}
                 isShowCoordinate={this.state.isShowCoordinate}
+                showCoordinateControls={this.props.showCoordinateControls}
                 onKeyPress={this.handleKeyPress}
                 showFixedLargeSize={this.showFixedLargeSize()}
                 onTriggerCoordinate={this.handleTriggerCoordinate}
@@ -146,7 +156,12 @@ StageHeader.propTypes = {
     }),
     stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)).isRequired,
     showStageWindowAutoFitButton: PropTypes.bool,
+    showCoordinateControls: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired
+};
+
+StageHeader.defaultProps = {
+    showCoordinateControls: true
 };
 
 const mapStateToProps = state => ({
@@ -157,6 +172,7 @@ const mapStateToProps = state => ({
     isFullScreen: state.scratchGui.mode.isFullScreen,
     // tw: update when dimensions or isWindowFullScreen changes
     isWindowFullScreen: state.scratchGui.tw.isWindowFullScreen,
+    showCoordinateControls: state.scratchGui.tw.showCoordinateControls !== false,
     dimensions: state.scratchGui.tw.dimensions,
     isPlayerOnly: state.scratchGui.mode.isPlayerOnly
 });

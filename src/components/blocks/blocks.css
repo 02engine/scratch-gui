@@ -61,13 +61,19 @@
     stroke: none;
 }
 
+/* The native assets already use white controls that remain readable on dark workspaces. */
+.blocks :global(.blocklyZoom > image) {
+    filter: none;
+}
+
 /* Ordinary blocks are not inserted into the SVG tree in Canvas mode. */
 .blocks :global(.blocklyCanvasRenderCanvas) {
     contain: strict;
 }
 
 .blocks.custom-background :global(.blocklySvg) {
-    background: transparent;
+    /* Blockly injects its theme CSS after the component stylesheet. */
+    background: transparent !important;
 }
 
 .blocks :global(.blocklyToolboxDiv) {

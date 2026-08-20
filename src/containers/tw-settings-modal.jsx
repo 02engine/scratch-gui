@@ -10,6 +10,7 @@ import {
     setOpsPerFrameState,
     setCustomUIState,
     setCanvasRendererState,
+    setShowCoordinateControlsState,
     setEditorBackgroundState
 } from '../reducers/tw';
 import windowStateStorage from '../lib/window-state-storage';
@@ -231,6 +232,7 @@ class UsernameModal extends React.Component {
             'handleDisableCompilerChange',
             'handleCustomUIChange',
             'handleCanvasRendererChange',
+            'handleShowCoordinateControlsChange',
             'handleBackgroundImageChange',
             'handleBackgroundBlurChange',
             'handleBackgroundTargetChange',
@@ -314,6 +316,9 @@ class UsernameModal extends React.Component {
     }
     handleCanvasRendererChange (e) {
         if (this.props.setCanvasRenderer) this.props.setCanvasRenderer(e.target.checked);
+    }
+    handleShowCoordinateControlsChange (e) {
+        if (this.props.setShowCoordinateControls) this.props.setShowCoordinateControls(e.target.checked);
     }
     async handleBackgroundImageChange (e) {
         const file = e.target.files && e.target.files[0];
@@ -436,6 +441,8 @@ class UsernameModal extends React.Component {
                 onCustomUIChange={this.handleCustomUIChange}
                 canvasRenderer={this.props.canvasRenderer}
                 onCanvasRendererChange={this.handleCanvasRendererChange}
+                showCoordinateControls={this.props.showCoordinateControls}
+                onShowCoordinateControlsChange={this.handleShowCoordinateControlsChange}
                 editorBackground={this.props.editorBackground}
                 onBackgroundImageChange={this.handleBackgroundImageChange}
                 onBackgroundBlurChange={this.handleBackgroundBlurChange}
@@ -494,6 +501,7 @@ UsernameModal.propTypes = {
     interpolation: PropTypes.bool,
     customUI: PropTypes.string,
     canvasRenderer: PropTypes.bool,
+    showCoordinateControls: PropTypes.bool,
     editorBackground: PropTypes.shape({
         image: PropTypes.string,
         blur: PropTypes.number,
@@ -511,6 +519,7 @@ UsernameModal.propTypes = {
     disableCompiler: PropTypes.bool,
     setEditorBackground: PropTypes.func,
     setCanvasRenderer: PropTypes.func,
+    setShowCoordinateControls: PropTypes.func,
     onOpenToolboxLayout: PropTypes.func
 };
 
@@ -521,6 +530,7 @@ const mapStateToProps = state => ({
     opsPerFrame: state.scratchGui.tw.opsPerFrame,
     customUI: state.scratchGui.tw.customUI,
     canvasRenderer: state.scratchGui.tw.canvasRenderer !== false,
+    showCoordinateControls: state.scratchGui.tw.showCoordinateControls !== false,
     editorBackground: normalizeEditorBackground(state.scratchGui.tw.editorBackground),
     highQualityPen: state.scratchGui.tw.highQualityPen,
     interpolation: state.scratchGui.tw.interpolation,
@@ -538,6 +548,7 @@ const mapDispatchToProps = dispatch => ({
     setOpsPerFrame: (value) => dispatch(setOpsPerFrameState(value)),
     setCustomUI: value => dispatch(setCustomUIState(value)),
     setCanvasRenderer: value => dispatch(setCanvasRendererState(value)),
+    setShowCoordinateControls: value => dispatch(setShowCoordinateControlsState(value)),
     setEditorBackground: value => dispatch(setEditorBackgroundState(value)),
     onOpenToolboxLayout: () => dispatch(openToolboxLayoutModal())
 });

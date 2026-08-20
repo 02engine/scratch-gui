@@ -1962,13 +1962,17 @@ class Blocks extends React.Component {
             useCatBlocks,
             workspaceMetrics,
             editorBackground,
+            editorBackgroundWindowFallback,
             ...props
         } = this.props;
         /* eslint-enable no-unused-vars */
         const editorBackgroundActive = hasEditorBackgroundTarget(
             editorBackground,
             EDITOR_BACKGROUND_TARGETS.BLOCKS
-        );
+        ) || (editorBackgroundWindowFallback && hasEditorBackgroundTarget(
+            editorBackground,
+            EDITOR_BACKGROUND_TARGETS.WINDOW
+        ));
         const flyoutResizeHandleStyle = this.props.isRtl ? {
             right: this.flyoutCategoryWidth + this.flyoutWidth - 4
         } : {
@@ -2042,6 +2046,7 @@ Blocks.propTypes = {
         blur: PropTypes.number,
         target: PropTypes.string
     }),
+    editorBackgroundWindowFallback: PropTypes.bool,
     isRtl: PropTypes.bool,
     isVisible: PropTypes.bool,
     layoutToken: PropTypes.string,
@@ -2099,6 +2104,7 @@ Blocks.defaultOptions = {
 };
 
 Blocks.defaultProps = {
+    editorBackgroundWindowFallback: false,
     isVisible: true,
     options: Blocks.defaultOptions,
     theme: Theme.light

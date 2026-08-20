@@ -7,6 +7,8 @@ import {
     setPersistentUILayoutMode,
     getPersistentCanvasRenderer,
     setPersistentCanvasRenderer,
+    getPersistentShowCoordinateControls,
+    setPersistentShowCoordinateControls,
     getPersistentEditorBackground,
     setPersistentEditorBackground,
     getPersistentToolboxLayout,
@@ -18,6 +20,7 @@ const SET_OPSPERFRAME = 'tw/SET_OPSPERFRAME';
 const SET_INTERPOLATION = 'tw/SET_INTERPOLATION';
 const SET_CUSTOM_UI = 'tw/SET_CUSTOM_UI';
 const SET_CANVAS_RENDERER = 'tw/SET_CANVAS_RENDERER';
+const SET_SHOW_COORDINATE_CONTROLS = 'tw/SET_SHOW_COORDINATE_CONTROLS';
 const SET_EDITOR_BACKGROUND = 'tw/SET_EDITOR_BACKGROUND';
 const SET_TOOLBOX_LAYOUT = 'tw/SET_TOOLBOX_LAYOUT';
 const SET_COMPILER_OPTIONS = 'tw/SET_COMPILER_OPTIONS';
@@ -44,6 +47,7 @@ export const initialState = {
     interpolation: false,
     customUI: getPersistentUILayoutMode(),
     canvasRenderer: getPersistentCanvasRenderer(true),
+    showCoordinateControls: getPersistentShowCoordinateControls(true),
     editorBackground: getPersistentEditorBackground(defaultEditorBackground),
     toolboxLayout: getPersistentToolboxLayout({
         enabled: false,
@@ -103,6 +107,10 @@ const reducer = function (state, action) {
     case SET_CANVAS_RENDERER:
         return Object.assign({}, state, {
             canvasRenderer: action.canvasRenderer
+        });
+    case SET_SHOW_COORDINATE_CONTROLS:
+        return Object.assign({}, state, {
+            showCoordinateControls: action.showCoordinateControls
         });
     case SET_EDITOR_BACKGROUND:
         return Object.assign({}, state, {
@@ -222,6 +230,14 @@ const setCanvasRendererState = function (canvasRenderer) {
     return {
         type: SET_CANVAS_RENDERER,
         canvasRenderer: canvasRenderer
+    };
+};
+
+const setShowCoordinateControlsState = function (showCoordinateControls) {
+    setPersistentShowCoordinateControls(showCoordinateControls);
+    return {
+        type: SET_SHOW_COORDINATE_CONTROLS,
+        showCoordinateControls
     };
 };
 
@@ -374,6 +390,7 @@ export {
     setOpsPerFrameState,
     setCustomUIState,
     setCanvasRendererState,
+    setShowCoordinateControlsState,
     setEditorBackgroundState,
     setToolboxLayoutState,
     setInterpolationState,

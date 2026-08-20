@@ -1294,6 +1294,7 @@ const GUIComponent = props => {
                             key={`${blocksId}/${theme.id}/${canvasRenderer ? 'canvas' : 'svg'}`}
                             canUseCloud={canUseCloud}
                             canvasRenderer={canvasRenderer}
+                            editorBackgroundWindowFallback={customUI !== UI_LAYOUT_MODES.NEW_02E}
                             grow={1}
                             isVisible={blocksTabVisible}
                             options={{

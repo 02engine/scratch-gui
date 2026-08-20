@@ -104,6 +104,7 @@ const StageHeaderComponent = function (props) {
         vm,
 
         isShowCoordinate,
+        showCoordinateControls,
         onTriggerCoordinate,
         onZoomOutCoordinateFontSize,
         onZoomInCoordinateFontSize,
@@ -213,21 +214,21 @@ const StageHeaderComponent = function (props) {
                 []
             ) : (
                 <div className={styles.stageSizeToggleGroup}>
-                    <div className={styles.coordinateControls}>
-                        <Button
-                            className={styles.stageButton}
-                            onClick={onTriggerCoordinate}
-                        >
-                            <img
-                                alt={isShowCoordinate ? '关闭坐标' : '开启坐标'}
-                                className={styles.stageButtonIcon}
-                                draggable={false}
-                                src={isShowCoordinate ? coordinateOnIcon : coordinateOffIcon}
-                                title={isShowCoordinate ? '关闭坐标' : '开启坐标'}
-                            />
-                        </Button>
-                        {
-                            isShowCoordinate&&stageSizeMode!==STAGE_SIZE_MODES.small ? (
+                    {showCoordinateControls ? (
+                        <div className={styles.coordinateControls}>
+                            <Button
+                                className={styles.stageButton}
+                                onClick={onTriggerCoordinate}
+                            >
+                                <img
+                                    alt={isShowCoordinate ? '关闭坐标' : '开启坐标'}
+                                    className={styles.stageButtonIcon}
+                                    draggable={false}
+                                    src={isShowCoordinate ? coordinateOnIcon : coordinateOffIcon}
+                                    title={isShowCoordinate ? '关闭坐标' : '开启坐标'}
+                                />
+                            </Button>
+                            {isShowCoordinate && stageSizeMode !== STAGE_SIZE_MODES.small ? (
                                 <>
                                     <Button
                                         className={styles.stageButton}
@@ -254,9 +255,9 @@ const StageHeaderComponent = function (props) {
                                         />
                                     </Button>
                                 </>
-                            ) : null
-                        }
-                    </div>
+                            ) : null}
+                        </div>
+                    ) : null}
 
 
 
@@ -387,13 +388,15 @@ StageHeaderComponent.propTypes = {
     vm: PropTypes.instanceOf(VM).isRequired,
 
     isShowCoordinate: PropTypes.bool.isRequired, // 标识是否显示网格坐标
+    showCoordinateControls: PropTypes.bool,
     onTriggerCoordinate: PropTypes.func.isRequired, // 控制是否显示网格坐标
     onZoomOutCoordinateFontSize: PropTypes.func.isRequired, // 缩小网格坐标系的字体大小
     onZoomInCoordinateFontSize: PropTypes.func.isRequired, // 放大网格坐标系的字体大小
 };
 
 StageHeaderComponent.defaultProps = {
-    stageSizeMode: STAGE_SIZE_MODES.large
+    stageSizeMode: STAGE_SIZE_MODES.large,
+    showCoordinateControls: true
 };
 
 export default injectIntl(connect(

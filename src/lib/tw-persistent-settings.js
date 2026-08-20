@@ -14,6 +14,7 @@ import {
 
 const CUSTOM_UI_KEY = 'tw:customUI';
 const CANVAS_RENDERER_KEY = 'tw:canvasRenderer';
+const SHOW_COORDINATE_CONTROLS_KEY = 'tw:showCoordinateControls';
 const EDITOR_BACKGROUND_KEY = 'tw:editorBackground';
 const TOOLBOX_LAYOUT_KEY = 'tw:toolboxLayout';
 const BLOCK_FLYOUT_WIDTH_KEY = 'tw:blockFlyoutWidth';
@@ -68,6 +69,18 @@ const getPersistentCanvasRenderer = (fallback = true) => {
 
 const setPersistentCanvasRenderer = canvasRenderer => (
     setLocalStorageItem(CANVAS_RENDERER_KEY, canvasRenderer === true ? 'true' : 'false')
+);
+
+const getPersistentShowCoordinateControls = (fallback = true) => {
+    const stored = getLocalStorageItem(SHOW_COORDINATE_CONTROLS_KEY);
+    if (stored === null) {
+        return fallback;
+    }
+    return stored === 'true';
+};
+
+const setPersistentShowCoordinateControls = visible => (
+    setLocalStorageItem(SHOW_COORDINATE_CONTROLS_KEY, visible === true ? 'true' : 'false')
 );
 
 const serializePersistentEditorBackground = editorBackground => {
@@ -155,6 +168,7 @@ const hydratePersistentEditorBackground = async background => {
 export {
     CUSTOM_UI_KEY,
     CANVAS_RENDERER_KEY,
+    SHOW_COORDINATE_CONTROLS_KEY,
     EDITOR_BACKGROUND_KEY,
     TOOLBOX_LAYOUT_KEY,
     BLOCK_FLYOUT_WIDTH_KEY,
@@ -165,6 +179,8 @@ export {
     setPersistentUILayoutMode as setPersistentCustomUI,
     getPersistentCanvasRenderer,
     setPersistentCanvasRenderer,
+    getPersistentShowCoordinateControls,
+    setPersistentShowCoordinateControls,
     getPersistentEditorBackground,
     hydratePersistentEditorBackground,
     setPersistentEditorBackground,

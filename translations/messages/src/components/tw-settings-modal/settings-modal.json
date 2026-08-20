@@ -74,6 +74,16 @@
     "defaultMessage": "Render the blocks workspace with Canvas in both the new and original UI. Turn this off to use the native SVG renderer."
   },
   {
+    "id": "tw.settingsModal.showCoordinateControls",
+    "description": "Stage coordinate controls visibility toggle",
+    "defaultMessage": "Show stage coordinate controls"
+  },
+  {
+    "id": "tw.settingsModal.showCoordinateControlsHelp",
+    "description": "Help text for stage coordinate controls visibility toggle",
+    "defaultMessage": "Show the coordinate grid button above the stage. Hiding it also turns off an active coordinate grid."
+  },
+  {
     "id": "tw.settingsModal.backgroundEditor",
     "description": "Custom editor background setting title",
     "defaultMessage": "Editor Background"

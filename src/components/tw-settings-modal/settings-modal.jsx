@@ -326,6 +326,32 @@ CanvasRenderer.propTypes = {
     onChange: PropTypes.func
 };
 
+const CoordinateControls = props => (
+    <BooleanSetting
+        value={props.showCoordinateControls}
+        onChange={props.onChange}
+        label={(
+            <FormattedMessage
+                defaultMessage="Show stage coordinate controls"
+                description="Stage coordinate controls visibility toggle"
+                id="tw.settingsModal.showCoordinateControls"
+            />
+        )}
+        help={(
+            <FormattedMessage
+                defaultMessage={'Show the coordinate grid button above the stage. ' +
+                    'Hiding it also turns off an active coordinate grid.'}
+                description="Help text for stage coordinate controls visibility toggle"
+                id="tw.settingsModal.showCoordinateControlsHelp"
+            />
+        )}
+    />
+);
+CoordinateControls.propTypes = {
+    showCoordinateControls: PropTypes.bool,
+    onChange: PropTypes.func
+};
+
 const BackgroundSettings = props => {
     const background = normalizeEditorBackground(props.editorBackground);
     return (
@@ -943,6 +969,10 @@ const SettingsModalComponent = props => (
                         canvasRenderer={props.canvasRenderer}
                         onChange={props.onCanvasRendererChange}
                     />
+                    <CoordinateControls
+                        showCoordinateControls={props.showCoordinateControls}
+                        onChange={props.onShowCoordinateControlsChange}
+                    />
                     <CustomizeToolbox
                         onOpenToolboxLayout={props.onOpenToolboxLayout}
                     />
@@ -1019,6 +1049,8 @@ SettingsModalComponent.propTypes = {
     onCustomUIChange: PropTypes.func,
     canvasRenderer: PropTypes.bool,
     onCanvasRendererChange: PropTypes.func,
+    showCoordinateControls: PropTypes.bool,
+    onShowCoordinateControlsChange: PropTypes.func,
     editorBackground: PropTypes.shape({
         image: PropTypes.string,
         blur: PropTypes.number,
