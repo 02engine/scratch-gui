@@ -62,7 +62,7 @@ import {
     bindViewportSyncListeners as bindViewportSyncListenersExternal,
     unbindViewportSyncListeners as unbindViewportSyncListenersExternal
 } from './collaboration/cursor-sync.js';
-import {APPNAME} from './brand.js';
+import {APP_NAME} from './brand.js';
 
 let collaborationServiceInstance = null;
 
@@ -501,13 +501,13 @@ class CollaborationService {
         const sanitizedRoomId = roomId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 
         if (isHost) {
-            return `${APPNAME}-collab-${sanitizedRoomId}-host`;
+            return `${APP_NAME}-collab-${sanitizedRoomId}-host`;
         }
         const timestamp = Date.now();
         const randomString = Math.random()
             .toString(36)
             .substring(2, 11);
-        return `${APPNAME}-collab-${sanitizedRoomId}-user-${timestamp}-${randomString}`;
+        return `${APP_NAME}-collab-${sanitizedRoomId}-user-${timestamp}-${randomString}`;
     }
 
     connectToRoom (roomId, username, isHost = false, privacy = 'public') {

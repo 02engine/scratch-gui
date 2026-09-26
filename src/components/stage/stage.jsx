@@ -10,8 +10,8 @@ import TargetHighlight from '../../containers/target-highlight.jsx';
 import GreenFlagOverlay from '../../containers/green-flag-overlay.jsx';
 import Question from '../../containers/question.jsx';
 import MicIndicator from '../mic-indicator/mic-indicator.jsx';
-import {STAGE_DISPLAY_SIZES} from '../../lib/layout-constants.js';
-import {getStageDimensions, getMinWidth} from '../../lib/screen-utils.js';
+import { STAGE_DISPLAY_SIZES } from '../../lib/layout-constants.js';
+import { getStageDimensions, getMinWidth } from '../../lib/screen-utils.js';
 import styles from './stage.css';
 
 const StageComponent = props => {
@@ -36,20 +36,18 @@ const StageComponent = props => {
         onQuestionAnswered,
         ...boxProps
     } = props;
-
     const stageDimensions = stageDimensionsOverride || getStageDimensions(stageSize, customStageSize, isFullScreen);
     const minWidth = stageDimensionsOverride ? stageDimensions.width : getMinWidth(stageSize);
     const transformStyle = !stageDimensionsOverride && stageDimensions.width < minWidth && !isFullScreen ? {
         transform: `translateX(${(minWidth - stageDimensions.width) / (isRtl ? -2 : 2)}px)`
     } : {};
-
     return (
         <React.Fragment>
             <Box
                 className={classNames(
                     styles.stageWrapper,
-                    {[styles.withColorPicker]: !isFullScreen && isColorPicking},
-                    {[styles.dragging]: isDragging})}
+                    { [styles.withColorPicker]: !isFullScreen && isColorPicking },
+                    { [styles.dragging]: isDragging })}
                 onDoubleClick={onDoubleClick}
                 style={isPlayerOnly || stageDimensionsOverride ? null : {
                     // add 2 because a 1px border is shown around each side of the stage
@@ -59,7 +57,7 @@ const StageComponent = props => {
                 <Box
                     className={classNames(
                         styles.stage,
-                        {[styles.fullScreen]: isFullScreen}
+                        { [styles.fullScreen]: isFullScreen }
                     )}
                     style={{
                         height: stageDimensions.height,
@@ -100,7 +98,7 @@ const StageComponent = props => {
                 <Box
                     className={classNames(
                         styles.stageOverlays,
-                        {[styles.fullScreen]: isFullScreen}
+                        { [styles.fullScreen]: isFullScreen }
                     )}
                     style={transformStyle}
                 >
@@ -120,7 +118,7 @@ const StageComponent = props => {
                         {question === null ? null : (
                             <div
                                 className={styles.questionWrapper}
-                                style={{width: stageDimensions.width}}
+                                style={{ width: stageDimensions.width }}
                             >
                                 <Question
                                     question={question}
@@ -183,6 +181,6 @@ StageComponent.propTypes = {
     useEditorDragStyle: PropTypes.bool
 };
 StageComponent.defaultProps = {
-    dragRef: () => {}
+    dragRef: () => { }
 };
 export default StageComponent;

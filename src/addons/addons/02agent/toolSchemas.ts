@@ -459,6 +459,33 @@ export const scratchToolSchemas = [
   {
     type: "function",
     function: {
+      name: "runJavaScript",
+      description:
+        "Execute model-written JavaScript in an async sandbox worker. The code is the body of an async function: use await for nested tools via sdk.call(name, args) and return a JSON-serializable value. Use this for computation, data transformation, or multi-step tool glue; project mutations still go through the existing validated tools. The worker has no DOM/localStorage and is terminated on timeout.",
+      parameters: {
+        type: "object",
+        properties: {
+          code: {
+            type: "string",
+            description:
+              "Async function body. Example: const text = await sdk.call(\"readFile\", { path: \"/stage.js\" }); return { length: text.length };",
+          },
+          timeoutMs: {
+            type: "number",
+            description: "Execution timeout in milliseconds. Defaults to 15000, max 60000.",
+          },
+          description: {
+            type: "string",
+            description: "Optional short note describing what the code computes.",
+          },
+        },
+        required: ["code"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "getDiagnostics",
       description: "Validate current virtual Scratch JS and SVG costume files and report parser/block/SVG diagnostics.",
       parameters: {
