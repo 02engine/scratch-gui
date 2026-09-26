@@ -13,14 +13,14 @@ const postcssVars = require('postcss-simple-vars');
 const postcssImport = require('postcss-import');
 
 const STATIC_PATH = process.env.STATIC_PATH || '/static';
-const {APP_NAME} = require('./src/lib/brand');
+const { APP_NAME } = require('./src/lib/brand');
 
 const root = process.env.ROOT || '';
 if (root.length > 0 && !root.endsWith('/')) {
     throw new Error('If ROOT is defined, it must have a trailing slash.');
 }
 
-const FILE_TO_PRINT = path.resolve(__dirname, 'static/02engine-asciilogo.txt'); 
+const FILE_TO_PRINT = path.resolve(__dirname, 'static/02engine-asciilogo.txt');
 
 const htmlWebpackPluginCommon = {
     root: root,
@@ -41,11 +41,11 @@ const base = {
         port: process.env.PORT || 8601,
         historyApiFallback: {
             rewrites: [
-                {from: /^\/\d+\/?$/, to: '/indexold.html'},
-                {from: /^\/\d+\/fullscreen\/?$/, to: '/fullscreen.html'},
-                {from: /^\/\d+\/editor\/?$/, to: '/index.html'},
-                {from: /^\/\d+\/embed\/?$/, to: '/embed.html'},
-                {from: /^\/addons\/?$/, to: '/addons.html'}
+                { from: /^\/\d+\/?$/, to: '/indexold.html' },
+                { from: /^\/\d+\/fullscreen\/?$/, to: '/fullscreen.html' },
+                { from: /^\/\d+\/editor\/?$/, to: '/index.html' },
+                { from: /^\/\d+\/embed\/?$/, to: '/embed.html' },
+                { from: /^\/addons\/?$/, to: '/addons.html' }
             ]
         }
     },
@@ -79,7 +79,8 @@ const base = {
                 path.resolve(__dirname, 'src'),
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,
                 /node_modules[\\/]pify/,
-                /node_modules[\\/]@vernier[\\/]godirect/
+                /node_modules[\\/]@vernier[\\/]godirect/,
+                /node_modules[\\/]@isomorphic-git[\\/]lightning-fs[\\/]src/
             ],
             options: {
                 babelrc: false,

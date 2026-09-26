@@ -1,0 +1,119 @@
+@resize-accent: rgba(45, 115, 110, 0.45);
+@resize-accent-strong: rgba(56, 168, 160, 0.9);
+@resize-corner: 16px;
+@resize-edge: 6px;
+
+.drag-handle {
+    height: 28px;
+    cursor: move;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    font-size: 14px;
+    box-sizing: border-box;
+    padding-left: 6px;
+    // border-bottom: 1px solid #add7d2;
+    background: #dddddd;
+    color: #424242;
+    user-select: none;
+
+    &.dark {
+        // border-bottom: 1px solid #314749;
+        background-color: #3d3d3d;
+        color: #ffffff;
+    }
+}
+
+.resize-handle {
+    position: absolute;
+    z-index: 35;
+    background: transparent;
+    touch-action: none;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: @resize-accent;
+    }
+
+    &.edge-n {
+        top: 0;
+        left: @resize-corner;
+        right: @resize-corner;
+        height: @resize-edge;
+        cursor: ns-resize;
+    }
+
+    &.edge-s {
+        bottom: 0;
+        left: @resize-corner;
+        right: @resize-corner;
+        height: @resize-edge;
+        cursor: ns-resize;
+    }
+
+    &.edge-w {
+        left: 0;
+        top: @resize-corner;
+        bottom: @resize-corner;
+        width: @resize-edge;
+        cursor: ew-resize;
+    }
+
+    &.edge-e {
+        right: 0;
+        top: @resize-corner;
+        bottom: @resize-corner;
+        width: @resize-edge;
+        cursor: ew-resize;
+    }
+
+    &.edge-nw {
+        top: 0;
+        left: 0;
+        width: @resize-corner;
+        height: @resize-corner;
+        cursor: nwse-resize;
+    }
+
+    &.edge-ne {
+        top: 0;
+        right: 0;
+        width: @resize-corner;
+        height: @resize-corner;
+        cursor: nesw-resize;
+    }
+
+    &.edge-sw {
+        bottom: 0;
+        left: 0;
+        width: @resize-corner;
+        height: @resize-corner;
+        cursor: nesw-resize;
+    }
+
+    &.edge-se {
+        bottom: 0;
+        right: 0;
+        width: @resize-corner;
+        height: @resize-corner;
+        cursor: nwse-resize;
+    }
+
+    &.edge-se::after {
+        content: "";
+        position: absolute;
+        right: 3px;
+        bottom: 3px;
+        width: 11px;
+        height: 11px;
+        pointer-events: none;
+        background: linear-gradient(
+            135deg,
+            transparent 0 44%,
+            @resize-accent-strong 44% 56%,
+            transparent 56% 68%,
+            @resize-accent-strong 68% 80%,
+            transparent 80%
+        );
+    }
+}

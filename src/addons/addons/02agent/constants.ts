@@ -8,3 +8,10 @@ export const PROVIDER_DEFAULT_URLS: Record<string, string> = {
   custom: "",
   custom_anthropic: "",
 };
+
+export const PROVIDER_DEFAULT_CONTEXT_WINDOWS: Record<string, number> = {
+  openai: 128000,
+  zhipu: 128000,
+  anthropic: 200000,
+  deepseek: 128000,
+};

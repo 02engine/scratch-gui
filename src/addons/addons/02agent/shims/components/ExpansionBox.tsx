@@ -1,209 +1,282 @@
 import * as React from "react";
 import Draggable from "react-draggable";
+import style from "../../ui/ExpansionBox.module.less"
 
 export interface ExpansionRect {
-  width: number;
-  height: number;
-  translateX: number;
-  translateY: number;
+    width: number;
+    height: number;
+    translateX: number;
+    translateY: number;
 }
 
 interface ExpansionBoxProps {
-  id: string;
-  title: string;
-  minWidth: number;
-  minHeight: number;
-  borderRadius: number;
-  themeMode?: "dark" | "light";
-  children: React.ReactNode;
-  containerInfo: ExpansionRect;
-  onClose?: () => void;
-  onMinimize?: () => void;
-  onSizeChange?: (rect: ExpansionRect) => void;
+    id: string;
+    title: string;
+    minWidth: number;
+    minHeight: number;
+    borderRadius: number;
+    themeMode?: "dark" | "light";
+    children: React.ReactNode;
+    containerInfo: ExpansionRect;
+    onClose?: () => void;
+    onMinimize?: () => void;
+    onSizeChange?: (rect: ExpansionRect) => void;
 }
 
-const resizeHandleStyle: React.CSSProperties = {
-  position: "absolute",
-  right: 0,
-  bottom: 0,
-  width: 24,
-  height: 24,
-  zIndex: 20,
-  cursor: "nwse-resize",
-  pointerEvents: "auto",
-  background: "linear-gradient(135deg, transparent 0 52%, rgba(45, 115, 110, 0.45) 52% 58%, transparent 58% 68%, rgba(45, 115, 110, 0.45) 68% 74%, transparent 74%)",
+type ResizeDirection = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
+
+interface WindowRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+const RESIZE_DIRECTIONS: ResizeDirection[] = ["n", "s", "e", "w", "nw", "ne", "sw", "se"];
+
+const RESIZE_CURSORS: Record<ResizeDirection, string> = {
+    n: "ns-resize",
+    s: "ns-resize",
+    e: "ew-resize",
+    w: "ew-resize",
+    ne: "nesw-resize",
+    sw: "nesw-resize",
+    nw: "nwse-resize",
+    se: "nwse-resize",
 };
 
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
+
+const toWindowRect = (info: ExpansionRect): WindowRect => ({
+    x: Math.max(info.translateX || 0, 0),
+    y: Math.max(info.translateY || 0, 0),
+    width: info.width,
+    height: info.height
+});
+
 const getPointer = (event: MouseEvent | TouchEvent | React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) =>
-  "touches" in event ? event.touches[0] || event.changedTouches[0] : event;
+    "touches" in event ? event.touches[0] || event.changedTouches[0] : event;
 
 const ExpansionBox = ({
-  id,
-  title,
-  minWidth,
-  minHeight,
-  borderRadius,
-  themeMode = "light",
-  children,
-  containerInfo,
-  onClose,
-  onMinimize,
-  onSizeChange
+    id,
+    title,
+    minWidth,
+    minHeight,
+    borderRadius,
+    themeMode = "light",
+    children,
+    containerInfo,
+    onClose,
+    onMinimize,
+    onSizeChange
 }: ExpansionBoxProps) => {
-  const isDark = themeMode === "dark";
-  const windowRef = React.useRef<HTMLDivElement | null>(null);
-  const [position, setPosition] = React.useState({
-    x: Math.max(containerInfo.translateX || 0, 0),
-    y: Math.max(containerInfo.translateY || 0, 0)
-  });
-  const handleOnMinimize = React.useCallback(async ()=>{
-    if(!windowRef.current) return;
-    windowRef.current.style.scale = "0";
-    windowRef.current.style.opacity = "0";
-    await new Promise(resolve => setTimeout(resolve, 200));
-    onMinimize?.();
-  },[onMinimize])
-  React.useEffect(()=>{
-    if(!windowRef.current) return;
-    windowRef.current.style.scale = "1";
-    windowRef.current.style.opacity = "1";
+    const isDark = themeMode === "dark";
+    const windowRef = React.useRef<HTMLDivElement | null>(null);
+    const endResizeRef = React.useRef<(() => void) | null>(null);
+    const [rect, setRect] = React.useState<WindowRect>(() => toWindowRect(containerInfo));
 
-  },[])
-  React.useEffect(() => {
-    setPosition({
-      x: Math.max(containerInfo.translateX || 0, 0),
-      y: Math.max(containerInfo.translateY || 0, 0)
-    });
-  }, [containerInfo.translateX, containerInfo.translateY]);
+    const handleOnMinimize = React.useCallback(async () => {
+        if (!windowRef.current) return;
+        windowRef.current.style.scale = "0";
+        windowRef.current.style.opacity = "0";
+        await new Promise(resolve => setTimeout(resolve, 200));
+        onMinimize?.();
+    }, [onMinimize])
 
-  const startResize = React.useCallback((event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    if (!("touches" in event) && event.button !== 0) return;
-    event.preventDefault();
-    event.stopPropagation();
+    React.useEffect(() => {
+        if (!windowRef.current) return;
+        windowRef.current.style.scale = "1";
+        windowRef.current.style.opacity = "1";
+    }, []);
 
-    document.body.style.cursor = "nwse-resize";
-    document.body.style.userSelect = "none";
+    React.useEffect(() => {
+        setRect(toWindowRect(containerInfo));
+    }, [containerInfo.translateX, containerInfo.translateY, containerInfo.width, containerInfo.height]);
 
-    const onPointerMove = (moveEvent: MouseEvent | TouchEvent) => {
-      moveEvent.preventDefault();
-      const point = getPointer(moveEvent);
-      const rect = windowRef.current?.getBoundingClientRect();
-      if (!point || !rect) return;
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      let nextX = position.x;
-      let nextY = position.y;
-      let nextWidth = Math.max(minWidth, Math.min(point.clientX - rect.left, viewportWidth - rect.left));
-      let nextHeight = Math.max(minHeight, Math.min(point.clientY - rect.top, viewportHeight - rect.top));
+    React.useEffect(() => () => {
+        endResizeRef.current?.();
+    }, []);
 
-      nextX = Math.max(0, Math.min(nextX, Math.max(0, viewportWidth - minWidth)));
-      nextY = Math.max(0, Math.min(nextY, Math.max(0, viewportHeight - minHeight)));
-      nextWidth = Math.max(minWidth, Math.min(nextWidth, viewportWidth - nextX));
-      nextHeight = Math.max(minHeight, Math.min(nextHeight, viewportHeight - nextY));
+    const startResize = React.useCallback((direction: ResizeDirection) =>
+        (event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+            if (!("touches" in event) && event.button !== 0) return;
+            const startPointer = getPointer(event);
+            if (!startPointer) return;
+            // React 16 pools synthetic events: this event's fields are nullified as soon
+            // as this handler returns. Copy the coordinates now, otherwise every later
+            // mousemove/touchmove computes dx/dy from a null clientX/clientY and drags
+            // the wrong edge or clamps the window to the viewport origin.
+            const startClientX = startPointer.clientX;
+            const startClientY = startPointer.clientY;
+            event.preventDefault();
+            event.stopPropagation();
 
-      const nextPosition = { x: nextX, y: nextY };
-      setPosition(nextPosition);
-      onSizeChange?.({ width: nextWidth, height: nextHeight, translateX: nextX, translateY: nextY });
-    };
+            const startRect = rect;
+            const startRight = startRect.x + startRect.width;
+            const startBottom = startRect.y + startRect.height;
+            const movesLeft = direction.includes("w");
+            const movesRight = direction.includes("e");
+            const movesTop = direction.includes("n");
+            const movesBottom = direction.includes("s");
+            const nextRect: WindowRect = { ...startRect };
+            let dirty = false;
 
-    const onPointerUp = (endEvent: MouseEvent | TouchEvent) => {
-      endEvent.preventDefault();
-      document.removeEventListener("mousemove", onPointerMove);
-      document.removeEventListener("mouseup", onPointerUp);
-      document.removeEventListener("touchmove", onPointerMove);
-      document.removeEventListener("touchend", onPointerUp);
-      document.removeEventListener("touchcancel", onPointerUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
+            document.body.style.cursor = RESIZE_CURSORS[direction];
+            document.body.style.userSelect = "none";
 
-    document.addEventListener("mousemove", onPointerMove);
-    document.addEventListener("mouseup", onPointerUp);
-    document.addEventListener("touchmove", onPointerMove, { passive: false });
-    document.addEventListener("touchend", onPointerUp, { passive: false });
-    document.addEventListener("touchcancel", onPointerUp, { passive: false });
-  }, [containerInfo.height, containerInfo.width, minHeight, minWidth, onSizeChange, position.x, position.y]);
+            const teardown = () => {
+                document.removeEventListener("mousemove", onPointerMove);
+                document.removeEventListener("mouseup", onPointerUp);
+                document.removeEventListener("touchmove", onPointerMove);
+                document.removeEventListener("touchend", onPointerUp);
+                document.removeEventListener("touchcancel", onPointerUp);
+                document.body.style.cursor = "";
+                document.body.style.userSelect = "";
+                endResizeRef.current = null;
+            };
 
-  return (
-    <Draggable
-      handle=".tw-02agent-drag-handle"
-      cancel="input, textarea, button, select, option, [contenteditable=true], .tw-02agent-resize-handle"
-      position={position}
-      onStop={(_, data) => {
-        const next = { x: Math.max(data.x, 0), y: Math.max(data.y, 0) };
-        setPosition(next);
-        onSizeChange?.({ ...containerInfo, translateX: next.x, translateY: next.y });
-      }}
-    >
-      <div
-        ref={windowRef}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          zIndex: 2147483647,
-          width: containerInfo.width,
-          height: containerInfo.height,
-          minWidth,
-          minHeight,
-          borderRadius,
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          background: isDark ? "#152223" : "#f4fbfa",
-          boxShadow: isDark ? "0 18px 46px rgba(0, 0, 0, 0.38)" : "0 18px 46px rgba(16, 72, 68, 0.24)",
-          scale: 0,
-          opacity: 0,
-          transition: "scale 0.2s ease-in-out, opacity 0.2s ease-in-out"
-        }}
-      >
-        <div
-          className="tw-02agent-drag-handle"
-          data-expansion-id={id}
-          style={{
-            height: 28,
-            cursor: "move",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderBottom: isDark ? "1px solid #314749" : "1px solid #add7d2",
-            background: isDark ? "#203436" : "#dff3f1",
-            color: isDark ? "#e7fffb" : "#123434",
-            userSelect: "none"
-          }}
+            const onPointerMove = (moveEvent: MouseEvent | TouchEvent) => {
+                moveEvent.preventDefault();
+                const point = getPointer(moveEvent);
+                if (!point) return;
+                const dx = point.clientX - startClientX;
+                const dy = point.clientY - startClientY;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const maxRight = Math.max(viewportWidth, startRight);
+                const maxBottom = Math.max(viewportHeight, startBottom);
+                const maxX = Math.max(0, maxRight - minWidth);
+                const maxY = Math.max(0, maxBottom - minHeight);
+
+                let left = startRect.x;
+                let top = startRect.y;
+                let right = startRight;
+                let bottom = startBottom;
+
+                if (movesLeft) left = clamp(startRect.x + dx, 0, startRight - minWidth);
+                if (movesRight) right = clamp(startRight + dx, left + minWidth, maxRight);
+                if (movesTop) top = clamp(startRect.y + dy, 0, startBottom - minHeight);
+                if (movesBottom) bottom = clamp(startBottom + dy, top + minHeight, maxBottom);
+
+                const x = Math.round(clamp(left, 0, maxX));
+                const y = Math.round(clamp(top, 0, maxY));
+                const width = Math.round(clamp(right - x, minWidth, Math.max(minWidth, maxRight - x)));
+                const height = Math.round(clamp(bottom - y, minHeight, Math.max(minHeight, maxBottom - y)));
+
+                if (x === nextRect.x && y === nextRect.y && width === nextRect.width && height === nextRect.height) return;
+                nextRect.x = x;
+                nextRect.y = y;
+                nextRect.width = width;
+                nextRect.height = height;
+                dirty = true;
+                setRect({ x, y, width, height });
+            };
+
+            const finish = () => {
+                const committed = { ...nextRect };
+                teardown();
+                if (dirty) {
+                    onSizeChange?.({
+                        width: committed.width,
+                        height: committed.height,
+                        translateX: committed.x,
+                        translateY: committed.y
+                    });
+                }
+            };
+
+            const onPointerUp = (endEvent: MouseEvent | TouchEvent) => {
+                endEvent.preventDefault();
+                finish();
+            };
+
+            document.addEventListener("mousemove", onPointerMove);
+            document.addEventListener("mouseup", onPointerUp);
+            document.addEventListener("touchmove", onPointerMove, { passive: false });
+            document.addEventListener("touchend", onPointerUp, { passive: false });
+            document.addEventListener("touchcancel", onPointerUp, { passive: false });
+            endResizeRef.current = teardown;
+        }, [minHeight, minWidth, onSizeChange, rect]);
+
+    const handleDragStop = React.useCallback((_: unknown, data: { x: number; y: number }) => {
+        const nextX = Math.max(Math.round(data.x), 0);
+        const nextY = Math.max(Math.round(data.y), 0);
+        setRect(previous => ({ ...previous, x: nextX, y: nextY }));
+        onSizeChange?.({
+            width: rect.width,
+            height: rect.height,
+            translateX: nextX,
+            translateY: nextY
+        });
+    }, [onSizeChange, rect.height, rect.width]);
+
+    return (
+        <Draggable
+            handle={`.${style['drag-handle']}`}
+            cancel="input, textarea, button, select, option, [contenteditable=true], .tw-02agent-resize-handle"
+            position={{ x: rect.x, y: rect.y }}
+            onStop={handleDragStop}
         >
-
-            <button
-              type="button"
-              onClick={handleOnMinimize}
-              title="最小化到后台"
-              style={{ position: "absolute", right: 34, background: "transparent", border: 0, color: "inherit" }}
+            <div
+                ref={windowRef}
+                style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    zIndex: 2147483647,
+                    width: rect.width,
+                    height: rect.height,
+                    minWidth,
+                    minHeight,
+                    borderRadius,
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                    background: isDark ? "#152223" : "#f4fbfa",
+                    boxShadow: isDark ? "0 18px 46px rgba(0, 0, 0, 0.38)" : "0 18px 46px rgba(16, 72, 68, 0.24)",
+                    scale: 0,
+                    opacity: 0,
+                    transition: "scale 0.2s ease-in-out, opacity 0.2s ease-in-out"
+                }}
             >
-              −
-            </button>
+                <div
+                    className={`${style['drag-handle']} ${isDark ? style.dark : ""}`}
+                    data-expansion-id={id}
+                >
+
+                    <button
+                        type="button"
+                        onClick={handleOnMinimize}
+                        title="最小化到后台"
+                        style={{ position: "absolute", right: 34, zIndex: 40, background: "transparent", border: 0, color: "inherit" }}
+                    >
+                        −
+                    </button>
 
 
-            <button
-              type="button"
-              onClick={onClose}
-              title="Close"
-              style={{ position: "absolute", right: 8, background: "transparent", border: 0, color: "inherit" }}
-            >
-              ×
-            </button>
-          <strong>{title}</strong>
-        </div>
-        {children}
-        <div
-          className="tw-02agent-resize-handle"
-          aria-hidden="true"
-          onMouseDown={startResize}
-          onTouchStart={startResize}
-          style={resizeHandleStyle}
-        />
-      </div>
-    </Draggable>
-  );
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        title="Close"
+                        style={{ position: "absolute", right: 8, zIndex: 40, background: "transparent", border: 0, color: "inherit" }}
+                    >
+                        ×
+                    </button>
+                    <strong>{title}</strong>
+                </div>
+                {children}
+                {RESIZE_DIRECTIONS.map((direction) => (
+                    <div
+                        key={direction}
+                        className={`tw-02agent-resize-handle ${style["resize-handle"]} ${style[`edge-${direction}`]}`}
+                        aria-hidden="true"
+                        onMouseDown={startResize(direction)}
+                        onTouchStart={startResize(direction)}
+                    />
+                ))}
+            </div>
+        </Draggable>
+    );
 };
 
 export default ExpansionBox;

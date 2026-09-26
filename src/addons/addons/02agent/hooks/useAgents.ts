@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import useStorageInfo from "../shims/hooks/useStorageInfo";
 import { Agent, AgentModel, FlattenedAgent } from "../types";
-import { PROVIDER_DEFAULT_URLS } from "../constants";
+import { PROVIDER_DEFAULT_CONTEXT_WINDOWS, PROVIDER_DEFAULT_URLS } from "../constants";
 
 interface ExportedAgentFile {
   version: 1;
@@ -41,6 +41,7 @@ export function useAgents() {
           name: (agent as any).displayName || agent.name || "Default Model",
           modelId: (agent as any).modelName || "gpt-3.5-turbo",
           maxTokens: (agent as any).maxTokens,
+          contextWindow: (agent as any).contextWindow,
         },
       ];
 
@@ -53,6 +54,7 @@ export function useAgents() {
         modelName: model.modelId,
         displayName: model.name,
         maxTokens: model.maxTokens,
+        contextWindow: model.contextWindow || PROVIDER_DEFAULT_CONTEXT_WINDOWS[agent.provider],
       }));
     });
   }, [agents]);

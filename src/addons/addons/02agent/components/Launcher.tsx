@@ -8,6 +8,7 @@ import { AIAssistantIcon } from "./AIAssistantIcon";
 interface LauncherProps {
   themeMode: "dark" | "light";
   onToggle: () => void;
+  isGenerating?: boolean;
 }
 
 const clampRectToViewport = (rect: DOMRect) => ({
@@ -15,7 +16,7 @@ const clampRectToViewport = (rect: DOMRect) => ({
   y: Math.max(0, Math.min(rect.top, window.innerHeight - rect.height)),
 });
 
-const Launcher: React.FC<LauncherProps> = ({ themeMode, onToggle }) => {
+const Launcher: React.FC<LauncherProps> = ({ themeMode, onToggle, isGenerating = false }) => {
   const [launcherPosition, setLauncherPosition] = useStoredState("02AGENT_LAUNCHER_POSITION", { x: 0, y: 0 });
   const containerRef = React.useRef<HTMLElement | null>(null);
   const launcherDraggedRef = React.useRef(false);
@@ -75,7 +76,9 @@ const Launcher: React.FC<LauncherProps> = ({ themeMode, onToggle }) => {
           style={{ pointerEvents: "auto" }}
         >
           <Tooltip
-            className={`tw-02agent-launcher-handle ${styles.icon} ${themeMode === "dark" ? styles.iconDark : styles.iconLight}`}
+            className={`tw-02agent-launcher-handle ${styles.icon} ${
+              themeMode === "dark" ? styles.iconDark : styles.iconLight
+            } ${isGenerating ? styles.iconBusy : ""}`}
             icon={
               <>
                 <AIAssistantIcon />
@@ -85,7 +88,7 @@ const Launcher: React.FC<LauncherProps> = ({ themeMode, onToggle }) => {
             onClick={() => {
               if (!launcherDraggedRef.current) onToggle();
             }}
-            tipText={"02Agent"}
+            tipText={isGenerating ? "02Agent 正在工作..." : "02Agent"}
           />
         </section>
       </Draggable>

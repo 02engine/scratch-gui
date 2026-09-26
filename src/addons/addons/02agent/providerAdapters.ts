@@ -1,4 +1,4 @@
-import { Agent, ChatMessage, ToolCall, FlattenedAgent } from "./types";
+import { Agent, ChatMessage, TokenUsage, ToolCall, FlattenedAgent } from "./types";
 
 type ProviderMessage = Record<string, unknown>;
 type AnthropicContentBlock =
@@ -21,6 +21,103 @@ export interface ChatCompletionRequest {
 export interface ProviderAdapter {
   sendChatCompletion: (request: ChatCompletionRequest) => Promise<any>;
 }
+
+const asFiniteNumber = (value: unknown): number | undefined => {
+  const numeric =
+    typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : Number.NaN;
+  return Number.isFinite(numeric) ? numeric : undefined;
+};
+
+const pickNumber = (...values: unknown[]): number | undefined => {
+  for (const value of values) {
+    const numeric = asFiniteNumber(value);
+    if (numeric !== undefined) return numeric;
+  }
+  return undefined;
+};
+
+const sumNumbers = (...values: unknown[]): number | undefined => {
+  let total = 0;
+  let hasValue = false;
+  for (const value of values) {
+    const numeric = asFiniteNumber(value);
+    if (numeric === undefined) continue;
+    total += numeric;
+    hasValue = true;
+  }
+  return hasValue ? total : undefined;
+};
+
+const mergeTokenUsage = (base: TokenUsage | undefined, next: TokenUsage | undefined): TokenUsage | undefined => {
+  if (!base) return next;
+  if (!next) return base;
+  const merged: TokenUsage = { ...base };
+  for (const key of Object.keys(next) as Array<keyof TokenUsage>) {
+    const value = next[key];
+    if (typeof value === "number") {
+      (merged as Record<string, number>)[key as string] = value;
+    }
+  }
+  if (typeof merged.inputTokens === "number" && typeof merged.outputTokens === "number") {
+    merged.totalTokens = merged.inputTokens + merged.outputTokens;
+  }
+  return merged;
+};
+
+const normalizeOpenAIUsage = (raw: unknown): TokenUsage | undefined => {
+  if (!raw || typeof raw !== "object") return undefined;
+  const value = raw as Record<string, any>;
+  const inputTokens = pickNumber(value.prompt_tokens, value.input_tokens);
+  const outputTokens = pickNumber(value.completion_tokens, value.output_tokens);
+  const cacheReadTokens = pickNumber(
+    value.prompt_cache_hit_tokens,
+    value.cached_tokens,
+    value.prompt_tokens_details?.cached_tokens,
+    value.input_tokens_details?.cached_tokens,
+  );
+  const cacheWriteTokens = pickNumber(value.prompt_cache_creation_tokens);
+  const reasoningTokens = pickNumber(
+    value.completion_tokens_details?.reasoning_tokens,
+    value.reasoning_tokens,
+  );
+  const totalTokens =
+    pickNumber(value.total_tokens) ??
+    (inputTokens !== undefined || outputTokens !== undefined
+      ? (inputTokens || 0) + (outputTokens || 0)
+      : undefined);
+
+  const usage: TokenUsage = {};
+  if (inputTokens !== undefined) usage.inputTokens = inputTokens;
+  if (outputTokens !== undefined) usage.outputTokens = outputTokens;
+  if (totalTokens !== undefined) usage.totalTokens = totalTokens;
+  if (cacheReadTokens !== undefined) usage.cacheReadTokens = cacheReadTokens;
+  if (cacheWriteTokens !== undefined) usage.cacheWriteTokens = cacheWriteTokens;
+  if (reasoningTokens !== undefined) usage.reasoningTokens = reasoningTokens;
+  return Object.keys(usage).length > 0 ? usage : undefined;
+};
+
+const normalizeAnthropicUsage = (raw: unknown): TokenUsage | undefined => {
+  if (!raw || typeof raw !== "object") return undefined;
+  const value = raw as Record<string, any>;
+  const uncachedInputTokens = pickNumber(value.input_tokens);
+  const cacheReadTokens = pickNumber(value.cache_read_input_tokens);
+  const cacheWriteTokens = pickNumber(value.cache_creation_input_tokens);
+  const inputTokens =
+    sumNumbers(uncachedInputTokens, cacheReadTokens, cacheWriteTokens) ?? uncachedInputTokens;
+  const outputTokens = pickNumber(value.output_tokens);
+  const totalTokens =
+    inputTokens !== undefined || outputTokens !== undefined
+      ? (inputTokens || 0) + (outputTokens || 0)
+      : undefined;
+
+  const usage: TokenUsage = {};
+  if (inputTokens !== undefined) usage.inputTokens = inputTokens;
+  if (outputTokens !== undefined) usage.outputTokens = outputTokens;
+  if (totalTokens !== undefined) usage.totalTokens = totalTokens;
+  if (cacheReadTokens !== undefined) usage.cacheReadTokens = cacheReadTokens;
+  if (cacheWriteTokens !== undefined) usage.cacheWriteTokens = cacheWriteTokens;
+  return Object.keys(usage).length > 0 ? usage : undefined;
+};
 
 const collectReasoningText = (value: unknown): string => {
   if (!value) return "";
@@ -154,6 +251,9 @@ class OpenAICompatibleAdapter implements ProviderAdapter {
         tools,
         tool_choice: toolChoice,
         stream: true,
+        // OpenAI only returns stream usage when explicitly requested. Other
+        // OpenAI-compatible providers may omit or reject this option.
+        ...(agent.provider === "openai" ? { stream_options: { include_usage: true } } : {}),
         ...(agent.maxTokens ? { max_tokens: agent.maxTokens } : {}),
         ...(enableReasoning
           ? {
@@ -184,6 +284,7 @@ class OpenAICompatibleAdapter implements ProviderAdapter {
     let buffer = "";
     let content = "";
     let reasoning = "";
+    let usage: TokenUsage | undefined;
     const toolCalls: Array<{ id: string; type: "function"; function: { name: string; arguments: string } }> = [];
 
     let reading = true;
@@ -214,6 +315,10 @@ class OpenAICompatibleAdapter implements ProviderAdapter {
           parsed = JSON.parse(payload);
         } catch {
           continue;
+        }
+
+        if (parsed.usage) {
+          usage = mergeTokenUsage(usage, normalizeOpenAIUsage(parsed.usage));
         }
 
         if (parsed.error) {
@@ -296,6 +401,7 @@ class OpenAICompatibleAdapter implements ProviderAdapter {
           },
         },
       ],
+      ...(usage ? { usage } : {}),
     };
   }
 }
@@ -464,6 +570,7 @@ class AnthropicAdapter implements ProviderAdapter {
     let buffer = "";
     let content = "";
     let reasoning = "";
+    let usage: TokenUsage | undefined;
     const toolCalls: Array<{ id: string; type: "function"; function: { name: string; arguments: string } }> = [];
     const anthropicContentBlocks: AnthropicContentBlock[] = [];
     const toolCallIndexByContentIndex = new Map<number, number>();
@@ -498,6 +605,13 @@ class AnthropicAdapter implements ProviderAdapter {
 
         if (parsed.type === "error") {
           throw new Error(parsed.error?.message || JSON.stringify(parsed.error));
+        }
+
+        if (parsed.type === "message_start" && parsed.message?.usage) {
+          usage = mergeTokenUsage(usage, normalizeAnthropicUsage(parsed.message.usage));
+        }
+        if (parsed.type === "message_delta" && parsed.usage) {
+          usage = mergeTokenUsage(usage, normalizeAnthropicUsage(parsed.usage));
         }
 
         if (parsed.type === "message_stop") {
@@ -670,6 +784,7 @@ class AnthropicAdapter implements ProviderAdapter {
           },
         },
       ],
+      ...(usage ? { usage } : {}),
     };
   }
 }

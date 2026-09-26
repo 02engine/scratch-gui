@@ -3,6 +3,7 @@ export interface AgentModel {
   name: string;
   modelId: string;
   maxTokens?: number;
+  contextWindow?: number;
 }
 
 export interface Agent {
@@ -23,6 +24,29 @@ export interface FlattenedAgent {
   modelName: string;
   displayName: string;
   maxTokens?: number;
+  contextWindow?: number;
+}
+
+export interface TokenUsage {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  reasoningTokens?: number;
+}
+
+export interface ChatStats extends TokenUsage {
+  startedAt: number;
+  completedAt?: number;
+  firstTokenAt?: number;
+  ttftMs?: number;
+  decodeMs?: number;
+  tokensPerSecond?: number;
+  contextWindow?: number;
+  contextUsedTokens?: number;
+  cacheHitPercent?: number;
+  estimated?: boolean;
 }
 
 export type AttachmentKind = "workspace-ucf" | "workspace-ucf-range" | "text-file" | "spreadsheet" | "document";
