@@ -5,7 +5,6 @@ import { ChatMessage, ToolCall } from "../types";
 interface ToolCallViewerProps {
   toolCalls: ToolCall[];
   toolResults?: ChatMessage[];
-  isGenerating?: boolean;
 }
 
 type ToolCallStatus = "running" | "success" | "error";
@@ -351,12 +350,11 @@ const renderResultPreview = (entry: ToolEntry) => {
   return <pre className={toolStyles.toolCompactJson}>{entry.formattedResult || "无返回内容"}</pre>;
 };
 
-export const ToolCallViewer: React.FC<ToolCallViewerProps> = ({
+const ToolCallViewerImpl: React.FC<ToolCallViewerProps> = ({
   toolCalls,
   toolResults = [],
-  isGenerating = false,
 }) => {
-  const [expanded, setExpanded] = React.useState(true);
+  const [expanded, setExpanded] = React.useState(false);
   const [expandedDetails, setExpandedDetails] = React.useState<Record<string, boolean>>({});
 
   const entries = React.useMemo(() => buildEntries(toolCalls, toolResults), [toolCalls, toolResults]);
@@ -385,16 +383,25 @@ export const ToolCallViewer: React.FC<ToolCallViewerProps> = ({
     setExpandedDetails((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const latestEntry = entries[entries.length - 1];
+  const latestToolLabel = latestEntry ? TOOL_LABELS[latestEntry.name] || latestEntry.name : "工具";
+  const headerTitle = hasRunning
+    ? `正在执行 ${latestToolLabel}`
+    : errorCount > 0
+      ? `工具调用 · ${errorCount} 项失败`
+      : entries.length === 1
+        ? latestToolLabel
+        : `工具调用 · ${entries.length} 项`;
+  const headerMeta = hasRunning
+    ? `${entries.length} 个工具`
+    : latestEntry?.summary || `${successCount} 成功`;
+
   return (
     <div className={`${toolStyles.toolCallSummary} ${hasRunning ? toolStyles.toolCallSummaryRunning : ""}`}>
       <button type="button" className={toolStyles.toolCallSummaryHeader} onClick={() => setExpanded((prev) => !prev)}>
         <span className={`${toolStyles.toolCallPulse} ${hasRunning ? toolStyles.toolCallPulseActive : ""}`} />
-        <span className={toolStyles.toolCallSummaryTitle}>
-          {hasRunning ? "正在执行工具" : errorCount > 0 ? "工具调用完成，有失败项" : "工具调用完成"}
-        </span>
-        <span className={toolStyles.toolCallSummaryMeta}>
-          {entries.length} 个工具 · {successCount} 成功{errorCount ? ` · ${errorCount} 失败` : ""}
-        </span>
+        <span className={toolStyles.toolCallSummaryTitle}>{headerTitle}</span>
+        {headerMeta ? <span className={toolStyles.toolCallSummaryMeta}>{headerMeta}</span> : null}
         <span className={toolStyles.toolCallChevron}>{expanded ? "⌃" : "⌄"}</span>
       </button>
 
@@ -483,3 +490,15 @@ export const ToolCallViewer: React.FC<ToolCallViewerProps> = ({
     </div>
   );
 };
+
+const areToolCallViewerPropsEqual = (previous: ToolCallViewerProps, next: ToolCallViewerProps) => {
+  if (previous.toolCalls.length !== next.toolCalls.length) return false;
+  if (previous.toolCalls.some((toolCall, index) => toolCall !== next.toolCalls[index])) return false;
+
+  const previousResults = previous.toolResults || [];
+  const nextResults = next.toolResults || [];
+  if (previousResults.length !== nextResults.length) return false;
+  return previousResults.every((result, index) => result === nextResults[index]);
+};
+
+export const ToolCallViewer = React.memo(ToolCallViewerImpl, areToolCallViewerPropsEqual);

@@ -1,16 +1,14 @@
 .toolCallSummary {
   position: relative;
-  overflow: hidden;
-  border: 1px solid var(--ai-border);
-  border-radius: var(--ai-radius-lg);
-  background: var(--ai-bg-surface);
-  animation: toolCardEnter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  transform-origin: 50% 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .toolCallSummaryRunning {
-  border-color: color-mix(in srgb, var(--ai-accent) 24%, var(--ai-border));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ai-accent) 8%, transparent);
+  border: 0;
+  box-shadow: none;
 }
 
 .toolCallSummary > * {
@@ -33,16 +31,24 @@
 }
 
 .toolCallSummaryHeader {
-  min-height: 38px;
-  padding: 8px 10px;
+  width: fit-content;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-pill);
+  background: var(--ai-bg-surface);
+  color: var(--ai-text-muted);
+  font-size: 12px;
   transition:
     background var(--ai-transition),
+    border-color var(--ai-transition),
     color var(--ai-transition);
 }
 
 .toolCallSummaryHeader:hover,
 .toolCallItemHeader:hover {
   background: var(--ai-bg-surface-hover);
+  color: var(--ai-text-primary);
 }
 
 .toolCallPulse {
@@ -60,37 +66,15 @@
 
 .toolCallSummaryTitle,
 .toolCallName {
-  color: var(--ai-text-primary);
-  font-weight: 750;
+  color: inherit;
+  font-weight: 650;
+  font-size: 12px;
 }
 
 .toolCallSummaryRunning .toolCallSummaryTitle,
-.toolCallSummaryRunning .toolCallSummaryMeta,
 .toolCallItemRunning .toolCallName,
 .toolCallItemRunning .toolCallSummaryLine {
-  background-image: linear-gradient(
-    105deg,
-    var(--ai-text-primary) 0%,
-    var(--ai-text-primary) 43%,
-    color-mix(in srgb, var(--ai-accent) 70%, var(--ai-text-primary)) 48%,
-    color-mix(in srgb, var(--ai-success) 48%, var(--ai-text-primary)) 51%,
-    var(--ai-text-primary) 57%,
-    var(--ai-text-primary) 100%
-  );
-  background-size: 360% 100%;
-  animation: toolTextShine 3s linear infinite;
-}
-
-@supports (-webkit-background-clip: text) or (background-clip: text) {
-  .toolCallSummaryRunning .toolCallSummaryTitle,
-  .toolCallSummaryRunning .toolCallSummaryMeta,
-  .toolCallItemRunning .toolCallName,
-  .toolCallItemRunning .toolCallSummaryLine {
-    color: transparent;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
+  color: inherit;
 }
 
 .toolCallSummaryMeta,
@@ -114,18 +98,19 @@
 }
 
 .toolCallBody {
-  padding: 0;
-  border-top: 1px solid var(--ai-border);
-  background: var(--ai-bg-app);
-  animation: toolBodyReveal 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  margin: 6px 0 0 12px;
+  padding: 8px 0 4px 12px;
+  border-top: 0;
+  border-left: 2px solid var(--ai-border-subtle);
+  background: transparent;
 }
 
 .toolRunSummary {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 8px;
-  border-bottom: 1px solid var(--ai-border-subtle);
+  padding: 0 0 8px;
+  border-bottom: 1px dashed var(--ai-border-subtle);
 }
 
 .changedFilesPanel,
@@ -205,24 +190,23 @@
 }
 
 .toolCallItem {
-  animation: toolItemEnter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: none;
 }
 
 .toolCallItemRunning .toolCallName,
 .toolCallItemRunning .toolCallSummaryLine {
-  text-shadow: 0 0 10px color-mix(in srgb, var(--ai-accent) 10%, transparent);
+  text-shadow: none;
 }
 
 .toolCallItemHeader {
-  min-height: 38px;
-  padding: 8px 10px;
-  transition:
-    background var(--ai-transition),
-    transform var(--ai-transition-fast);
+  min-height: 30px;
+  padding: 4px 0;
+  transition: color var(--ai-transition);
 }
 
 .toolCallItemHeader:hover {
-  transform: translateX(2px);
+  background: transparent;
+  transform: none;
 }
 
 .toolCallGlyph {

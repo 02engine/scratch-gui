@@ -3,6 +3,7 @@
   display: inline-block;
 
   .icon {
+    position: relative;
     width: 40px;
     height: 38px;
     display: flex;
@@ -46,6 +47,17 @@
       cursor: grabbing;
       transform: translateY(0);
     }
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      opacity: 0.1;
+      pointer-events: none;
+      animation: agentHalo 4.2s ease-in-out infinite;
+    }
   }
 
   .iconLight {
@@ -60,6 +72,81 @@
     background: #203436 !important;
     color: #e7fffb;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+  }
+
+  .iconBusy {
+    box-shadow:
+      0 0 0 3px rgba(126, 207, 202, 0.18),
+      0 10px 24px rgba(4, 124, 118, 0.22) !important;
+
+    img {
+      animation: agentBusyBob 1.2s ease-in-out infinite;
+    }
+
+    &::before {
+      opacity: 0.52;
+      animation: agentHalo 1.2s ease-out infinite;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 9px;
+      height: 9px;
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.55);
+      animation: agentBusyDot 0.9s ease-in-out infinite;
+      pointer-events: none;
+    }
+  }
+
+  @keyframes agentHalo {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.1;
+    }
+
+    50% {
+      transform: scale(1.12);
+      opacity: 0.24;
+    }
+  }
+
+  @keyframes agentBusyBob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-1.5px);
+    }
+  }
+
+  @keyframes agentBusyDot {
+    0%,
+    100% {
+      transform: scale(0.88);
+      opacity: 0.65;
+    }
+
+    50% {
+      transform: scale(1.15);
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .icon::before,
+    .iconBusy::after,
+    .iconBusy img {
+      animation: none;
+    }
   }
 }
 
