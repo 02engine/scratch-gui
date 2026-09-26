@@ -1,0 +1,4 @@
+/**
+ * @license
+ * ScratchComment Markdown Editor addon
+ */
