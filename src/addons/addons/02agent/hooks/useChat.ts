@@ -3,7 +3,7 @@ import { FlattenedAgent, Attachment, ChatMessage, ChatStats, TokenUsage } from "
 import { AITools } from "../tools";
 import { scratchToolSchemas } from "../toolSchemas";
 import { getProviderAdapter, isProviderImplemented } from "../providerAdapters";
-import { callAITool } from "../toolRuntime";
+import { callAITool, MUTATING_TOOLS } from "../toolRuntime";
 
 interface UseChatOptions {
     messages: ChatMessage[];
@@ -20,6 +20,7 @@ interface UseChatOptions {
         targetSessionId?: string,
     ) => void;
     enableReasoning: boolean;
+    planMode: boolean;
     vm: any;
 }
 
@@ -31,6 +32,7 @@ const MAX_REQUEST_CHARS = 120000;
 const MAX_TOOL_RESULT_CHARS = 24000;
 const MAX_ATTACHMENT_TEXT_CHARS = 48000;
 const MAX_TOOL_ROUNDS = 8;
+const MAX_PLAN_TOOL_ROUNDS = 12;
 
 const estimateTokensFromText = (text: string) => {
     if (!text) return 0;
@@ -322,23 +324,41 @@ Short examples:
 - define({ proccode: "draw frame %n[left] %n[right]", info: ["warp"], $xy: { x: 80, y: 520 } }, () => { pen.clear(); /* use argument.reporter_string_number for left/right */ });
 - pen.setPenColorParamTo({ $field_COLOR_PARAM: "color", VALUE: 50 });`;
 
+export const PLAN_MODE_PROMPT = `Plan mode (read-only) is active:
+- Do NOT modify the project. Mutating tools (applyPatch, sprite/costume creation, deletion or reordering tools, installExtension, etc.) are removed from your tool list, and calls made through runJavaScript's sdk.call are rejected as well.
+- Research first: getProjectOverview -> listFiles/searchFiles -> readFile/readVariable/readListSlice/searchList -> getScratchGuide/searchBlocks/getBlockHelp/searchExtensions when needed. Use getDiagnostics to understand current errors.
+- runJavaScript is available for read-only computation and read-only tool composition only.
+- When you have enough information, reply with a concrete implementation plan instead of making changes. Include: (1) the goal, (2) exact files/targets/scripts to change, (3) ordered steps, (4) risks or open questions, (5) how you will validate (getDiagnostics etc.).
+- Never claim that something was changed. The user will approve the plan before execution starts.
+- If the user's message is only a question, answer it directly; keep the plan short.`;
+
+const buildSystemPrompt = (planMode: boolean): string =>
+    planMode ? `${SYSTEM_PROMPT}\n\n${PLAN_MODE_PROMPT}` : SYSTEM_PROMPT;
+
+const getToolSchemasForMode = (planMode: boolean) =>
+    planMode
+        ? scratchToolSchemas.filter((tool) => !MUTATING_TOOLS.has(tool.function.name))
+        : scratchToolSchemas;
+
 export function useChat({
     messages,
     currentAgent,
     updateSessionMessages,
     appendSessionSnapshot,
     enableReasoning,
+    planMode,
     vm,
 }: UseChatOptions) {
     const [inputText, setInputText] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [chatStats, setChatStats] = useState<ChatStats | null>(null);
+    const [isPlanReady, setIsPlanReady] = useState(false);
     const aiToolsRef = useRef<AITools | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    const callTool = async (functionName: string, args: Record<string, any>) =>
-        callAITool(aiToolsRef.current as Record<string, any> | null, functionName, args);
+    const callTool = async (functionName: string, args: Record<string, any>, denyMutations = false) =>
+        callAITool(aiToolsRef.current as Record<string, any> | null, functionName, args, { denyMutations });
 
     useEffect(() => {
         aiToolsRef.current?.dispose?.();
@@ -351,9 +371,16 @@ export function useChat({
         };
     }, [vm]);
 
-    const handleSend = async () => {
+    useEffect(() => {
+        if (!planMode) setIsPlanReady(false);
+    }, [planMode]);
+
+    const handleSend = async (overrides?: { text?: string; attachments?: Attachment[]; planMode?: boolean }) => {
         if (isGenerating) return;
-        if (!inputText.trim() && attachments.length === 0) return;
+        const effectiveInputText = overrides?.text ?? inputText;
+        const effectiveAttachments = overrides?.attachments ?? attachments;
+        const activePlanMode = overrides?.planMode ?? planMode;
+        if (!effectiveInputText.trim() && effectiveAttachments.length === 0) return;
 
         if (!currentAgent) {
             updateSessionMessages([
@@ -382,8 +409,8 @@ export function useChat({
         const newMessage: ChatMessage = {
             id: createMessageId(),
             role: "user",
-            content: inputText,
-            attachments,
+            content: effectiveInputText,
+            attachments: effectiveAttachments,
         };
         const cleanedPreviousMessages = sanitizeMessagesForProvider(messages);
         const newMessages = [...cleanedPreviousMessages, newMessage];
@@ -394,8 +421,8 @@ export function useChat({
             {
                 messageId: newMessage.id,
                 projectJson: typeof vm?.toJSON === "function" ? vm.toJSON() : "",
-                attachments,
-                inputText,
+                attachments: effectiveAttachments,
+                inputText: effectiveInputText,
                 createdAt: Date.now(),
             },
             sessionId,
@@ -406,6 +433,11 @@ export function useChat({
         setIsGenerating(true);
         abortControllerRef.current?.abort();
         abortControllerRef.current = new AbortController();
+
+        const activeSystemPrompt = buildSystemPrompt(activePlanMode);
+        const activeToolSchemas = getToolSchemasForMode(activePlanMode);
+        // const maxToolRounds = activePlanMode ? MAX_PLAN_TOOL_ROUNDS : MAX_TOOL_ROUNDS;
+        setIsPlanReady(false);
 
         let currentMessages = newMessages;
         let pendingStreamMessages: ChatMessage[] | null = null;
@@ -484,22 +516,24 @@ export function useChat({
         try {
             const providerAdapter = getProviderAdapter(currentAgent.provider);
             let shouldContinue = true;
+            let completedNormally = false;
             let toolRounds = 0;
             while (shouldContinue) {
 
+                // NEVER_APPLY_THE_CODE
                 // Stop runaway tool loops even if the model keeps requesting more tools.
-                if (toolRounds >= MAX_TOOL_ROUNDS) {
-                    currentMessages = [
-                        ...currentMessages,
-                        {
-                            id: createMessageId(),
-                            role: "assistant",
-                            content: `Error: 工具调用轮次超过上限（${MAX_TOOL_ROUNDS} 轮），已停止以避免无限循环。`,
-                        },
-                    ];
-                    updateSessionMessages(currentMessages, sessionId);
-                    break;
-                }
+                // if (toolRounds >= maxToolRounds) {
+                //     currentMessages = [
+                //         ...currentMessages,
+                //         {
+                //             id: createMessageId(),
+                //             role: "assistant",
+                //             content: `Error: 工具调用轮次超过上限（${maxToolRounds} 轮），已停止以避免无限循环。`,
+                //         },
+                //     ];
+                //     updateSessionMessages(currentMessages, sessionId);
+                //     break;
+                // }
 
                 const requestMessages = selectMessagesForRequest(currentMessages);
                 activeRequestStats = {
@@ -510,9 +544,9 @@ export function useChat({
                     estimatedOutputTokens: 0,
                     toolCallTokens: 0,
                     estimatedInputTokens:
-                        estimateTokensFromText(SYSTEM_PROMPT) +
+                        estimateTokensFromText(activeSystemPrompt) +
                         estimateTokensFromText(JSON.stringify(requestMessages)) +
-                        estimateTokensFromText(JSON.stringify(scratchToolSchemas)),
+                        estimateTokensFromText(JSON.stringify(activeToolSchemas)),
                     usage: undefined,
                 };
                 lastStatsPublishedAt = 0;
@@ -532,13 +566,13 @@ export function useChat({
                 const data = await providerAdapter.sendChatCompletion({
                     agent: currentAgent,
                     messages: [
-                        { id: createMessageId(), role: "system", content: SYSTEM_PROMPT },
+                        { id: createMessageId(), role: "system", content: activeSystemPrompt },
                         ...buildRequestMessages(requestMessages, {
                             includeAssistantMetadata: enableReasoning,
                             provider: currentAgent.provider,
                         }),
                     ],
-                    tools: scratchToolSchemas,
+                    tools: activeToolSchemas,
                     toolChoice: "auto",
                     enableReasoning,
                     signal: abortControllerRef.current.signal,
@@ -663,7 +697,7 @@ export function useChat({
                                 throw new Error(`Invalid tool arguments: ${parseError.message}`);
                             }
 
-                            const result = await callTool(functionName, args);
+                            const result = await callTool(functionName, args, activePlanMode);
                             try {
                                 toolResult = typeof result === "object" ? JSON.stringify(result) : String(result);
                             } catch (stringifyError: any) {
@@ -686,8 +720,12 @@ export function useChat({
                         updateSessionMessages(currentMessages, sessionId);
                     }
                 } else {
+                    completedNormally = true;
                     shouldContinue = false;
                 }
+            }
+            if (activePlanMode && completedNormally) {
+                setIsPlanReady(true);
             }
         } catch (err: any) {
             flushStreamMessages();
@@ -733,5 +771,6 @@ export function useChat({
         setAttachments,
         handleSend,
         handleStopGenerating,
+        isPlanReady,
     };
 }

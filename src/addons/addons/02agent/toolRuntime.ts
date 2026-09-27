@@ -14,7 +14,13 @@ export const REQUIRED_TOOL_ARGUMENTS: Record<string, string[]> = {
   runJavaScript: ["code"],
 };
 
-const MUTATING_TOOLS = new Set([
+export interface CallAIToolOptions {
+  // Plan mode: reject every tool that can mutate the project, including nested
+  // sdk.call(...) invocations made from inside runJavaScript.
+  denyMutations?: boolean;
+}
+
+export const MUTATING_TOOLS = new Set([
   "applyPatch",
   "createSpriteWithSvg",
   "updateSpriteProperties",
@@ -252,6 +258,7 @@ const runJavaScriptInWorker = (
   aiTools: Record<string, any>,
   code: string,
   requestedTimeoutMs?: unknown,
+  options: CallAIToolOptions = {},
 ) => {
   const timeoutMs = Math.max(
     1000,
@@ -317,7 +324,7 @@ const runJavaScriptInWorker = (
           sendToWorker({ type: "tool-result", id: message.id, error: "runJavaScript cannot call itself" });
           return;
         }
-        Promise.resolve(callAITool(aiTools, String(message.name || ""), message.args || {}))
+        Promise.resolve(callAITool(aiTools, String(message.name || ""), message.args || {}, options))
           .then(
             (toolResult) => {
               sendToWorker({ type: "tool-result", id: message.id, result: toolResult });
@@ -383,12 +390,23 @@ const enqueueMutation = async <T>(operation: () => Promise<T>) => {
   }
 };
 
-export const callAITool = async (aiTools: Record<string, any> | null, functionName: string, args: Record<string, any>) => {
+export const callAITool = async (
+  aiTools: Record<string, any> | null,
+  functionName: string,
+  args: Record<string, any>,
+  options: CallAIToolOptions = {},
+) => {
+  if (options.denyMutations && MUTATING_TOOLS.has(functionName)) {
+    throw new Error(
+      `Tool ${functionName} is disabled in plan mode because it modifies the project. Finish the read-only investigation, present the plan, and wait for user approval before making changes.`,
+    );
+  }
+
   validateToolArguments(functionName, args);
 
   if (functionName === "runJavaScript") {
     if (!aiTools) throw new Error("Tool runJavaScript not found");
-    return runJavaScriptInWorker(aiTools, String(args.code || ""), args.timeoutMs);
+    return runJavaScriptInWorker(aiTools, String(args.code || ""), args.timeoutMs, options);
   }
 
   if (!aiTools || typeof aiTools[functionName] !== "function") {
