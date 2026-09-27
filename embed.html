@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="google" value="notranslate" />
+    <title>Embedded Project - 02Engine</title>
+    <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden !important;
+      }
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+      #vite-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #00baad;
+        color: #fff;
+        z-index: 999999;
+      }
+      .vite-spinner:after {
+        content: " ";
+        display: block;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 6px solid;
+        border-color: #fff transparent #fff transparent;
+        animation: vite-spinner 1.2s linear infinite;
+      }
+      @keyframes vite-spinner {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="vite-splash"><div class="vite-spinner"></div></div>
+    <script>
+      window.SplashEnd = function () {
+        var splash = document.getElementById('vite-splash');
+        if (splash) splash.style.display = 'none';
+      };
+    </script>
+    <script type="module" src="/src/playground/embed.jsx"></script>
+  </body>
+</html>

@@ -24,34 +24,40 @@ Start the local development server:
 bun run start
 ```
 
+Start the local development server with Vite (currently unstable)
+
+```powershell
+bun start:vite
+```
+
 Build the GUI:
 
 ```powershell
-bun run build
+bun build
 ```
 
 Run the default test pipeline:
 
 ```powershell
-bun run test
+bun test
 ```
 
 Run lint only:
 
 ```powershell
-bun run test:lint
+bun test:lint
 ```
 
 Run unit tests only:
 
 ```powershell
-bun run test:unit
+bun test:unit
 ```
 
 Run integration tests only:
 
 ```powershell
-bun run test:integration
+bun test:integration
 ```
 
 Run smoke tests only:
@@ -69,13 +75,13 @@ bun run watch
 Sync credits:
 
 ```powershell
-bun run sync:credits
+bun sync:credits
 ```
 
 Sync PenguinMod extension metadata:
 
 ```powershell
-bun run sync:penguinmod
+bun sync:penguinmod
 ```
 
 ## Notes

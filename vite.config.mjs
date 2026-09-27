@@ -300,7 +300,42 @@ const staticDirPlugin = () => {
   };
 };
 
+const htmlRewritesPlugin = () => {
+  // Same pretty paths webpack-dev-server's historyApiFallback handles.
+  const rewrites = [
+    [/^\/editor\/?$/, '/index.html'],
+    [/^\/addons\/?$/, '/addons.html'],
+    [/^\/credits\/?$/, '/credits.html'],
+    [/^\/embed\/?$/, '/embed.html'],
+    [/^\/fullscreen\/?$/, '/fullscreen.html'],
+    [/^\/(\d+)\/?$/, '/indexold.html'],
+    [/^\/\d+\/editor\/?$/, '/index.html'],
+    [/^\/\d+\/embed\/?$/, '/embed.html'],
+    [/^\/\d+\/fullscreen\/?$/, '/fullscreen.html']
+  ];
+
+  return {
+    name: 'html-rewrites',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url || req.method !== 'GET') return next();
+        const queryIndex = req.url.indexOf('?');
+        const pathname = queryIndex === -1 ? req.url : req.url.slice(0, queryIndex);
+        const query = queryIndex === -1 ? '' : req.url.slice(queryIndex);
+        for (const [pattern, replacement] of rewrites) {
+          if (pattern.test(pathname)) {
+            req.url = replacement + query;
+            return next();
+          }
+        }
+        next();
+      });
+    },
+  };
+};
+
 export default defineConfig({
+  appType: 'mpa',
   root,
   publicDir: false,
   resolve: {
@@ -322,6 +357,7 @@ export default defineConfig({
     'process.env.ROUTING_STYLE': JSON.stringify(process.env.ROUTING_STYLE || 'filehash'),
   },
   plugins: [
+    htmlRewritesPlugin(),
     vendorAliasesPlugin(),
     appWebpackCompatPlugin(),
     commonjsSourceCompatPlugin(),
@@ -349,7 +385,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    entries: ['index.html'],
+    entries: ['*.html'],
     include: [
       'vite-plugin-node-polyfills/shims/buffer',
       'vite-plugin-node-polyfills/shims/global',
