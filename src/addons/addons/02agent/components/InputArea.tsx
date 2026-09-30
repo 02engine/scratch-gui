@@ -21,6 +21,10 @@ interface InputAreaProps {
     isSelectingBlocks: boolean;
     enableReasoning: boolean;
     onToggleReasoning: () => void;
+    planMode: boolean;
+    onTogglePlanMode: () => void;
+    isPlanReady: boolean;
+    onApprovePlan: () => void;
     onOpenAttachment: (attachment: Attachment) => void;
     isGenerating: boolean;
     isExpanded: boolean;
@@ -95,6 +99,10 @@ export const InputArea: React.FC<InputAreaProps> = ({
     isSelectingBlocks,
     enableReasoning,
     onToggleReasoning,
+    planMode,
+    onTogglePlanMode,
+    isPlanReady,
+    onApprovePlan,
     onOpenAttachment,
     isGenerating,
     isExpanded,
@@ -185,10 +193,35 @@ export const InputArea: React.FC<InputAreaProps> = ({
                 </div>
             ) : null}
             <div className={composer.inputBox}>
+                <div className={composer.toggleModeArea}>
+                    <button
+                        type="button"
+                        className={`${composer.modeToggleButton} ${planMode ? composer.modeToggleButtonActive : ""}`}
+                        onClick={onTogglePlanMode}
+                        title="Plan 模式：让 AI 制定完整的规划"
+                        aria-pressed={planMode}
+                    >
+                        Plan
+                    </button>
+                    {planMode ? (
+                        <span className={composer.modeHint}>
+                            {isGenerating
+                                ? "正在调研并制定计划..."
+                                : isPlanReady
+                                    ? "计划已就绪，确认后开始执行"
+                                    : "规划你的项目"}
+                        </span>
+                    ) : null}
+                    {planMode && isPlanReady && !isGenerating ? (
+                        <button type="button" className={composer.modeApproveButton} onClick={onApprovePlan}>
+                            执行计划
+                        </button>
+                    ) : null}
+                </div>
                 <div className={composer.composerTextareaWrap}>
                     <textarea
                         className={`${composer.composerTextarea} ${isExpanded ? composer.composerTextareaExpanded : ""}`}
-                        placeholder="输入消息、修改需求或粘贴上下文..."
+                        placeholder={planMode ? "描述目标，制定详尽的规划..." : "输入消息、修改需求或粘贴上下文..."}
                         value={inputText}
                         onChange={(event) => setInputText(event.target.value)}
                         onKeyDown={(event) => {
@@ -267,8 +300,8 @@ export const InputArea: React.FC<InputAreaProps> = ({
                                 type="button"
                                 onClick={onSend}
                                 className={`${composer.primaryButton} ${isExpanded ? composer.expandedComposerSendButton : composer.iconButton}`}
-                                title="发送"
-                                aria-label="发送"
+                                title={planMode ? "制定计划" : "发送"}
+                                aria-label={planMode ? "制定计划" : "发送"}
                             >
                                 <IconSend />
                             </div>
@@ -298,9 +331,9 @@ export const InputArea: React.FC<InputAreaProps> = ({
                             {stats.contextWindow ? ` / ${formatCompactTokens(stats.contextWindow)}` : ""}
                             {stats.contextWindow
                                 ? ` (${Math.min(
-                                      100,
-                                      Math.round((stats.contextUsedTokens / Math.max(1, stats.contextWindow)) * 100),
-                                  )}%)`
+                                    100,
+                                    Math.round((stats.contextUsedTokens / Math.max(1, stats.contextWindow)) * 100),
+                                )}%)`
                                 : ""}
                         </span>
                     ) : null}

@@ -105,6 +105,8 @@ const getToolSummary = (name: string, args: any, result: any, status: ToolCallSt
       return result?.success ? `${result?.dslCall || args?.opcode || "积木"} 用法已读取` : "积木帮助读取失败";
     case "getScratchGuide":
       return `${result?.title || result?.topic || args?.topic || "指南"} 已读取`;
+    case "runJavaScript":
+      return `JS 执行完成${result?.durationMs ? ` · ${Math.round(result.durationMs)}ms` : ""}`;
     case "getProjectOverview":
       return `项目概览 · ${asArray(result?.files).length} 个文件`;
     case "listFiles":
@@ -150,6 +152,7 @@ const TOOL_LABELS: Record<string, string> = {
   getScratchGuide: "读取指南",
   getProjectOverview: "项目概览",
   listFiles: "列出文件",
+  runJavaScript: "运行 JS",
 };
 
 const parsePatchDiff = (patch: string): DiffFile[] => {

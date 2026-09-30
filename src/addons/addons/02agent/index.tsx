@@ -60,6 +60,7 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
     const [themeMode, setThemeMode] = React.useState<ThemeMode>(editorThemeMode);
     const agentMenuRef = React.useRef<HTMLDivElement | null>(null);
     const [enableReasoning, setEnableReasoning] = useStoredState<boolean>("02AGENT_ENABLE_REASONING", false);
+    const [planMode, setPlanMode] = useStoredState<boolean>("02AGENT_PLAN_MODE", false);
 
     const [containerInfo, setContainerInfo] = useStoredState<ExpansionRect>(
         "02AGENT_CONTAINER_INFO",
@@ -112,15 +113,21 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
         rollbackToMessage,
     } = useChatSessions(useDrawerHistory);
 
-    const { inputText, setInputText, isGenerating, chatStats, attachments, setAttachments, handleSend, handleStopGenerating } =
+    const { inputText, setInputText, isGenerating, chatStats, attachments, setAttachments, handleSend, handleStopGenerating, isPlanReady } =
         useChat({
             messages,
             currentAgent,
             updateSessionMessages,
             appendSessionSnapshot,
             enableReasoning,
+            planMode,
             vm,
         });
+
+    const handleApprovePlan = () => {
+        setPlanMode(false);
+        void handleSend({ text: "计划已确认，请按上面的计划开始执行。", planMode: false });
+    };
 
     const { previewAttachment, setPreviewAttachment, handleOpenAttachment } = useAttachmentInteraction(vm, workspace);
     const { bridgeConfig, bridgeStatus, bridgeLastError, toggleBridge } = useBridgeClient(vm);
@@ -413,13 +420,19 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                                     setInputText={setInputText}
                                     attachments={attachments}
                                     setAttachments={setAttachments}
-                                    onSend={handleSend}
+                                    onSend={() => {
+                                        void handleSend();
+                                    }}
                                     onStopGenerating={handleStopGenerating}
                                     onStartBlockSelection={startSelecting}
                                     onCancelBlockSelection={cancelSelecting}
                                     isSelectingBlocks={isSelecting}
                                     enableReasoning={enableReasoning}
                                     onToggleReasoning={() => setEnableReasoning((previous) => !previous)}
+                                    planMode={planMode}
+                                    onTogglePlanMode={() => setPlanMode((previous) => !previous)}
+                                    isPlanReady={isPlanReady}
+                                    onApprovePlan={handleApprovePlan}
                                     onOpenAttachment={handleOpenAttachment}
                                     isGenerating={isGenerating}
                                     isExpanded={isComposerExpanded}
