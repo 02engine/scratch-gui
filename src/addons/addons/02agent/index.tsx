@@ -8,6 +8,7 @@ import { registerContextMenu } from "./contextMenu";
 import Launcher from "./components/Launcher";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { SettingsModal } from "./components/SettingsModal";
+import { DebugPanel } from "./components/DebugPanel";
 import { ChatArea } from "./components/ChatArea";
 import { InputArea } from "./components/InputArea";
 import { AttachmentInteractionLayer } from "./components/AttachmentInteractionLayer";
@@ -61,6 +62,8 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
     const agentMenuRef = React.useRef<HTMLDivElement | null>(null);
     const [enableReasoning, setEnableReasoning] = useStoredState<boolean>("02AGENT_ENABLE_REASONING", false);
     const [planMode, setPlanMode] = useStoredState<boolean>("02AGENT_PLAN_MODE", false);
+    const [debugMode, setDebugMode] = useStoredState<boolean>("02AGENT_DEBUG_MODE", false);
+    const [showDebugPanel, setShowDebugPanel] = React.useState(false);
 
     const [containerInfo, setContainerInfo] = useStoredState<ExpansionRect>(
         "02AGENT_CONTAINER_INFO",
@@ -453,11 +456,22 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                                         onEditAgent={setEditingAgent}
                                         themeMode={themeMode}
                                         onThemeModeChange={setThemeMode}
+                                        debugMode={debugMode}
+                                        onToggleDebugMode={(next) => setDebugMode(next)}
+                                        onOpenBenchmark={() => setShowDebugPanel(true)}
                                         onClose={() => {
                                             setShowSettings(false);
                                             setEditingAgent(null);
                                         }}
                                         isCompact={containerInfo.width < 760 || containerInfo.height < 560}
+                                    />
+                                )}
+
+                                {showDebugPanel && (
+                                    <DebugPanel
+                                        vm={vm}
+                                        themeMode={themeMode}
+                                        onClose={() => setShowDebugPanel(false)}
                                     />
                                 )}
 

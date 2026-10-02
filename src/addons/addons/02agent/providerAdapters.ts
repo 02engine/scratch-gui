@@ -254,7 +254,6 @@ class OpenAICompatibleAdapter implements ProviderAdapter {
         // OpenAI only returns stream usage when explicitly requested. Other
         // OpenAI-compatible providers may omit or reject this option.
         ...(agent.provider === "openai" ? { stream_options: { include_usage: true } } : {}),
-        ...(agent.maxTokens ? { max_tokens: agent.maxTokens } : {}),
         ...(enableReasoning
           ? {
               reasoning: { enabled: true },

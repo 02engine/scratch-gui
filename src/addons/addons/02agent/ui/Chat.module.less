@@ -145,6 +145,14 @@
     box-shadow: 0 2px 10px color-mix(in srgb, var(--ai-shadow-medium) 14%, transparent);
 }
 
+/* Streaming plain text (assistant text + reasoning) is split into stable blocks so that a flush
+   only re-lays out the block that actually grew. `contain: layout` isolates each block (deliberately
+   not `paint`/`content`, which would clip overflowing long tokens). */
+.streamingBlock {
+    display: block;
+    contain: layout;
+}
+
 .messageText {
     margin: 0;
     padding: 8px 11px;
@@ -565,6 +573,7 @@
 }
 
 @keyframes agentActivityPulse {
+
     0%,
     100% {
         transform: translateY(0);
