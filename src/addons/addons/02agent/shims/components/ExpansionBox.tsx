@@ -198,7 +198,27 @@ const ExpansionBox = ({
             endResizeRef.current = teardown;
         }, [minHeight, minWidth, onSizeChange, rect]);
 
+    // The window hosts the whole chat subtree, so a live transform on it would make the browser
+    // re-paint it on every frame of the drag. Two properties, applied only while dragging, make the
+    // move independent of what the window contains:
+    //  - `will-change: transform` promotes the window to its own compositing layer, turning the move
+    //    into a compositor-only transform.
+    //  - `isolation: isolate` makes the window the backdrop root of its (`backdrop-filter`) children,
+    //    so their blurs no longer sample the page behind the window every frame. The window
+    //    background is already opaque, so this changes nothing visually.
+    const handleDragStart = React.useCallback(() => {
+        const node = windowRef.current;
+        if (!node) return;
+        node.style.willChange = "transform";
+        node.style.isolation = "isolate";
+    }, []);
+
     const handleDragStop = React.useCallback((_: unknown, data: { x: number; y: number }) => {
+        const node = windowRef.current;
+        if (node) {
+            node.style.willChange = "";
+            node.style.isolation = "";
+        }
         const nextX = Math.max(Math.round(data.x), 0);
         const nextY = Math.max(Math.round(data.y), 0);
         setRect(previous => ({ ...previous, x: nextX, y: nextY }));
@@ -215,6 +235,7 @@ const ExpansionBox = ({
             handle={`.${style['drag-handle']}`}
             cancel="input, textarea, button, select, option, [contenteditable=true], .tw-02agent-resize-handle"
             position={{ x: rect.x, y: rect.y }}
+            onStart={handleDragStart}
             onStop={handleDragStop}
         >
             <div

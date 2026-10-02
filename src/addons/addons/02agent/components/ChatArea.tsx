@@ -173,6 +173,47 @@ const MarkdownSegment = React.memo(function MarkdownSegment({ content }: { conte
 
 const STICKY_BOTTOM_DISTANCE = 48;
 
+/** Streaming text is rendered as plain text until the message completes. Chopping it into stable
+ * blocks means a flush only re-shapes the block that actually grew: every earlier block keeps the
+ * same content, stays memoized, and is layout-isolated via `contain` — instead of the browser
+ * re-flowing one ever-growing text node (hundreds of KB) on every single update. */
+const STREAMING_BLOCK_MAX_CHARS = 2000;
+const STREAMING_BLOCK_MIN_CHARS = 1200;
+
+const splitStreamingTextBlocks = (content: string): string[] => {
+    if (content.length <= STREAMING_BLOCK_MAX_CHARS) return [content];
+
+    const blocks: string[] = [];
+    let start = 0;
+
+    while (content.length - start > STREAMING_BLOCK_MAX_CHARS) {
+        const limit = start + STREAMING_BLOCK_MAX_CHARS;
+        const newlineIndex = content.lastIndexOf("\n", limit);
+        let cut = newlineIndex >= start + STREAMING_BLOCK_MIN_CHARS ? newlineIndex + 1 : limit;
+        // A block must never start with a preserved newline, otherwise it renders an extra blank
+        // first line; keep the break at the end of the previous block instead.
+        while (cut < content.length && content[cut] === "\n") cut++;
+        blocks.push(content.slice(start, cut));
+        start = cut;
+    }
+
+    blocks.push(content.slice(start));
+    return blocks;
+};
+
+const StreamingTextBlock = React.memo(function StreamingTextBlock({ content }: { content: string }) {
+    return <span className={chat.streamingBlock}>{content}</span>;
+});
+
+/** The wrapper element keeps its original tag/class so the surrounding CSS cascade is unchanged. */
+const StreamingText = ({ content, containerClassName }: { content: string; containerClassName: string }) => (
+    <pre className={containerClassName}>
+        {splitStreamingTextBlocks(content).map((block, blockIndex) => (
+            <StreamingTextBlock key={blockIndex} content={block} />
+        ))}
+    </pre>
+);
+
 const ReasoningChevron = ({ expanded }: { expanded: boolean }) => (
     <span
         style={{
@@ -673,7 +714,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                                                             }`}
                                                     >
                                                         {segment.id === latestStreamingTextSegmentId ? (
-                                                            <pre className={chat.messageText}>{segment.content}</pre>
+                                                            <StreamingText
+                                                                content={segment.content}
+                                                                containerClassName={chat.messageText}
+                                                            />
                                                         ) : (
                                                             <MarkdownSegment content={segment.content} />
                                                         )}
@@ -700,7 +744,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                                                         </button>
                                                         {!reasoningPanels[segment.id]?.collapsed ? (
                                                             <div className={chat.reasoningInlineBody}>
-                                                                <pre className={chat.reasoningText}>{segment.content || "模型正在整理思路..."}</pre>
+                                                                <StreamingText
+                                                                    content={segment.content || "模型正在整理思路..."}
+                                                                    containerClassName={chat.reasoningText}
+                                                                />
                                                             </div>
                                                         ) : null}
                                                     </div>

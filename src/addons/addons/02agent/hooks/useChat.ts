@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { FlattenedAgent, Attachment, ChatMessage, ChatStats, TokenUsage } from "../types";
-import { AITools } from "../tools";
+import { AITools, measureAsync, measureSync } from "../tools";
 import { scratchToolSchemas } from "../toolSchemas";
 import { getProviderAdapter, isProviderImplemented } from "../providerAdapters";
 import { callAITool, MUTATING_TOOLS } from "../toolRuntime";
@@ -420,7 +420,7 @@ export function useChat({
         appendSessionSnapshot(
             {
                 messageId: newMessage.id,
-                projectJson: typeof vm?.toJSON === "function" ? vm.toJSON() : "",
+                projectJson: typeof vm?.toJSON === "function" ? measureSync("snapshot vm.toJSON", () => vm.toJSON()) : "",
                 attachments: effectiveAttachments,
                 inputText: effectiveInputText,
                 createdAt: Date.now(),
@@ -440,27 +440,59 @@ export function useChat({
         setIsPlanReady(false);
 
         let currentMessages = newMessages;
-        let pendingStreamMessages: ChatMessage[] | null = null;
+        let assistantMessageIndex = -1;
         let streamUpdateTimer: number | null = null;
+        let streamIsDirty = false;
+        // Deltas are buffered and appended once per flush instead of rebuilding the whole
+        // message array (and re-copying the whole growing string) for every single token.
+        let pendingTextDeltas: string[] = [];
+        let pendingReasoningDeltas: string[] = [];
+
+        const applyPendingStreamDeltas = () => {
+            const hasTextDeltas = pendingTextDeltas.length > 0;
+            const hasReasoningDeltas = pendingReasoningDeltas.length > 0;
+            if (!hasTextDeltas && !hasReasoningDeltas) return;
+
+            const textChunk = hasTextDeltas ? pendingTextDeltas.join("") : "";
+            const reasoningChunk = hasReasoningDeltas ? pendingReasoningDeltas.join("") : "";
+            pendingTextDeltas = [];
+            pendingReasoningDeltas = [];
+
+            currentMessages = currentMessages.map((message, index) =>
+                index === assistantMessageIndex
+                    ? {
+                        ...message,
+                        content: textChunk ? `${message.content}${textChunk}` : message.content,
+                        reasoning: reasoningChunk ? `${message.reasoning || ""}${reasoningChunk}` : message.reasoning,
+                        reasoningStartedAt: reasoningChunk
+                            ? message.reasoningStartedAt || Date.now()
+                            : message.reasoningStartedAt,
+                    }
+                    : message,
+            );
+        };
+
+        const commitStreamMessages = () => {
+            if (!streamIsDirty) return;
+            streamIsDirty = false;
+            applyPendingStreamDeltas();
+            updateSessionMessages(currentMessages, sessionId);
+        };
 
         const flushStreamMessages = () => {
             if (streamUpdateTimer !== null) {
                 window.clearTimeout(streamUpdateTimer);
                 streamUpdateTimer = null;
             }
-            if (!pendingStreamMessages) return;
-            updateSessionMessages(pendingStreamMessages, sessionId);
-            pendingStreamMessages = null;
+            commitStreamMessages();
         };
 
         const scheduleStreamMessagesUpdate = () => {
-            pendingStreamMessages = currentMessages;
+            streamIsDirty = true;
             if (streamUpdateTimer !== null) return;
             streamUpdateTimer = window.setTimeout(() => {
                 streamUpdateTimer = null;
-                if (!pendingStreamMessages) return;
-                updateSessionMessages(pendingStreamMessages, sessionId);
-                pendingStreamMessages = null;
+                commitStreamMessages();
             }, STREAM_UPDATE_INTERVAL_MS);
         };
 
@@ -550,7 +582,7 @@ export function useChat({
                     usage: undefined,
                 };
                 lastStatsPublishedAt = 0;
-                const assistantMessageIndex = currentMessages.length;
+                assistantMessageIndex = currentMessages.length;
                 currentMessages = [
                     ...currentMessages,
                     {
@@ -585,15 +617,7 @@ export function useChat({
                             }
                             activeRequestStats.lastTokenAt = now;
                         }
-                        currentMessages = currentMessages.map((message, index) =>
-                            index === assistantMessageIndex
-                                ? {
-                                    ...message,
-                                    reasoning: `${message.reasoning || ""}${delta}`,
-                                    reasoningStartedAt: message.reasoningStartedAt || Date.now(),
-                                }
-                                : message,
-                        );
+                        pendingReasoningDeltas.push(delta);
                         scheduleStreamMessagesUpdate();
                         publishActiveStats();
                     },
@@ -606,14 +630,7 @@ export function useChat({
                             }
                             activeRequestStats.lastTokenAt = now;
                         }
-                        currentMessages = currentMessages.map((message, index) =>
-                            index === assistantMessageIndex
-                                ? {
-                                    ...message,
-                                    content: `${message.content}${delta}`,
-                                }
-                                : message,
-                        );
+                        pendingTextDeltas.push(delta);
                         scheduleStreamMessagesUpdate();
                         publishActiveStats();
                     },
@@ -697,7 +714,7 @@ export function useChat({
                                 throw new Error(`Invalid tool arguments: ${parseError.message}`);
                             }
 
-                            const result = await callTool(functionName, args, activePlanMode);
+                            const result = await measureAsync(`tool:${functionName}`, () => callTool(functionName, args, activePlanMode));
                             try {
                                 toolResult = typeof result === "object" ? JSON.stringify(result) : String(result);
                             } catch (stringifyError: any) {

@@ -3,7 +3,7 @@ import settings from "../ui/Settings.module.less";
 import { Agent, AgentModel } from "../types";
 import { PROVIDER_DEFAULT_CONTEXT_WINDOWS, PROVIDER_DEFAULT_URLS } from "../constants";
 
-type SettingsSection = "agents" | "appearance" | "about";
+type SettingsSection = "agents" | "appearance" | "debug" | "about";
 type ThemeMode = "dark" | "light";
 
 interface SettingsModalProps {
@@ -16,6 +16,9 @@ interface SettingsModalProps {
     onEditAgent: (agent: Agent | null) => void;
     themeMode: ThemeMode;
     onThemeModeChange: (theme: ThemeMode) => void;
+    debugMode: boolean;
+    onToggleDebugMode: (next: boolean) => void;
+    onOpenBenchmark: () => void;
     onClose: () => void;
     isCompact?: boolean;
 }
@@ -146,6 +149,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     onEditAgent,
     themeMode,
     onThemeModeChange,
+    debugMode,
+    onToggleDebugMode,
+    onOpenBenchmark,
     onClose,
     isCompact,
 }) => {
@@ -309,10 +315,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         }
     };
 
-    const sectionTitle = activeSection === "agents" ? "模型" : activeSection === "appearance" ? "外观" : "关于";
+    const sectionTitle =
+        activeSection === "agents"
+            ? "模型"
+            : activeSection === "appearance"
+                ? "外观"
+                : activeSection === "debug"
+                    ? "调试"
+                    : "关于";
     const sectionDescription = {
         "agents": "管理 Agents",
         'appearance': "",
+        "debug": "性能基准与开发者工具",
         "about": "关于本项目"
     }[activeSection] || ""
 
@@ -330,6 +344,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         {[
                             ["agents", "模型"],
                             ["appearance", "外观"],
+                            ["debug", "调试"],
                             ["about", "关于"],
                         ].map(([id, label]) => (
                             <button
@@ -515,8 +530,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                                 model.contextWindow === undefined
                                                                     ? ""
                                                                     : isPresetContextWindow(model.contextWindow)
-                                                                      ? String(model.contextWindow)
-                                                                      : "custom"
+                                                                        ? String(model.contextWindow)
+                                                                        : "custom"
                                                             }
                                                             onChange={(event) => {
                                                                 const nextValue = event.target.value;
@@ -541,7 +556,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                             <option value="custom">自定义</option>
                                                         </select>
                                                         {model.contextWindow !== undefined &&
-                                                        !isPresetContextWindow(model.contextWindow) ? (
+                                                            !isPresetContextWindow(model.contextWindow) ? (
                                                             <input
                                                                 className={`${settings.input} ${settings.contextWindowInput}`}
                                                                 type="number"
@@ -666,6 +681,45 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </div>
                                 </div>
                             </section>
+                        ) : null}
+
+                        {activeSection === "debug" ? (
+                            <div className={settings.sectionStack}>
+                                <section className={settings.card}>
+                                    <div className={settings.cardHeader}>
+                                        <div>
+                                            <h5>调试模式</h5>
+                                            <p>开启后可从调试入口打开性能基准面板。</p>
+                                        </div>
+                                    </div>
+                                    <div className={settings.cardBody}>
+                                        <button
+                                            type="button"
+                                            className={`${settings.themeChoice} ${debugMode ? settings.themeChoiceActive : ""}`}
+                                            onClick={() => onToggleDebugMode(!debugMode)}
+                                        >
+                                            <strong>{debugMode ? "已开启" : "已关闭"}</strong>
+                                            <span>开启后可从调试入口打开性能基准面板。</span>
+                                        </button>
+                                    </div>
+                                </section>
+                                <section className={settings.card}>
+                                    <div className={settings.cardHeader}>
+                                        <div>
+                                            <h5>性能基准</h5>
+                                            <p>在真实聊天渲染管线中测量流式输出的 FPS、掉帧与长任务，不会写入真实会话历史。</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className={settings.button}
+                                            onClick={onOpenBenchmark}
+                                            disabled={!debugMode}
+                                        >
+                                            打开性能基准面板
+                                        </button>
+                                    </div>
+                                </section>
+                            </div>
                         ) : null}
 
                         {activeSection === "about" ? (
