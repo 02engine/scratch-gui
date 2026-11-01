@@ -1,4 +1,5 @@
 import { scratchToUCF, ucfToScratch } from "./ucf";
+import { createSubagentResult, deleteMemoryBlock, finishSubagentResult, getEnabledSkills, getMemoryBlock, listMemoryBlocks, listSubagentDefinitions, listSubagentResults, replaceMemoryBlockText, setMemoryBlock, requestUserInput, updateTodos, runSubagentProfile, getSubagentDefinition, writeSkillByAuthor, resolveImageModel, pushNotice } from "./agentStores";
 import { normalizeModelUCF, toAnnotatedUCF } from "./annotatedUcf";
 import {
     deleteScriptById,
@@ -13,6 +14,21 @@ import scratchBlocksCatalog from "./scratch_blocks.json";
 import { resolveKnownExtension, searchKnownExtensions, type ExtensionRegistryItem } from "./extensionRegistry";
 import { validateSerializedBroadcastSchema, validateBlockGraph, validateRuntimeBroadcastBlocks } from "./blockGraph";
 import * as acorn from "acorn";
+import { toolConfigStore } from "./toolConfigStore";
+import { fetchThroughRelayOrDirect } from "./proxyConfig";
+import { ALL_BLOCK_INFO, BLOCK_SEARCH_ALIASES, isMenuOpcode } from "./blockCatalog";
+
+// Production should stay quiet: verbose trace logs only when the page exposes
+// a debug flag (set `window.__02AGENT_DEBUG = true` while debugging).
+const debug02AgentLog = (...args: unknown[]) => {
+    try {
+        if (typeof window !== "undefined" && (window as any).__02AGENT_DEBUG) {
+            console.info("[02Agent]", ...args);
+        }
+    } catch {
+        /* never throw from logging */
+    }
+};
 
 // This file contains tools for 02Agent to interact with Scratch.
 
@@ -206,80 +222,16 @@ const sanitizePathSegment = (value: string, fallback: string) => {
     return sanitized || fallback;
 };
 
-const escapeSvgAttribute = (value: unknown) =>
-    String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/"/g, "&quot;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-
-const validateSvgText = (svgText: string) => {
-    const text = String(svgText || "").trim();
-    const errors: Array<{ line: number; message: string }> = [];
-    if (!text) {
-        errors.push({ line: 1, message: "SVG content is empty." });
-    }
-    if (!/^<svg[\s>]/i.test(text) && !text.includes("<svg")) {
-        errors.push({ line: 1, message: "Costume file must contain an <svg> root element." });
-    }
-    if (/<script[\s>]/i.test(text)) {
-        errors.push({ line: 1, message: "SVG <script> elements are not allowed." });
-    }
-    if (/\son[a-z]+\s*=/i.test(text)) {
-        errors.push({ line: 1, message: "SVG event handler attributes such as onclick are not allowed." });
-    }
-    if (/href\s*=\s*["']https?:\/\//i.test(text) || /xlink:href\s*=\s*["']https?:\/\//i.test(text)) {
-        errors.push({ line: 1, message: "Remote image links are not allowed; use data: images inside SVG." });
-    }
-    try {
-        const doc = new DOMParser().parseFromString(text, "image/svg+xml");
-        const parseError = doc.querySelector("parsererror");
-        if (parseError) {
-            errors.push({ line: 1, message: parseError.textContent?.trim().slice(0, 300) || "Invalid SVG XML." });
-        }
-    } catch (error) {
-        errors.push({ line: 1, message: error instanceof Error ? error.message : "Invalid SVG XML." });
-    }
-    return errors;
-};
-
-const parseSvgLength = (value: string | null | undefined) => {
-    const match = String(value || "").trim().match(/^-?\d+(?:\.\d+)?/);
-    return match ? Number(match[0]) : null;
-};
-
-const getSvgCanvasSize = (svgText: string) => {
-    try {
-        const doc = new DOMParser().parseFromString(String(svgText || ""), "image/svg+xml");
-        const svg = doc.querySelector("svg");
-        if (!svg) return null;
-        const viewBox = String(svg.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
-        const viewBoxWidth = Number.isFinite(viewBox[2]) && viewBox[2] > 0 ? viewBox[2] : null;
-        const viewBoxHeight = Number.isFinite(viewBox[3]) && viewBox[3] > 0 ? viewBox[3] : null;
-        const width = parseSvgLength(svg.getAttribute("width")) || viewBoxWidth;
-        const height = parseSvgLength(svg.getAttribute("height")) || viewBoxHeight;
-        if (!width || !height) return null;
-        return { width, height };
-    } catch {
-        return null;
-    }
-};
-
-const normalizeSvgTextForScratch = (svgText: string) => {
-    let text = String(svgText || "").trim();
-    const fencedMatch = text.match(/^```(?:svg|xml)?\s*([\s\S]*?)\s*```$/i);
-    if (fencedMatch) {
-        text = fencedMatch[1].trim();
-    }
-    const svgStart = text.search(/<svg[\s>]/i);
-    const svgEnd = text.toLowerCase().lastIndexOf("</svg>");
-    if (svgStart > 0 && svgEnd >= svgStart) {
-        text = text.slice(svgStart, svgEnd + "</svg>".length).trim();
-    }
-    return text
-        .replace(/&nbsp;/gi, "&#160;")
-        .replace(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-f]+;)/gi, "&amp;");
-};
+// SVG / costume asset pipeline lives in spriteAssets.ts (extracted from here).
+import {
+    validateSvgText,
+    getSvgCanvasSize,
+    normalizeSvgTextForScratch,
+    resolveCostumeIndex,
+    getCostumeSvgContent,
+    applySvgToCostumeObject,
+    inferSvgRotationCenter,
+} from "./spriteAssets";
 
 const getSpriteNameFromVirtualPath = (path: string) => {
     const normalizedPath = normalizeVirtualPath(path);
@@ -654,7 +606,7 @@ const perfRecord = (label: string, ms: number) => {
     entry.maxMs = Math.max(entry.maxMs, ms);
     perfStats.set(label, entry);
     if (ms >= PERF_LOG_THRESHOLD_MS) {
-        console.log(`[02Agent perf] ${label}: ${ms.toFixed(1)}ms`);
+        console.info(`[02Agent perf] ${label}: ${ms.toFixed(1)}ms`);
     }
 };
 
@@ -697,190 +649,11 @@ if (typeof window !== "undefined") {
 }
 
 export class AITools {
-    static AllBlockInfo: Record<string, string> = {
-        control_repeat: "重复执行 [TIMES] 次（TIMES：number）",
-        control_repeat_until: "重复执行直到 [CONDITION]（CONDITION：Boolean）",
-        control_while: "当 [CONDITION] 重复执行（CONDITION：Boolean）",
-        control_for_each: "对 [VARIABLE] 遍历 [VALUE]（VARIABLE：string, VALUE：string）",
-        control_forever: "重复执行",
-        control_wait: "等待 [DURATION] 秒（DURATION：number）",
-        control_wait_until: "等待直到 [CONDITION]（CONDITION：Boolean）",
-        control_if: "如果 [CONDITION] 那么（CONDITION：Boolean）",
-        control_if_else: "如果 [CONDITION] 那么 否则（CONDITION：Boolean）",
-        control_stop: "停止 [STOP_OPTION]（STOP_OPTION：string）",
-        control_start_as_clone: "当作为克隆体启动时",
-        control_create_clone_of: "克隆 [CLONE_OPTION]（CLONE_OPTION：string）",
-        control_delete_this_clone: "删除此克隆体",
-        control_get_counter: "计数器",
-        control_incr_counter: "计数器加 1",
-        control_clear_counter: "计数器归零",
-        control_all_at_once: "一口气执行",
-        event_whenflagclicked: "当绿旗被点击",
-        event_whenkeypressed: "当按下 [KEY_OPTION] 键（KEY_OPTION：string）",
-        event_whenbroadcastreceived: "当接收到广播 [BROADCAST_OPTION]（BROADCAST_OPTION：broadcast）",
-        event_whentouchingobject: "当碰到 [TOUCHINGOBJECTMENU]（TOUCHINGOBJECTMENU：string）",
-        event_broadcast: "广播 [BROADCAST_INPUT]（BROADCAST_INPUT：string）",
-        event_broadcastandwait: "广播 [BROADCAST_INPUT] 并等待（BROADCAST_INPUT：string）",
-        event_whengreaterthan: "当 [WHENGREATERTHANMENU] > [VALUE]（WHENGREATERTHANMENU：string, VALUE：number）",
-        looks_say: "说 [MESSAGE]（MESSAGE：string）",
-        looks_sayforsecs: "说 [MESSAGE] [SECS] 秒（MESSAGE：string, SECS：number）",
-        looks_think: "思考 [MESSAGE]（MESSAGE：string）",
-        looks_thinkforsecs: "思考 [MESSAGE] [SECS] 秒（MESSAGE：string, SECS：number）",
-        looks_show: "显示",
-        looks_hide: "隐藏",
-        looks_hideallsprites: "隐藏所有角色",
-        looks_switchcostumeto: "换成造型 [COSTUME]（COSTUME：string）",
-        looks_switchbackdropto: "换成背景 [BACKDROP]（BACKDROP：string）",
-        looks_switchbackdroptoandwait: "换成背景 [BACKDROP] 并等待（BACKDROP：string）",
-        looks_nextcostume: "下一个造型",
-        looks_nextbackdrop: "下一个背景",
-        looks_changeeffectby: "将 [EFFECT] 特效增加 [CHANGE]（EFFECT：string, CHANGE：number）",
-        looks_seteffectto: "将 [EFFECT] 特效设为 [VALUE]（EFFECT：string, VALUE：number）",
-        looks_cleargraphiceffects: "清除图形特效",
-        looks_changesizeby: "将大小增加 [CHANGE]（CHANGE：number）",
-        looks_setsizeto: "将大小设为 [SIZE]（SIZE：number）",
-        looks_changestretchby: "将伸缩增加 [CHANGE]（CHANGE：number）",
-        looks_setstretchto: "将伸缩设为 [STRETCH]（STRETCH：number）",
-        looks_gotofrontback: "移到最 [FRONT_BACK]（FRONT_BACK：string）",
-        looks_goforwardbackwardlayers: "向 [FORWARD_BACKWARD] 移动 [NUM] 层（FORWARD_BACKWARD：string, NUM：number）",
-        looks_size: "大小",
-        looks_costumenumbername: "造型 [NUMBER_NAME]（NUMBER_NAME：string）",
-        looks_backdropnumbername: "背景 [NUMBER_NAME]（NUMBER_NAME：string）",
-        motion_movesteps: "移动 [STEPS] 步（STEPS：number）",
-        motion_movegrids: "移动 [STEPS] 格（STEPS：number）",
-        motion_gotoxy: "移到 x:[X] y:[Y]（X：number, Y：number）",
-        motion_goto: "移到 [TO]（TO：string）",
-        motion_turnright: "右转 [DEGREES] 度（DEGREES：number）",
-        motion_turnleft: "左转 [DEGREES] 度（DEGREES：number）",
-        motion_pointindirection: "面向 [DIRECTION] 度（DIRECTION：number）",
-        motion_pointtowards: "面向 [TOWARDS]（TOWARDS：string）",
-        motion_glidesecstoxy: "在 [SECS] 秒内滑行到 x:[X] y:[Y]（SECS：number, X：number, Y：number）",
-        motion_glideto: "在 [SECS] 秒内滑行到 [TO]（SECS：number, TO：string）",
-        motion_ifonedgebounce: "碰到边缘就反弹",
-        motion_setrotationstyle: "将旋转方式设为 [STYLE]（STYLE：string）",
-        motion_changexby: "将 x 增加 [DX]（DX：number）",
-        motion_setx: "将 x 设为 [X]（X：number）",
-        motion_changeyby: "将 y 增加 [DY]（DY：number）",
-        motion_sety: "将 y 设为 [Y]（Y：number）",
-        motion_xposition: "x 坐标",
-        motion_yposition: "y 坐标",
-        motion_direction: "方向",
-        motion_scroll_right: "向右滚动 [DISTANCE]（DISTANCE：number）",
-        motion_scroll_up: "向上滚动 [DISTANCE]（DISTANCE：number）",
-        motion_align_scene: "对齐场景 [ALIGNMENT]（ALIGNMENT：string）",
-        motion_xscroll: "场景 x 滚动",
-        motion_yscroll: "场景 y 滚动",
-        operator_add: "[NUM1] + [NUM2]（NUM1：number, NUM2：number）",
-        operator_subtract: "[NUM1] - [NUM2]（NUM1：number, NUM2：number）",
-        operator_multiply: "[NUM1] * [NUM2]（NUM1：number, NUM2：number）",
-        operator_divide: "[NUM1] / [NUM2]（NUM1：number, NUM2：number）",
-        operator_lt: "[OPERAND1] < [OPERAND2]（OPERAND1：null, OPERAND2：null）",
-        operator_equals: "[OPERAND1] = [OPERAND2]（OPERAND1：null, OPERAND2：null）",
-        operator_gt: "[OPERAND1] > [OPERAND2]（OPERAND1：null, OPERAND2：null）",
-        operator_and: "[OPERAND1] 且 [OPERAND2]（OPERAND1：Boolean, OPERAND2：Boolean）",
-        operator_or: "[OPERAND1] 或 [OPERAND2]（OPERAND1：Boolean, OPERAND2：Boolean）",
-        operator_not: "不成立 [OPERAND]（OPERAND：Boolean）",
-        operator_random: "在 [FROM] 到 [TO] 之间取随机数（FROM：number, TO：number）",
-        operator_join: "连接 [STRING1] 和 [STRING2]（STRING1：string, STRING2：string）",
-        operator_letter_of: "[STRING] 的第 [LETTER] 个字符（STRING：string, LETTER：number）",
-        operator_length: "[STRING] 的长度（STRING：string）",
-        operator_contains: "[STRING1] 包含 [STRING2]？（STRING1：string, STRING2：string）",
-        operator_mod: "[NUM1] 除以 [NUM2] 的余数（NUM1：number, NUM2：number）",
-        operator_round: "四舍五入 [NUM]（NUM：number）",
-        operator_mathop: "[OPERATOR] [NUM]（OPERATOR：string, NUM：number）",
-        sound_play: "播放声音 [SOUND_MENU]（SOUND_MENU：string）",
-        sound_playuntildone: "播放声音 [SOUND_MENU] 等待播放完成（SOUND_MENU：string）",
-        sound_stopallsounds: "停止所有声音",
-        sound_seteffectto: "将 [EFFECT] 音效设为 [VALUE]（EFFECT：string, VALUE：number）",
-        sound_changeeffectby: "将 [EFFECT] 音效增加 [VALUE]（EFFECT：string, VALUE：number）",
-        sound_cleareffects: "清除音效",
-        sound_sounds_menu: "声音 [SOUND_MENU]（SOUND_MENU：string）",
-        sound_beats_menu: "节拍 [BEATS]（BEATS：number）",
-        sound_effects_menu: "音效 [EFFECT]（EFFECT：string）",
-        sound_setvolumeto: "将音量设为 [VOLUME]（VOLUME：number）",
-        sound_changevolumeby: "将音量增加 [VOLUME]（VOLUME：number）",
-        sound_volume: "音量",
-        sensing_touchingobject: "碰到 [TOUCHINGOBJECTMENU]？（TOUCHINGOBJECTMENU：string）",
-        sensing_touchingcolor: "碰到颜色 [COLOR]？（COLOR：string）",
-        sensing_coloristouchingcolor: "颜色 [COLOR] 碰到 [COLOR2]？（COLOR：string, COLOR2：string）",
-        sensing_distanceto: "到 [DISTANCETOMENU] 的距离（DISTANCETOMENU：string）",
-        sensing_timer: "计时器",
-        sensing_resettimer: "计时器归零",
-        sensing_of: "[OBJECT] 的 [PROPERTY]（OBJECT：string, PROPERTY：string）",
-        sensing_mousex: "鼠标 x",
-        sensing_mousey: "鼠标 y",
-        sensing_setdragmode: "将拖动方式设为 [DRAG_MODE]（DRAG_MODE：string）",
-        sensing_mousedown: "鼠标按下？",
-        sensing_keypressed: "按下 [KEY_OPTION] 键？（KEY_OPTION：string）",
-        sensing_current: "当前 [CURRENTMENU]（CURRENTMENU：string）",
-        sensing_dayssince2000: "距 2000 年的天数",
-        sensing_loudness: "响度",
-        sensing_loud: "响吗？",
-        sensing_askandwait: "询问 [QUESTION] 并等待（QUESTION：string）",
-        sensing_answer: "回答",
-        sensing_username: "用户名",
-        sensing_userid: "用户 id",
-        data_variable: "变量 [VARIABLE]（VARIABLE：variable）",
-        data_setvariableto: "将 [VARIABLE] 设为 [VALUE]（VARIABLE：variable, VALUE：string）",
-        data_changevariableby: "将 [VARIABLE] 增加 [VALUE]（VARIABLE：variable, VALUE：number）",
-        data_hidevariable: "隐藏变量 [VARIABLE]（VARIABLE：variable）",
-        data_showvariable: "显示变量 [VARIABLE]（VARIABLE：variable）",
-        data_listcontents: "列表 [LIST]（LIST：list）",
-        data_addtolist: "将 [ITEM] 加入列表 [LIST]（ITEM：string, LIST：list）",
-        data_deleteoflist: "删除列表 [LIST] 的第 [INDEX] 项（LIST：list, INDEX：string）",
-        data_deletealloflist: "删除列表 [LIST] 的全部项目（LIST：list）",
-        data_insertatlist: "在列表 [LIST] 的第 [INDEX] 项前插入 [ITEM]（LIST：list, INDEX：string, ITEM：string）",
-        data_replaceitemoflist: "将列表 [LIST] 的第 [INDEX] 项替换为 [ITEM]（LIST：list, INDEX：string, ITEM：string）",
-        data_itemoflist: "列表 [LIST] 的第 [INDEX] 项（LIST：list, INDEX：string）",
-        data_itemnumoflist: "[ITEM] 在列表 [LIST] 中的编号（ITEM：string, LIST：list）",
-        data_lengthoflist: "列表 [LIST] 的长度（LIST：list）",
-        data_listcontainsitem: "列表 [LIST] 包含 [ITEM]？（LIST：list, ITEM：string）",
-        data_hidelist: "隐藏列表 [LIST]（LIST：list）",
-        data_showlist: "显示列表 [LIST]（LIST：list）",
-        procedures_definition: "自定义积木定义",
-        procedures_call: "调用自定义积木 [PROCEDURE]（PROCEDURE：string）",
-        procedures_call_with_return: "调用自定义积木 [PROCEDURE] 并返回（PROCEDURE：string）",
-    };
+    // Delegated to the shared catalog (blockCatalog.ts) so tools.ts and
+    // converter.js can never drift apart again.
+    static AllBlockInfo: Record<string, string> = ALL_BLOCK_INFO;
 
-    static BlockSearchAliases: Record<string, string[]> = {
-        event_whenflagclicked: ["当绿旗被点击", "绿旗", "开始", "启动"],
-        event_whenbroadcastreceived: ["当接收到广播", "接收到广播", "收到广播", "广播触发"],
-        event_broadcast: ["广播", "发送广播", "广播消息"],
-        event_broadcastandwait: ["广播并等待", "发送广播并等待"],
-        operator_lt: ["小于", "less", "operator.less", "operator.lt", "<"],
-        operator_gt: ["大于", "greater", "operator.greater", "operator.gt", ">"],
-        operator_equals: ["等于", "equal", "operator.equal", "operator.equals", "=="],
-        pen_penDown: ["落笔", "下笔", "pen.down", "pen.penDown", "pen_penDown"],
-        pen_penUp: ["抬笔", "停笔", "pen.up", "pen.penUp", "pen_penUp"],
-        argument_reporter_string_number: [
-            'argument.reporter_string_number({ $field_VALUE: "highlight" })',
-            "自定义积木参数",
-            "读取函数参数",
-            "custom block argument reporter",
-            "$field_VALUE",
-        ],
-        argument_reporter_boolean: [
-            'argument.reporter_boolean({ $field_VALUE: "enabled" })',
-            "自定义积木布尔参数",
-            "读取布尔函数参数",
-            "$field_VALUE",
-        ],
-        pen_setPenColorParamTo: [
-            'pen.setPenColorParamTo({ $field_COLOR_PARAM: "color", VALUE: 50 })',
-            "将笔的颜色/饱和度/亮度/透明度设为",
-            "COLOR_PARAM menu values: color, saturation, brightness, transparency",
-            "$field_COLOR_PARAM",
-        ],
-        pen_changePenColorParamBy: [
-            'pen.changePenColorParamBy({ $field_COLOR_PARAM: "brightness", VALUE: 10 })',
-            "将笔的颜色/饱和度/亮度/透明度增加",
-            "COLOR_PARAM menu values: color, saturation, brightness, transparency",
-            "$field_COLOR_PARAM",
-        ],
-        procedures_definition: ["自定义积木定义", "定义积木", "定义函数"],
-        procedures_call: ["调用自定义积木", "调用函数", "执行自定义积木"],
-        procedures_call_with_return: ["调用自定义积木并返回", "返回值积木", "返回值函数"],
-    };
+    static BlockSearchAliases: Record<string, string[]> = BLOCK_SEARCH_ALIASES;
 
     vm: any;
     private draftContentByPath = new Map<string, string>();
@@ -1112,17 +885,9 @@ export class AITools {
     }
 
     private _resolveCostumeIndex(target: any, costumeIndex?: number, costumeName?: string) {
-        const costumes = Array.isArray(target?.sprite?.costumes) ? target.sprite.costumes : [];
-        if (typeof costumeIndex === "number" && Number.isFinite(costumeIndex)) {
-            const normalizedIndex = Math.floor(costumeIndex);
-            if (normalizedIndex >= 0 && normalizedIndex < costumes.length) return normalizedIndex;
-        }
-        if (costumeName) {
-            const normalizedName = String(costumeName).trim().toLowerCase();
-            const foundIndex = costumes.findIndex((costume: any) => String(costume?.name || "").trim().toLowerCase() === normalizedName);
-            if (foundIndex >= 0) return foundIndex;
-        }
-        return -1;
+        // Sprite-asset pipeline moved to spriteAssets.ts; thin delegation kept
+        // so every call site inside the class stays untouched.
+        return resolveCostumeIndex(target, costumeIndex, costumeName);
     }
 
     private _getCostumeVirtualId(costume: any) {
@@ -1227,23 +992,7 @@ export class AITools {
     }
 
     private _getCostumeSvgContent(costume: any) {
-        const asset = costume?.asset;
-        if (!asset) return "";
-        const dataFormat = String(costume.dataFormat || asset.dataFormat || "").toLowerCase();
-        if (dataFormat === "svg") {
-            return asset.decodeText?.() || "";
-        }
-        if (dataFormat === "png" || dataFormat === "jpg" || dataFormat === "jpeg") {
-            const imageHref = asset.encodeDataURI?.(dataFormat === "jpg" || dataFormat === "jpeg" ? "image/jpeg" : "image/png") || "";
-            const width = Math.max(1, Number(costume.size?.[0] || costume.rotationCenterX * 2 || 480));
-            const height = Math.max(1, Number(costume.size?.[1] || costume.rotationCenterY * 2 || 360));
-            return [
-                `<svg xmlns="http://www.w3.org/2000/svg" width="${escapeSvgAttribute(width)}" height="${escapeSvgAttribute(height)}" viewBox="0 0 ${escapeSvgAttribute(width)} ${escapeSvgAttribute(height)}">`,
-                `  <image href="${escapeSvgAttribute(imageHref)}" x="0" y="0" width="${escapeSvgAttribute(width)}" height="${escapeSvgAttribute(height)}" />`,
-                `</svg>`,
-            ].join("\n");
-        }
-        return "";
+        return getCostumeSvgContent(costume);
     }
 
     private _buildCostumeVirtualFile(target: any, costume: any) {
@@ -1251,18 +1000,7 @@ export class AITools {
     }
 
     private _inferSvgRotationCenter(target: any, svg: string, fallback?: [number, number]): [number, number] {
-        const canvasSize = getSvgCanvasSize(svg);
-        if (canvasSize) {
-            return [canvasSize.width / 2, canvasSize.height / 2];
-        }
-        if (target?.isStage) {
-            const runtime = this.vm.runtime || {};
-            return [Number(runtime.stageWidth || 480) / 2, Number(runtime.stageHeight || 360) / 2];
-        }
-        if (fallback && Number.isFinite(fallback[0]) && Number.isFinite(fallback[1])) {
-            return fallback;
-        }
-        return [0, 0];
+        return inferSvgRotationCenter(this.vm?.runtime, target, svg, fallback);
     }
 
     private _getCommentsByBlockId(target: any) {
@@ -1750,9 +1488,7 @@ export class AITools {
             normalized === "math_positive_number" ||
             normalized === "math_angle" ||
             normalized === "colour_picker" ||
-            normalized.endsWith("_menu") ||
-            normalized.includes("_menu_") ||
-            normalized.endsWith("_dropdown")
+            isMenuOpcode(normalized)
         );
     }
 
@@ -2362,53 +2098,8 @@ export class AITools {
     }
 
     private _applySvgToCostumeObject(costume: any, svg: string, rotationCenterX?: number, rotationCenterY?: number) {
-        const runtime = this.vm.runtime;
-        const storage = runtime?.storage;
-        const renderer = runtime?.renderer;
-        if (!costume || !storage || !renderer) {
-            throw new Error("Scratch runtime renderer/storage is not available for SVG update.");
-        }
-
-        const hasExplicitRotationCenter = Number.isFinite(rotationCenterX) && Number.isFinite(rotationCenterY);
-        let resolvedRotationCenter: [number, number];
-
-        if (typeof costume.skinId === "number" && typeof renderer.updateSVGSkin === "function") {
-            if (hasExplicitRotationCenter) {
-                renderer.updateSVGSkin(costume.skinId, svg, [Number(rotationCenterX), Number(rotationCenterY)]);
-                resolvedRotationCenter = [Number(rotationCenterX), Number(rotationCenterY)];
-            } else {
-                renderer.updateSVGSkin(costume.skinId, svg);
-                const derived = renderer.getSkinRotationCenter(costume.skinId);
-                resolvedRotationCenter = [Number(derived?.[0] ?? 0), Number(derived?.[1] ?? 0)];
-            }
-        } else {
-            const createdSkinId = hasExplicitRotationCenter
-                ? renderer.createSVGSkin(svg, [Number(rotationCenterX), Number(rotationCenterY)])
-                : renderer.createSVGSkin(svg);
-            costume.skinId = createdSkinId;
-            resolvedRotationCenter = hasExplicitRotationCenter
-                ? [Number(rotationCenterX), Number(rotationCenterY)]
-                : [
-                    Number(renderer.getSkinRotationCenter(createdSkinId)?.[0] ?? 0),
-                    Number(renderer.getSkinRotationCenter(createdSkinId)?.[1] ?? 0),
-                ];
-        }
-
-        costume.rotationCenterX = resolvedRotationCenter[0];
-        costume.rotationCenterY = resolvedRotationCenter[1];
-        costume.size = renderer.getSkinSize(costume.skinId);
-        costume.dataFormat = storage.DataFormat.SVG;
-        costume.bitmapResolution = 1;
-        costume.asset = storage.createAsset(
-            storage.AssetType.ImageVector,
-            storage.DataFormat.SVG,
-            new TextEncoder().encode(svg),
-            null,
-            true,
-        );
-        costume.assetId = costume.asset.assetId;
-        costume.md5 = `${costume.assetId}.${costume.dataFormat}`;
-        costume.md5ext = costume.md5;
+        // Sprite-asset pipeline moved to spriteAssets.ts; thin delegation.
+        return applySvgToCostumeObject(this.vm?.runtime, costume, svg, rotationCenterX, rotationCenterY);
     }
 
     private _formatSyncFailure(action: string, scriptId: string, result: any) {
@@ -2557,46 +2248,14 @@ export class AITools {
             };
         }
 
-        const results = [];
-        for (const operation of operations) {
-            if (operation.type === "replace") {
-                const result: any = await replaceScriptByUCF(
-                    this.vm,
-                    window.Blockly.getMainWorkspace() as Blockly.WorkspaceSvg,
-                    operation.oldSection.scriptId,
-                    operation.section.code,
-                    {
-                        includeComments: true,
-                    },
-                );
-                if (!result.success) {
-                    throw new Error(this._formatSyncFailure("Failed to replace", operation.oldSection.scriptId, result));
-                }
-                results.push({ type: "replace", scriptId: operation.oldSection.scriptId, result });
-            } else if (operation.type === "delete") {
-                const result: any = await deleteScriptById(
-                    this.vm,
-                    window.Blockly.getMainWorkspace() as Blockly.WorkspaceSvg,
-                    operation.section.scriptId,
-                );
-                if (!result.success) {
-                    throw new Error(this._formatSyncFailure("Failed to delete", operation.section.scriptId, result));
-                }
-                results.push({ type: "delete", scriptId: operation.section.scriptId, result });
-            } else if (operation.type === "insert") {
-                const result: any = await this._insertScriptByUCF(entry.targetId || "", operation.section.code);
-                if (!result.success) {
-                    throw new Error(this._formatSyncFailure("Failed to insert", operation.section.scriptId, result));
-                }
-                results.push({ type: "insert", scriptId: operation.section.scriptId, result });
-            }
-        }
-
+        // Only the full-sections transaction path above can ever commit changes:
+        // when no operations were needed we report a no-op without any partial
+        // per-op commit path (the unreachable per-operation loop used to hide here).
         return {
             path: entry.path,
             targetId: entry.targetId,
-            operationCount: results.length,
-            operations: results,
+            operationCount: 0,
+            operations: [],
         };
     }
 
@@ -2670,9 +2329,54 @@ export class AITools {
         };
     }
 
+    /** Per-path pre-write snapshots feeding discardDraft (latest kept per path, bounded). */
+    private _virtualDraftStack: Array<{ path: string; content: string; at: number; seq: number }> = [];
+    private _virtualDraftSeq = 0;
+
     private async _syncVirtualFile(entry: VirtualFileEntry, oldContent: string, newContent: string) {
-        if (entry.kind === "costume") return this._syncVirtualCostumeFile(entry, oldContent, newContent);
-        return this._syncVirtualTargetFile(entry, oldContent, newContent);
+        // The snapshot must only become a discardDraft restore point AFTER the
+        // write actually succeeded — otherwise a failed sync would register a
+        // "pre-write" draft for a change that never happened.
+        const success = entry.kind === "costume"
+            ? await this._syncVirtualCostumeFile(entry, oldContent, newContent)
+            : await this._syncVirtualTargetFile(entry, oldContent, newContent);
+        if (oldContent !== newContent && entry.writable && success) {
+            this._virtualDraftSeq += 1;
+            this._virtualDraftStack = [
+                ...this._virtualDraftStack.filter((item) => item.path !== entry.path),
+                { path: entry.path, content: oldContent, at: Date.now(), seq: this._virtualDraftSeq },
+            ].slice(-50);
+        }
+        return success;
+    }
+
+    /**
+     * discardDraft: restore a virtual file to the pre-write snapshot taken before its last
+     * change (from patch/costume writes). Without `path`, lists available draft snapshots.
+     * High risk: restores BOTH the virtual text and the corresponding Scratch blocks.
+     */
+    async discardDraft(options: { path?: string } = {}) {
+        if (!options?.path) {
+            return {
+                drafts: this._virtualDraftStack.map((item) => ({
+                    path: item.path,
+                    at: item.at,
+                    seq: item.seq,
+                    preview: item.content.slice(0, 120),
+                })),
+                note: "传 path 可把该文件与对应积木恢复到该次写入之前。低频使用；一般改用 applyPatch 反向补丁以保留历史。",
+            };
+        }
+        const path = options.path.trim();
+        const snapshot = [...this._virtualDraftStack].reverse().find((item) => item.path === path);
+        if (!snapshot) return { restored: false, error: `没有 ${path} 的可恢复快照。` };
+        const entry = this._getVirtualFiles().find((item) => item.path === path);
+        if (!entry) return { restored: false, error: `虚拟文件不存在: ${path}` };
+        if (!entry.writable) return { restored: false, error: `只读文件不可恢复: ${path}` };
+        const current = entry.content;
+        await this._syncVirtualFile(entry, current, snapshot.content);
+        this._virtualDraftStack = this._virtualDraftStack.filter((item) => item.path !== path);
+        return { restored: true, path, restoredTo: snapshot.content.slice(0, 120), at: snapshot.at };
     }
 
     listFiles() {
@@ -4697,7 +4401,7 @@ export class AITools {
             }),
             overviewNotes: [
                 "targets are Scratch actors/containers: the stage or sprites. They own scripts, variables, lists, sounds, and ordered costumes/backdrops.",
-                "costumeAssets are visual assets inside a target. Editing a costume/backdrop changes appearance only; use updateSpriteProperties to change a sprite target's x/y/size/direction/visibility/current costume.",
+                "costumes are the visual assets inside a target. Editing a costume/backdrop changes appearance only; use updateSpriteProperties to change a sprite target's x/y/size/direction/visibility/current costume.",
                 "stage targets use backdrops and cannot move. Sprite targets use costumes and can move, rotate, resize, show/hide, clone, and change current costume.",
             ],
             targets: targets.map((target: any) => {
@@ -4722,25 +4426,14 @@ export class AITools {
                     costumeNames: costumes.map((costume: any, index: number) => costume?.name || `costume-${index + 1}`),
                 };
             }),
-            costumeAssets: costumeFiles.map((entry) => ({
-                kind: entry.isStage ? "stage-backdrop-asset" : "sprite-costume-asset",
-                path: entry.path,
-                targetId: entry.targetId,
-                targetName: entry.targetName,
-                ownerTargetPath: pathByTargetId.get(entry.targetId) || undefined,
-                ownerTargetKind: entry.isStage ? "stage-target" : "sprite-target",
-                assetRole: entry.isStage ? "backdrop" : "costume",
-                costumeIndex: entry.costumeIndex,
-                costumeName: entry.costumeName,
-                originalDataFormat: entry.dataFormat,
-                writable: entry.writable,
-                lineCount: getLineCount(entry.content),
-            })),
+            // Single costume listing (costumeAssets was a near-duplicate payload
+            // that wasted tokens; ownerTargetPath was its only extra field).
             costumes: costumeFiles.map((entry) => ({
                 kind: entry.isStage ? "stage-backdrop-asset" : "sprite-costume-asset",
                 path: entry.path,
                 targetId: entry.targetId,
                 targetName: entry.targetName,
+                ownerTargetPath: pathByTargetId.get(entry.targetId) || undefined,
                 ownerTargetKind: entry.isStage ? "stage-target" : "sprite-target",
                 assetRole: entry.isStage ? "backdrop" : "costume",
                 isStage: entry.isStage,
@@ -5295,7 +4988,7 @@ export class AITools {
                     for (const block of extInfo.blocks) {
                         const fullOpcode = `${extInfo.id}_${block.info?.opcode}`;
                         if (fullOpcode === resolvedOpcode || block.info?.opcode === resolvedOpcode) {
-                            console.log(`[Debug] Matched ext block: ${resolvedOpcode} in ${extInfo.id}`);
+                            debug02AgentLog(`[Debug] Matched ext block: ${resolvedOpcode} in ${extInfo.id}`);
                             result.found = true;
                             result.blockType = this._normalizeBlockType(block.info?.blockType);
                             result.extensionId = extInfo.id || null;
@@ -5339,7 +5032,7 @@ export class AITools {
                                 }
                                 for (const menuName of usedMenuNames) {
                                     const hasMenuConfig = !Array.isArray(menuInfoSource) ? menuInfoSource[menuName] !== undefined : false;
-                                    console.log(`[Debug] Trying to process menu: ${menuName}, exists in extInfo.menuInfo: ${hasMenuConfig}`);
+                                    debug02AgentLog(`[Debug] Trying to process menu: ${menuName}, exists in extInfo.menuInfo: ${hasMenuConfig}`);
 
                                     if (hasMenuConfig) {
                                         // Try to find outputShape from the corresponding block json in extInfo.menus array
@@ -5354,7 +5047,7 @@ export class AITools {
                                             }
                                         }
 
-                                        console.log(`[Debug] getBlockInfo pre-set menu: ${menuName}, acceptReporters: ${acceptReporters}`);
+                                        debug02AgentLog(`[Debug] getBlockInfo pre-set menu: ${menuName}, acceptReporters: ${acceptReporters}`);
                                         result.menus = result.menus || {};
                                         result.menus[menuName] = {
                                             options: this._menuConfigToOptions(menuInfoSource[menuName]),
@@ -5482,6 +5175,655 @@ export class AITools {
         );
     }
 
+    /**
+     * sleep: wait for `ms` milliseconds (max 120s). Useful to introduce a delay, e.g. after an
+     * asynchronous operation or to pace multi-step flows. Read-only; does not touch the project.
+     */
+    async sleep(options: { ms: number | string }) {
+        const ms = Math.max(0, Math.min(120000, Number(options?.ms) || 0));
+        await new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+        return { sleptMs: ms, ok: true };
+    }
+
+    /** askUser: surface concise clarification questions to the user in the chat UI. */
+    async askUser(options: { question?: string; questions?: any[] }) {
+        const rawQuestions: any[] = Array.isArray(options?.questions) && options.questions.length
+            ? options.questions
+            : [options?.question ? { question: options.question } : {}].filter((item) => item.question);
+        if (!rawQuestions.length) {
+            throw new Error("askUser 需要至少一个 question 或 questions 数组");
+        }
+        const questions = rawQuestions.slice(0, 6).map((item, index) => {
+            const question = String(item?.question || item?.text || "").trim();
+            if (!question) throw new Error(`questions[${index}] 缺少 question 文本`);
+            const questionType =
+                item?.questionType === "choice"
+                    ? "choice"
+                    : item?.questionType === "multiChoice"
+                      ? "multiChoice"
+                      : "input";
+            const options = Array.isArray(item?.options) ? item.options.map((value: any) => String(value)).slice(0, 8) : undefined;
+            if ((questionType === "choice" || questionType === "multiChoice") && (!options || options.length < 2)) {
+                throw new Error(`questions[${index}] 为 ${questionType} 类型时需要至少两个 options`);
+            }
+            return {
+                id: typeof item?.id === "string" && item.id ? item.id : `q-${index}`,
+                question,
+                questionType,
+                options,
+            } as any;
+        });
+        const answers = await requestUserInput(questions);
+        return {
+            answers,
+            answeredCount: answers.length,
+            allAnswered: answers.every((answer) => answer.answer && answer.answer.trim().length > 0),
+        };
+    }
+
+    /** listMemoryBlocks: read persistent long-term / project memory. */
+    async listMemoryBlocks(options: { scope?: string; query?: string } = {}) {
+        const scope = options?.scope === "longTerm" || options?.scope === "project" ? options.scope : undefined;
+        const rows = listMemoryBlocks(scope as any, options?.query).slice(0, 50);
+        return { count: rows.length, blocks: rows.map((row) => ({ id: row.id, scope: row.scope, title: row.title || "", text: row.text, updatedAt: row.updatedAt })) };
+    }
+
+    /** getMemoryBlock: return one memory block verbatim. */
+    async getMemoryBlock(options: { id: string }) {
+        const id = String(options?.id || "").trim();
+        if (!id) throw new Error("getMemoryBlock 需要 id");
+        const row = getMemoryBlock(id);
+        if (!row) throw new Error(`没有找到 id 为 ${id} 的记忆`);
+        return { block: { id: row.id, scope: row.scope, title: row.title || "", text: row.text, updatedAt: row.updatedAt } };
+    }
+
+    /** setMemoryBlock: create or overwrite a persistent memory block. */
+    async setMemoryBlock(options: { id?: string; scope?: string; title?: string; text: string }) {
+        const scope = options?.scope === "longTerm" ? "longTerm" : "project";
+        const { block, updated } = setMemoryBlock({
+            id: options?.id,
+            scope: scope as any,
+            title: options?.title,
+            text: String(options?.text || ""),
+        });
+        return { id: block.id, scope: block.scope, updated, saved: true };
+    }
+
+    /** replaceMemoryBlockText: surgically replace text inside one memory block. */
+    async replaceMemoryBlockText(options: { id: string; find: string; replacement?: string }) {
+        const id = String(options?.id || "").trim();
+        const find = String(options?.find || "");
+        if (!id || !find) throw new Error("replaceMemoryBlockText 需要 id 和 find");
+        const row = replaceMemoryBlockText(id, find, String(options?.replacement ?? ""));
+        return { id: row.id, text: row.text, updatedAt: row.updatedAt };
+    }
+
+    /** deleteMemoryBlock: remove one persistent memory block. */
+    async deleteMemoryBlock(options: { id: string }) {
+        const id = String(options?.id || "").trim();
+        if (!id) throw new Error("deleteMemoryBlock 需要 id");
+        deleteMemoryBlock(id);
+        return { deleted: true, id };
+    }
+
+    /**
+     * createSkill: persist a reusable instruction so the user can enable it for future sessions.
+     * Review-gated: each AI write lands with enabled=false and the user is asked to review.
+     */
+    async createSkill(options: { id?: string; name: string; description?: string; content: string }) {
+        const name = String(options?.name || "").trim();
+        const content = String(options?.content || "").trim();
+        if (!name || !content) throw new Error("createSkill 需要 name 与 content");
+        if (content.length < 20) throw new Error("技能 content 太短（<20 字符），先确认沉淀价值。");
+        const result = writeSkillByAuthor(
+            { id: options?.id?.trim() || undefined, name, description: options?.description?.trim() || undefined, content },
+            "ai",
+        );
+        return {
+            ...result,
+            note: result.status === "created"
+                ? "技能已保存为禁用状态；提示用户在 设置 → 技能 中审查并启用后才会注入后续会话。"
+                : "已有同名技能已更新为禁用状态；提示用户在 设置 → 技能 中审查差异并重新启用。",
+        };
+    }
+
+    /** listSkills: index of enabled skills (name + description) available via readSkill. */
+    async listSkills() {
+        const rows = getEnabledSkills();
+        return { count: rows.length, skills: rows.map((row) => ({ id: row.id, name: row.name, description: row.description || "" })) };
+    }
+
+    /** readSkill: return one skill's full instructions by name (or id). */
+    async readSkill(options: { name: string }) {
+        const needle = String(options?.name || "").trim().toLowerCase();
+        const row = getEnabledSkills().find((skill) => skill.name.toLowerCase() === needle || skill.id === needle);
+        if (!row) {
+            throw new Error(`没有找到技能 "${options?.name}"。请用 listSkills 查看可用技能。`);
+        }
+        return { id: row.id, name: row.name, description: row.description || "", content: row.content };
+    }
+
+    /**
+     * observeStage: structured live stage state (text-friendly). Returns target positions,
+     * motion state, visibility, current costume, speaking status, and top variables. No screenshots.
+     */
+    observeStage(options: { includeVariables?: boolean } = {}) {
+        const runtime = this.vm?.runtime;
+        const stage = runtime?.getStageTarget?.();
+        const stageSize = { width: 480, height: 360 };
+        const targets = Array.isArray(runtime?.targets) ? runtime.targets : [];
+        const rows = targets
+            .filter((target: any) => String(target?.getName?.() || "").trim())
+            .map((target: any) => {
+                const costume = target?.currentCostume !== undefined ? target?.getCostumes?.()[target.currentCostume] : undefined;
+                const variables = options?.includeVariables
+                    ? Object.values(target?.variables || {}).slice(0, 8).map((item: any) => ({ name: String(item?.name || ""), value: Array.isArray(item?.value) ? `list(${(item?.value as any[]).length})` : String(item?.value).slice(0, 60) }))
+                    : undefined;
+                const row: Record<string, unknown> = {
+                    name: this._getTargetName(target),
+                    isStage: Boolean(target?.isStage),
+                    x: Number.isFinite(target?.x) ? Math.round(target.x) : undefined,
+                    y: Number.isFinite(target?.y) ? Math.round(target.y) : undefined,
+                    size: Math.round(target?.size ?? 100),
+                    direction: Math.round(target?.direction ?? 90),
+                    visible: Boolean(target?.visible),
+                    costume: String(costume?.name || "").trim() || undefined,
+                    speech: target?.speechBubble ? String(target?.speechBubble?.text || "") : undefined,
+                    layerOrder: target?._layerOrder,
+                };
+                if (variables) row.variables = variables;
+                return row;
+            });
+        const threads = Array.isArray(runtime?.threads) ? runtime.threads : [];
+        // Broadcast visibility: how many "when I receive" hats exist, and which messages
+        // currently have a running broadcast thread ("in flight") — key for "script not firing" debugging.
+        // Single pass over targets builds an id→block map so per-thread lookup is O(1).
+        const broadcastHatById = new Map<string, any>();
+        const broadcastNames = new Set<string>();
+        for (const target of targets) {
+            const blockMap = (target?.blocks as any)?._blocks || {};
+            for (const [blockId, block] of Object.entries(blockMap) as [string, any][]) {
+                if (block?.opcode !== "event_whenbroadcastreceived") continue;
+                broadcastHatById.set(blockId, block);
+                const name = String((block?.fields as any)?.BROADCAST_OPTION?.[0] || "").trim();
+                if (name) broadcastNames.add(name);
+            }
+        }
+        const broadcastsRunning: string[] = [];
+        for (const thread of threads) {
+            const topBlockId = String((thread as any)?.topBlock?.id ?? (thread as any)?.topBlock ?? "");
+            const block = broadcastHatById.get(topBlockId);
+            if (!block) continue;
+            const name = String((block?.fields as any)?.BROADCAST_OPTION?.[0] || "").trim() || "未命名消息";
+            if (!broadcastsRunning.includes(name)) broadcastsRunning.push(name);
+        }
+        return {
+            stageSize,
+            targets: rows,
+            threadsRunning: threads.length,
+            broadcast: {
+                listeners: broadcastHatById.size,
+                listeningTo: [...broadcastNames].slice(0, 8),
+                running: broadcastsRunning.slice(0, 8),
+            },
+            note: "Real-time state; call again after stage changes.",
+        };
+    }
+
+    private _stageRecorder: any = null;
+    private _stageRecorderStart = 0;
+    private _stageRecorderChunks: Blob[] = [];
+    private _stageRecorderMime = "";
+
+    /** Stage canvas renderer, if ready. */
+    private _getStageCanvas(): HTMLCanvasElement | null {
+        const canvas = (this.vm?.renderer as any)?.canvas;
+        return canvas && typeof canvas.captureStream === "function" ? canvas : null;
+    }
+
+    /**
+     * startStageRecording: begin recording the stage canvas to WebM (MediaRecorder).
+     * Ends with stopStageRecording, which returns a page-scoped blob URL for playback/download.
+     */
+    startStageRecording(options: { fps?: number } = {}) {
+        const canvas = this._getStageCanvas();
+        if (!canvas) return { success: false, error: "Stage canvas unavailable (renderer not ready or captureStream unsupported)." };
+        const MediaRecorderCtor: any = (globalThis as any).MediaRecorder;
+        if (!MediaRecorderCtor) return { success: false, error: "MediaRecorder unsupported in this browser." };
+        if (this._stageRecorder) return { success: false, error: "A recording is already running; call stopStageRecording first." };
+        const fps = Math.min(Math.max(Number(options?.fps) || 10, 1), 30);
+        const stream = canvas.captureStream(fps);
+        const chosenMime = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(
+            (mime) => MediaRecorderCtor.isTypeSupported?.(mime),
+        );
+        if (!chosenMime) return { success: false, error: "Browser cannot record WebM." };
+        const recorder = new MediaRecorderCtor(stream, { mimeType: chosenMime, videoBitsPerSecond: 2500000 });
+        const chunks: Blob[] = [];
+        recorder.ondataavailable = (event: any) => {
+            if (event?.data?.size) chunks.push(event.data);
+        };
+        recorder.start(500);
+        this._stageRecorder = recorder;
+        this._stageRecorderChunks = chunks;
+        this._stageRecorderMime = chosenMime;
+        this._stageRecorderStart = Date.now();
+        pushNotice("已开始舞台录像；需要停止时告诉我“停止录像”。");
+        return { success: true, fps, mimeType: chosenMime, note: "用 stopStageRecording 结束并取回回放链接。" };
+    }
+
+    /** stopStageRecording: finalize the WebM and return a play/download link. */
+    async stopStageRecording() {
+        const recorder = this._stageRecorder;
+        if (!recorder) return { success: false, error: "No recording currently running." };
+        const durationMs = Date.now() - this._stageRecorderStart;
+        await new Promise<void>((resolve) => {
+            recorder.onstop = () => resolve();
+            try {
+                recorder.stop();
+            } catch {
+                resolve();
+            }
+        });
+        try {
+            recorder.stream?.getTracks?.().forEach?.((track: MediaStreamTrack) => track.stop());
+        } catch {
+            /* ignore */
+        }
+        this._stageRecorder = null;
+        const blob = new Blob(this._stageRecorderChunks, { type: this._stageRecorderMime.split(";")[0] });
+        this._stageRecorderChunks = [];
+        if (!blob.size) return { success: false, error: "Recording was empty (stage may not have changed)." };
+        const url = URL.createObjectURL(blob);
+        pushNotice(`舞台录像已生成（${Math.round(durationMs / 100) / 10}s / ${Math.round(blob.size / 1024)}KB）`);
+        return {
+            success: true,
+            durationMs,
+            sizeBytes: blob.size,
+            mimeType: this._stageRecorderMime.split(";")[0],
+            url,
+            note: "url 是本页面的临时回放链接（刷新即失效）。请告诉用户在浏览器打开该链接后右键“视频另存为”保存到本地；不要把视频 base64 贴进对话。",
+        };
+    }
+
+    /**
+     * generateCostumeFromDescription: generate a bitmap costume with the configured image
+     * model (OpenAI-compatible images API) and attach it as a wrapper-SVG bitmap costume.
+     * Returns clear guidance when no image model is configured.
+     */
+    async generateCostumeFromDescription(options: {
+        name: string;
+        description: string;
+        targetName?: string;
+        targetId?: string;
+        size?: "256x256" | "512x512" | "1024x1024";
+    }) {
+        const name = String(options?.name || "").trim();
+        const description = String(options?.description || "").trim();
+        if (!name || !description) throw new Error("generateCostumeFromDescription 需要 name 与 description");
+        const config = resolveImageModel();
+        if (!config?.modelId) {
+            return {
+                success: false,
+                code: "IMAGE_MODEL_NOT_CONFIGURED",
+                error:
+                    "未配置图像生成模型。设置 → 模型 → 对应模型行的“生成图像模型ID”填入 OpenAI 图像 API 名称（如 dall-e-3），然后重试；在那之前请改用 createSpriteWithSvg 的 SVG 描述。",
+            };
+        }
+        const prompt = `${description}\n\nRequirements: single subject on a fully transparent background, flat 2D vector-style game asset, no text or watermarks, centered, clear silhouette, Scratch costume style.`;
+        const endpoint = `${config.baseUrl.replace(/\/(chat\/completions|completions)\/?$/, "")}/images/generations`;
+        // Same egress policy as other tools: relay first, direct fallback.
+        const response = await fetchThroughRelayOrDirect(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${config.apiKey}`,
+            },
+            body: JSON.stringify({
+                model: config.modelId,
+                prompt,
+                n: 1,
+                size: options?.size || "1024x1024",
+                response_format: "b64_json",
+            }),
+        });
+        if (!response.ok) {
+            const text = await response.text().catch(() => "");
+            return {
+                success: false,
+                code: "IMAGE_API_ERROR",
+                status: response.status,
+                error: `图像 API 请求失败（${response.status}）。请检查图像模型名称是否正确。${text.slice(0, 300)}`,
+                fallback: "可改用 createSpriteWithSvg 的 SVG 描述流程。",
+            };
+        }
+        const payload: any = await response.json().catch(() => null);
+        const item = Array.isArray(payload?.data) ? payload.data[0] : null;
+        const dataUrl = item?.b64_json
+            ? `data:image/png;base64,${item.b64_json}`
+            : item?.url
+                ? String(item.url)
+                : null;
+        if (!dataUrl) {
+            return { success: false, code: "IMAGE_API_EMPTY", error: "图像 API 返回为空；请换模型或稍后重试。" };
+        }
+        const size = options?.size || "1024x1024";
+        const parts = String(size).split("x").map((part) => Math.max(1, Math.round(Number(part))));
+        // NaN/0 dimensions would produce an unusable skin; fall back to 1024.
+        const width = Number.isFinite(parts[0]) && parts[0] >= 1 ? parts[0] : 1024;
+        const height = Number.isFinite(parts[1]) && parts[1] >= 1 ? parts[1] : width;
+        const wrapperSvg =
+            `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
+            `<image width="${width}" height="${height}" xlink:href="${dataUrl}"/></svg>`;
+        const costume = await this.addCostumeWithSvg({
+            svg: wrapperSvg,
+            costumeName: name,
+            targetId: options?.targetId,
+            targetName: options?.targetName,
+        });
+        if (costume && typeof costume === "object" && "success" in costume && (costume as any).success === false) {
+            return costume;
+        }
+        return {
+            success: true,
+            costumeName: costume && typeof costume === "object" && (costume as any).costumeName
+                ? (costume as any).costumeName
+                : name,
+            generatedBy: config.modelId,
+            note: "位图造型以嵌入式 wrapper SVG 保存（与现有位图造型读写路径一致）；若出现渲染异常请改用 SVG 描述。",
+        };
+    }
+
+    /**
+     * runSubAgent: START a background subagent run (non-blocking)
+     * in its own conversation (no tools) and reports completion via notifications.
+     * Returns immediately with a run id; results come through checkSubagentResults.
+     */
+    async runSubAgent(options: { profile?: string; task: string; context?: string }) {
+        const profile = String(options?.profile || "researcher").trim();
+        const def = getSubagentDefinition(profile);
+        if (!def) {
+            throw new Error(`未知子智能体 profile "${profile}"，可用: ${listSubagentDefinitions().map((d) => d.id).join(", ")}`);
+        }
+        const task = String(options?.task || "").trim();
+        if (!task) throw new Error("runSubAgent 需要 task");
+
+        // Background execution: start immediately, return at once. Results land in the
+        // registry; the model checks them with checkSubagentResults in later turns.
+        const entry = createSubagentResult(profile, task);
+        const context = options?.context ? String(options.context) : undefined;
+        void runSubagentProfile(profile, task, context)
+            .then((result) => finishSubagentResult(entry.id, { status: "completed", summary: result.summary, partial: result.partial || undefined }))
+            .catch((error) =>
+                finishSubagentResult(entry.id, { status: "error", error: String(error?.message || error) }),
+            );
+
+        return {
+            started: true,
+            id: entry.id,
+            profile: def.name ? profile : profile,
+            profileName: def.name,
+            note: "子智能体已在后台启动。你现在可以继续其它工作；稍后用 checkSubagentResults 查询结果（不要空转等待）。",
+        };
+    }
+
+    /** checkSubagentResults: list background subagent runs (recent first). */
+    async checkSubagentResults() {
+        const rows = listSubagentResults().slice(-10).reverse();
+        return {
+            count: rows.length,
+            results: rows.map((row) => ({
+                id: row.id,
+                profile: row.profile,
+                task: row.task.length > 200 ? `${row.task.slice(0, 200)}…` : row.task,
+                status: row.status,
+                partial: Boolean(row.partial),
+                summary: (row.partial && row.summary && !row.summary.startsWith("（子智能体中断）")
+                    ? `${row.summary}\n（注意：该子智能体提前中断，以上为部分结果，可能不完整）`
+                    : row.summary) || "",
+                error: row.error || "",
+                startedAt: row.startedAt,
+                finishedAt: row.finishedAt,
+            })),
+            note: "partial=true 表示运行提前中断但已产出可用内容；使用时先声明其不完整。",
+        };
+    }
+
+    /** updateTodoList: replace the visible task list the user can track in the panel. */
+    async updateTodoList(options: { todos?: any[] }) {
+        const rows: any[] = Array.isArray(options?.todos) ? options.todos.slice(0, 20) : [];
+        if (!rows.length) throw new Error("updateTodoList 的 todos 不能为空");
+        const todos = rows.map((row, index) => ({
+            id: typeof row?.id === "string" && row.id ? row.id : `todo-${index + 1}`,
+            title: String(row?.title || ""),
+            status: row?.status,
+        }));
+        for (const row of todos) {
+            if (!row.title.trim()) throw new Error("todos 中存在没有 title 的条目");
+        }
+        const result = updateTodos(todos as any);
+        return result;
+    }
+
+    /**
+     * httpRequest: perform an HTTP(S) request from the browser context (GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS).
+     * Useful to fetch remote JSON/text, call REST APIs, or post data. Note: the browser enforces CORS on
+     * cross-origin requests. Returns status, headers, and the response body as text (auto-decoded to JSON
+     * string when applicable).
+     */
+    async httpRequest(options: {
+        method?: string;
+        url: string;
+        headers?: Record<string, string> | string;
+        body?: string | Record<string, unknown>;
+        timeoutMs?: number | string;
+    }) {
+        const method = (options?.method || "GET").toUpperCase();
+        const url = options?.url;
+        if (!url) {
+            return { ok: false, error: "Missing required 'url'." };
+        }
+        let headers: Record<string, string> = {};
+        if (typeof options?.headers === "string" && options.headers.trim()) {
+            try {
+                headers = JSON.parse(options.headers);
+            } catch {
+                return { ok: false, error: "headers must be a JSON object string or object." };
+            }
+        } else if (options?.headers && typeof options.headers === "object") {
+            headers = { ...(options.headers as Record<string, string>) };
+        }
+        let body: string | undefined;
+        if (options?.body != null) {
+            body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+        }
+        const timeoutMs = Math.max(0, Math.min(120000, Number(options?.timeoutMs) || 20000));
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const headersObj = headers;
+            const response = await fetchThroughRelayOrDirect(url, {
+                method,
+                headers: Object.keys(headersObj).length ? headersObj : undefined,
+                body,
+                signal: controller.signal,
+            });
+            const text = await response.text();
+            let parsedBody: unknown = text;
+            if (text) {
+                try {
+                    parsedBody = JSON.parse(text);
+                } catch {
+                    parsedBody = text;
+                }
+            }
+            const responseHeaders: Record<string, string> = {};
+            response.headers.forEach((value, key) => {
+                responseHeaders[key] = value;
+            });
+            return {
+                ok: response.ok,
+                status: response.status,
+                statusText: response.statusText,
+                headers: responseHeaders,
+                body: parsedBody,
+                bodyLength: text.length,
+            };
+        } catch (error: any) {
+            return { ok: false, error: error?.name === "AbortError" ? `Request timed out after ${timeoutMs}ms` : (error?.message || String(error)) };
+        } finally {
+            window.clearTimeout(timer);
+        }
+    }
+
+    /**
+     * manageMCPServers: let the model view/add/update/delete/toggle MCP servers in the user's own
+     * settings (设置 → MCP). `action` is one of list | add | update | delete | toggle. Use list first
+     * to see existing config before mutating. Does not modify the Scratch project.
+     */
+    async manageMCPServers(options: {
+        action: "list" | "add" | "update" | "delete" | "toggle";
+        server?: {
+            id?: string;
+            name?: string;
+            url?: string;
+            transport?: "http" | "sse";
+            apiKey?: string;
+            customHeaders?: string;
+            enabled?: boolean;
+        };
+    }) {
+        const action = options?.action || "list";
+        const servers = [...toolConfigStore.getMCPServers()];
+        if (action === "list") {
+            return {
+                ok: true,
+                servers: servers.map(({ id, name, url, transport, enabled }) => ({ id, name, url, transport, enabled })),
+            };
+        }
+        const input = options?.server || {};
+        if (action === "add") {
+            if (!input.name?.trim() || !input.url?.trim()) {
+                return { ok: false, error: "add requires server.name and server.url." };
+            }
+            const id = input.id?.trim() || `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+            if (servers.some((s) => s.id === id)) {
+                return { ok: false, error: `A server with id "${id}" already exists.` };
+            }
+            const entry = {
+                id,
+                name: input.name.trim(),
+                url: input.url.trim(),
+                transport: input.transport || "http",
+                apiKey: input.apiKey || "",
+                customHeaders: input.customHeaders || "",
+                enabled: input.enabled !== false,
+                disabledTools: [] as string[],
+            };
+            toolConfigStore.setMCPServers((prev: any[]) => [...prev, entry]);
+            return { ok: true, action: "add", server: { id: entry.id, name: entry.name, url: entry.url, transport: entry.transport, enabled: entry.enabled } };
+        }
+        const target = servers.find((s) => s.id === input.id || s.name === input.name);
+        if (!target) {
+            return { ok: false, error: `Server not found (id or name "${input.id || input.name}").` };
+        }
+        if (action === "delete") {
+            toolConfigStore.setMCPServers((prev: any[]) => prev.filter((s: any) => s.id !== target.id));
+            return { ok: true, action: "delete", id: target.id };
+        }
+        if (action === "toggle") {
+            toolConfigStore.setMCPServers((prev: any[]) =>
+                prev.map((s: any) => (s.id === target.id ? { ...s, enabled: !s.enabled } : s)),
+            );
+            return { ok: true, action: "toggle", id: target.id, enabled: !target.enabled };
+        }
+        if (action === "update") {
+            toolConfigStore.setMCPServers((prev: any[]) =>
+                prev.map((s: any) => {
+                    if (s.id !== target.id) return s;
+                    const next = { ...s };
+                    if (input.name?.trim()) next.name = input.name.trim();
+                    if (input.url?.trim()) next.url = input.url.trim();
+                    if (input.transport) next.transport = input.transport;
+                    if (input.apiKey !== undefined) next.apiKey = input.apiKey;
+                    if (input.customHeaders !== undefined) next.customHeaders = input.customHeaders;
+                    if (input.enabled !== undefined) next.enabled = input.enabled;
+                    return next;
+                }),
+            );
+            return { ok: true, action: "update", id: target.id };
+        }
+        return { ok: false, error: `Unknown action "${action}".` };
+    }
+
+    /**
+     * manageSkills: let the model view/add/update/delete/toggle the user's own skills
+     * (设置 → 技能) that are injected into the system prompt. `action` is list | add | update | delete | toggle.
+     */
+    async manageSkills(options: {
+        action: "list" | "add" | "update" | "delete" | "toggle";
+        skill?: {
+            id?: string;
+            name?: string;
+            description?: string;
+            content?: string;
+            enabled?: boolean;
+        };
+    }) {
+        const action = options?.action || "list";
+        const skills = [...toolConfigStore.getSkills()];
+        if (action === "list") {
+            return { ok: true, skills: skills.map(({ id, name, description, enabled }) => ({ id, name, description, enabled })) };
+        }
+        const input = options?.skill || {};
+        if (action === "add") {
+            if (!input.name?.trim()) {
+                return { ok: false, error: "add requires skill.name." };
+            }
+            const id = input.id?.trim() || `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+            if (skills.some((s) => s.id === id)) {
+                return { ok: false, error: `A skill with id "${id}" already exists.` };
+            }
+            const entry = {
+                id,
+                name: input.name.trim(),
+                description: input.description || "",
+                content: input.content || "",
+                enabled: input.enabled !== false,
+            };
+            toolConfigStore.setSkills((prev: any[]) => [...prev, entry]);
+            return { ok: true, action: "add", skill: { id: entry.id, name: entry.name, enabled: entry.enabled } };
+        }
+        const target = skills.find((s) => s.id === input.id || s.name === input.name);
+        if (!target) {
+            return { ok: false, error: `Skill not found (id or name "${input.id || input.name}").` };
+        }
+        if (action === "delete") {
+            toolConfigStore.setSkills((prev: any[]) => prev.filter((s: any) => s.id !== target.id));
+            return { ok: true, action: "delete", id: target.id };
+        }
+        if (action === "toggle") {
+            toolConfigStore.setSkills((prev: any[]) =>
+                prev.map((s: any) => (s.id === target.id ? { ...s, enabled: !s.enabled } : s)),
+            );
+            return { ok: true, action: "toggle", id: target.id, enabled: !target.enabled };
+        }
+        if (action === "update") {
+            toolConfigStore.setSkills((prev: any[]) =>
+                prev.map((s: any) => {
+                    if (s.id !== target.id) return s;
+                    const next = { ...s };
+                    if (input.name?.trim()) next.name = input.name.trim();
+                    if (input.description !== undefined) next.description = input.description;
+                    if (input.content !== undefined) next.content = input.content;
+                    if (input.enabled !== undefined) next.enabled = input.enabled;
+                    return next;
+                }),
+            );
+            return { ok: true, action: "update", id: target.id };
+        }
+        return { ok: false, error: `Unknown action "${action}".` };
+    }
+
     async replaceBlocksRangeByUCF(startBlockId: string, endBlockId: string, ucfString: string) {
         return replaceBlocksRangeByUCF(
             this.vm,
@@ -5505,11 +5847,11 @@ export class AITools {
             };
         }
 
-        console.log("[AI Tool Call] generateCodeFromUCF started. UCF String:", ucfString);
+        debug02AgentLog("generateCodeFromUCF started", {length: String(ucfString || "").length});
         let newBlocks;
         try {
             newBlocks = ucfToScratch(normalizeModelUCF(ucfString), { runtime: this.vm.runtime, includeComments: true });
-            console.log("[AI Tool Call] Parsed blocks array:", newBlocks);
+            debug02AgentLog("generateCodeFromUCF parsed blocks", {count: Array.isArray(newBlocks) ? newBlocks.length : 0});
         } catch (e) {
             console.error("[AI Tool Call] Error parsing UCF string:", e);
             return {

@@ -1,12 +1,20 @@
-import { useEffect, useRef, useState } from "react";
-import { FlattenedAgent, Attachment, ChatMessage, ChatStats, TokenUsage } from "../types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { FlattenedAgent, Attachment, ChatMessage, ChatStats, TokenUsage, MCPServerConfig, SkillConfig, PromptConfig } from "../types";
 import { AITools, measureAsync, measureSync } from "../tools";
 import { scratchToolSchemas } from "../toolSchemas";
 import { getProviderAdapter, isProviderImplemented } from "../providerAdapters";
-import { callAITool, MUTATING_TOOLS } from "../toolRuntime";
+import { callAITool, MUTATING_TOOLS, PLAN_BLOCKED_TOOLS } from "../toolRuntime";
+import { AskUserQuestion, bindAskUserHandler, bindImageModelResolver, bindNoticeListener, bindSkillsChangedListener, bindSkillsProvider, bindSubagentResultListener, bindSubagentRunner, getSubagentDefinition, listTodos, setSubagentDefinitions, SkillWriteResult, TodoItem, updateTodos } from "../agentStores";
+import { SubagentDef } from "../types";
+import { SubagentResultEntry } from "../agentStores";
+import { runSubagentLoop } from "./useSubagentLoop";
+import { mcpRegistry } from "../mcpClient";
 
 interface UseChatOptions {
     messages: ChatMessage[];
+    /** Active conversation id; switching conversations clears pending reflow queues. */
+    currentSessionId?: string;
+    subagents: SubagentDef[];
     currentAgent: FlattenedAgent | null;
     updateSessionMessages: (newMessages: ChatMessage[], targetSessionId?: string) => string;
     appendSessionSnapshot: (
@@ -22,6 +30,18 @@ interface UseChatOptions {
     enableReasoning: boolean;
     planMode: boolean;
     vm: any;
+    /** Enabled/disabled state of MCP servers used to extend the tool list. */
+    mcpServers: MCPServerConfig[];
+    /** Names of built-in tools the user disabled in 设置 → 工具. */
+    disabledTools: string[];
+    /** Skill instructions injected into the system prompt when enabled. */
+    skills: SkillConfig[];
+    /** User-editable system prompt override (prepend / append / replace). */
+    promptConfig?: PromptConfig;
+    /** Current session's compacted-summary state (see ChatSession.compacted). */
+    compacted?: { summary: string; upTo: number };
+    /** Persist the compacted-summary state for the current session. */
+    updateSessionCompacted?: (compacted: { summary: string; upTo: number } | undefined) => void;
 }
 
 const createMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -33,6 +53,170 @@ const MAX_TOOL_RESULT_CHARS = 24000;
 const MAX_ATTACHMENT_TEXT_CHARS = 48000;
 const MAX_TOOL_ROUNDS = 8;
 const MAX_PLAN_TOOL_ROUNDS = 12;
+
+/** Compaction keeps the most recent tail verbatim within this character budget. */
+const COMPACT_RETAIN_CHARS = 40000;
+/** Below this many characters there is nothing worth summarizing. */
+const COMPACT_MIN_CHARS = 8000;
+
+const COMPACTED_SUMMARY_TAG = "compacted-summary";
+
+/**
+ * The compaction instruction, kept verbatim. Steps 1-4 drive the model's analysis,
+ * the output format fixes the <state_snapshot> sections, and the self-check makes it
+ * verify its own output before answering.
+ */
+const COMPACTION_PROMPT = `You are a context compression assistant for a coding agent. Your job is to compress
+the conversation history below into a <state_snapshot> that lets the agent resume
+work without re-reading the original context.
+
+【Step 1 — 在 <analysis> 中按时间顺序分析，不要跳过】
+1. 用户的原始任务是什么？后续有哪些修正或补充约束？
+2. 哪些文件被读取、创建或修改？改动的目的是什么？
+3. 哪些命令被执行过？哪些成功、哪些失败？失败的具体报错是什么？
+4. 做过哪些技术决策？为什么选 A 不选 B？排除了哪些方案？
+5. 当前进行到哪一步？下一步计划是什么？
+6. 有哪些用户明确提出的约束（技术栈、禁止修改的文件、代码风格、依赖限制）？
+
+【Step 2 — 必须逐字保留（verbatim，不得改写或概括）】
+- 文件路径、目录结构、函数名、类名、变量名、API 端点
+- 命令原文（含参数、flag、环境变量）
+- 报错信息原文（错误类型 + 关键行，不要只写“报错”）
+- 版本号、分支名、commit hash、PR/issue 编号、端口号、配置项键名
+- 用户提出的硬约束与禁止事项
+
+【Step 3 — 必须保留语义（可以概括，但因果不能丢）】
+- 每个技术决策的理由，尤其是“为什么没选另一个方案”
+- 失败的尝试及其失败原因（避免后续重复踩坑）
+- 已确认的事实（如“该 API 需要 token 才能调用”“此文件是自动生成的，不要手改”）
+- 尚未解决的问题，以及已经试过的解法
+
+【Step 4 — 可以丢弃】
+- 寒暄、确认性对话、思考过程的重复
+- 已被后续决策推翻的中间方案
+- 工具输出中与当前目标无关的大段内容（如完整文件内容、成功的构建日志全文）
+- 但：工具输出中的**关键返回值、报错、测试失败用例名**必须保留
+
+【输出格式】
+先输出 <analysis>，再输出 <state_snapshot>：
+
+<state_snapshot>
+  <overall_goal>用户最终要达成什么（一句话）</overall_goal>
+  <user_constraints>用户提出的硬性约束、偏好、禁止事项</user_constraints>
+  <key_knowledge>已确认的技术事实（API 行为、文件性质、环境限制等）</key_knowledge>
+  <file_system_state>
+    已修改/创建的文件，每个文件附：路径 + 改动目的 + 当前状态（完成/进行中/待验证）
+  </file_system_state>
+  <commands_and_results>
+    关键命令 + 结果（成功/失败 + 失败时的报错原文）
+  </commands_and_results>
+  <decisions>技术决策 + 理由 + 被排除的方案及原因</decisions>
+  <failed_approaches>失败路径 + 失败原因（防止重复尝试）</failed_approaches>
+  <current_state>当前进度、正在做的事、卡在哪里</current_state>
+  <next_steps>下一步计划，以及执行它所需的最小上下文</next_steps>
+  <open_questions>待确认的问题</open_questions>
+</state_snapshot>
+
+【Self-check（输出后执行，不要省略）】
+- 用户约束是否全部写入 <user_constraints>？
+- 所有文件路径、命令、报错是否逐字保留？
+- 失败路径是否都记录了原因？
+- 摘要总 token 是否 ≤ 原文的 50%？若超过，压缩 <commands_and_results>
+  中的成功输出，保留失败输出。`;
+
+/**
+ * Compose the full compaction request. When a summary already exists it is appended
+ * as prior state so the model rolls it forward instead of starting over.
+ */
+const buildCompactionPrompt = (previousSummary: string, transcript: string) => {
+    const previous = previousSummary
+        ? `\n\n=== 已有的摘要（请在其基础上滚动更新：保留仍为真的事实、丢弃已过时的内容、合并为一份） ===\n${previousSummary}`
+        : "";
+    return `${COMPACTION_PROMPT}${previous}\n\n=== 需要压缩的对话历史 ===\n${transcript}`;
+};
+
+/** Render messages as a compact transcript for the summarizer. */
+const renderTranscriptForSummary = (messages: ChatMessage[]) =>
+    messages
+        .map((message) => {
+            const role = message.role;
+            const parts: string[] = [];
+            if (message.content?.trim()) parts.push(message.content.trim());
+            if (message.tool_calls?.length) {
+                parts.push(
+                    message.tool_calls
+                        .map((call) => `[tool_call ${call.function?.name || "?"}] ${call.function?.arguments || ""}`)
+                        .join("\n"),
+                );
+            }
+            if (!parts.length) return "";
+            const body = parts.join("\n").slice(0, 4000);
+            return `--- ${role} ---\n${body}`;
+        })
+        .filter(Boolean)
+        .join("\n\n");
+
+/**
+ * Move `cut` forward until it does not split a tool_call from its tool result.
+ * A boundary is safe when it sits before a user message, or after the last tool
+ * result of a completed call group.
+ */
+const alignCutToToolPair = (messages: ChatMessage[], cut: number) => {
+    let index = Math.max(0, Math.min(cut, messages.length));
+    while (index > 0 && index < messages.length) {
+        const next = messages[index];
+        // Never start the retained tail with an orphan tool result.
+        if (next.role !== "tool") break;
+        index += 1;
+    }
+    return index;
+};
+
+/**
+ * Pick the boundary for compaction: accumulate from the end until the retained tail
+ * reaches COMPACT_RETAIN_CHARS, then align it to a tool-pair safe position.
+ * Returns 0 when nothing should be compacted.
+ */
+const computeCompactionCut = (
+    messages: ChatMessage[],
+    fromIndex: number,
+    retainChars: number = COMPACT_RETAIN_CHARS,
+    minRegionChars: number = COMPACT_MIN_CHARS,
+    force: boolean = false,
+) => {
+    let total = 0;
+    let cut = messages.length;
+    for (let index = messages.length - 1; index >= fromIndex; index -= 1) {
+        total += estimateMessageChars(messages[index]);
+        cut = index;
+        if (total >= retainChars) break;
+    }
+
+    const usable = () => cut > fromIndex && alignCutToToolPair(messages, cut) > fromIndex;
+
+    // Forced compaction must always make progress. When the whole remaining history fits
+    // inside the retain budget there is no natural boundary, so keep only the last couple
+    // of messages verbatim and compress everything before them.
+    if (!usable() && force) {
+        // Always leave at least one message verbatim; never summarize the whole history away.
+        cut = Math.min(messages.length - 1, Math.max(fromIndex + 1, messages.length - 2));
+    }
+
+    if (cut <= fromIndex) return 0;
+    const aligned = alignCutToToolPair(messages, cut);
+    if (aligned <= fromIndex) return 0;
+    const regionChars = messages
+        .slice(fromIndex, aligned)
+        .reduce((sum, message) => sum + estimateMessageChars(message), 0);
+    if (minRegionChars > 0 && regionChars < minRegionChars) return 0;
+    return aligned;
+};
+
+const buildSummaryMessage = (summary: string): ChatMessage => ({
+    id: createMessageId(),
+    role: "user",
+    content: `<${COMPACTED_SUMMARY_TAG}>\n${summary.trim()}\n</${COMPACTED_SUMMARY_TAG}>\n\n以上是对更早对话的压缩快照（含 analysis 与 state_snapshot）。请据此继续工作：不要重复已完成或已失败的尝试，按 <next_steps> 推进；需要细节时用工具重新读取对应文件。`,
+});
 
 const estimateTokensFromText = (text: string) => {
     if (!text) return 0;
@@ -149,30 +333,35 @@ const estimateMessageChars = (message: ChatMessage) => {
 };
 
 // Keep only the recent user turns within a character budget so long sessions still fit the provider context.
-const selectMessagesForRequest = (messages: ChatMessage[]) => {
+const selectMessagesForRequest = (messages: ChatMessage[], compacted?: { summary: string; upTo: number }) => {
     if (messages.length === 0) return messages;
 
+    // Everything before `compacted.upTo` is represented by the rolled-up summary.
+    const compactedUpTo = compacted?.summary ? Math.min(compacted.upTo, messages.length) : 0;
+    const tail = compactedUpTo > 0 ? messages.slice(compactedUpTo) : messages;
+    const prefix = compactedUpTo > 0 ? [buildSummaryMessage(compacted.summary)] : [];
+
     const userIndexes: number[] = [];
-    messages.forEach((message, index) => {
+    tail.forEach((message, index) => {
         if (message.role === "user") userIndexes.push(index);
     });
 
     let startIndex =
         userIndexes.length > MAX_REQUEST_USER_TURNS ? userIndexes[userIndexes.length - MAX_REQUEST_USER_TURNS] : 0;
-    let selected = messages.slice(startIndex);
+    let selected = tail.slice(startIndex);
     let totalChars = selected.reduce((sum, message) => sum + estimateMessageChars(message), 0);
 
     while (totalChars > MAX_REQUEST_CHARS) {
         let nextUserIndex = -1;
-        for (let index = startIndex + 1; index < messages.length; index++) {
-            if (messages[index].role === "user") {
+        for (let index = startIndex + 1; index < tail.length; index++) {
+            if (tail[index].role === "user") {
                 nextUserIndex = index;
                 break;
             }
         }
         if (nextUserIndex < 0) break;
         startIndex = nextUserIndex;
-        selected = messages.slice(startIndex);
+        selected = tail.slice(startIndex);
         totalChars = selected.reduce((sum, message) => sum + estimateMessageChars(message), 0);
     }
 
@@ -180,7 +369,7 @@ const selectMessagesForRequest = (messages: ChatMessage[]) => {
         selected = selected.slice(1);
     }
 
-    return selected;
+    return [...prefix, ...selected];
 };
 
 const ANTHROPIC_PROVIDERS = new Set<FlattenedAgent["provider"]>(["anthropic", "custom_anthropic"]);
@@ -272,9 +461,15 @@ Tool map (full parameter schemas are included with this request):
 - Scratch reference: getScratchGuide, searchBlocks, getBlockHelp.
 - Extensions: searchExtensions, installExtension.
 - Data slices: readVariable, readListSlice, searchList, getDataSummary.
-- Compute/glue: runJavaScript (async worker; use await sdk.call(name, args) to compose tools and return a JSON-serializable value).
+- Compute/glue: runJavaScript (main thread, not sandboxed; has full page access incl. fetch/console/sdk.vm; use await sdk.call(name, args) to compose tools and return a JSON-serializable value).
 - Edit/validate: applyPatch, getDiagnostics.
 - Targets/costumes: createSpriteWithSvg, updateSpriteProperties, listCostumes, addCostumeWithSvg, batchAddCostumesWithSvg, deleteCostume, batchDeleteCostumes, reorderCostume, setCostumeOrder, deleteSprite.
+- Stage observability: observeStage — live positions/speech/broadcast-listener state; call it after stage changes to VERIFY the change took effect instead of assuming.
+- Undo: discardDraft — restores a virtual file to its pre-write snapshot (text + blocks). Last resort; prefer an inverse applyPatch to keep history.
+- Media generation: generateCostumeFromDescription — needs an image model id in 设置 → 模型（IMAGE_MODEL_NOT_CONFIGURED 时改用 SVG 描述，不要反复重试）.
+- Recording: startStageRecording / stopStageRecording — stage WebM; the returned url is page-scoped (lost on refresh), so tell the user to save it via 右键另存为.
+- Subagents: runSubAgent starts a background run and returns AT ONCE (never idle-wait); results are injected next turn as <subagent_results> AND are listed by checkSubagentResults. Entries with partial=true are incomplete — say so when you use them.
+- Skills/memory: listSkills, readSkill, createSkill + memory tools (see Collaboration tools).
 
 Workflow:
 1. Start with getProjectOverview. Use listFiles when the paths are unclear.
@@ -328,37 +523,289 @@ export const PLAN_MODE_PROMPT = `Plan mode (read-only) is active:
 - Do NOT modify the project. Mutating tools (applyPatch, sprite/costume creation, deletion or reordering tools, installExtension, etc.) are removed from your tool list, and calls made through runJavaScript's sdk.call are rejected as well.
 - Research first: getProjectOverview -> listFiles/searchFiles -> readFile/readVariable/readListSlice/searchList -> getScratchGuide/searchBlocks/getBlockHelp/searchExtensions when needed. Use getDiagnostics to understand current errors.
 - runJavaScript is available for read-only computation and read-only tool composition only.
+- observeStage, readSkill, listSkills, checkSubagentResults, listMemoryBlocks and getMemoryBlock remain available as read-only inputs for planning.
 - When you have enough information, reply with a concrete implementation plan instead of making changes. Include: (1) the goal, (2) exact files/targets/scripts to change, (3) ordered steps, (4) risks or open questions, (5) how you will validate (getDiagnostics etc.).
 - Never claim that something was changed. The user will approve the plan before execution starts.
 - If the user's message is only a question, answer it directly; keep the plan short.`;
 
+/** Tool-usage guidance for the collaboration tools (memory / todos / questions). */
+const COLLAB_PROMPT = `
+
+## Collaboration tools
+
+- updateTodoList: for any multi-step task (three steps or more), maintain the visible task list and update statuses as you progress (pending / in_progress / completed / cancelled). Keep ids stable across updates.
+- askUser: ask AT MOST once per turn and only when missing information would change the result; prefer reasonable assumptions otherwise. Combine all clarifications into one call.
+- Skill sedimentation (createSkill): when the SAME scenario or user preference recurs (2+ times), offer to persist it as a skill instead of a memory. AI-written skills start DISABLED; tell the user to review in Settings > Skills. One-off facts belong to memory tools.
+- Memory tools: use setMemoryBlock to persist durable facts worth remembering across sessions (project convention under scope "project", stable user rules/preferences under scope "longTerm"). At the start of a relevant task, use listMemoryBlocks to recall context; correct stale facts with replaceMemoryBlockText instead of rewriting whole blocks; deleteMemoryBlock only when a memory is wrong.`;
+
 const buildSystemPrompt = (planMode: boolean): string =>
-    planMode ? `${SYSTEM_PROMPT}\n\n${PLAN_MODE_PROMPT}` : SYSTEM_PROMPT;
+    planMode ? `${SYSTEM_PROMPT}\n\n${PLAN_MODE_PROMPT}` : `${SYSTEM_PROMPT}${COLLAB_PROMPT}`;
+
+/** Append enabled skill instructions so the model follows the user's custom guidance. */
+const enabledSkills = (skills: SkillConfig[]): SkillConfig[] =>
+    skills.filter((skill) => skill.enabled && skill.name?.trim() && skill.content?.trim());
+
+/** Compact index only — full skill text is NO LONGER auto-injected; the model reads it on demand
+    via listSkills / readSkill (or when the user picks one with "/" before sending). */
+const buildSkillsIndexPrompt = (skills: SkillConfig[]): string => {
+    const enabled = enabledSkills(skills);
+    if (enabled.length === 0) return "";
+    const lines = enabled
+        .map((skill) => {
+            const description = skill.description?.trim() ? ` — ${skill.description.trim()}` : "";
+            return `- ${skill.name?.trim()}${description}（用 readSkill 读取全文）`;
+        })
+        .join("\n");
+    return `\n\n## Skills index (on-demand)\n\nThe following skills are enabled but NOT inlined here. When relevant, call listSkills / readSkill to load the full instructions before acting:\n${lines}\n\nSkills are user-authored standing guidance; follow them by default, but the user's latest explicit request takes precedence over any skill.`;
+};
+
+/** Full inline injection, now only used for a user-selected skill ("/skill" flow). */
+const buildSkillTextPrompt = (skill: SkillConfig): string =>
+    `\n\n## Selected skill: ${skill.name}\n${skill.description ? `${skill.description}\n` : ""}${skill.content}`;
 
 const getToolSchemasForMode = (planMode: boolean) =>
     planMode
-        ? scratchToolSchemas.filter((tool) => !MUTATING_TOOLS.has(tool.function.name))
+        ? scratchToolSchemas.filter(
+              (tool) =>
+                  !MUTATING_TOOLS.has(tool.function.name) && !PLAN_BLOCKED_TOOLS.has(tool.function.name),
+          )
         : scratchToolSchemas;
 
 export function useChat({
+    subagents,
     messages,
+    currentSessionId,
     currentAgent,
     updateSessionMessages,
     appendSessionSnapshot,
     enableReasoning,
     planMode,
     vm,
+    mcpServers,
+    disabledTools,
+    skills,
+    promptConfig,
+    compacted,
+    updateSessionCompacted,
 }: UseChatOptions) {
     const [inputText, setInputText] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [chatStats, setChatStats] = useState<ChatStats | null>(null);
+    const [systemPrompt, setSystemPrompt] = useState<string>("");
     const [isPlanReady, setIsPlanReady] = useState(false);
     const aiToolsRef = useRef<AITools | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const disabledToolSetRef = useRef(new Set(disabledTools));
+    const compactedRef = useRef(compacted);
+    const [isCompacting, setIsCompacting] = useState(false);
+    const [todos, setTodos] = useState<TodoItem[]>(() => listTodos());
+    // Task list is per-turn/per-conversation: hide it when a new turn starts or a
+    // different conversation is opened (cleared by clearTodos below).
+    const clearTodos = useCallback(() => {
+        updateTodos([]);
+        setTodos([]);
+    }, []);
+    // Poll for tool-driven updates; cheap and avoids threading a store into every tool call.
+    const agentRef = useRef(currentAgent);
+    const skillsRef = useRef(skills);
+    const subagentsRef = useRef(subagents);
+    const pendingSubagentReflowRef = useRef<SubagentResultEntry[]>([]);
+    const pendingSkillsReflowRef = useRef<SkillWriteResult[]>([]);
+    // Streaming refs are mirror values consumed inside async closures. Writing them
+    // during render was fragile under concurrent rendering; mirror them via effects.
+    useEffect(() => {
+        disabledToolSetRef.current = new Set(disabledTools);
+    }, [disabledTools]);
+    useEffect(() => {
+        compactedRef.current = compacted;
+    }, [compacted]);
+    useEffect(() => {
+        agentRef.current = currentAgent;
+    }, [currentAgent]);
+    useEffect(() => {
+        skillsRef.current = skills;
+    }, [skills]);
+    useEffect(() => {
+        subagentsRef.current = subagents;
+    }, [subagents]);
+    useEffect(() => {
+        setSubagentDefinitions(subagentsRef.current);
+    }, [subagents]);
+
+    // Reflow entries belong to the conversation they were produced in; switching or
+    // opening a conversation drops the queue so old results cannot leak into a new chat.
+    useEffect(() => {
+        if (!currentSessionId) return;
+        pendingSubagentReflowRef.current = [];
+        pendingSkillsReflowRef.current = [];
+    }, [currentSessionId]);
+
+    // Expose the active model's image config to image-generation tools + generic notices.
+    useEffect(() => {
+        const unbindImage = bindImageModelResolver(() => {
+            const agent = agentRef.current;
+            return agent?.imageModel ? { baseUrl: agent.baseUrl, apiKey: agent.apiKey, modelId: agent.imageModel } : null;
+        });
+        const unbindNotice = bindNoticeListener((text, autoClearMs) => showStatusNotice(text, autoClearMs));
+        const unbindSkillsChanged = bindSkillsChangedListener((result) => {
+            pendingSkillsReflowRef.current = [...pendingSkillsReflowRef.current, result].slice(-5);
+            showStatusNotice(`<技能库更新> ${result.name}（待审查启用）`, 6000);
+        });
+        return () => {
+            unbindImage();
+            unbindNotice();
+            unbindSkillsChanged();
+        };
+    }, []);
+
+    // Surface finished background subagent runs as a status notice.
+    useEffect(() => {
+        const unbind = bindSubagentResultListener((entry) => {
+            // Completed summaries are queued and injected into the NEXT request's system
+            // prompt (see send path) so the model learns the result without polling.
+            if (entry.status === "completed") pendingSubagentReflowRef.current = [...pendingSubagentReflowRef.current, entry].slice(-5);
+            const label = entry.status === "completed"
+                ? `<子智能体完成> ${entry.profile} 已返回结果（用 checkSubagentResults 查看）`
+                : `<子智能体失败> ${entry.profile}：${entry.error || "未知错误"}`;
+            showStatusNotice(label, 6000);
+        });
+        return () => {
+            unbind();
+        };
+    }, []);
+    useEffect(() => {
+        const unbind = bindSkillsProvider(() => {
+            const enabled = skillsRef.current.filter((skill) => skill.enabled && skill.name?.trim() && skill.content?.trim());
+            return enabled.map((skill) => ({
+                id: skill.id || `skill-${skill.name}`,
+                name: skill.name,
+                description: skill.description,
+                content: skill.content,
+            }));
+        });
+        return () => {
+            unbind();
+        };
+    }, []);
+    // Subagent runner: run a one-shot conversation against the current agent without tools.
+    useEffect(() => {
+        const unbind = bindSubagentRunner(async (profile, task, context) => {
+            const agent = agentRef.current;
+            if (!agent) throw new Error("子智能体不可用：当前没有可用的模型配置。");
+            const def = getSubagentDefinition(profile);
+            if (!def) throw new Error(`未知子智能体 profile ${profile}`);
+            const systemPrompt = `${def.systemPrompt}\n\nYou may use ONLY the provided read-only tools when they help. Do not modify the project.\n\nOutput contract: your final text is delivered verbatim to the main agent as the run summary, and it cannot see this conversation. Make it self-contained: state the answer/findings directly, key evidence, and remaining uncertainty — no narration of your process or tool calls.`;
+            const adapter = getProviderAdapter(agent.provider);
+            const toolNames = [
+                "readFile", "listFiles", "searchFiles", "getProjectOverview", "readVariable", "readListSlice",
+                "searchList", "searchBlocks", "getBlocksHelp", "observeStage", "listMemoryBlocks", "getMemoryBlock",
+            ];
+            const subagentTools = (getToolSchemasForMode(false) as any[]).filter((tool: any) => toolNames.includes(tool.function?.name));
+            return runSubagentLoop(
+                {
+                    sendMessage: (messages, opts) => adapter.sendChatCompletion({
+                        agent,
+                        messages,
+                        tools: subagentTools,
+                        toolChoice: "auto" as any,
+                        enableReasoning: false,
+                        onTextDelta: opts.onTextDelta,
+                    }),
+                    executeTool: (name: string, args: any) => callAITool(
+                        aiToolsRef.current as Record<string, any> | null,
+                        name,
+                        args,
+                        {allowBuiltinTool: (toolName: string) => toolNames.includes(toolName)},
+                    ),
+                },
+                {profile, task, systemPrompt, context},
+            );
+        });
+        return () => {
+            unbind();
+        };
+    }, []);
+
+
+    // Preset status-notice state before its handlers below.
+    const [statusNotice, setStatusNotice] = useState<string | null>(null);
+    // Full compaction summary kept for the "view compressed content" overlay.
+    const [compactionPreview, setCompactionPreview] = useState<string | null>(null);
+    const statusNoticeTimerRef = useRef<number | null>(null);
+    // Bumped by clearStatusNotice so a pending timer callback cannot resurrect a cleared queue.
+    const noticeEpochRef = useRef(0);
+    type NoticeItem = { text: string; autoClearMs?: number };
+    const noticeQueueRef = useRef<NoticeItem[]>([]);
+    const noticeActiveRef = useRef(false);
+
+    // No-op updates must not re-render: the 600ms poll produces a fresh array
+    // every tick even when the tool-driven todos did not change.
+    const todosEqual = (a: TodoItem[] | null, b: TodoItem[] | null) => {
+        if (a === b) return true;
+        if (!a || !b || a.length !== b.length) return false;
+        for (let index = 0; index < a.length; index += 1) {
+            if (
+                a[index].id !== b[index].id ||
+                a[index].status !== b[index].status ||
+                a[index].title !== b[index].title
+            ) {
+                return false;
+            }
+        }
+        return true;
+    };
+    useEffect(() => {
+        const timer = window.setInterval(() => {
+            const next = listTodos();
+            setTodos((prev) => (todosEqual(prev, next) ? prev : next));
+        }, 600);
+        return () => window.clearInterval(timer);
+    }, []);
+
+    const clearStatusNotice = useCallback(() => {
+        noticeEpochRef.current += 1;
+        if (statusNoticeTimerRef.current !== null) {
+            window.clearTimeout(statusNoticeTimerRef.current);
+            statusNoticeTimerRef.current = null;
+        }
+        setStatusNotice(null);
+        noticeQueueRef.current = [];
+        noticeActiveRef.current = false;
+    }, []);
+
+    /** Show a transient status line in the message rail; queued when one is already showing. */
+    const showStatusNotice = useCallback((text: string, autoClearMs?: number) => {
+        noticeQueueRef.current = [...noticeQueueRef.current, { text, autoClearMs }].slice(-8);
+        if (noticeActiveRef.current) return;
+        const displayNext = (epoch: number) => {
+            if (epoch !== noticeEpochRef.current) return;
+            const item = noticeQueueRef.current.shift();
+            if (!item) {
+                noticeActiveRef.current = false;
+                return;
+            }
+            noticeActiveRef.current = true;
+            setStatusNotice(item.text);
+            if (statusNoticeTimerRef.current !== null) window.clearTimeout(statusNoticeTimerRef.current);
+            statusNoticeTimerRef.current = window.setTimeout(
+                () => {
+                    statusNoticeTimerRef.current = null;
+                    setStatusNotice(null);
+                    displayNext(epoch);
+                },
+                item.autoClearMs || 3000,
+            );
+        };
+        displayNext(noticeEpochRef.current);
+    }, []);
 
     const callTool = async (functionName: string, args: Record<string, any>, denyMutations = false) =>
-        callAITool(aiToolsRef.current as Record<string, any> | null, functionName, args, { denyMutations });
+        callAITool(aiToolsRef.current as Record<string, any> | null, functionName, args, {
+            denyMutations,
+            allowMcp: !denyMutations,
+            allowBuiltinTool: (name: string) => !(disabledToolSetRef.current.has(name)),
+        });
 
     useEffect(() => {
         aiToolsRef.current?.dispose?.();
@@ -371,12 +818,127 @@ export function useChat({
         };
     }, [vm]);
 
+    // Generation continues into async continuations after unmount (abort races):
+    // state writes must be suppressed once this component instance is gone.
+    const unmountedRef = useRef(false);
+    useEffect(() => {
+        unmountedRef.current = false;
+        return () => {
+            unmountedRef.current = true;
+        };
+    }, []);
+
     useEffect(() => {
         if (!planMode) setIsPlanReady(false);
     }, [planMode]);
 
-    const handleSend = async (overrides?: { text?: string; attachments?: Attachment[]; planMode?: boolean }) => {
+    /**
+     * Condense older history into a rolling summary and persist the new boundary.
+     * Returns the compacted state so callers can use it immediately.
+     * `force` runs even when the budget is not exceeded (the 「压缩上下文」action).
+     */
+    const runCompaction = async (
+        sourceMessages: ChatMessage[],
+        agent: FlattenedAgent,
+        force: boolean,
+        signal?: AbortSignal,
+    ): Promise<{ summary: string; upTo: number } | undefined> => {
+        const view = compactedRef.current;
+        const fromIndex = view?.summary ? Math.min(view.upTo, sourceMessages.length) : 0;
+        const remaining = sourceMessages
+            .slice(fromIndex)
+            .reduce((sum, message) => sum + estimateMessageChars(message), 0);
+
+        if (!force && remaining <= MAX_REQUEST_CHARS) return view;
+
+        // Forced (manual) compaction ignores the length thresholds entirely: the user asked
+        // for it, so shrink the retained tail proportionally and always make progress.
+        if (!force && remaining < COMPACT_MIN_CHARS) return view;
+
+        const retainChars = force ? Math.max(0, Math.min(COMPACT_RETAIN_CHARS, Math.floor(remaining * 0.4))) : COMPACT_RETAIN_CHARS;
+        const cut = computeCompactionCut(sourceMessages, fromIndex, retainChars, force ? 0 : COMPACT_MIN_CHARS, force);
+        if (!cut || cut <= fromIndex) {
+            if (force) {
+                showStatusNotice(
+                    sourceMessages.length <= 1
+                        ? "<无需压缩> 只有一条消息，没有可压缩的历史"
+                        : "<无需压缩> 没有可压缩的较早历史",
+                    4000,
+                );
+            }
+            return view;
+        }
+
+        const region = sourceMessages.slice(fromIndex, cut);
+        const transcript = renderTranscriptForSummary(region);
+        if (!transcript.trim()) return view;
+
+        const prompt = buildCompactionPrompt(view?.summary || "", transcript);
+
+        setIsCompacting(true);
+        showStatusNotice("<AI正在压缩记忆>");
+        try {
+            const adapter = getProviderAdapter(agent.provider);
+            const data = await adapter.sendChatCompletion({
+                agent,
+                messages: [{ id: createMessageId(), role: "user", content: prompt }],
+                enableReasoning: false,
+                ...(signal ? { signal } : {}),
+            });
+            const summary = String(data?.choices?.[0]?.message?.content || "").trim();
+            if (!summary) {
+                if (force) showStatusNotice("<压缩记忆失败> 模型没有返回摘要内容", 4000);
+                return view;
+            }
+            // Automatic compaction only keeps a summary that is actually smaller, so it never
+            // inflates a short request. A manual (forced) compaction is honored even when the
+            // region is tiny — the user explicitly asked for it.
+            const regionChars = region.reduce((sum, message) => sum + estimateMessageChars(message), 0);
+            if (!force && summary.length >= regionChars) return view;
+
+            const next = { summary, upTo: cut };
+            updateSessionCompacted?.(next);
+            compactedRef.current = next;
+            const summarizedCount = cut - fromIndex;
+            setCompactionPreview(summary);
+            showStatusNotice(`<已完成压缩记忆> 已将前 ${summarizedCount} 条消息压缩为摘要（${summary.length} 字符），点开可查看`, 5000);
+            return next;
+        } catch (error: any) {
+            // Compaction is best-effort: on failure keep the previous view.
+            // An abort is the user pressing stop, not a failure worth reporting.
+            if (error?.name !== "AbortError") {
+                console.warn("[02Agent] compaction failed", error);
+                showStatusNotice(
+                    error?.message ? `<压缩记忆失败> ${String(error.message).slice(0, 120)}（已保留原有上下文）` : "<压缩记忆失败> 已保留原有上下文",
+                    4000,
+                );
+            }
+            return view;
+        } finally {
+            setIsCompacting(false);
+        }
+    };
+
+    /** Explicit user action: compact now regardless of the current budget. */
+    const handleCompactNow = async () => {
+        if (isGenerating || isCompacting) return;
+        if (!currentAgent) return;
+        await runCompaction(messages, currentAgent, true);
+    };
+
+    /** Explicit user action: forget earlier turns and any rolled-up summary. */
+    const handleClearMemory = () => {
         if (isGenerating) return;
+        updateSessionCompacted?.(undefined);
+        compactedRef.current = undefined;
+        showStatusNotice("<已清空记忆> 上下文摘要已删除，AI 将重新读取聊天记录", 4000);
+    };
+
+
+    const handleSend = async (overrides?: { text?: string; attachments?: Attachment[]; planMode?: boolean; selectedSkillId?: string }) => {
+        if (isGenerating) return;
+        // A new user turn starts a fresh task view: drop the previous turn's checklist.
+        clearTodos();
         const effectiveInputText = overrides?.text ?? inputText;
         const effectiveAttachments = overrides?.attachments ?? attachments;
         const activePlanMode = overrides?.planMode ?? planMode;
@@ -434,9 +996,84 @@ export function useChat({
         abortControllerRef.current?.abort();
         abortControllerRef.current = new AbortController();
 
-        const activeSystemPrompt = buildSystemPrompt(activePlanMode);
-        const activeToolSchemas = getToolSchemasForMode(activePlanMode);
-        // const maxToolRounds = activePlanMode ? MAX_PLAN_TOOL_ROUNDS : MAX_TOOL_ROUNDS;
+        // Build the system prompt: base prompt + plan mode + user prompt override + enabled skills.
+        const basePrompt = (promptConfig?.includeBase === false) ? "" : buildSystemPrompt(activePlanMode);
+        const customText = (promptConfig?.text || "").trim();
+        const mergedBase = (() => {
+            if (!customText) return basePrompt;
+            switch (promptConfig?.mode || "append") {
+                case "replace":
+                    return customText;
+                case "prepend":
+                    return `${customText}\n\n${basePrompt}`;
+                case "append":
+                default:
+                    return `${basePrompt}\n\n${customText}`;
+            }
+        })();
+        let activeSystemPrompt = mergedBase + buildSkillsIndexPrompt(skills);
+        const selectedSkill = overrides?.selectedSkillId
+            ? enabledSkills(skills).find((skill) => skill.id === overrides.selectedSkillId)
+            : undefined;
+        if (selectedSkill) activeSystemPrompt += buildSkillTextPrompt(selectedSkill);
+
+        // Reflow: completed background subagent runs land in the next system prompt.
+        const reflow = pendingSubagentReflowRef.current;
+        pendingSubagentReflowRef.current = [];
+        if (reflow.length) {
+            const body = reflow
+                .map(
+                    (entry) =>
+                        `- run ${entry.id} · ${entry.profile} · 任务: ${entry.task.slice(0, 160)}${entry.partial ? "（部分结果，可能不完整）" : ""}
+  结论: ${(entry.summary || "").slice(0, 2000)}`,
+                )
+                .join("\n");
+            activeSystemPrompt += `
+
+<subagent_results>
+以下为后台子智能体的已完成结果（仅在需要时使用，不要重复其结论）：
+${body}
+</subagent_results>`;
+        }
+
+        // Reflow: skills written by the AI (awaiting human review) land in the next system prompt.
+        const skillsReflow = pendingSkillsReflowRef.current;
+        pendingSkillsReflowRef.current = [];
+        if (skillsReflow.length) {
+            const body = skillsReflow
+                .map((entry) => `- ${entry.status}: "${entry.name}"（enabled=${entry.enabled}，待用户在 设置 → 技能 审查后启用）`)
+                .join("\n");
+            activeSystemPrompt += `
+
+<skills_updated>
+以下技能刚由 AI 写入技能库（默认禁用，不会立即生效；请告知用户到 设置 → 技能 审查并启用）：
+${body}
+</skills_updated>`;
+        }
+        setSystemPrompt(activeSystemPrompt);
+
+        // Build the tool list: built-in tools minus disabled ones, plus MCP tools from
+        // enabled servers (MCP tools are excluded entirely in plan mode).
+        const disabledToolSet = new Set(disabledTools || []);
+        const activeToolSchemas: any[] = getToolSchemasForMode(activePlanMode).filter(
+            (tool) => !disabledToolSet.has(tool.function.name),
+        );
+
+        if (!activePlanMode && Array.isArray(mcpServers) && mcpServers.some((server) => server.enabled)) {
+            try {
+                const { schemas, errors } = await mcpRegistry.getToolSchemas(mcpServers);
+                activeToolSchemas.push(...schemas);
+                if (errors.length > 0) {
+                    activeSystemPrompt += `\n\nMCP servers unavailable this turn (their tools are not in your tool list): ${errors
+                        .map((e) => `${e.serverName} (${e.message})`)
+                        .join("; ")}`;
+                }
+            } catch (error) {
+                console.warn("[02Agent] MCP tool discovery failed", error);
+            }
+        }
+
+        const maxToolRounds = activePlanMode ? MAX_PLAN_TOOL_ROUNDS : MAX_TOOL_ROUNDS;
         setIsPlanReady(false);
 
         let currentMessages = newMessages;
@@ -512,11 +1149,11 @@ export function useChat({
 
         const publishActiveStats = (force = false) => {
             const active = activeRequestStats;
-            if (!active) return;
-
-            const now = active.completedAt || Date.now();
-            if (!force && now - lastStatsPublishedAt < 120) return;
-            lastStatsPublishedAt = now;
+            if (active) {
+                const now = active.completedAt || Date.now();
+                if (!force && now - lastStatsPublishedAt < 120) return;
+                if (unmountedRef.current) return;
+                lastStatsPublishedAt = now;
 
             const estimatedOutputTokens = active.estimatedOutputTokens + active.toolCallTokens;
             const outputTokens =
@@ -543,6 +1180,7 @@ export function useChat({
                 cacheHitPercent: getCacheHitPercent(active.usage),
                 estimated: !active.usage,
             });
+            }
         };
 
         try {
@@ -552,22 +1190,28 @@ export function useChat({
             let toolRounds = 0;
             while (shouldContinue) {
 
-                // NEVER_APPLY_THE_CODE
                 // Stop runaway tool loops even if the model keeps requesting more tools.
-                // if (toolRounds >= maxToolRounds) {
-                //     currentMessages = [
-                //         ...currentMessages,
-                //         {
-                //             id: createMessageId(),
-                //             role: "assistant",
-                //             content: `Error: 工具调用轮次超过上限（${maxToolRounds} 轮），已停止以避免无限循环。`,
-                //         },
-                //     ];
-                //     updateSessionMessages(currentMessages, sessionId);
-                //     break;
-                // }
+                if (toolRounds >= maxToolRounds) {
+                    currentMessages = [
+                        ...currentMessages,
+                        {
+                            id: createMessageId(),
+                            role: "assistant",
+                            content: `Error: 工具调用轮次超过上限（${maxToolRounds} 轮），已停止以避免无限循环。请检查任务是否过于复杂，或拆分成多次对话完成。`,
+                        },
+                    ];
+                    updateSessionMessages(currentMessages, sessionId);
+                    break;
+                }
 
-                const requestMessages = selectMessagesForRequest(currentMessages);
+                // Summarize older history before it is dropped by the budget.
+                const compactedView = await runCompaction(
+                    currentMessages,
+                    currentAgent,
+                    false,
+                    abortControllerRef.current?.signal,
+                );
+                const requestMessages = selectMessagesForRequest(currentMessages, compactedView);
                 activeRequestStats = {
                     startedAt: Date.now(),
                     firstTokenAt: null,
@@ -661,7 +1305,13 @@ export function useChat({
                     activeRequestStats.completedAt = Date.now();
                     publishActiveStats(true);
                 }
-                const responseMessage = data.choices[0].message as ChatMessage;
+                const choices = (data as { choices?: Array<{ message?: ChatMessage }> } | undefined)?.choices;
+                const responseMessage = choices?.[0]?.message;
+                if (!responseMessage) {
+                    throw new Error(
+                        "模型返回了空响应（choices 为空或缺少 message）。请检查所选模型是否兼容工具调用，或在设置中换一个模型重试。",
+                    );
+                }
                 const responseToolCalls = responseMessage.tool_calls?.filter(
                     (toolCall) => toolCall?.id || toolCall?.function?.name,
                 );
@@ -771,7 +1421,7 @@ export function useChat({
                 publishActiveStats(true);
             }
             abortControllerRef.current = null;
-            setIsGenerating(false);
+            if (!unmountedRef.current) setIsGenerating(false);
         }
     };
 
@@ -784,10 +1434,20 @@ export function useChat({
         setInputText,
         isGenerating,
         chatStats,
+        systemPrompt,
         attachments,
         setAttachments,
         handleSend,
         handleStopGenerating,
         isPlanReady,
+        isCompacting,
+        todos,
+        clearTodos,
+        compactionPreview,
+        setCompactionPreview,
+        statusNotice,
+        clearStatusNotice,
+        handleCompactNow,
+        handleClearMemory,
     };
 }

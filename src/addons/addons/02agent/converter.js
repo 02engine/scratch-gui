@@ -1,4 +1,7 @@
 import * as acorn from 'acorn';
+// Shared block catalog — the local copy that used to live here had drifted
+// away from the tools.ts copy (missing several hat blocks). Single source now.
+import { ALL_BLOCK_INFO as AllBlockInfo } from './blockCatalog';
 
 export let runtime = {};
 export function setRuntime(rt) {
@@ -10,146 +13,6 @@ export function setGetBlockInfoTool(fn) {
     getBlockInfoTool = typeof fn === "function" ? fn : null;
 }
 
-const AllBlockInfo = {
-    "control_repeat": "重复执行 [TIMES] 次（TIMES：number）",
-    "control_repeat_until": "重复执行直到 [CONDITION]（CONDITION：Boolean）",
-    "control_while": "当 [CONDITION] 重复执行（CONDITION：Boolean）",
-    "control_for_each": "对 [VARIABLE] 遍历 [VALUE]（VARIABLE：string, VALUE：string）",
-    "control_forever": "重复执行",
-    "control_wait": "等待 [DURATION] 秒（DURATION：number）",
-    "control_wait_until": "等待直到 [CONDITION]（CONDITION：Boolean）",
-    "control_if": "如果 [CONDITION] 那么（CONDITION：Boolean）",
-    "control_if_else": "如果 [CONDITION] 那么 否则（CONDITION：Boolean）",
-    "control_stop": "停止 [STOP_OPTION]（STOP_OPTION：string）",
-    "control_create_clone_of": "克隆 [CLONE_OPTION]（CLONE_OPTION：string）",
-    "control_delete_this_clone": "删除此克隆体",
-    "control_get_counter": "计数器",
-    "control_incr_counter": "计数器加 1",
-    "control_clear_counter": "计数器归零",
-    "control_all_at_once": "一口气执行",
-    "event_whentouchingobject": "当碰到 [TOUCHINGOBJECTMENU]（TOUCHINGOBJECTMENU：string）",
-    "event_broadcast": "广播 [BROADCAST_INPUT]（BROADCAST_INPUT：string）",
-    "event_broadcastandwait": "广播 [BROADCAST_INPUT] 并等待（BROADCAST_INPUT：string）",
-    "event_whengreaterthan": "当 [WHENGREATERTHANMENU] > [VALUE]（WHENGREATERTHANMENU：string, VALUE：number）",
-    "looks_say": "说 [MESSAGE]（MESSAGE：string）",
-    "looks_sayforsecs": "说 [MESSAGE] [SECS] 秒（MESSAGE：string, SECS：number）",
-    "looks_think": "思考 [MESSAGE]（MESSAGE：string）",
-    "looks_thinkforsecs": "思考 [MESSAGE] [SECS] 秒（MESSAGE：string, SECS：number）",
-    "looks_show": "显示",
-    "looks_hide": "隐藏",
-    "looks_hideallsprites": "隐藏所有角色",
-    "looks_switchcostumeto": "换成造型 [COSTUME]（COSTUME：string）",
-    "looks_switchbackdropto": "换成背景 [BACKDROP]（BACKDROP：string）",
-    "looks_switchbackdroptoandwait": "换成背景 [BACKDROP] 并等待（BACKDROP：string）",
-    "looks_nextcostume": "下一个造型",
-    "looks_nextbackdrop": "下一个背景",
-    "looks_changeeffectby": "将 [EFFECT] 特效增加 [CHANGE]（EFFECT：string, CHANGE：number）",
-    "looks_seteffectto": "将 [EFFECT] 特效设为 [VALUE]（EFFECT：string, VALUE：number）",
-    "looks_cleargraphiceffects": "清除图形特效",
-    "looks_changesizeby": "将大小增加 [CHANGE]（CHANGE：number）",
-    "looks_setsizeto": "将大小设为 [SIZE]（SIZE：number）",
-    "looks_changestretchby": "将伸缩增加 [CHANGE]（CHANGE：number）",
-    "looks_setstretchto": "将伸缩设为 [STRETCH]（STRETCH：number）",
-    "looks_gotofrontback": "移到最 [FRONT_BACK]（FRONT_BACK：string）",
-    "looks_goforwardbackwardlayers": "向 [FORWARD_BACKWARD] 移动 [NUM] 层（FORWARD_BACKWARD：string, NUM：number）",
-    "looks_size": "大小",
-    "looks_costumenumbername": "造型 [NUMBER_NAME]（NUMBER_NAME：string）",
-    "looks_backdropnumbername": "背景 [NUMBER_NAME]（NUMBER_NAME：string）",
-    "motion_movesteps": "移动 [STEPS] 步（STEPS：number）",
-    "motion_movegrids": "移动 [STEPS] 格（STEPS：number）",
-    "motion_gotoxy": "移到 x:[X] y:[Y]（X：number, Y：number）",
-    "motion_goto": "移到 [TO]（TO：string）",
-    "motion_turnright": "右转 [DEGREES] 度（DEGREES：number）",
-    "motion_turnleft": "左转 [DEGREES] 度（DEGREES：number）",
-    "motion_pointindirection": "面向 [DIRECTION] 度（DIRECTION：number）",
-    "motion_pointtowards": "面向 [TOWARDS]（TOWARDS：string）",
-    "motion_glidesecstoxy": "在 [SECS] 秒内滑行到 x:[X] y:[Y]（SECS：number, X：number, Y：number）",
-    "motion_glideto": "在 [SECS] 秒内滑行到 [TO]（SECS：number, TO：string）",
-    "motion_ifonedgebounce": "碰到边缘就反弹",
-    "motion_setrotationstyle": "将旋转方式设为 [STYLE]（STYLE：string）",
-    "motion_changexby": "将 x 增加 [DX]（DX：number）",
-    "motion_setx": "将 x 设为 [X]（X：number）",
-    "motion_changeyby": "将 y 增加 [DY]（DY：number）",
-    "motion_sety": "将 y 设为 [Y]（Y：number）",
-    "motion_xposition": "x 坐标",
-    "motion_yposition": "y 坐标",
-    "motion_direction": "方向",
-    "motion_scroll_right": "向右滚动 [DISTANCE]（DISTANCE：number）",
-    "motion_scroll_up": "向上滚动 [DISTANCE]（DISTANCE：number）",
-    "motion_align_scene": "对齐场景 [ALIGNMENT]（ALIGNMENT：string）",
-    "motion_xscroll": "场景 x 滚动",
-    "motion_yscroll": "场景 y 滚动",
-    "operator_add": "[NUM1] + [NUM2]（NUM1：number, NUM2：number）",
-    "operator_subtract": "[NUM1] - [NUM2]（NUM1：number, NUM2：number）",
-    "operator_multiply": "[NUM1] * [NUM2]（NUM1：number, NUM2：number）",
-    "operator_divide": "[NUM1] / [NUM2]（NUM1：number, NUM2：number）",
-    "operator_lt": "[OPERAND1] < [OPERAND2]（OPERAND1：null, OPERAND2：null）",
-    "operator_equals": "[OPERAND1] = [OPERAND2]（OPERAND1：null, OPERAND2：null）",
-    "operator_gt": "[OPERAND1] > [OPERAND2]（OPERAND1：null, OPERAND2：null）",
-    "operator_and": "[OPERAND1] 且 [OPERAND2]（OPERAND1：Boolean, OPERAND2：Boolean）",
-    "operator_or": "[OPERAND1] 或 [OPERAND2]（OPERAND1：Boolean, OPERAND2：Boolean）",
-    "operator_not": "不成立 [OPERAND]（OPERAND：Boolean）",
-    "operator_random": "在 [FROM] 到 [TO] 之间取随机数（FROM：number, TO：number）",
-    "operator_join": "连接 [STRING1] 和 [STRING2]（STRING1：string, STRING2：string）",
-    "operator_letter_of": "[STRING] 的第 [LETTER] 个字符（STRING：string, LETTER：number）",
-    "operator_length": "[STRING] 的长度（STRING：string）",
-    "operator_contains": "[STRING1] 包含 [STRING2]？（STRING1：string, STRING2：string）",
-    "operator_mod": "[NUM1] 除以 [NUM2] 的余数（NUM1：number, NUM2：number）",
-    "operator_round": "四舍五入 [NUM]（NUM：number）",
-    "operator_mathop": "[OPERATOR] [NUM]（OPERATOR：string, NUM：number）",
-    "sound_play": "播放声音 [SOUND_MENU]（SOUND_MENU：string）",
-    "sound_playuntildone": "播放声音 [SOUND_MENU] 等待播放完成（SOUND_MENU：string）",
-    "sound_stopallsounds": "停止所有声音",
-    "sound_seteffectto": "将 [EFFECT] 音效设为 [VALUE]（EFFECT：string, VALUE：number）",
-    "sound_changeeffectby": "将 [EFFECT] 音效增加 [VALUE]（EFFECT：string, VALUE：number）",
-    "sound_cleareffects": "清除音效",
-    "sound_sounds_menu": "声音 [SOUND_MENU]（SOUND_MENU：string）",
-    "sound_beats_menu": "节拍 [BEATS]（BEATS：number）",
-    "sound_effects_menu": "音效 [EFFECT]（EFFECT：string）",
-    "sound_setvolumeto": "将音量设为 [VOLUME]（VOLUME：number）",
-    "sound_changevolumeby": "将音量增加 [VOLUME]（VOLUME：number）",
-    "sound_volume": "音量",
-    "sensing_touchingobject": "碰到 [TOUCHINGOBJECTMENU]？（TOUCHINGOBJECTMENU：string）",
-    "sensing_touchingcolor": "碰到颜色 [COLOR]？（COLOR：string）",
-    "sensing_coloristouchingcolor": "颜色 [COLOR] 碰到 [COLOR2]？（COLOR：string, COLOR2：string）",
-    "sensing_distanceto": "到 [DISTANCETOMENU] 的距离（DISTANCETOMENU：string）",
-    "sensing_timer": "计时器",
-    "sensing_resettimer": "计时器归零",
-    "sensing_of": "[OBJECT] 的 [PROPERTY]（OBJECT：string, PROPERTY：string）",
-    "sensing_mousex": "鼠标 x",
-    "sensing_mousey": "鼠标 y",
-    "sensing_setdragmode": "将拖动方式设为 [DRAG_MODE]（DRAG_MODE：string）",
-    "sensing_mousedown": "鼠标按下？",
-    "sensing_keypressed": "按下 [KEY_OPTION] 键？（KEY_OPTION：string）",
-    "sensing_current": "当前 [CURRENTMENU]（CURRENTMENU：string）",
-    "sensing_dayssince2000": "距 2000 年的天数",
-    "sensing_loudness": "响度",
-    "sensing_loud": "响吗？",
-    "sensing_askandwait": "询问 [QUESTION] 并等待（QUESTION：string）",
-    "sensing_answer": "回答",
-    "sensing_username": "用户名",
-    "sensing_userid": "用户 id",
-    "data_variable": "变量 [VARIABLE]（VARIABLE：variable）",
-    "data_setvariableto": "将 [VARIABLE] 设为 [VALUE]（VARIABLE：variable, VALUE：string）",
-    "data_changevariableby": "将 [VARIABLE] 增加 [VALUE]（VARIABLE：variable, VALUE：number）",
-    "data_hidevariable": "隐藏变量 [VARIABLE]（VARIABLE：variable）",
-    "data_showvariable": "显示变量 [VARIABLE]（VARIABLE：variable）",
-    "data_listcontents": "列表 [LIST]（LIST：list）",
-    "data_addtolist": "将 [ITEM] 加入列表 [LIST]（ITEM：string, LIST：list）",
-    "data_deleteoflist": "删除列表 [LIST] 的第 [INDEX] 项（LIST：list, INDEX：string）",
-    "data_deletealloflist": "删除列表 [LIST] 的全部项目（LIST：list）",
-    "data_insertatlist": "在列表 [LIST] 的第 [INDEX] 项前插入 [ITEM]（LIST：list, INDEX：string, ITEM：string）",
-    "data_replaceitemoflist": "将列表 [LIST] 的第 [INDEX] 项替换为 [ITEM]（LIST：list, INDEX：string, ITEM：string）",
-    "data_itemoflist": "列表 [LIST] 的第 [INDEX] 项（LIST：list, INDEX：string）",
-    "data_itemnumoflist": "[ITEM] 在列表 [LIST] 中的编号（ITEM：string, LIST：list）",
-    "data_lengthoflist": "列表 [LIST] 的长度（LIST：list）",
-    "data_listcontainsitem": "列表 [LIST] 包含 [ITEM]？（LIST：list, ITEM：string）",
-    "data_hidelist": "隐藏列表 [LIST]（LIST：list）",
-    "data_showlist": "显示列表 [LIST]（LIST：list）",
-    "procedures_definition": "自定义积木定义",
-    "procedures_call": "调用自定义积木 [PROCEDURE]（PROCEDURE：string）",
-    "procedures_call_with_return": "调用自定义积木 [PROCEDURE] 并返回（PROCEDURE：string）",
-};
 
 function getBlockInfo(opcode, rt) {
     const activeRuntime = rt || runtime;
@@ -1123,6 +986,161 @@ export function jsToJson(jsCode) {
         return '';
     }
 
+    // Extracted define-macro unrolling: builds the procedures_definition block
+    // plus its procedures_prototype shadow from a `define({...})` macro.
+    // Kept in the jsToJson scope so it keeps using evaluateLiteral /
+    // parseDefineCompactProccode / ensureProcArgIds / generateId / blocks.
+    function unrollDefineMacro(block, argsObject, blockId) {
+        block.opcode = 'procedures_definition';
+        const protoId = generateId();
+        block.inputs.custom_block = {
+            name: "custom_block",
+            block: protoId,
+            shadow: protoId
+        };
+
+        const protoBlock = {
+            id: protoId,
+            opcode: 'procedures_prototype',
+            inputs: {},
+            fields: {},
+            next: null,
+            topLevel: false,
+            parent: blockId,
+            shadow: true,
+            hidden: false,
+            locked: false,
+            collapsed: false,
+            mutation: {
+                tagName: "mutation",
+                children: [],
+                proccode: "",
+                argumentids: "[]",
+                argumentnames: "[]",
+                argumentdefaults: "[]",
+                warp: "false",
+                isreporter: "false",
+                isglobal: "false",
+                targetid: "null"
+            }
+        };
+
+        if (argsObject) {
+            let customArgsArray = null;
+            let infoArray = null;
+            let rawProccode = null;
+            let compactParsed = null;
+            for (const prop of argsObject.properties) {
+                const key = prop.key.name || prop.key.value;
+                if (key === '$args') {
+                    customArgsArray = prop.value;
+                } else if (key === 'info') {
+                    const val = evaluateLiteral(prop.value);
+                    if (Array.isArray(val)) infoArray = val.map(String);
+                } else if (key === '$xy') {
+                    const coords = evaluateLiteral(prop.value);
+                    if (coords && typeof coords === 'object') {
+                        if (coords.x !== undefined) block.x = coords.x;
+                        if (coords.y !== undefined) block.y = coords.y;
+                    }
+                } else {
+                    const valNode = prop.value;
+                    const val = evaluateLiteral(valNode);
+                    if (val !== null) {
+                        if (key === 'argumentnames' || key === 'argumentdefaults') {
+                            protoBlock.mutation[key] = Array.isArray(val) ? JSON.stringify(val) : String(val);
+                        } else {
+                            if (key === 'proccode') rawProccode = String(val);
+                            protoBlock.mutation[key] = String(val);
+                        }
+                    }
+                }
+            }
+
+            if (rawProccode) {
+                compactParsed = parseDefineCompactProccode(rawProccode);
+                protoBlock.mutation.proccode = unescapeDefineProccode(compactParsed.proccode);
+            }
+
+            if (infoArray) {
+                if (infoArray.includes('warp')) protoBlock.mutation.warp = "true";
+                if (infoArray.includes('global')) protoBlock.mutation.isglobal = "true";
+                if (infoArray.includes('reporter')) protoBlock.mutation.isreporter = "true";
+            }
+
+            // For definitions, type is only set if it's a reporter, otherwise it's just standard
+            if (protoBlock.mutation.isreporter === "true") {
+                protoBlock.mutation.type = "procedures_prototype";
+            }
+
+            // Process prototype args
+            if (customArgsArray && customArgsArray.type === 'ArrayExpression') {
+                const proccode = protoBlock.mutation.proccode;
+                const shared = proccode ? ensureProcArgIds(proccode, customArgsArray.elements.length) : null;
+                const argIds = shared
+                    ? [...shared]
+                    : Array.from({ length: customArgsArray.elements.length }, () => "arg_" + generateId().substring(0, 10));
+                protoBlock.mutation.argumentids = JSON.stringify(argIds);
+
+                for (let i = 0; i < customArgsArray.elements.length; i++) {
+                    const argNode = customArgsArray.elements[i];
+                    const argId = argIds[i];
+                    if (!argNode) continue;
+
+                    if (argNode.type === 'CallExpression' || argNode.type === 'MemberExpression') {
+                        const subBlockId = parseBlockStatement([{ type: 'ExpressionStatement', expression: argNode }], protoId, false);
+                        protoBlock.inputs[argId] = {
+                            name: argId,
+                            block: subBlockId,
+                            shadow: subBlockId
+                        };
+                        const innerBlock = blocks.find(b => b.id === subBlockId);
+                        if (innerBlock) innerBlock.shadow = true;
+                    }
+                }
+            } else if (compactParsed && compactParsed.argTypes.length > 0) {
+                const names = compactParsed.argNames.map((n, idx) => (n === undefined ? `参数${idx + 1}` : n));
+                const defaults = compactParsed.argTypes.map(defaultForArgType);
+                protoBlock.mutation.argumentnames = JSON.stringify(names);
+                protoBlock.mutation.argumentdefaults = JSON.stringify(defaults);
+                const proccode = protoBlock.mutation.proccode;
+                const shared = proccode ? ensureProcArgIds(proccode, compactParsed.argTypes.length) : null;
+                const argIds = shared
+                    ? [...shared]
+                    : Array.from({ length: compactParsed.argTypes.length }, () => "arg_" + generateId().substring(0, 10));
+                protoBlock.mutation.argumentids = JSON.stringify(argIds);
+
+                for (let i = 0; i < compactParsed.argTypes.length; i++) {
+                    const t = compactParsed.argTypes[i];
+                    const argId = argIds[i];
+                    const reporterId = generateId();
+                    const reporterOpcode = t === 'b' ? 'argument_reporter_boolean' : 'argument_reporter_string_number';
+                    blocks.push({
+                        id: reporterId,
+                        opcode: reporterOpcode,
+                        inputs: {},
+                        fields: { VALUE: { name: 'VALUE', value: String(names[i]) } },
+                        next: null,
+                        topLevel: false,
+                        parent: protoId,
+                        shadow: true,
+                        hidden: false,
+                        locked: false,
+                        collapsed: false
+                    });
+                    protoBlock.inputs[argId] = {
+                        name: argId,
+                        block: reporterId,
+                        shadow: reporterId
+                    };
+                }
+            }
+        }
+
+        blocks.push(protoBlock);
+        blocks.push(block);
+    }
+
     // Process a block statement (e.g. function body or top-level program)
     function parseBlockStatement(statements, parentId, isTopLevel = false) {
         let firstId = null;
@@ -1248,156 +1266,9 @@ export function jsToJson(jsCode) {
                 }
             }
 
-            // Special unrolling for 'define' macro
+            // Special unrolling for 'define' macro (see unrollDefineMacro below)
             if (block.opcode === 'define') {
-                block.opcode = 'procedures_definition';
-                const protoId = generateId();
-                block.inputs.custom_block = {
-                    name: "custom_block",
-                    block: protoId,
-                    shadow: protoId
-                };
-
-                const protoBlock = {
-                    id: protoId,
-                    opcode: 'procedures_prototype',
-                    inputs: {},
-                    fields: {},
-                    next: null,
-                    topLevel: false,
-                    parent: blockId,
-                    shadow: true,
-                    hidden: false,
-                    locked: false,
-                    collapsed: false,
-                    mutation: {
-                        tagName: "mutation",
-                        children: [],
-                        proccode: "",
-                        argumentids: "[]",
-                        argumentnames: "[]",
-                        argumentdefaults: "[]",
-                        warp: "false",
-                        isreporter: "false",
-                        isglobal: "false",
-                        targetid: "null"
-                    }
-                };
-
-                if (argsObject) {
-                    let customArgsArray = null;
-                    let infoArray = null;
-                    let rawProccode = null;
-                    let compactParsed = null;
-                    for (const prop of argsObject.properties) {
-                        const key = prop.key.name || prop.key.value;
-                        if (key === '$args') {
-                            customArgsArray = prop.value;
-                        } else if (key === 'info') {
-                            const val = evaluateLiteral(prop.value);
-                            if (Array.isArray(val)) infoArray = val.map(String);
-                        } else if (key === '$xy') {
-                            const coords = evaluateLiteral(prop.value);
-                            if (coords && typeof coords === 'object') {
-                                if (coords.x !== undefined) block.x = coords.x;
-                                if (coords.y !== undefined) block.y = coords.y;
-                            }
-                        } else {
-                            const valNode = prop.value;
-                            const val = evaluateLiteral(valNode);
-                            if (val !== null) {
-                                if (key === 'argumentnames' || key === 'argumentdefaults') {
-                                    protoBlock.mutation[key] = Array.isArray(val) ? JSON.stringify(val) : String(val);
-                                } else {
-                                    if (key === 'proccode') rawProccode = String(val);
-                                    protoBlock.mutation[key] = String(val);
-                                }
-                            }
-                        }
-                    }
-
-                    if (rawProccode) {
-                        compactParsed = parseDefineCompactProccode(rawProccode);
-                        protoBlock.mutation.proccode = unescapeDefineProccode(compactParsed.proccode);
-                    }
-
-                    if (infoArray) {
-                        if (infoArray.includes('warp')) protoBlock.mutation.warp = "true";
-                        if (infoArray.includes('global')) protoBlock.mutation.isglobal = "true";
-                        if (infoArray.includes('reporter')) protoBlock.mutation.isreporter = "true";
-                    }
-
-                    // For definitions, type is only set if it's a reporter, otherwise it's just standard
-                    if (protoBlock.mutation.isreporter === "true") {
-                        protoBlock.mutation.type = "procedures_prototype";
-                    }
-
-                    // Process prototype args
-                    if (customArgsArray && customArgsArray.type === 'ArrayExpression') {
-                        const proccode = protoBlock.mutation.proccode;
-                        const shared = proccode ? ensureProcArgIds(proccode, customArgsArray.elements.length) : null;
-                        const argIds = shared
-                            ? [...shared]
-                            : Array.from({ length: customArgsArray.elements.length }, () => "arg_" + generateId().substring(0, 10));
-                        protoBlock.mutation.argumentids = JSON.stringify(argIds);
-
-                        for (let i = 0; i < customArgsArray.elements.length; i++) {
-                            const argNode = customArgsArray.elements[i];
-                            const argId = argIds[i];
-                            if (!argNode) continue;
-
-                            if (argNode.type === 'CallExpression' || argNode.type === 'MemberExpression') {
-                                const subBlockId = parseBlockStatement([{ type: 'ExpressionStatement', expression: argNode }], protoId, false);
-                                protoBlock.inputs[argId] = {
-                                    name: argId,
-                                    block: subBlockId,
-                                    shadow: subBlockId
-                                };
-                                const innerBlock = blocks.find(b => b.id === subBlockId);
-                                if (innerBlock) innerBlock.shadow = true;
-                            }
-                        }
-                    } else if (compactParsed && compactParsed.argTypes.length > 0) {
-                        const names = compactParsed.argNames.map((n, idx) => (n === undefined ? `参数${idx + 1}` : n));
-                        const defaults = compactParsed.argTypes.map(defaultForArgType);
-                        protoBlock.mutation.argumentnames = JSON.stringify(names);
-                        protoBlock.mutation.argumentdefaults = JSON.stringify(defaults);
-                        const proccode = protoBlock.mutation.proccode;
-                        const shared = proccode ? ensureProcArgIds(proccode, compactParsed.argTypes.length) : null;
-                        const argIds = shared
-                            ? [...shared]
-                            : Array.from({ length: compactParsed.argTypes.length }, () => "arg_" + generateId().substring(0, 10));
-                        protoBlock.mutation.argumentids = JSON.stringify(argIds);
-
-                        for (let i = 0; i < compactParsed.argTypes.length; i++) {
-                            const t = compactParsed.argTypes[i];
-                            const argId = argIds[i];
-                            const reporterId = generateId();
-                            const reporterOpcode = t === 'b' ? 'argument_reporter_boolean' : 'argument_reporter_string_number';
-                            blocks.push({
-                                id: reporterId,
-                                opcode: reporterOpcode,
-                                inputs: {},
-                                fields: { VALUE: { name: 'VALUE', value: String(names[i]) } },
-                                next: null,
-                                topLevel: false,
-                                parent: protoId,
-                                shadow: true,
-                                hidden: false,
-                                locked: false,
-                                collapsed: false
-                            });
-                            protoBlock.inputs[argId] = {
-                                name: argId,
-                                block: reporterId,
-                                shadow: reporterId
-                            };
-                        }
-                    }
-                }
-
-                blocks.push(protoBlock);
-                blocks.push(block);
+                unrollDefineMacro(block, argsObject, blockId);
                 prevId = linkStatements ? blockId : null;
                 continue; // Skip the rest of the generic parsing for 'define'
             }

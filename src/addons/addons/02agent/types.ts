@@ -4,6 +4,8 @@ export interface AgentModel {
   modelId: string;
   maxTokens?: number;
   contextWindow?: number;
+  /** Optional image generation model (OpenAI images API) used by generateCostumeFromDescription. */
+  imageModel?: string;
 }
 
 export interface Agent {
@@ -25,6 +27,7 @@ export interface FlattenedAgent {
   displayName: string;
   maxTokens?: number;
   contextWindow?: number;
+  imageModel?: string;
 }
 
 export interface TokenUsage {
@@ -119,6 +122,11 @@ export interface ChatSession {
   title: string;
   messages: ChatMessage[];
   updatedAt: number;
+  /**
+   * Context compaction state. `summary` condenses every message before index `upTo`
+   * so long sessions keep their早期结论 instead of silently dropping them.
+   */
+  compacted?: { summary: string; upTo: number };
 }
 
 export type BridgeStatus = "disabled" | "connecting" | "connected" | "error";
@@ -127,4 +135,59 @@ export interface BridgeConfig {
   enabled: boolean;
   port: number;
   token: string;
+}
+
+export type MCPTransport = "http" | "sse";
+
+export interface MCPToolInfo {
+  name: string;
+  description?: string;
+  inputSchema?: Record<string, unknown>;
+}
+
+export interface MCPServerConfig {
+  id: string;
+  name: string;
+  url: string;
+  transport: MCPTransport;
+  apiKey: string;
+  /** JSON text of extra request headers, e.g. {"X-Tenant":"a"} */
+  customHeaders: string;
+  enabled: boolean;
+  /** Original MCP tool names disabled for this server */
+  disabledTools: string[];
+  /** Last successfully discovered tools (informational cache) */
+  cachedTools?: MCPToolInfo[];
+  lastConnectedAt?: number;
+  lastError?: string;
+}
+
+export interface SkillConfig {
+  id: string;
+  name: string;
+  description: string;
+  /** Markdown instructions injected into the system prompt when enabled */
+  content: string;
+  enabled: boolean;
+}
+
+/** User-editable system prompt override. */
+export interface PromptConfig {
+  /** Where to merge the custom text relative to the built-in base prompt. */
+  mode: "prepend" | "append" | "replace";
+  /** Custom system prompt text (used for all modes; `replace` uses it alone). */
+  text: string;
+  /**
+   * Whether to include the built-in default base prompt (SYSTEM_PROMPT + plan-mode
+   * prompt). When false, the base is skipped entirely and only `text` (+ skills) is
+   * injected. Defaults to true for backwards compatibility.
+   */
+  includeBase: boolean;
+}
+
+export interface SubagentDef {
+  id: string;
+  name: string;
+  description?: string;
+  systemPrompt: string;
 }

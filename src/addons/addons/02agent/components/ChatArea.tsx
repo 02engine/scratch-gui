@@ -17,6 +17,8 @@ interface ChatAreaProps {
     onOpenWorkspaceAttachment: (attachment: Attachment) => void;
     onRestoreToUserMessage: (messageId: string, message: ChatMessage) => void;
     hasSnapshot: (messageId: string) => boolean;
+    /** Transient status line shown in the message rail (compaction / memory cleared). */
+    statusNotice?: string | null;
 }
 
 type AssistantSegment =
@@ -465,6 +467,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     onOpenWorkspaceAttachment,
     onRestoreToUserMessage,
     hasSnapshot,
+    statusNotice,
 }) => {
     const displayItems = React.useMemo(() => collectAssistantBubbles(messages, isGenerating), [messages, isGenerating]);
     const latestChangeSummary = React.useMemo(
@@ -632,7 +635,25 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
     const handleCopy = React.useCallback(async (text: string) => {
         if (!text.trim()) return;
-        await navigator.clipboard.writeText(text);
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (error) {
+            // Clipboard permission / non-secure-context failure must not become an
+            // unhandled rejection; fall back to a hidden textarea copy.
+            console.warn("[02Agent] clipboard copy failed", error);
+            try {
+                const textarea = document.createElement("textarea");
+                textarea.value = text;
+                textarea.style.position = "fixed";
+                textarea.style.opacity = "0";
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+            } catch (fallbackError) {
+                console.warn("[02Agent] clipboard fallback also failed", fallbackError);
+            }
+        }
     }, []);
 
     return (
@@ -798,6 +819,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                                 </div>
                             ))}
                         </div>
+                    </div>
+                ) : null}
+                {statusNotice ? (
+                    <div className={chat.statusNotice} role="status">
+                        <span className={chat.statusNoticeIcon} aria-hidden="true">
+                            ✦
+                        </span>
+                        <span className={chat.statusNoticeText}>{statusNotice}</span>
                     </div>
                 ) : null}
                 <div ref={bottomRef} className={chat.bottomAnchor} aria-hidden="true" />

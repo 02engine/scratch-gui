@@ -1,3 +1,6 @@
+import { MCP_TOOL_PREFIX } from "./mcpClient";
+import { getJsPermissionMode, requestJsApproval } from "./jsPermission";
+
 export const REQUIRED_TOOL_ARGUMENTS: Record<string, string[]> = {
   readFile: ["path"],
   readVariable: [],
@@ -12,12 +15,33 @@ export const REQUIRED_TOOL_ARGUMENTS: Record<string, string[]> = {
   batchAddCostumesWithSvg: ["costumes"],
   reorderCostume: ["newIndex"],
   runJavaScript: ["code"],
+  askUser: [],
+  updateTodoList: ["todos"],
+  listMemoryBlocks: [],
+  getMemoryBlock: ["id"],
+  setMemoryBlock: ["text"],
+  replaceMemoryBlockText: ["id", "find"],
+  deleteMemoryBlock: ["id"],
+  runSubAgent: ["task"],
+  readSkill: ["name"],
+  checkSubagentResults: [],
+  createSkill: ["name", "content"],
+  generateCostumeFromDescription: ["name", "description"],
+  startStageRecording: [],
+  stopStageRecording: [],
 };
 
 export interface CallAIToolOptions {
   // Plan mode: reject every tool that can mutate the project, including nested
   // sdk.call(...) invocations made from inside runJavaScript.
   denyMutations?: boolean;
+  // Allow dispatching namespaced mcp__* tools to their MCP servers.
+  allowMcp?: boolean;
+  // Runtime gate for built-in tools: when provided (and NOT MCP tools, which return
+  // earlier), a call is rejected unless this returns true for the tool name. Used to
+  // enforce "disabled built-in tools" at invocation time — even stray model calls or
+  // nested sdk.call(...) from runJavaScript are blocked. Propagates through options.
+  allowBuiltinTool?: (name: string) => boolean;
 }
 
 export const MUTATING_TOOLS = new Set([
@@ -37,6 +61,23 @@ export const MUTATING_TOOLS = new Set([
   "generateCodeFromUCF",
 ]);
 
+/**
+ * Tools that have external/config side effects but do NOT modify the Scratch project itself.
+ * They are blocked in plan mode (read-only investigation) and excluded from its tool list,
+ * but they are not routed through the project mutation queue.
+ */
+export const PLAN_BLOCKED_TOOLS = new Set([
+  "httpRequest",
+  "manageMCPServers",
+  "manageSkills",
+  "setMemoryBlock",
+  "replaceMemoryBlockText",
+  "createSkill",
+  "deleteMemoryBlock",
+  "discardDraft",
+  "generateCostumeFromDescription",
+]);
+
 let mutationQueue = Promise.resolve();
 
 const isMissingToolArgument = (value: unknown) =>
@@ -53,6 +94,10 @@ export const validateToolArguments = (functionName: string, args: Record<string,
     throw new Error(
       `Tool ${functionName} requires argument(s): ${missingArguments.join(", ")}. Received: ${JSON.stringify(args)}`,
     );
+  }
+
+  if (functionName === "askUser" && !hasAnyToolArgument(args, ["question", "questions"])) {
+    throw new Error(`Tool askUser requires either question or questions. Received: ${JSON.stringify(args)}`);
   }
 
   if ((functionName === "readVariable" || functionName === "readListSlice") && !hasAnyToolArgument(args, ["name", "variableId"])) {
@@ -116,8 +161,18 @@ const dispatchAITool = async (aiTools: Record<string, any>, functionName: string
       return aiTools[functionName](args);
     case "deleteSprite":
       return aiTools[functionName](args);
+    case "sleep":
+      return aiTools[functionName](args);
+    case "httpRequest":
+      return aiTools[functionName](args);
+    case "manageMCPServers":
+      return aiTools[functionName](args);
+    case "manageSkills":
+      return aiTools[functionName](args);
     default:
-      return aiTools[functionName]();
+      // Always forward args: dropping them makes any tool whose signature takes an
+      // options object see an empty payload (seen with the memory/todo/askUser tools).
+      return aiTools[functionName](args);
   }
 };
 
@@ -252,6 +307,157 @@ const parseWorkerResultText = (text: unknown) => {
   } catch {
     return text;
   }
+};
+
+// ---------- main-thread runner (un-sandboxed) ----------
+// Runs the AI-generated JS on the MAIN thread instead of inside a Web Worker. This
+// gives the code direct access to the page globals: fetch, console, timers, the
+// `sdk` bridge, and `sdk.vm` (the live Scratch VM). NOTE: this is arbitrary code
+// execution with full page privileges — the user explicitly asked to move it out of
+// the sandbox. Usage is the caller's responsibility.
+
+const AsyncFunctionCtor = Object.getPrototypeOf(async function () {}).constructor;
+
+const formatThreadLogValue = (value: unknown): string => {
+  try {
+    if (typeof value === "string") return value;
+    const text = JSON.stringify(value);
+    return text === undefined ? String(value) : text;
+  } catch {
+    return String(value);
+  }
+};
+
+const runJavaScriptInThread = async (
+  aiTools: Record<string, any>,
+  code: string,
+  requestedTimeoutMs?: unknown,
+  options: CallAIToolOptions = {},
+) => {
+  const timeoutMs = Math.max(
+    1000,
+    Math.min(MAX_JAVASCRIPT_TIMEOUT_MS, Number(requestedTimeoutMs) || DEFAULT_JAVASCRIPT_TIMEOUT_MS),
+  );
+  const startedAt = Date.now();
+  const mode = getJsPermissionMode();
+  const source = String(code || "");
+
+  // `review`: show the code and require explicit approval. Fails closed when no
+  // approval UI is bound, so a missing dialog can never silently execute code.
+  if (mode === "review") {
+    const approved = await requestJsApproval(source);
+    if (!approved) {
+      return {
+        success: false,
+        error: "用户未允许执行这段 JavaScript（审核模式）。请调整方案或询问用户希望在代码中做什么。",
+        logs: [],
+        durationMs: Date.now() - startedAt,
+        timeoutMs,
+        permission: mode,
+      };
+    }
+  }
+
+  // `readonly`: silence every mutation path — nested tool calls run under
+  // denyMutations and the live VM is not exposed.
+  const readOnly = mode === "readonly";
+  const nestedOptions: CallAIToolOptions = readOnly ? { ...options, denyMutations: true, allowMcp: false } : options;
+
+  return new Promise<any>((resolve) => {
+    let settled = false;
+    const finish = (result: any) => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+
+    const logs: string[] = [];
+    const sandboxConsole: Record<string, (...args: any[]) => void> = {};
+    ["log", "info", "warn", "error"].forEach((level) => {
+      sandboxConsole[level] = (...args: any[]) => {
+        const line = `${level}: ${args.map((a: any) => formatThreadLogValue(a)).join(" ")}`;
+        if (logs.length < 200) logs.push(line);
+      };
+    });
+
+    const callTool = (name: string, args: any) => {
+      if (name === "runJavaScript") {
+        return Promise.reject(new Error("runJavaScript cannot call itself"));
+      }
+      if (readOnly && MUTATING_TOOLS.has(String(name || ""))) {
+        return Promise.reject(
+          new Error(
+            `Tool ${name} is blocked: runJavaScript runs in 仅查看 (read-only) mode. Switch 设置 → 工具 → JavaScript 执行权限 to 审核 or 开放 to allow changes.`,
+          ),
+        );
+      }
+      // Return directly; nested sdk.call works same-thread (options propagate, incl. the
+      // disabled-tool runtime gate via options.allowBuiltinTool).
+      return callAITool(aiTools, String(name || ""), args || {}, nestedOptions);
+    };
+
+    const exposedVm = readOnly ? undefined : aiTools?.vm;
+
+    const sdk = {
+      call: callTool,
+      sleep: (ms: number) =>
+        new Promise<void>((r) => setTimeout(r, Math.max(0, Math.min(Number(ms) || 0, 5000)))),
+      vm: exposedVm,
+    };
+
+    try {
+      const body = '"use strict";\n' + source;
+      const fn = AsyncFunctionCtor("sdk", "console", "fetch", "vm", body);
+      const resultPromise = fn(sdk, sandboxConsole, (url: string, init?: any) => window.fetch(url, init), exposedVm);
+      const timeout = new Promise<never>((_resolve, reject) =>
+        window.setTimeout(() => reject(new Error(`runJavaScript timed out after ${timeoutMs}ms.`)), timeoutMs),
+      );
+      Promise.race([resultPromise, timeout])
+        .then((result: any) => {
+          let text: string;
+          try {
+            text = JSON.stringify(result);
+            if (text === undefined) text = String(result);
+          } catch (serializeError) {
+            throw new Error(`Result is not JSON-serializable: ${(serializeError as Error).message}`);
+          }
+          if (typeof text !== "string") text = String(text);
+          let truncated = false;
+          if (text.length > 60000) {
+            text = text.slice(0, 60000) + "...[truncated]";
+            truncated = true;
+          }
+          finish({
+            success: true,
+            result: parseWorkerResultText(text),
+            truncated,
+            logs,
+            durationMs: Date.now() - startedAt,
+            timeoutMs,
+            permission: mode,
+          });
+        })
+        .catch((error: any) => {
+          finish({
+            success: false,
+            error: String((error && (error.stack || error.message)) || error),
+            logs,
+            durationMs: Date.now() - startedAt,
+            timeoutMs,
+            permission: mode,
+          });
+        });
+    } catch (error: any) {
+      finish({
+        success: false,
+        error: String((error && (error.stack || error.message)) || error),
+        logs,
+        durationMs: Date.now() - startedAt,
+        timeoutMs,
+        permission: mode,
+      });
+    }
+  });
 };
 
 const runJavaScriptInWorker = (
@@ -396,9 +602,38 @@ export const callAITool = async (
   args: Record<string, any>,
   options: CallAIToolOptions = {},
 ) => {
+  if (functionName.startsWith(MCP_TOOL_PREFIX)) {
+    if (options.denyMutations) {
+      throw new Error(
+        `Tool ${functionName} is disabled in plan mode because MCP tools may modify external state. Finish the read-only investigation, present the plan, and wait for user approval before making changes.`,
+      );
+    }
+    if (!options.allowMcp) {
+      throw new Error(`Tool ${functionName} not found (MCP integration is disabled for this request)`);
+    }
+    const { mcpRegistry } = await import("./mcpClient");
+    return await mcpRegistry.callTool(functionName, args);
+  }
+
   if (options.denyMutations && MUTATING_TOOLS.has(functionName)) {
     throw new Error(
       `Tool ${functionName} is disabled in plan mode because it modifies the project. Finish the read-only investigation, present the plan, and wait for user approval before making changes.`,
+    );
+  }
+
+  // Side-effecting external/config tools are also blocked in plan mode (not project mutation,
+  // but they can touch remote systems or user settings and are excluded from the plan tool list).
+  if (options.denyMutations && PLAN_BLOCKED_TOOLS.has(functionName)) {
+    throw new Error(
+      `Tool ${functionName} is disabled in plan mode because it has external side effects. Finish the read-only investigation, present the plan, and wait for user approval before making changes.`,
+    );
+  }
+
+  // Enforce disabled built-in tools at invocation time (not just at advertisement).
+  // MCP tools already returned above; this gate also covers nested sdk.call(...) calls.
+  if (typeof options.allowBuiltinTool === "function" && !options.allowBuiltinTool(functionName)) {
+    throw new Error(
+      `Tool ${functionName} is disabled in 设置 → 工具 and was blocked. Enable it in settings (or re-enable the built-in tools) before using it.`,
     );
   }
 
@@ -406,7 +641,9 @@ export const callAITool = async (
 
   if (functionName === "runJavaScript") {
     if (!aiTools) throw new Error("Tool runJavaScript not found");
-    return runJavaScriptInWorker(aiTools, String(args.code || ""), args.timeoutMs, options);
+    // Moved out of the Web Worker sandbox: run on the main thread so the generated JS has
+    // direct access to page globals (fetch, console, timers) and sdk.vm.
+    return runJavaScriptInThread(aiTools, String(args.code || ""), args.timeoutMs, options);
   }
 
   if (!aiTools || typeof aiTools[functionName] !== "function") {

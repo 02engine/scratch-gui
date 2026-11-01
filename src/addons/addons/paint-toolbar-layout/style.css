@@ -1,0 +1,38 @@
+/*
+ * scratch-paint 在窗口宽度 < 1256px（$full-size-paint）时会给 .mode-selector 加
+ * flex-direction: column，变成单列；而本 fork 的矢量工具有 21 个，
+ * 单列高度远超可用高度又没有滚动，于是后面的工具被裁掉。
+ *
+ * 这里把它改回「多列换行 + 必要时纵向滚动」，宽窄窗口表现一致。
+ * 类名由 CSS Modules 生成，形如 paint-editor_mode-selector_xxxxx，
+ * 哈希每次构建都会变，所以用前缀属性选择器匹配。
+ */
+
+[class^='paint-editor_mode-selector'] {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    align-content: flex-start !important;
+    /* 约 3 列：单列工具约 2.25rem + 边距 */
+    max-width: 11rem !important;
+    max-height: 100%;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin;
+}
+
+/* 工具列表滚动时不要把滚动条压在图标上 */
+[class^='paint-editor_mode-selector']::-webkit-scrollbar {
+    width: 4px;
+}
+
+[class^='paint-editor_mode-selector']::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, .5);
+    border-radius: 2px;
+}
+
+/* 工具行之间不留多余空隙，靠按钮自身 margin 控制 */
+[class^='paint-editor_mode-selector'] > * {
+    flex: 0 0 auto;
+}

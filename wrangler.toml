@@ -1,0 +1,25 @@
+# Cloudflare Worker 部署配置（可选，网页版部署不需要这个文件）
+#
+# 用法：
+#   npm i -g wrangler
+#   wrangler login
+#   wrangler deploy
+#
+# 部署后得到 https://<name>.<your-subdomain>.workers.dev
+
+name = "02agent-cors-proxy"
+main = "cloudflare-worker-proxy.js"
+compatibility_date = "2024-11-01"
+
+# ---- 可选环境变量（按需取消注释） ----
+# [vars]
+# 允许的目标域名白名单，逗号分隔；留空/不配置 = 允许任意 http(s)
+# ALLOW_HOSTS = "api.anysearch.com,anysearch.com"
+# 转发用 UA；"none" = 不改写；留空 = 内置浏览器 UA
+# USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+# 允许的来源；留空 = *
+# ALLOW_ORIGIN = "*"
+
+# 免费套餐默认即可
+# [observability]
+# enabled = true
