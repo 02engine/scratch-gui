@@ -1,4 +1,5 @@
 import * as React from "react";
+import { buildSkillPrefix, filterSkillSuggestions, moveSkillSelection, parseSkillQuery } from "../skillPicker";
 import composer from "../ui/Composer.module.less";
 import { parseLocalAttachment } from "../attachments";
 import { Attachment, ChatStats } from "../types";
@@ -119,11 +120,22 @@ export const InputArea: React.FC<InputAreaProps> = ({
     // token starts with "/" (before any whitespace/newline).
     // Only show suggestions while the first line IS the bare "/token" (no trailing space) —
     // otherwise the panel never closes after a pick (empty query matches everything).
-    const skillQueryMatch = /^(?:\s*)\/([^ \n]*)$/.exec((inputText.split("\n")[0] || "").trimEnd());
-    const currentSkillSuggestions =
-        skillQueryMatch && skills.length
-            ? skills.filter((skill) => skill.name.toLowerCase().includes(skillQueryMatch[1].toLowerCase()))
-            : [];
+    const skillQuery = parseSkillQuery(inputText);
+    // Escape hides the picker for the current query only; typing another character re-opens it.
+    const [dismissedSkillQuery, setDismissedSkillQuery] = React.useState<string | null>(null);
+    const [skillSuggestIndex, setSkillSuggestIndex] = React.useState(0);
+    const skillSuggestions = filterSkillSuggestions(skills, skillQuery, dismissedSkillQuery);
+    const activeSkillSuggestIndex = skillSuggestions.length
+        ? Math.min(skillSuggestIndex, skillSuggestions.length - 1)
+        : 0;
+
+    // Pick writes "/name " (trailing space) so the derived query stops matching and the
+    // panel closes; the prefix is then resolved by handleSkillAwareSend on submit.
+    const pickSkill = (skill: {id: string; name: string}) => {
+        setInputText(buildSkillPrefix(skill.name));
+        setSkillSuggestIndex(0);
+        setDismissedSkillQuery(null);
+    };
 
     // Attachments are snapped into the session snapshot (localStorage) and full
     // text is injected into the prompt — do not let a accidental 50MB dump
@@ -237,12 +249,61 @@ export const InputArea: React.FC<InputAreaProps> = ({
                     ) : null}
                 </div>
                 <div className={composer.composerTextareaWrap}>
+                    {!skillSuggestions.length && skillQuery !== null && skills.length === 0 ? (
+                        <div className={composer.skillSuggest} role="status">
+                            <span className={composer.skillSuggestEmpty}>
+                                还没有启用的技能。在「设置 → 技能」中添加并启用后，输入 / 即可在这轮注入。
+                            </span>
+                        </div>
+                    ) : null}
+                    {skillSuggestions.length ? (
+                        <div className={composer.skillSuggest} role="listbox" aria-label="选择本轮注入的技能">
+                            {skillSuggestions.map((skill, index) => (
+                                <button
+                                    key={skill.id}
+                                    type="button"
+                                    role="option"
+                                    aria-selected={index === activeSkillSuggestIndex}
+                                    className={`${composer.skillSuggestItem} ${index === activeSkillSuggestIndex ? composer.skillSuggestItemActive : ""}`}
+                                    // Keep focus in the textarea so the keyboard flow is uninterrupted.
+                                    onMouseDown={(event) => event.preventDefault()}
+                                    onMouseEnter={() => setSkillSuggestIndex(index)}
+                                    onClick={() => pickSkill(skill)}
+                                    title={skill.description || skill.name}
+                                >
+                                    <code>/{skill.name}</code>
+                                    {skill.description ? <span>{skill.description}</span> : null}
+                                </button>
+                            ))}
+                        </div>
+                    ) : null}
                     <textarea
                         className={`${composer.composerTextarea} ${isExpanded ? composer.composerTextareaExpanded : ""}`}
-                        placeholder={planMode ? "描述目标，制定详尽的规划..." : "输入消息、修改需求或粘贴上下文..."}
+                        placeholder={planMode ? "描述目标，制定详尽的规划..." : "输入消息、修改需求或粘贴上下文…（输入 / 选择本轮技能）"}
                         value={inputText}
                         onChange={(event) => setInputText(event.target.value)}
                         onKeyDown={(event) => {
+                            // While the skill picker is open it owns Arrow/Enter/Tab/Escape so a
+                            // pick never accidentally submits the message.
+                            if (skillSuggestions.length) {
+                                if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                                    event.preventDefault();
+                                    const delta = event.key === "ArrowDown" ? 1 : -1;
+                                    setSkillSuggestIndex(moveSkillSelection(activeSkillSuggestIndex, delta, skillSuggestions.length));
+                                    return;
+                                }
+                                if (event.key === "Enter" || event.key === "Tab") {
+                                    event.preventDefault();
+                                    pickSkill(skillSuggestions[activeSkillSuggestIndex]);
+                                    return;
+                                }
+                                if (event.key === "Escape") {
+                                    event.preventDefault();
+                                    setDismissedSkillQuery(skillQuery);
+                                    return;
+                                }
+                            }
+
                             if (isExpanded) {
                                 if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
                                     event.preventDefault();
