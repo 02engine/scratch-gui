@@ -186,6 +186,10 @@ export const useBridgeClient = (vm: any) => {
     const previousSocket = socketRef.current;
     if (previousSocket && (previousSocket.readyState === WebSocket.OPEN || previousSocket.readyState === WebSocket.CONNECTING)) previousSocket.close(1000, "Reconnecting");
 
+    // Token stays in the query string for now: the bridge server counterpart
+    // (AI/Skill launcher, ws://127.0.0.1 only) validates `?token=` and moving to
+    // a subprotocol/first-frame auth would need a coordinated server change.
+    // Loopback-only listen makes URL exposure acceptable; rotate with resetToken.
     const socket = new WebSocket(`ws://127.0.0.1:${config.port}/agent?token=${encodeURIComponent(config.token)}`);
     socketRef.current = socket;
 
@@ -222,8 +226,14 @@ export const useBridgeClient = (vm: any) => {
     });
   }, [buildManifest, config.enabled, config.port, config.token, handleRequest, send, vm]);
 
+  // Persist config without tearing the connection down: connect()/disconnect()
+  // already depend on the exact enabled/port/token values via useCallback, so a
+  // full-config effect previously reconnected on any unrelated field change.
   useEffect(() => {
     saveBridgeConfig(config);
+  }, [config]);
+
+  useEffect(() => {
     if (config.enabled) {
       connect();
     } else {
@@ -235,8 +245,12 @@ export const useBridgeClient = (vm: any) => {
       if (reconnectTimerRef.current !== null) window.clearTimeout(reconnectTimerRef.current);
       const socket = socketRef.current;
       if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) socket.close(1000, "Component unmounted");
+      // Reject the queued request head so a pending bridge call fails fast
+      // instead of hanging on the socket teardown.
+      requestQueueRef.current = Promise.reject(new Error("BRIDGE_UNMOUNTED: bridge client unmounted"));
+      requestQueueRef.current.catch(() => undefined);
     };
-  }, [config, connect, disconnect]);
+  }, [connect, disconnect]);
 
   const toggleBridge = useCallback(() => {
     setConfig((previous) => ({

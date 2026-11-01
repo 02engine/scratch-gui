@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "jsx": "react",
+        "strict": false,
+        "noEmit": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "allowImportingTsExtensions": true,
+        "isolatedModules": false,
+        "lib": ["es2020", "dom", "dom.iterable"]
+    },
+    "include": ["src/addons/addons/02agent/**/*.ts", "src/addons/addons/02agent/**/*.tsx"]
+}

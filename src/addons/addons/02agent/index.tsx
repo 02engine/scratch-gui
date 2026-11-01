@@ -12,6 +12,17 @@ import { DebugPanel } from "./components/DebugPanel";
 import { ChatArea } from "./components/ChatArea";
 import { InputArea } from "./components/InputArea";
 import { AttachmentInteractionLayer } from "./components/AttachmentInteractionLayer";
+import { JsApprovalDialog, JsApprovalRequest } from "./components/JsApprovalDialog";
+import { QuestionsDialog } from "./components/QuestionsDialog";
+import { CompactionPreview } from "./components/CompactionPreview";
+import { TodoPanel } from "./components/TodoPanel";
+import { AskUserAnswered, AskUserRequest, bindAskUserHandler } from "./agentStores";
+import {
+    JsPermissionMode,
+    getJsPermissionMode,
+    setJsPermissionMode,
+    bindJsApprovalHandler,
+} from "./jsPermission";
 import { SelectionHint } from "./components/SelectionHint";
 import { useAgents } from "./hooks/useAgents";
 import { useAttachmentInteraction } from "./hooks/useAttachmentInteraction";
@@ -19,7 +30,9 @@ import { useBlockRangeSelection } from "./hooks/useBlockRangeSelection";
 import { useChatSessions } from "./hooks/useChatSessions";
 import { useChat } from "./hooks/useChat";
 import { useBridgeClient } from "./hooks/useBridgeClient";
-import { Attachment } from "./types";
+import { Attachment, MCPServerConfig, SkillConfig, PromptConfig, SubagentDef } from "./types";
+import { bindSkillsWriter } from "./agentStores";
+import { toolConfigStore } from "./toolConfigStore";
 import { getAttachmentDisplayName } from "./attachmentUtils";
 import { callGetBlockInfo, setRuntime } from "./converter";
 import { exportConversationText } from "./conversationExport";
@@ -63,6 +76,76 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
     const [enableReasoning, setEnableReasoning] = useStoredState<boolean>("02AGENT_ENABLE_REASONING", false);
     const [planMode, setPlanMode] = useStoredState<boolean>("02AGENT_PLAN_MODE", false);
     const [debugMode, setDebugMode] = useStoredState<boolean>("02AGENT_DEBUG_MODE", false);
+    const [mcpServers, setMCPServers] = useStoredState<MCPServerConfig[]>("02AGENT_MCP_SERVERS", []);
+    const [disabledTools, setDisabledTools] = useStoredState<string[]>("02AGENT_DISABLED_TOOLS", []);
+    const [skills, setSkills] = useStoredState<SkillConfig[]>("02AGENT_SKILLS", []);
+    const [subagents, setSubagents] = useStoredState<SubagentDef[]>("02AGENT_SUBAGENTS", []);
+    const [promptConfig, setPromptConfig] = useStoredState<PromptConfig>("02AGENT_SYSTEM_PROMPT", { mode: "append", text: "", includeBase: true });
+    const [jsPermission, setJsPermissionState] = React.useState<JsPermissionMode>(() => getJsPermissionMode());
+    const [jsApprovalRequest, setJsApprovalRequest] = React.useState<JsApprovalRequest | null>(null);
+    const [askUserRequest, setAskUserRequest] = React.useState<AskUserRequest | null>(null);
+    const askUserResolverRef = React.useRef<((answers: AskUserAnswered[]) => void) | null>(null);
+
+    const setAskUser = React.useCallback((request: AskUserRequest | null) => {
+        setAskUserRequest(request);
+    }, []);
+
+    const resolveAskUser = React.useCallback((answers: AskUserAnswered[]) => {
+        const resolve = askUserResolverRef.current;
+        askUserResolverRef.current = null;
+        setAskUserRequest(null);
+        resolve?.(answers);
+    }, []);
+
+    // Bridge the askUser tool request into React state (fail closed when unmounted).
+    React.useEffect(() => {
+        const unbind = bindAskUserHandler(
+            (questions, context) =>
+                new Promise((resolve) => {
+                    askUserResolverRef.current = resolve;
+                    setAskUserRequest({ questions, context });
+                }),
+        );
+        return () => {
+            unbind();
+            askUserResolverRef.current?.([]);
+            askUserResolverRef.current = null;
+        };
+    }, []);
+    const jsApprovalResolverRef = React.useRef<((approved: boolean) => void) | null>(null);
+
+    const setJsPermission = React.useCallback((mode: JsPermissionMode) => {
+        setJsPermissionMode(mode);
+        setJsPermissionState(mode);
+    }, []);
+
+    // Bridge the framework-free toolRuntime approval request into React state (审核 mode).
+    React.useEffect(() => {
+        const unbind = bindJsApprovalHandler(
+            (code: string) =>
+                new Promise<boolean>((resolve) => {
+                    jsApprovalResolverRef.current = resolve;
+                    setJsApprovalRequest({ id: Date.now(), code });
+                }),
+        );
+        return () => {
+            unbind();
+            jsApprovalResolverRef.current?.(false);
+            jsApprovalResolverRef.current = null;
+        };
+    }, []);
+
+    const resolveJsApproval = React.useCallback((approved: boolean) => {
+        const resolve = jsApprovalResolverRef.current;
+        jsApprovalResolverRef.current = null;
+        setJsApprovalRequest(null);
+        resolve?.(approved);
+    }, []);
+    // Bridge the AI built-in management tools (manageMCPServers / manageSkills) to
+    // this live state — done in an effect instead of during render.
+    React.useEffect(() => {
+        toolConfigStore.bind({ mcpServers, setMCPServers, skills, setSkills });
+    }, [mcpServers, setMCPServers, skills, setSkills]);
     const [showDebugPanel, setShowDebugPanel] = React.useState(false);
 
     const [containerInfo, setContainerInfo] = useStoredState<ExpansionRect>(
@@ -111,21 +194,149 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
         handleSelectSession,
         handleDeleteSession,
         updateSessionMessages,
+        updateSessionCompacted,
         appendSessionSnapshot,
         hasSnapshot,
         rollbackToMessage,
     } = useChatSessions(useDrawerHistory);
 
-    const { inputText, setInputText, isGenerating, chatStats, attachments, setAttachments, handleSend, handleStopGenerating, isPlanReady } =
-        useChat({
+    const {
+        inputText,
+        setInputText,
+        isGenerating,
+        chatStats,
+        systemPrompt,
+        attachments,
+        setAttachments,
+        handleSend,
+        handleStopGenerating,
+        isPlanReady,
+        isCompacting,
+        todos,
+        clearTodos,
+        compactionPreview,
+        setCompactionPreview,
+        statusNotice,
+        clearStatusNotice,
+        handleCompactNow,
+        handleClearMemory,
+    } = useChat({
             messages,
+            currentSessionId,
             currentAgent,
             updateSessionMessages,
             appendSessionSnapshot,
             enableReasoning,
             planMode,
             vm,
+            mcpServers,
+            disabledTools,
+            skills,
+            subagents,
+            promptConfig,
+            compacted: currentSession?.compacted,
+            updateSessionCompacted,
         });
+
+    // Opening a new conversation or switching to a different one hides the task panel:
+    // the checklist belongs to the conversation where the model created it.
+    const hideTodosOnLeave = React.useCallback(
+        (targetSessionId: string) => {
+            if (targetSessionId && targetSessionId === currentSessionId) return;
+            clearTodos();
+        },
+        [clearTodos, currentSessionId],
+    );
+
+    // "/" prefix sends the whole turn with the selected skill injected in full.
+    const handleSkillAwareSend = React.useCallback(() => {
+        const match = /^\s*\/([^\s]+)/.exec(inputText);
+        if (match) {
+            const token = match[1];
+            const skill = skills.find(
+                (item) =>
+                    item.enabled &&
+                    (item.name?.trim() === token || (item.id || `skill-${item.name}`) === token),
+            );
+            if (skill) {
+                const rest = inputText.slice(match[0].length);
+                const finalText =
+                    rest.trim() || `请先完整读取并遵循技能《${skill.name}》，然后继续对话目标。`;
+                void handleSend({ text: finalText, selectedSkillId: skill.id || `skill-${skill.name}` });
+                return;
+            }
+        }
+        void handleSend();
+    }, [inputText, skills, handleSend]);
+
+    const handleSaveMCPServer = React.useCallback(
+        (server: MCPServerConfig) => {
+            setMCPServers((previous) =>
+                previous.some((item) => item.id === server.id)
+                    ? previous.map((item) => (item.id === server.id ? server : item))
+                    : [...previous, server],
+            );
+        },
+        [setMCPServers],
+    );
+
+    const handleDeleteMCPServer = React.useCallback(
+        (id: string) => setMCPServers((previous) => previous.filter((item) => item.id !== id)),
+        [setMCPServers],
+    );
+
+    const handleSaveSkill = React.useCallback(
+        (skill: SkillConfig) => {
+            setSkills((previous) =>
+                previous.some((item) => item.id === skill.id)
+                    ? previous.map((item) => (item.id === skill.id ? skill : item))
+                    : [...previous, skill],
+            );
+        },
+        [setSkills],
+    );
+
+    // AI-created/updated skills are stored review-gated (enabled=false) until the user enables them.
+    const skillsWriterRef = React.useRef<SkillConfig[]>([]);
+    React.useEffect(() => {
+        skillsWriterRef.current = skills;
+    }, [skills]);
+    React.useEffect(() => {
+        const unbind = bindSkillsWriter((input) => {
+            const list = skillsWriterRef.current;
+            const existing = list.find((item) => item.id === input.id);
+            if (!existing && list.some((item) => item.name?.trim() === input.name.trim())) {
+                // Same-name collision: treat as update to that skill.
+                const sameName = list.find((item) => item.name?.trim() === input.name.trim())! as SkillConfig;
+                const entry: SkillConfig = {
+                    ...sameName,
+                    name: input.name.trim(),
+                    description: input.description?.trim() || sameName.description,
+                    content: input.content,
+                    enabled: false,
+                };
+                handleSaveSkill(entry);
+                return { status: "updated", id: entry.id, enabled: false };
+            }
+            const entry: SkillConfig = {
+                id: input.id?.trim() || `skill-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+                name: input.name.trim(),
+                description: input.description?.trim() || "由 AI 沉淀（待审核）",
+                content: input.content,
+                enabled: false,
+            };
+            handleSaveSkill(entry);
+            return { status: "created", id: entry.id, enabled: false };
+        });
+        return () => {
+            unbind();
+        };
+    }, [handleSaveSkill]);
+
+    const handleDeleteSkill = React.useCallback(
+        (id: string) => setSkills((previous) => previous.filter((item) => item.id !== id)),
+        [setSkills],
+    );
 
     const handleApprovePlan = () => {
         setPlanMode(false);
@@ -231,7 +442,32 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
         [setContainerInfo],
     );
 
-    const pluginsWrapper = document.querySelector(".plugins-wrapper") || document.querySelector("#gandi-plugins-wrapper");
+    // Portal host is looked up ONCE per mount in an effect (rendering-side
+    // document.querySelector ran on every render and shot createPortal(null)
+    // when the wrapper was not yet in the DOM). A short retry covers the case
+    // where this addon mounts before .plugins-wrapper itself.
+    const [pluginsWrapper, setPluginsWrapper] = React.useState<HTMLElement | null>(null);
+    const warnedNoPortalRef = React.useRef(false);
+    React.useEffect(() => {
+        let cancelled = false;
+        const lookup = () =>
+            document.querySelector(".plugins-wrapper") ||
+            document.querySelector("#gandi-plugins-wrapper");
+        const found = lookup() as HTMLElement | null;
+        if (found) {
+            setPluginsWrapper(found);
+            return;
+        }
+        const retry = window.setTimeout(() => {
+            if (cancelled) return;
+            const late = lookup() as HTMLElement | null;
+            if (late) setPluginsWrapper(late);
+        }, 200);
+        return () => {
+            cancelled = true;
+            window.clearTimeout(retry);
+        };
+    }, []);
 
     React.useEffect(() => {
         if (!isAgentMenuOpen) return;
@@ -298,7 +534,11 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
     }, [vm, workspace, handleToggle, setAttachments]);
 
     if (!pluginsWrapper) {
-        console.warn("[02Agent] No portal target found (.plugins-wrapper or #gandi-plugins-wrapper)");
+        if (!warnedNoPortalRef.current) {
+            warnedNoPortalRef.current = true;
+            console.warn("[02Agent] No portal target found (.plugins-wrapper or #gandi-plugins-wrapper)");
+        }
+        return null;
     }
 
     return ReactDOM.createPortal(
@@ -327,8 +567,14 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                                 <HistoryPanel
                                     sessions={sessions}
                                     currentSessionId={currentSessionId}
-                                    onNewChat={handleNewChat}
-                                    onSelectSession={handleSelectSession}
+                                    onNewChat={() => {
+                                        handleNewChat();
+                                        hideTodosOnLeave();
+                                    }}
+                                    onSelectSession={(id) => {
+                                        handleSelectSession(id);
+                                        hideTodosOnLeave(id);
+                                    }}
                                     onDeleteSession={handleDeleteSession}
                                     bridgeStatus={bridgeStatus}
                                     bridgeEnabled={bridgeConfig.enabled}
@@ -396,6 +642,24 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                                         <button
                                             type="button"
                                             className={shell.secondaryButton}
+                                            onClick={() => void handleCompactNow()}
+                                            disabled={isGenerating || isCompacting || messages.length === 0}
+                                            title="把较早的对话压缩成结构化摘要，保留结论、去掉冗余，长会话不再失忆"
+                                        >
+                                            {isCompacting ? "压缩中…" : "压缩"}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={shell.secondaryButton}
+                                            onClick={handleClearMemory}
+                                            disabled={isGenerating}
+                                            title="清空已生成的上下文摘要（不影响聊天记录本身）"
+                                        >
+                                            清空记忆
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={shell.secondaryButton}
                                             onClick={() => void handleExportConversation()}
                                             title="复制精简会话文本，包含工具调用参数和返回结果"
                                         >
@@ -407,6 +671,8 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                                     </div>
                                 </div>
 
+                                <TodoPanel todos={todos} />
+
                                 <ChatArea
                                     messages={messages}
                                     isGenerating={isGenerating}
@@ -414,6 +680,7 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                                     onOpenWorkspaceAttachment={handleOpenAttachment}
                                     onRestoreToUserMessage={handleRestoreToUserMessage}
                                     hasSnapshot={hasSnapshot}
+                                    statusNotice={statusNotice}
                                 />
 
                                 <SelectionHint visible={isSelecting} />
@@ -423,13 +690,12 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                                     setInputText={setInputText}
                                     attachments={attachments}
                                     setAttachments={setAttachments}
-                                    onSend={() => {
-                                        void handleSend();
-                                    }}
+                                    onSend={handleSkillAwareSend}
                                     onStopGenerating={handleStopGenerating}
                                     onStartBlockSelection={startSelecting}
                                     onCancelBlockSelection={cancelSelecting}
                                     isSelectingBlocks={isSelecting}
+                                    skills={skills.filter((skill) => skill.enabled && skill.name?.trim() && skill.content?.trim()).map((skill) => ({ id: skill.id || `skill-${skill.name}`, name: skill.name, description: skill.description }))}
                                     enableReasoning={enableReasoning}
                                     onToggleReasoning={() => setEnableReasoning((previous) => !previous)}
                                     planMode={planMode}
@@ -459,6 +725,21 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                                         debugMode={debugMode}
                                         onToggleDebugMode={(next) => setDebugMode(next)}
                                         onOpenBenchmark={() => setShowDebugPanel(true)}
+                                        jsPermission={jsPermission}
+                                        onSetJsPermission={setJsPermission}
+                                        mcpServers={mcpServers}
+                                        onSaveMCPServer={handleSaveMCPServer}
+                                        onDeleteMCPServer={handleDeleteMCPServer}
+                                        disabledTools={disabledTools}
+                                        onSetDisabledTools={(next) => setDisabledTools(next)}
+                                        skills={skills}
+                                        onSaveSkill={handleSaveSkill}
+                                        onDeleteSkill={handleDeleteSkill}
+                                        subagents={subagents}
+                                        onSaveSubagents={setSubagents}
+                                        promptConfig={promptConfig}
+                                        onSavePromptConfig={(next) => setPromptConfig(next)}
+                                        systemPrompt={systemPrompt}
                                         onClose={() => {
                                             setShowSettings(false);
                                             setEditingAgent(null);
@@ -480,6 +761,13 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                                     onClosePreview={() => setPreviewAttachment(null)}
                                 />
 
+                                <JsApprovalDialog request={jsApprovalRequest} onResolve={resolveJsApproval} />
+                                <QuestionsDialog request={askUserRequest} onResolve={resolveAskUser} />
+                                <CompactionPreview
+                                    summary={compactionPreview}
+                                    onClose={() => setCompactionPreview(null)}
+                                />
+
                                 {/* History Modal for Narrow Screen */}
                                 {useDrawerHistory && isLeftPanelOpen && (
                                     <div className={shell.drawerOverlay} onClick={() => setIsLeftPanelOpen(false)}>
@@ -487,9 +775,13 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light" 
                                             <HistoryPanel
                                                 sessions={sessions}
                                                 currentSessionId={currentSessionId}
-                                                onNewChat={handleNewChat}
+                                                onNewChat={() => {
+                                                    handleNewChat();
+                                                    hideTodosOnLeave();
+                                                }}
                                                 onSelectSession={(id) => {
                                                     handleSelectSession(id);
+                                                    hideTodosOnLeave(id);
                                                     setIsLeftPanelOpen(false);
                                                 }}
                                                 onDeleteSession={handleDeleteSession}

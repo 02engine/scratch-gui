@@ -113,6 +113,20 @@ export function useChatSessions(shouldAutoCollapseHistory: boolean) {
     [setActiveSessionId, setSessions],
   );
 
+  /** Persist (or clear) the context-compaction summary for a session. */
+  const updateSessionCompacted = useCallback(
+    (compacted: { summary: string; upTo: number } | undefined, targetSessionId?: string) => {
+      const sessionId = targetSessionId || currentSessionIdRef.current;
+      if (!sessionId) return;
+      setSessions((previousSessions) =>
+        previousSessions.map((session) =>
+          session.id === sessionId ? { ...session, compacted, updatedAt: Date.now() } : session,
+        ),
+      );
+    },
+    [setSessions],
+  );
+
   const appendSessionSnapshot = useCallback((snapshot: SessionSnapshot, targetSessionId?: string) => {
     const sessionId = targetSessionId || currentSessionIdRef.current;
     if (!sessionId) return;
@@ -190,6 +204,7 @@ export function useChatSessions(shouldAutoCollapseHistory: boolean) {
     handleSelectSession,
     handleDeleteSession,
     updateSessionMessages,
+    updateSessionCompacted,
     appendSessionSnapshot,
     hasSnapshot,
     rollbackToMessage,

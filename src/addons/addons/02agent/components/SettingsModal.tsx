@@ -1,9 +1,42 @@
 import * as React from "react";
 import settings from "../ui/Settings.module.less";
-import { Agent, AgentModel } from "../types";
+import { MemorySection } from "./MemorySection";
+import { SubagentsSection } from "./SubagentsSection";
+import { Agent, AgentModel, MCPServerConfig, MCPToolInfo, SkillConfig, PromptConfig , SubagentDef} from "../types";
 import { PROVIDER_DEFAULT_CONTEXT_WINDOWS, PROVIDER_DEFAULT_URLS } from "../constants";
+import { scratchToolSchemas } from "../toolSchemas";
+import { MUTATING_TOOLS } from "../toolRuntime";
+import { mcpRegistry } from "../mcpClient";
+import {
+    JsPermissionMode,
+    JS_PERMISSION_MODES,
+    JS_PERMISSION_LABELS,
+    JS_PERMISSION_DESCRIPTIONS,
+} from "../jsPermission";
 
-type SettingsSection = "agents" | "appearance" | "debug" | "about";
+
+type SettingsSection = "agents" | "mcp" | "tools" | "skills" | "memory" | "subagents" | "prompt" | "appearance" | "debug" | "about";
+
+/** Top-level groups shown in the settings rail; each group exposes its sections as sub-tabs. */
+const SECTION_GROUPS: Array<{ id: string; label: string; sublabel?: string; sections: SettingsSection[] }> = [
+    { id: "defaults", label: "默认设置", sublabel: "模型与外部服务", sections: ["agents", "mcp"] },
+    { id: "personalize", label: "工具与个性化", sublabel: "AI 行为的自定义项", sections: ["tools", "skills", "memory", "subagents", "prompt"] },
+    { id: "interface", label: "界面与开发模式", sublabel: "主题与调试", sections: ["appearance", "debug"] },
+    { id: "about", label: "关于", sections: ["about"] },
+];
+
+const SUBTAB_LABELS: Record<SettingsSection, string> = {
+    agents: "模型",
+    mcp: "MCP",
+    tools: "工具",
+    skills: "技能",
+    memory: "记忆",
+    subagents: "子智能体",
+    prompt: "提示词",
+    appearance: "主题",
+    debug: "调试与性能",
+    about: "关于",
+};
 type ThemeMode = "dark" | "light";
 
 interface SettingsModalProps {
@@ -19,6 +52,22 @@ interface SettingsModalProps {
     debugMode: boolean;
     onToggleDebugMode: (next: boolean) => void;
     onOpenBenchmark: () => void;
+    mcpServers: MCPServerConfig[];
+    onSaveMCPServer: (server: MCPServerConfig) => void;
+    onDeleteMCPServer: (id: string) => void;
+    disabledTools: string[];
+    onSetDisabledTools: (next: string[]) => void;
+    jsPermission: JsPermissionMode;
+    onSetJsPermission: (mode: JsPermissionMode) => void;
+    skills: SkillConfig[];
+    subagents: SubagentDef[];
+    onSaveSubagents: (list: SubagentDef[]) => void;
+    onSaveSkill: (skill: SkillConfig) => void;
+    onDeleteSkill: (id: string) => void;
+    promptConfig: PromptConfig;
+    onSavePromptConfig: (config: PromptConfig) => void;
+    /** The fully-assembled system prompt (base + user override + skills) actually sent to the model. */
+    systemPrompt: string;
     onClose: () => void;
     isCompact?: boolean;
 }
@@ -52,6 +101,25 @@ const createDefaultModel = (): AgentModel => ({
     name: "My GPT-4o",
     modelId: "gpt-4o",
     contextWindow: PROVIDER_DEFAULT_CONTEXT_WINDOWS.openai,
+});
+
+const createDefaultMcpServer = (): MCPServerConfig => ({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    name: "",
+    url: "",
+    transport: "http",
+    apiKey: "",
+    customHeaders: "",
+    enabled: true,
+    disabledTools: [],
+});
+
+const createDefaultSkill = (): SkillConfig => ({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    name: "",
+    description: "",
+    content: "",
+    enabled: true,
 });
 
 const getDefaultModelForProvider = (provider: Agent["provider"]) => {
@@ -139,6 +207,765 @@ const fetchProviderModels = async (provider: Agent["provider"], baseUrl: string,
     return models;
 };
 
+interface MCPSectionProps {
+    servers: MCPServerConfig[];
+    onSave: (server: MCPServerConfig) => void;
+    onDelete: (id: string) => void;
+}
+
+const MCPSection: React.FC<MCPSectionProps> = ({ servers, onSave, onDelete }) => {
+    const [editing, setEditing] = React.useState<Partial<MCPServerConfig> | null>(null);
+    const [statusById, setStatusById] = React.useState<Record<string, string>>({});
+    const [testing, setTesting] = React.useState<string | null>(null);
+    const [expandedId, setExpandedId] = React.useState<string | null>(null);
+    const [testTools, setTestTools] = React.useState<MCPToolInfo[] | null>(null);
+
+    const runTest = async (server: MCPServerConfig, list?: Partial<MCPServerConfig>) => {
+        const candidate: MCPServerConfig = { ...server, ...(list as object) } as MCPServerConfig;
+        setTestTools(null);
+        if (!candidate.url?.trim()) {
+            setStatusById((prev) => ({ ...prev, [candidate.id]: "请先填写服务器 URL" }));
+            return;
+        }
+        setTesting(candidate.id);
+        try {
+            const result = await mcpRegistry.testServer(candidate);
+            if (result.lastError) {
+                setStatusById((prev) => ({ ...prev, [candidate.id]: `连接失败：${result.lastError}` }));
+            } else {
+                onSave(result);
+                const count = result.cachedTools?.length ?? 0;
+                setTestTools(result.cachedTools || []);
+                setStatusById((prev) => ({ ...prev, [candidate.id]: `连接成功，发现 ${count} 个工具` }));
+            }
+        } catch (error: any) {
+            setStatusById((prev) => ({
+                ...prev,
+                [candidate.id]: `连接失败：${error?.message || String(error)}`,
+            }));
+        } finally {
+            setTesting(null);
+        }
+    };
+
+    const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!editing) return;
+        const url = (editing.url || "").trim();
+        const name = (editing.name || "").trim();
+        if (!name) {
+            window.alert("请填写服务器名称");
+            return;
+        }
+        if (!/^https?:\/\//i.test(url)) {
+            window.alert("URL 需要以 http:// 或 https:// 开头");
+            return;
+        }
+        if (editing.customHeaders?.trim()) {
+            try {
+                const parsed = JSON.parse(editing.customHeaders);
+                if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("必须是 JSON 对象");
+            } catch (error: any) {
+                window.alert(`自定义请求头不是合法的 JSON 对象：${error?.message || error}`);
+                return;
+            }
+        }
+        onSave({
+            ...createDefaultMcpServer(),
+            ...editing,
+            id: editing.id || `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            name,
+            url,
+            transport: editing.transport === "sse" ? "sse" : "http",
+            enabled: editing.enabled !== false,
+            disabledTools: editing.disabledTools || [],
+        });
+        setEditing(null);
+        setTestTools(null);
+    };
+
+    const toggleServerTool = (server: MCPServerConfig, toolName: string, enabled: boolean) => {
+        const next = new Set(server.disabledTools || []);
+        if (enabled) next.delete(toolName);
+        else next.add(toolName);
+        onSave({ ...server, disabledTools: Array.from(next) });
+    };
+
+    return (
+        <div className={settings.sectionStack}>
+            <section className={settings.card}>
+                <div className={settings.cardHeader}>
+                    <div>
+                        <h5>MCP 服务器</h5>
+                        <p>通过 MCP（Model Context Protocol）为 AI 接入外部工具。支持 Streamable HTTP 与 SSE，请求经内置服务器中继出站，无需额外代理配置。</p>
+                    </div>
+                    <button
+                        type="button"
+                        className={settings.button}
+                        onClick={() => setEditing(createDefaultMcpServer())}
+                    >
+                        添加服务器
+                    </button>
+                </div>
+                <div className={`${settings.cardBody} ${settings.agentList}`}>
+                    {servers.length === 0 ? (
+                        <div className={settings.hint}>还没有配置 MCP 服务器。点击“添加服务器”开始。</div>
+                    ) : null}
+                    {servers.map((server) => (
+                        <article key={server.id} className={settings.agentItem}>
+                            <div className={settings.agentItemHeader}>
+                                <div>
+                                    <div className={settings.agentName}>{server.name || "(未命名)"}</div>
+                                    <div className={settings.agentProvider}>
+                                        {server.transport === "sse" ? "SSE" : "Streamable HTTP"} · {server.url}
+                                    </div>
+                                </div>
+                                <div className={settings.actions}>
+                                    <label className={settings.checkLabel} title={server.enabled ? "已启用" : "已禁用"}>
+                                        <input
+                                            type="checkbox"
+                                            checked={server.enabled}
+                                            onChange={(event) => onSave({ ...server, enabled: event.target.checked })}
+                                        />
+                                        启用
+                                    </label>
+                                    <button
+                                        type="button"
+                                        className={settings.button}
+                                        disabled={testing === server.id}
+                                        onClick={() => void runTest(server)}
+                                    >
+                                        {testing === server.id ? "连接中..." : "测试连接"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={settings.button}
+                                        onClick={() => setEditing({ ...server })}
+                                    >
+                                        编辑
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={settings.dangerButton}
+                                        onClick={() => {
+                                            if (window.confirm(`确定删除 MCP 服务器“${server.name}”吗？`)) onDelete(server.id);
+                                        }}
+                                    >
+                                        删除
+                                    </button>
+                                </div>
+                            </div>
+                            <div className={settings.hint}>
+                                {statusById[server.id] ||
+                                    (server.lastConnectedAt
+                                        ? `上次连接：${new Date(server.lastConnectedAt).toLocaleString()} · 工具 ${server.cachedTools?.length ?? 0} 个`
+                                        : "尚未测试连接")}
+                                {server.lastError ? ` · 错误：${server.lastError}` : ""}
+                            </div>
+                            {(server.cachedTools?.length ?? 0) > 0 ? (
+                                <div className={settings.toolGroup}>
+                                    <button
+                                        type="button"
+                                        className={settings.ghostButton}
+                                        onClick={() => setExpandedId(expandedId === server.id ? null : server.id)}
+                                    >
+                                        {expandedId === server.id ? "收起工具列表" : `展开工具列表（${server.cachedTools?.length}）`}
+                                    </button>
+                                    {expandedId === server.id ? (
+                                        <div className={settings.toolList}>
+                                            {server.cachedTools!.map((tool) => {
+                                                const toolEnabled = !(server.disabledTools || []).includes(tool.name);
+                                                return (
+                                                    <label key={tool.name} className={settings.checkRow} title={tool.description || tool.name}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={toolEnabled}
+                                                            onChange={(event) => toggleServerTool(server, tool.name, event.target.checked)}
+                                                        />
+                                                        <code>{tool.name}</code>
+                                                        <span className={settings.toolDesc}>{tool.description || ""}</span>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : null}
+                                </div>
+                            ) : null}
+                        </article>
+                    ))}
+                </div>
+            </section>
+
+            {editing ? (
+                <section className={settings.card}>
+                    <div className={settings.cardHeader}>
+                        <div>
+                            <h5>{servers.some((server) => server.id === editing.id) ? "编辑服务器" : "添加服务器"}</h5>
+                            <p>保存后在列表中“测试连接”以发现该服务器提供的工具。</p>
+                        </div>
+                    </div>
+                    <form className={settings.cardBody} onSubmit={handleSave}>
+                        <div className={settings.formGrid}>
+                            <label className={settings.field}>
+                                <span className={settings.label}>名称</span>
+                                <input
+                                    className={settings.input}
+                                    value={editing.name || ""}
+                                    onChange={(event) => setEditing({ ...editing, name: event.target.value })}
+                                    placeholder="例如：filesystem"
+                                    required
+                                />
+                            </label>
+                            <label className={settings.field}>
+                                <span className={settings.label}>传输方式</span>
+                                <select
+                                    className={settings.select}
+                                    value={editing.transport || "http"}
+                                    onChange={(event) =>
+                                        setEditing({ ...editing, transport: event.target.value as MCPServerConfig["transport"] })
+                                    }
+                                >
+                                    <option value="http">Streamable HTTP（推荐）</option>
+                                    <option value="sse">HTTP + SSE（旧版）</option>
+                                </select>
+                            </label>
+                            <label className={`${settings.field} ${settings.fieldFull}`}>
+                                <span className={settings.label}>服务器 URL</span>
+                                <input
+                                    className={settings.input}
+                                    value={editing.url || ""}
+                                    onChange={(event) => setEditing({ ...editing, url: event.target.value })}
+                                    placeholder="https://example.com/mcp"
+                                    required
+                                />
+                            </label>
+                            <label className={`${settings.field} ${settings.fieldFull}`}>
+                                <span className={settings.label}>API Key（可选，作为 Authorization: Bearer）</span>
+                                <input
+                                    className={settings.input}
+                                    type="password"
+                                    value={editing.apiKey || ""}
+                                    onChange={(event) => setEditing({ ...editing, apiKey: event.target.value })}
+                                    placeholder="留空表示不发送 Bearer Token"
+                                />
+                            </label>
+                            <label className={`${settings.field} ${settings.fieldFull}`}>
+                                <span className={settings.label}>自定义请求头（可选，JSON 对象）</span>
+                                <textarea
+                                    className={`${settings.input} ${settings.textarea}`}
+                                    rows={3}
+                                    value={editing.customHeaders || ""}
+                                    onChange={(event) => setEditing({ ...editing, customHeaders: event.target.value })}
+                                    placeholder={'{"X-Tenant": "a"}'}
+                                    spellCheck={false}
+                                />
+                            </label>
+                        </div>
+                        <div className={`${settings.toolbar} ${settings.formActions}`}>
+                            <div className={settings.actions}>
+                                <button type="button" className={settings.button} onClick={() => setEditing(null)}>
+                                    取消
+                                </button>
+                                <button
+                                    type="button"
+                                    className={settings.button}
+                                    disabled={testing === editing.id}
+                                    onClick={() => {
+                                        if (!editing.url?.trim() || !editing.name?.trim()) {
+                                            window.alert("请先填写名称和 URL");
+                                            return;
+                                        }
+                                        void runTest(
+                                            {
+                                                ...(editing as MCPServerConfig),
+                                            },
+                                            editing,
+                                        );
+                                    }}
+                                >
+                                    {testing === editing.id ? "连接中..." : "测试连接"}
+                                </button>
+                                <button type="submit" className={settings.primaryButton}>
+                                    保存
+                                </button>
+                            </div>
+                        </div>
+                        {testTools !== null ? <div className={settings.hint}>发现 {testTools.length} 个工具</div> : null}
+                    </form>
+                </section>
+            ) : null}
+        </div>
+    );
+};
+
+interface ToolsSectionProps {
+    disabledTools: string[];
+    onSetDisabledTools: (next: string[]) => void;
+    jsPermission: JsPermissionMode;
+    onSetJsPermission: (mode: JsPermissionMode) => void;
+}
+
+/** Built-in tools grouped for display in settings (读取 / 修改 / AI 协作 / 系统与外部). */
+const classifyTool = (name: string): "read" | "mutate" | "assist" | "system" => {
+    if (name === "runJavaScript") return "system";
+    if (MUTATING_TOOLS.has(name)) return "mutate";
+    if (["readFile","listFiles","searchFiles","getProjectOverview","readVariable","readListSlice","searchList","getDataSummary","getDiagnostics","listCostumes","searchBlocks","getBlocksHelp","searchExtensions","getAllExtensions","getExtensionBlocks","getScratchGuide"].includes(name)) return "read";
+    if (["askUser","updateTodoList","listMemoryBlocks","getMemoryBlock","setMemoryBlock","replaceMemoryBlockText","deleteMemoryBlock","runSubAgent","checkSubagentResults","listSkills","readSkill","createSkill","startStageRecording","stopStageRecording"].includes(name)) return "assist";
+    return "system";
+};
+
+const buildToolGroups = () => {
+    const buckets: Record<string, Set<string>> = { read: new Set(), mutate: new Set(), assist: new Set(), system: new Set() };
+    scratchToolSchemas.forEach((tool) => buckets[classifyTool(tool.function.name)].add(tool.function.name));
+    return [
+        { key: "read", label: "编辑器读取（只读）", names: buckets.read },
+        { key: "mutate", label: "编辑器修改（写入项目）", names: buckets.mutate },
+        { key: "assist", label: "AI 协作与记忆", names: buckets.assist },
+        { key: "system", label: "系统与外部（网络 / 代码执行 / 技能管理）", names: buckets.system },
+    ];
+};
+
+const ToolsSection: React.FC<ToolsSectionProps> = ({ disabledTools, onSetDisabledTools, jsPermission, onSetJsPermission }) => {
+    const disabledSet = React.useMemo(() => new Set(disabledTools), [disabledTools]);
+    const tools = scratchToolSchemas;
+    const toolGroups = React.useMemo(() => buildToolGroups(), []);
+
+    const toggleTool = (name: string, enabled: boolean) => {
+        const next = new Set(disabledSet);
+        if (enabled) next.delete(name);
+        else next.add(name);
+        onSetDisabledTools(Array.from(next));
+    };
+
+    const enabledCount = tools.filter((tool) => !disabledSet.has(tool.function.name)).length;
+
+    return (
+        <div className={settings.sectionStack}>
+            <section className={settings.card}>
+                <div className={settings.cardHeader}>
+                    <div>
+                        <h5>JavaScript 执行权限</h5>
+                        <p>runJavaScript 工具在主线程运行模型写的代码，可访问页面全局（含 localStorage 中的密钥）。选择它被允许做什么。</p>
+                    </div>
+                </div>
+                <div className={settings.cardBody}>
+                    <div className={settings.permissionChoices}>
+                        {JS_PERMISSION_MODES.map((mode) => (
+                            <label
+                                key={mode}
+                                className={`${settings.permissionChoice}${jsPermission === mode ? ` ${settings.permissionChoiceActive}` : ""}`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="js-permission"
+                                    checked={jsPermission === mode}
+                                    onChange={() => onSetJsPermission(mode)}
+                                />
+                                <span className={settings.permissionChoiceBody}>
+                                    <span className={settings.permissionChoiceTitle}>{JS_PERMISSION_LABELS[mode]}</span>
+                                    <span className={settings.permissionChoiceDesc}>{JS_PERMISSION_DESCRIPTIONS[mode]}</span>
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            </section>
+            <section className={settings.card}>
+                <div className={settings.cardHeader}>
+                    <div>
+                        <h5>内置工具</h5>
+                        <p>控制随每次请求发送给模型的内置工具。已启用 {enabledCount} / {tools.length} 个。计划模式下写入类工具仍会自动禁用。</p>
+                    </div>
+                    <div className={settings.actions}>
+                        <button
+                            type="button"
+                            className={settings.button}
+                            onClick={() => onSetDisabledTools([])}
+                            disabled={enabledCount === tools.length}
+                        >
+                            全部启用
+                        </button>
+                        <button
+                            type="button"
+                            className={settings.button}
+                            onClick={() => onSetDisabledTools(tools.map((tool) => tool.function.name))}
+                            disabled={enabledCount === 0}
+                        >
+                            全部禁用
+                        </button>
+                    </div>
+                </div>
+                <div className={`${settings.cardBody} ${settings.toolList}`}>
+                    {toolGroups.map((group) => {
+                        const rows = tools.filter((tool) => group.names.has(tool.function.name));
+                        if (rows.length === 0) return null;
+                        return (
+                            <div key={group.key} className={settings.toolGroup}>
+                                <div className={settings.toolGroupLabel}>
+                                    {group.label} · {rows.length}
+                                </div>
+                                {rows.map((tool) => {
+                                    const name = tool.function.name;
+                                    const checked = !disabledSet.has(name);
+                                    return (
+                                        <label key={name} className={settings.checkRow} title={tool.function.description}>
+                                            <input
+                                                type="checkbox"
+                                                checked={checked}
+                                                onChange={(event) => toggleTool(name, event.target.checked)}
+                                            />
+                                            <code>{name}</code>
+                                            {MUTATING_TOOLS.has(name) ? <span className={settings.toolBadge}>写入</span> : null}
+                                            <span className={settings.toolDesc}>{tool.function.description}</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })}
+                </div>
+            </section>
+        </div>
+    );
+};
+
+interface SkillsSectionProps {
+    skills: SkillConfig[];
+    onSave: (skill: SkillConfig) => void;
+    onDelete: (id: string) => void;
+}
+
+const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, onSave, onDelete }) => {
+    const [editing, setEditing] = React.useState<Partial<SkillConfig> | null>(null);
+    const importInputRef = React.useRef<HTMLInputElement | null>(null);
+
+    const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!editing) return;
+        const name = (editing.name || "").trim();
+        const content = (editing.content || "").trim();
+        if (!name) {
+            window.alert("请填写技能名称");
+            return;
+        }
+        if (!content) {
+            window.alert("请填写技能内容");
+            return;
+        }
+        onSave({
+            id: editing.id || `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            name,
+            description: (editing.description || "").trim(),
+            content,
+            enabled: editing.enabled !== false,
+        });
+        setEditing(null);
+    };
+
+    const handleExport = () => {
+        const blob = new Blob([JSON.stringify(skills, null, 2)], { type: "application/json;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "02agent-skills.json";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+
+    const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        try {
+            const parsed = JSON.parse(await file.text());
+            const list = Array.isArray(parsed) ? parsed : parsed?.skills;
+            if (!Array.isArray(list)) throw new Error("文件不是技能数组或 {skills:[...]} 结构");
+            for (const item of list) {
+                if (!item || typeof item.name !== "string" || typeof item.content !== "string") continue;
+                onSave({
+                    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    name: item.name.trim(),
+                    description: typeof item.description === "string" ? item.description : "",
+                    content: item.content,
+                    enabled: item.enabled !== false,
+                });
+            }
+        } catch (error) {
+            window.alert(`导入失败：${error instanceof Error ? error.message : String(error)}`);
+        } finally {
+            event.target.value = "";
+        }
+    };
+
+    return (
+        <div className={settings.sectionStack}>
+            <section className={settings.card}>
+                <div className={settings.cardHeader}>
+                    <div>
+                        <h5>已配置技能</h5>
+                        <p>启用的技能会以 Markdown 形式注入到系统提示词中，相当于自定义指令/工作规范。</p>
+                    </div>
+                    <div className={settings.actions}>
+                        <button type="button" className={settings.button} onClick={() => setEditing(createDefaultSkill())}>
+                            添加技能
+                        </button>
+                        <button type="button" className={settings.button} onClick={handleExport} disabled={skills.length === 0}>
+                            导出
+                        </button>
+                        <button type="button" className={settings.button} onClick={() => importInputRef.current?.click()}>
+                            导入
+                        </button>
+                    </div>
+                </div>
+                <div className={`${settings.cardBody} ${settings.agentList}`}>
+                    {skills.length === 0 ? <div className={settings.hint}>还没有配置技能。</div> : null}
+                    {skills.map((skill) => (
+                        <article key={skill.id} className={settings.agentItem}>
+                            <div className={settings.agentItemHeader}>
+                                <div>
+                                    <div className={settings.agentName}>{skill.name}</div>
+                                    <div className={settings.agentProvider}>{skill.description || skill.content.slice(0, 80)}</div>
+                                </div>
+                                <div className={settings.actions}>
+                                    <label className={settings.checkLabel}>
+                                        <input
+                                            type="checkbox"
+                                            checked={skill.enabled}
+                                            onChange={(event) => onSave({ ...skill, enabled: event.target.checked })}
+                                        />
+                                        启用
+                                    </label>
+                                    <button type="button" className={settings.button} onClick={() => setEditing({ ...skill })}>
+                                        编辑
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={settings.dangerButton}
+                                        onClick={() => {
+                                            if (window.confirm(`确定删除技能“${skill.name}”吗？`)) onDelete(skill.id);
+                                        }}
+                                    >
+                                        删除
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </section>
+
+            {editing ? (
+                <section className={settings.card}>
+                    <div className={settings.cardHeader}>
+                        <div>
+                            <h5>{skills.some((skill) => skill.id === editing.id) ? "编辑技能" : "添加技能"}</h5>
+                        </div>
+                    </div>
+                    <form className={settings.cardBody} onSubmit={handleSave}>
+                        <div className={settings.formGrid}>
+                            <label className={settings.field}>
+                                <span className={settings.label}>名称</span>
+                                <input
+                                    className={settings.input}
+                                    value={editing.name || ""}
+                                    onChange={(event) => setEditing({ ...editing, name: event.target.value })}
+                                    placeholder="例如：代码审查规范"
+                                    required
+                                />
+                            </label>
+                            <label className={settings.field}>
+                                <span className={settings.label}>描述（可选）</span>
+                                <input
+                                    className={settings.input}
+                                    value={editing.description || ""}
+                                    onChange={(event) => setEditing({ ...editing, description: event.target.value })}
+                                    placeholder="一句话说明何时使用该技能"
+                                />
+                            </label>
+                            <label className={`${settings.field} ${settings.fieldFull}`}>
+                                <span className={settings.label}>内容（Markdown 指令）</span>
+                                <textarea
+                                    className={`${settings.input} ${settings.textarea}`}
+                                    rows={10}
+                                    value={editing.content || ""}
+                                    onChange={(event) => setEditing({ ...editing, content: event.target.value })}
+                                    placeholder={"## 规范\n- 修改积木前先用 getDiagnostics 检查"}
+                                    spellCheck={false}
+                                />
+                            </label>
+                        </div>
+                        <div className={`${settings.toolbar} ${settings.formActions}`}>
+                            <div className={settings.actions}>
+                                <button type="button" className={settings.button} onClick={() => setEditing(null)}>
+                                    取消
+                                </button>
+                                <button type="submit" className={settings.primaryButton}>
+                                    保存
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+            ) : null}
+
+            <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json,.json"
+                className={settings.fileInput}
+                onChange={(event) => void handleImport(event)}
+            />
+        </div>
+    );
+};
+
+interface PromptSectionProps {
+    config: PromptConfig;
+    onSave: (config: PromptConfig) => void;
+    systemPrompt: string;
+}
+
+const PromptSection: React.FC<PromptSectionProps> = ({ config, onSave, systemPrompt }) => {
+    const [mode, setMode] = React.useState<PromptConfig["mode"]>(config?.mode || "append");
+    const [text, setText] = React.useState<string>(config?.text || "");
+    const [includeBase, setIncludeBase] = React.useState<boolean>(config?.includeBase !== false);
+    const [saved, setSaved] = React.useState(false);
+    const savedTimerRef = React.useRef<number | null>(null);
+
+    const flashSaved = () => {
+        setSaved(true);
+        if (savedTimerRef.current !== null) window.clearTimeout(savedTimerRef.current);
+        savedTimerRef.current = window.setTimeout(() => setSaved(false), 2000);
+    };
+
+    // Apply one or more fields immediately (used by the instant-apply switch/mode controls).
+    const saveFields = (overrides: Partial<PromptConfig> = {}) => {
+        const next: PromptConfig = {
+            mode: overrides.mode ?? mode,
+            text: overrides.text ?? text,
+            includeBase: overrides.includeBase ?? includeBase,
+        };
+        setMode(next.mode);
+        setIncludeBase(next.includeBase);
+        onSave(next);
+        flashSaved();
+    };
+
+    const handleSave = () => {
+        onSave({ mode, text, includeBase });
+        flashSaved();
+    };
+
+    const modeOptions: Array<{ value: PromptConfig["mode"]; label: string; hint: string }> = [
+        { value: "append", label: "追加（默认）", hint: "自定义内容放在内置基础提示词之后，叠加生效。" },
+        { value: "prepend", label: "前置", hint: "自定义内容放在基础提示词之前，优先级最高。" },
+        { value: "replace", label: "完全替换", hint: "只用你的文本作为系统提示词，丢弃内置基础提示词。此模式需自行描述工具与工作流，否则 AI 可能行为不稳定。" },
+    ];
+
+    return (
+        <div className={settings.sectionStack}>
+            <section className={settings.card}>
+                <div className={settings.cardHeader}>
+                    <div>
+                        <h5>系统提示词</h5>
+                        <p>自定义发给模型的系统提示词。技能（设置→技能）始终在最终提示词末尾追加，不受此设置影响。</p>
+                    </div>
+                    <button type="button" className={settings.primaryButton} onClick={handleSave}>
+                        {saved ? "已保存" : "保存"}
+                    </button>
+                </div>
+                <div className={settings.cardBody}>
+                    <label className={settings.checkLabel}>
+                        <input
+                            type="checkbox"
+                            checked={includeBase}
+                            onChange={(event) => {
+                                // Persist instantly: users expect this switch to take effect
+                                // without hunting for the header save button.
+                                setIncludeBase(event.target.checked);
+                                saveFields({ includeBase: event.target.checked });
+                            }}
+                        />
+                        <span>
+                            <strong>启用内置默认提示词</strong>
+                            <span className={settings.toolDesc}> 关闭后，内置基础提示词与计划模式提示词都不再注入，只使用下方自定义内容（另有技能时追加）。</span>
+                        </span>
+                    </label>
+                    <div>
+                        <span className={settings.label}>合并方式</span>
+                        <div className={settings.formGrid}>
+                            {modeOptions.map((option) => (
+                                <label key={option.value} className={settings.checkLabel}>
+                                    <input
+                                        type="radio"
+                                        name="prompt-mode"
+                                        checked={mode === option.value}
+                                        onChange={() => saveFields({ mode: option.value })}
+                                    />
+                                    <span>
+                                        <strong>{option.label}</strong>
+                                        <span className={settings.toolDesc}> {option.hint}</span>
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                    <label className={`${settings.field} ${settings.fieldFull}`}>
+                        <span className={settings.label}>提示词内容</span>
+                        <textarea
+                            className={`${settings.input} ${settings.textarea}`}
+                            rows={14}
+                            value={text}
+                            onChange={(event) => {
+                                setText(event.target.value);
+                                setSaved(false);
+                            }}
+                            placeholder={"You are helpful assistant...（注意：replace 模式下此文本将完全替代内置提示词）"}
+                            spellCheck={false}
+                        />
+                    </label>
+                    <div className={`${settings.toolbar} ${settings.formActions}`}>
+                        <button type="button" className={settings.button} onClick={handleSave}>
+                            {saved ? "已保存" : "保存"}
+                        </button>
+                    </div>
+                </div>
+            </section>
+            <section className={settings.card}>
+                <div className={settings.cardHeader}>
+                    <div>
+                        <h5>当前生效的系统提示词</h5>
+                        <p>这是上一次发送消息时，实际发给模型的完整系统提示词（内置基础 + 你的自定义 + 技能 合并后）。改完设置后发送一条消息即可刷新。</p>
+                    </div>
+                    <button
+                        type="button"
+                        className={settings.button}
+                        onClick={() => {
+                            if (navigator.clipboard?.writeText) {
+                                void navigator.clipboard.writeText(systemPrompt || "");
+                                window.setTimeout(() => alert("已复制系统提示词"), 0);
+                            }
+                        }}
+                        disabled={!systemPrompt}
+                    >
+                        复制
+                    </button>
+                </div>
+                <div className={settings.cardBody}>
+                    <textarea
+                        className={`${settings.input} ${settings.textarea}`}
+                        rows={16}
+                        readOnly
+                        value={systemPrompt || "（尚未发送消息，暂无系统提示词。发送一次消息后这里会显示实际生效的完整提示词。）"}
+                        spellCheck={false}
+                    />
+                </div>
+            </section>
+        </div>
+    );
+};
+
 export const SettingsModal: React.FC<SettingsModalProps> = ({
     agents,
     editingAgent,
@@ -152,6 +979,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     debugMode,
     onToggleDebugMode,
     onOpenBenchmark,
+    mcpServers,
+    onSaveMCPServer,
+    onDeleteMCPServer,
+    disabledTools,
+    onSetDisabledTools,
+    jsPermission,
+    onSetJsPermission,
+    skills,
+    subagents,
+    onSaveSubagents,
+    onSaveSkill,
+    onDeleteSkill,
+    promptConfig,
+    onSavePromptConfig,
+    systemPrompt,
     onClose,
     isCompact,
 }) => {
@@ -315,17 +1157,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         }
     };
 
-    const sectionTitle =
-        activeSection === "agents"
-            ? "模型"
-            : activeSection === "appearance"
-                ? "外观"
-                : activeSection === "debug"
-                    ? "调试"
-                    : "关于";
+    const activeGroup = SECTION_GROUPS.find((group) => group.sections.includes(activeSection)) || SECTION_GROUPS[0];
+    const sectionTitle = SUBTAB_LABELS[activeSection];
     const sectionDescription = {
         "agents": "管理 Agents",
-        'appearance': "",
+        "mcp": "连接 MCP 服务器，为 AI 提供外部工具",
+        "tools": "启用或禁用内置工具",
+        "skills": "自定义注入系统提示词的技能",
+        "memory": "管理 AI 的长期记忆与项目记忆",
+        "subagents": "管理 runSubAgent 可用的子智能体角色",
+        "prompt": "编辑发给模型的系统提示词",
+        "appearance": "切换界面主题",
         "debug": "性能基准与开发者工具",
         "about": "关于本项目"
     }[activeSection] || ""
@@ -341,21 +1183,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         <h3>设置</h3>
                     </div>
                     <nav className={settings.navList} aria-label="设置分类">
-                        {[
-                            ["agents", "模型"],
-                            ["appearance", "外观"],
-                            ["debug", "调试"],
-                            ["about", "关于"],
-                        ].map(([id, label]) => (
-                            <button
-                                key={id}
-                                type="button"
-                                className={`${settings.navItem} ${activeSection === id ? settings.navItemActive : ""}`}
-                                onClick={() => setActiveSection(id as SettingsSection)}
-                            >
-                                <span>{label}</span>
-                            </button>
-                        ))}
+                        {SECTION_GROUPS.map((group) => {
+                            const isActive = group.id === activeGroup.id;
+                            return (
+                                <button
+                                    key={group.id}
+                                    type="button"
+                                    className={`${settings.navItem} ${isActive ? settings.navItemActive : ""}`}
+                                    onClick={() => setActiveSection(group.sections[0])}
+                                    title={group.sublabel}
+                                >
+                                    <span>{group.label}</span>
+                                </button>
+                            );
+                        })}
                     </nav>
                     <div className={settings.navFooter}>
                         <button type="button" className={settings.button} onClick={() => fileInputRef.current?.click()}>
@@ -381,6 +1222,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <p>{sectionDescription}</p>
                         </div>
                     </header>
+                    {activeGroup.sections.length > 1 ? (
+                        <nav className={settings.subTabs} aria-label={`${activeGroup.label}分类`}>
+                            {activeGroup.sections.map((section) => (
+                                <button
+                                    key={section}
+                                    type="button"
+                                    className={`${settings.subTabItem} ${activeSection === section ? settings.subTabItemActive : ""}`}
+                                    onClick={() => setActiveSection(section)}
+                                >
+                                    {SUBTAB_LABELS[section]}
+                                </button>
+                            ))}
+                        </nav>
+                    ) : null}
 
                     <div className={settings.settingsContent}>
                         {activeSection === "agents" ? (
@@ -523,6 +1378,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                         }
                                                         placeholder="Max Tokens"
                                                     />
+                                                    <input
+                                                        className={settings.input}
+                                                        value={model.imageModel || ""}
+                                                        onChange={(event) =>
+                                                            updateModel(
+                                                                model.id,
+                                                                "imageModel",
+                                                                event.target.value.trim() || undefined,
+                                                            )
+                                                        }
+                                                        placeholder="生成图像模型ID（可选，用于 AI 生成造型）"
+                                                    />
                                                     <div className={settings.contextWindowControl}>
                                                         <select
                                                             className={settings.select}
@@ -651,6 +1518,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </div>
                                 </section>
                             </div>
+                        ) : null}
+
+                        {activeSection === "mcp" ? (
+                            <MCPSection servers={mcpServers} onSave={onSaveMCPServer} onDelete={onDeleteMCPServer} />
+                        ) : null}
+
+                        {activeSection === "tools" ? (
+                            <ToolsSection
+                                disabledTools={disabledTools}
+                                onSetDisabledTools={onSetDisabledTools}
+                                jsPermission={jsPermission}
+                                onSetJsPermission={onSetJsPermission}
+                            />
+                        ) : null}
+
+                        {activeSection === "memory" ? <MemorySection /> : null}
+
+                        {activeSection === "subagents" ? (
+                            <SubagentsSection subagents={subagents} onSave={onSaveSubagents} />
+                        ) : null}
+
+                        {activeSection === "skills" ? (
+                            <SkillsSection skills={skills} onSave={onSaveSkill} onDelete={onDeleteSkill} />
+                        ) : null}
+
+                        {activeSection === "prompt" ? (
+                            <PromptSection config={promptConfig} onSave={onSavePromptConfig} systemPrompt={systemPrompt} />
                         ) : null}
 
                         {activeSection === "appearance" ? (

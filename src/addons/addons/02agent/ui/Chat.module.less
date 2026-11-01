@@ -747,3 +747,313 @@
         max-width: 100%;
     }
 }
+.approvalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.approvalPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(760px, 100%);
+    max-height: 80vh;
+    padding: 18px 20px;
+    border-radius: 12px;
+    background: var(--ai-bg-surface);
+    border: 1px solid var(--ai-border);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.approvalHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.approvalTitle {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.approvalSubtitle {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    opacity: 0.75;
+}
+
+.approvalCode {
+    flex: 1;
+    min-height: 120px;
+    margin: 0;
+    padding: 12px;
+    overflow: auto;
+    border-radius: 8px;
+    border: 1px solid var(--ai-border);
+    background: var(--ai-bg-input, rgba(128, 128, 128, 0.1));
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    tab-size: 2;
+}
+
+.approvalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.approvalDeny,
+.approvalAllow {
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid var(--ai-border);
+    background: var(--ai-bg-surface);
+    color: inherit;
+}
+
+.approvalAllow {
+    border-color: var(--ai-accent, #4c97ff);
+    background: var(--ai-accent, #4c97ff);
+    color: #fff;
+    font-weight: 600;
+}
+
+.approvalAllow:hover {
+    filter: brightness(1.06);
+}
+
+.approvalDeny:hover {
+    background: var(--ai-bg-input, rgba(128, 128, 128, 0.12));
+}
+
+.statusNotice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px auto;
+    padding: 7px 14px;
+    width: fit-content;
+    max-width: 88%;
+    border-radius: 999px;
+    border: 1px solid var(--ai-border);
+    background: var(--ai-bg-surface);
+    font-size: 12px;
+    line-height: 1.4;
+    opacity: 0.9;
+}
+
+.statusNoticeIcon {
+    color: var(--ai-accent, #4c97ff);
+    animation: statusNoticePulse 1.4s ease-in-out infinite;
+}
+
+.statusNoticeText {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+@keyframes statusNoticePulse {
+    0%, 100% { opacity: 0.45; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+.questionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: auto;
+    padding: 2px 0;
+}
+
+.questionItem {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.questionText {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.questionOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.questionOption {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--ai-border);
+    border-radius: 8px;
+    background: var(--ai-bg-input, rgba(128, 128, 128, 0.08));
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.questionOption:hover {
+    border-color: var(--ai-accent, #4c97ff);
+}
+
+.questionInput {
+    padding: 8px 10px;
+    border: 1px solid var(--ai-border);
+    border-radius: 8px;
+    background: var(--ai-bg-input, rgba(128, 128, 128, 0.08));
+    color: inherit;
+    font-size: 13px;
+    outline: none;
+    min-width: 0;
+}
+
+.questionInput:focus {
+    border-color: var(--ai-accent, #4c97ff);
+}
+
+.todoPanel {
+    position: absolute;
+    top: 48px;
+    right: 12px;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: 78%;
+}
+
+/* Expanded state: applied dynamically by the component (className concat).
+   It must exist here or the concat yields a literal "undefined" class. */
+.todoPanelExpanded {
+    max-width: 92%;
+    align-items: stretch;
+}
+
+.todoPanelExpanded .todoChip {
+    border-color: var(--ai-accent, #4c97ff);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.todoPanelExpanded .todoChipToggle {
+    opacity: 1;
+    transform: rotate(90deg);
+}
+
+.todoChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--ai-border);
+    background: var(--ai-bg-surface);
+    font-size: 12px;
+    color: inherit;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.todoChipLabel {
+    font-weight: 600;
+}
+
+.todoChipProgress {
+    color: var(--ai-accent, #4c97ff);
+    font-weight: 600;
+}
+
+.todoChipActive {
+    color: #f5ad35;
+}
+
+.todoChipToggle {
+    opacity: 0.65;
+    font-size: 10px;
+}
+
+.todoList {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 8px 10px;
+    width: min(320px, 100%);
+    max-height: 40vh;
+    overflow: auto;
+    border-radius: 10px;
+    border: 1px solid var(--ai-border);
+    background: var(--ai-bg-surface);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.todoListItem {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.todoStatus {
+    flex: none;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.todoTitle {
+    word-break: break-word;
+}
+
+.compactionOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.compactionPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(720px, 100%);
+    max-height: 80%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--ai-border);
+    background: var(--ai-bg-surface);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+}
+
+.compactionBody {
+    overflow: auto;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--ai-bg-input, rgba(128, 128, 128, 0.08));
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+}

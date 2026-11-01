@@ -90,6 +90,7 @@ const IconComposeExpand = () => <svg width="14" height="14" viewBox="0 0 14 14" 
 export const InputArea: React.FC<InputAreaProps> = ({
     inputText,
     setInputText,
+    skills = [],
     attachments,
     setAttachments,
     onSend,
@@ -114,32 +115,49 @@ export const InputArea: React.FC<InputAreaProps> = ({
     const [previewAttachment, setPreviewAttachment] = React.useState<Attachment | null>(null);
     const [expandedId, setExpandedId] = React.useState<string | null>(null);
 
+    // "/" opens the skill picker: propose matching enabled skills as soon as the first
+    // token starts with "/" (before any whitespace/newline).
+    // Only show suggestions while the first line IS the bare "/token" (no trailing space) —
+    // otherwise the panel never closes after a pick (empty query matches everything).
+    const skillQueryMatch = /^(?:\s*)\/([^ \n]*)$/.exec((inputText.split("\n")[0] || "").trimEnd());
+    const currentSkillSuggestions =
+        skillQueryMatch && skills.length
+            ? skills.filter((skill) => skill.name.toLowerCase().includes(skillQueryMatch[1].toLowerCase()))
+            : [];
+
+    // Attachments are snapped into the session snapshot (localStorage) and full
+    // text is injected into the prompt — do not let a accidental 50MB dump
+    // poison both.
+    const MAX_ATTACHMENT_FILE_SIZE = 2 * 1024 * 1024;
+
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(event.target.files || []);
+        const files = Array.from((event.target.files || []) as FileList);
         if (!files.length) return;
 
         const parsedAttachments = await Promise.all(
-            files.map(async (file) => {
-                try {
-                    return await parseLocalAttachment(file);
-                } catch (error: unknown) {
-                    const message = error instanceof Error ? error.message : "未知错误";
-                    return {
-                        id: `${Date.now()}-${file.name}`,
-                        name: file.name,
-                        kind: "text-file" as const,
-                        mimeType: file.type || "application/octet-stream",
-                        content: `导入失败：${message}`,
-                        preview: `导入失败：${message}`,
-                        meta: {
-                            source: "local-file",
-                        },
-                    };
-                }
-            }),
+            files
+                .filter((file) => {
+                    if (file.size <= MAX_ATTACHMENT_FILE_SIZE) return true;
+                    console.warn(`[02Agent] attachment too large, skipped: ${file.name} (${file.size} bytes > 2MB limit)`);
+                    return false;
+                })
+                .map(async (file) => {
+                    try {
+                        return await parseLocalAttachment(file);
+                    } catch (error: unknown) {
+                        const message = error instanceof Error ? error.message : "未知错误";
+                        console.warn(`[02Agent] attachment import failed: ${file.name} — ${message}`);
+                        // A failed import must not enter the conversation as fake
+                        // content; the user only sees the console warning here.
+                        return null;
+                    }
+                }),
         );
 
-        setAttachments((prev) => [...prev, ...parsedAttachments]);
+        const succeeded = parsedAttachments.filter(Boolean) as Attachment[];
+        if (succeeded.length) {
+            setAttachments((prev) => [...prev, ...succeeded]);
+        }
         event.target.value = "";
     };
 
@@ -296,15 +314,15 @@ export const InputArea: React.FC<InputAreaProps> = ({
                                 <img src={StopIcon} aria-hidden="true" alt="" />
                             </button>
                         ) : (
-                            <div
+                            <button
                                 type="button"
                                 onClick={onSend}
                                 className={`${composer.primaryButton} ${isExpanded ? composer.expandedComposerSendButton : composer.iconButton}`}
-                                title={planMode ? "制定计划" : "发送"}
+                                title={planMode ? "制定计划" : (inputText.trim() ? "发送" : "发送（请先输入内容）")}
                                 aria-label={planMode ? "制定计划" : "发送"}
                             >
                                 <IconSend />
-                            </div>
+                            </button>
                         )}
                     </div>
                 </div>

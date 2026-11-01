@@ -7,6 +7,16 @@ declare const require: any;
 const getScratchBlocks = () => (window as any).ScratchBlocks || window.Blockly;
 const LARGE_SCRIPT_BLOCK_THRESHOLD = 120;
 
+// Production should stay quiet: verbose trace logs only when the page exposes
+// a debug flag (set `window.__02AGENT_DEBUG = true` while debugging).
+const debug02AgentLog = (...args: unknown[]) => {
+  try {
+    if (typeof window !== "undefined" && (window as any).__02AGENT_DEBUG) {
+      console.info("[02Agent]", ...args);
+    }
+  } catch { /* never throw from logging */ }
+};
+
 const setBlocklyEventGroup = (grouped: boolean) => {
   const events = getScratchBlocks()?.Events;
   if (typeof events?.setGroup !== "function") return;
@@ -362,24 +372,45 @@ export const resolveVariableReferences = (
       repairListVariableValue(ownerTarget, variable);
     }
     if (commit) ensureWorkspaceVariable(id, name, type, scope);
-    existingVariables.push({
-      id,
-      name,
-      type,
-      source: "runtime",
-      target: ownerTarget,
-      variable,
-    });
-    return existingVariables[existingVariables.length - 1];
+    // Sync the resolution BACK into the snapshot so later blocks in the same
+    // conversion see the real record (id may differ from the requested one).
+    const resolvedId = variable?.id || id;
+    const record = { id: resolvedId, name, type, source: "runtime", target: ownerTarget, variable };
+    existingVariables.push(record);
+    return record;
   };
 
+  // scope "auto" must NOT blindly take the first name match: a sprite-local
+  // variable that happens to share the stage's global name would be shadowed
+  // (targets order usually puts the stage first). Rank: local > global > any.
   const findVariableReference = (nameOrId: string, type: string, scope: string) => {
-    const byName = existingVariables.find((item) =>
-      item.name === nameOrId && item.type === type && variableMatchesScope(item, scope));
+    const rankedPick = (items: any[]) => {
+      if (!items.length) return null;
+      if (scope === "auto") {
+        const local = items.find((item) => item.source === "runtime" && item.target?.id === target?.id);
+        if (local) {
+          const global = items.find((item) => item.source === "runtime" && Boolean(item.target?.isStage) && item !== local);
+          if (global) {
+            debug02AgentLog("variable scope auto: same-name global shadowed by local", {
+              name: nameOrId,
+              localId: local.id,
+              globalId: global.id,
+            });
+          }
+          return local;
+        }
+        const global = items.find((item) => item.source === "runtime" && Boolean(item.target?.isStage));
+        if (global) return global;
+      }
+      return items[0];
+    };
+
+    const byName = rankedPick(existingVariables.filter((item) =>
+      item.name === nameOrId && item.type === type && variableMatchesScope(item, scope)));
     if (byName) return byName;
 
-    const byId = existingVariables.find((item) =>
-      item.id === nameOrId && item.type === type && variableMatchesScope(item, scope));
+    const byId = rankedPick(existingVariables.filter((item) =>
+      item.id === nameOrId && item.type === type && variableMatchesScope(item, scope)));
     if (byId) return byId;
 
     return null;
@@ -407,10 +438,12 @@ export const resolveVariableReferences = (
     }
 
     const fieldId = requestedId || createStableVariableId(requestedName, variableType, requestedScope);
-    field.id = fieldId;
     field.value = requestedName;
     field.variableType = variableType;
-    ensureRuntimeVariable(fieldId, requestedName, variableType, requestedScope);
+    const record = ensureRuntimeVariable(fieldId, requestedName, variableType, requestedScope);
+    // Use the ACTUAL runtime record: creation may resolve to a different id.
+    field.id = record?.id || fieldId;
+    if (record?.name) field.value = record.name;
   };
 
   blocksState.forEach((blockState) => {
@@ -516,10 +549,43 @@ const insertRuntimeBlocks = (target: Scratch.RenderTarget, blocksState: any[]) =
   return { insertedBlockIds, insertedCommentIds };
 };
 
+// Fixed sleep(60) calls raced on slow devices / busy event loops: the workspace
+// had not been rebuilt when the follow-up lookup ran. Prefer polling until the
+// expected state appears (short interval, bounded timeout).
+const waitForCondition = async (predicate: () => boolean, timeoutMs = 1000, intervalMs = 50) => {
+  const started = Date.now();
+  for (;;) {
+    let ok = false;
+    try {
+      ok = Boolean(predicate());
+    } catch {
+      ok = false;
+    }
+    if (ok) return true;
+    if (Date.now() - started >= timeoutMs) return false;
+    await new Promise((resolve) => window.setTimeout(resolve, intervalMs));
+  }
+};
+
+const waitForWorkspaceSync = async <T>(action: () => T | null | undefined, timeoutMs = 1000, intervalMs = 50) => {
+  const started = Date.now();
+  for (;;) {
+    let value = null;
+    try {
+      value = action() ?? null;
+    } catch {
+      value = null;
+    }
+    if (value) return value as T;
+    if (Date.now() - started >= timeoutMs) return null;
+    await new Promise((resolve) => window.setTimeout(resolve, intervalMs));
+  }
+};
+
 const refreshWorkspaceAfterRuntimeWrite = async (vm: PluginContext["vm"], target: Scratch.RenderTarget) => {
   if (vm.editingTarget?.id !== target.id) {
     vm.setEditingTarget(target.id);
-    await new Promise((resolve) => window.setTimeout(resolve, 60));
+    await waitForCondition(() => vm.editingTarget?.id === target.id);
   }
   try {
     const stageTarget = vm.runtime?.getTargetForStage?.();
@@ -625,7 +691,7 @@ export const replaceBlocksRangeByUCF = async (
   options: { includeComments?: boolean; linkTopLevelStatements?: boolean } = {},
 ) => {
   const target = resolveTargetForRange(vm, startBlockId, endBlockId);
-  console.log("[AI Assistant Range Replace] resolved runtime target", {
+  debug02AgentLog("range replace: resolved runtime target", {
     startBlockId,
     endBlockId,
     targetId: target?.id || null,
@@ -640,9 +706,9 @@ export const replaceBlocksRangeByUCF = async (
 
   let switchedTarget = false;
   if (vm.editingTarget?.id !== target.id) {
-    console.log("[AI Assistant Range Replace] switching editing target", { from: vm.editingTarget?.id, to: target.id });
+    debug02AgentLog("range replace: switching editing target", { from: vm.editingTarget?.id, to: target.id });
     vm.setEditingTarget(target.id);
-    await new Promise((resolve) => window.setTimeout(resolve, 60));
+    await waitForCondition(() => vm.editingTarget?.id === target.id);
     switchedTarget = true;
   }
 
@@ -711,10 +777,23 @@ export const replaceBlocksRangeByUCF = async (
     topLevelBlockState.y = startXY.y;
     resolveVariableReferences(vm, workspace, newBlocksState);
     const xmlText = blockStatesToXml(newBlocksState);
+    const topLevelBeforeSet = new Set(topLevelBefore);
 
     setBlocklyEventGroup(true);
 
-    console.log("[AI Assistant Range Replace] before delete", {
+    // ROLLBACK-SAFE ORDER: the old range is NOT destroyed until the replacement
+    // is fully placed AND reconnected. Every failure path below disposes only
+    // the newly created top-level blocks and leaves the original range in place.
+    const disposeNewTopLevelBlocks = () => {
+      collectTopLevelBlockIds(workspace)
+        .filter((blockId) => !topLevelBeforeSet.has(blockId))
+        .forEach((blockId) => {
+          const block = workspace.getBlockById(blockId) as Blockly.BlockSvg | null;
+          if (block) block.dispose(false, true);
+        });
+    };
+
+    debug02AgentLog("range replace: inserting replacement", {
       startBlockId,
       endBlockId,
       blocksToDelete: blocksToDelete.map((block) => block.id),
@@ -722,30 +801,16 @@ export const replaceBlocksRangeByUCF = async (
       nextBlockId,
     });
 
-    if (startBlock.previousConnection?.isConnected()) {
-      startBlock.previousConnection.disconnect();
-    }
-    if (endBlock.nextConnection?.isConnected()) {
-      endBlock.nextConnection.disconnect();
-    }
-    startBlock.dispose(false, true);
-
-    console.log("[AI Assistant Range Replace] after delete", {
-      remainingStart: workspace.getBlockById(startBlockId)?.id || null,
-      remainingEnd: workspace.getBlockById(endBlockId)?.id || null,
-    });
-
     const xmlDom = window.Blockly.Xml.textToDom(xmlText);
     window.Blockly.Xml.domToWorkspace(xmlDom, workspace);
     applyBlockCommentsToWorkspace(workspace, newBlocksState);
     repairListVariableValues(vm, target.id);
 
-    let insertedBlock = workspace.getBlockById(topLevelBlockState.id) as Blockly.BlockSvg | null;
+    let insertedBlock = (await waitForWorkspaceSync(
+      () => workspace.getBlockById(topLevelBlockState.id)) as Blockly.BlockSvg | null) || null;
     if (!insertedBlock) {
-      await new Promise((resolve) => window.setTimeout(resolve, 60));
-      insertedBlock = workspace.getBlockById(topLevelBlockState.id) as Blockly.BlockSvg | null;
-    }
-    if (!insertedBlock) {
+      disposeNewTopLevelBlocks();
+      debug02AgentLog("range replace: rolled back (inserted block not found)", { startBlockId, endBlockId });
       return buildFailureResult("Inserted block not found", "locate_inserted_block", {
         startBlockId,
         endBlockId,
@@ -757,6 +822,40 @@ export const replaceBlocksRangeByUCF = async (
     let reconnectedNext = false;
     const previousBlock = previousBlockId ? (workspace.getBlockById(previousBlockId) as Blockly.BlockSvg | null) : null;
     const nextBlock = nextBlockId ? (workspace.getBlockById(nextBlockId) as Blockly.BlockSvg | null) : null;
+
+    // Free the boundary connections on the OLD chain first (the old range
+    // itself is still intact internally). If the reconnect fails we restore
+    // them below.
+    if (previousBlock?.nextConnection?.isConnected()) {
+      previousBlock.nextConnection.disconnect();
+    }
+    if (nextBlock?.previousConnection?.isConnected()) {
+      nextBlock.previousConnection.disconnect();
+    }
+
+    // Put the untouched old range back between the boundary blocks.
+    const restoreBoundaryConnections = () => {
+      try {
+        if (insertedBlock?.previousConnection?.isConnected()) {
+          insertedBlock.previousConnection.disconnect();
+        }
+      } catch { /* already free */ }
+      try {
+        if (lastInsertedBlock?.nextConnection?.isConnected()) {
+          lastInsertedBlock.nextConnection.disconnect();
+        }
+      } catch { /* already free */ }
+      try {
+        if (previousBlock?.nextConnection && startBlock.previousConnection) {
+          previousBlock.nextConnection.connect(startBlock.previousConnection);
+        }
+      } catch { /* original chain restored best-effort */ }
+      try {
+        if (nextBlock?.previousConnection && endBlock.nextConnection) {
+          nextBlock.previousConnection.connect(endBlock.nextConnection);
+        }
+      } catch { /* original chain restored best-effort */ }
+    };
 
     if (
       previousBlock?.nextConnection &&
@@ -781,7 +880,7 @@ export const replaceBlocksRangeByUCF = async (
       reconnectedNext = true;
     }
 
-    console.log("[AI Assistant Range Replace] reconnect result", {
+    debug02AgentLog("range replace: reconnect result", {
       insertedTopBlockId: insertedBlock.id,
       lastInsertedBlockId: lastInsertedBlock.id,
       reconnectedPrevious,
@@ -791,7 +890,9 @@ export const replaceBlocksRangeByUCF = async (
     const requiresPreviousReconnect = Boolean(previousBlockId);
     const requiresNextReconnect = Boolean(nextBlockId);
     if ((requiresPreviousReconnect && !reconnectedPrevious) || (requiresNextReconnect && !reconnectedNext)) {
-      insertedBlock.dispose(false, true);
+      disposeNewTopLevelBlocks();
+      restoreBoundaryConnections();
+      debug02AgentLog("range replace: rolled back (reconnect failed)", { startBlockId, endBlockId });
       return buildFailureResult(
         "Replacement inserted new blocks but failed to reconnect the range boundaries safely",
         "reconnect_boundaries",
@@ -804,6 +905,7 @@ export const replaceBlocksRangeByUCF = async (
           lastInsertedBlockId: lastInsertedBlock.id,
           reconnectedPrevious,
           reconnectedNext,
+          rolledBack: true,
           visitedDeletedBlockIds: blocksToDelete.map((block) => block.id),
         },
       );
@@ -815,7 +917,9 @@ export const replaceBlocksRangeByUCF = async (
     );
 
     if (orphanTopLevelBlockIds.length > 0) {
-      insertedBlock.dispose(false, true);
+      disposeNewTopLevelBlocks();
+      restoreBoundaryConnections();
+      debug02AgentLog("range replace: rolled back (orphan blocks)", { startBlockId, endBlockId, orphanTopLevelBlockIds });
       return buildFailureResult(
         "Replacement created unexpected top-level orphan blocks",
         "validate_workspace_after_replace",
@@ -823,12 +927,20 @@ export const replaceBlocksRangeByUCF = async (
           startBlockId,
           endBlockId,
           insertedTopBlockId: insertedBlock.id,
+          rolledBack: true,
           orphanTopLevelBlockIds,
           topLevelBefore,
           topLevelAfter,
         },
       );
     }
+
+    // COMMIT: only now that the replacement is fully wired do we remove the
+    // original range (already disconnected from both boundaries above).
+    if (startBlock.previousConnection?.isConnected()) {
+      startBlock.previousConnection.disconnect();
+    }
+    startBlock.dispose(false, true);
 
     return {
       success: true,
@@ -901,7 +1013,7 @@ export const replaceScriptByUCF = async (
       const workspaceForVariables = workspace || (window.Blockly.getMainWorkspace() as Blockly.WorkspaceSvg);
       if (vm.editingTarget?.id !== target.id) {
         vm.setEditingTarget(target.id);
-        await new Promise((resolve) => window.setTimeout(resolve, 60));
+        await waitForCondition(() => vm.editingTarget?.id === target.id);
       }
       resolveVariableReferences(vm, workspaceForVariables, newBlocksState);
       directSyncResult = await syncLargeScriptDirectly(vm, target, scriptId, newBlocksState, "replace");
@@ -956,6 +1068,67 @@ const applyProcedureArgumentIds = (block: any, argumentIds: string[]) => {
   });
   block.inputs = nextInputs;
   block.mutation.argumentids = JSON.stringify(argumentIds);
+};
+
+// Candidate SB3 serialization check: isolated so the internal-path require is in
+// one audit-friendly place. Returns an error string on failure, null when valid.
+const validateCandidateSb3Serialization = (candidateBlocks: Record<string, any>): string | null => {
+  try {
+    const sb3 = require("scratch-vm/src/serialization/sb3");
+    const serializedBlocks = sb3.serializeBlocks(candidateBlocks)[0];
+    const serializedBroadcast = validateSerializedBroadcastSchema({ targets: [{ blocks: serializedBlocks }] });
+    if (!serializedBroadcast.valid) {
+      return `Candidate blocks do not serialize to valid SB3 broadcast input arrays: ${JSON.stringify(serializedBroadcast.errors)}`;
+    }
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error.message : "Could not validate candidate SB3 serialization";
+  }
+};
+
+// Snapshot + restore pair for the vm-direct target transaction. Captures blocks,
+// scripts, comments and every runtime target's variables so a failed commit (or
+// an explicit rollback) can put the whole picture back.
+const createTargetSnapshot = (vm: PluginContext["vm"], target: any) => {
+  const before = {
+    blocks: target.blocks._blocks,
+    scripts: target.blocks._scripts,
+    comments: target.comments,
+    variablesByTarget: new Map((vm.runtime?.targets || []).map((item: any) => [item.id, {
+      container: item.variables,
+      entries: new Map(Object.entries(item.variables || {}).map(([id, variable]: [string, any]) => [id, {
+        variable,
+        value: variable?.value,
+        internalValue: variable?._value,
+        monitorUpToDate: variable?._monitorUpToDate,
+      }])),
+    }])),
+  };
+  const restore = async () => {
+    target.blocks._blocks = before.blocks;
+    target.blocks._scripts = before.scripts;
+    target.comments = before.comments;
+    before.variablesByTarget.forEach((state: any, id) => {
+      const previousTarget = vm.runtime?.getTargetById?.(id);
+      if (!previousTarget) return;
+      previousTarget.variables = state.container;
+      Object.keys(previousTarget.variables || {}).forEach((variableId) => {
+        if (!state.entries.has(variableId)) delete previousTarget.variables[variableId];
+      });
+      state.entries.forEach((entry: any, variableId: string) => {
+        previousTarget.variables[variableId] = entry.variable;
+        if (entry.variable) {
+          entry.variable.value = entry.value;
+          if ("_value" in entry.variable) entry.variable._value = entry.internalValue;
+          if ("_monitorUpToDate" in entry.variable) entry.variable._monitorUpToDate = entry.monitorUpToDate;
+        }
+      });
+    });
+    target.blocks.resetCache?.();
+    target.blocks.updateTargetSpecificBlocks?.(Boolean(target.isStage));
+    await refreshWorkspaceAfterRuntimeWrite(vm, target);
+  };
+  return { before, restore };
 };
 
 export const replaceTargetScriptsByUCFSections = async (
@@ -1143,55 +1316,16 @@ export const replaceTargetScriptsByUCFSections = async (
       return buildFailureResult("Candidate broadcast block graph is invalid; no VM changes were made", "validate_candidate_broadcasts", { targetId: target.id, errors: broadcastGraph.errors });
     }
     try {
-      const sb3 = require("scratch-vm/src/serialization/sb3");
-      const serializedBlocks = sb3.serializeBlocks(candidateBlocks)[0];
-      const serializedBroadcast = validateSerializedBroadcastSchema({ targets: [{ blocks: serializedBlocks }] });
-      if (!serializedBroadcast.valid) {
-        return buildFailureResult("Candidate blocks do not serialize to valid SB3 broadcast input arrays", "validate_candidate_serialization", { targetId: target.id, errors: serializedBroadcast.errors });
+      const serializationError = validateCandidateSb3Serialization(candidateBlocks);
+      if (serializationError) {
+        return buildFailureResult(serializationError, "validate_candidate_serialization", { targetId: target.id });
       }
     } catch (error) {
       return buildFailureResult(error instanceof Error ? error.message : "Could not validate candidate SB3 serialization", "validate_candidate_serialization", { targetId: target.id });
     }
 
-    const before = {
-      blocks: target.blocks._blocks,
-      scripts: target.blocks._scripts,
-      comments: target.comments,
-      variablesByTarget: new Map((vm.runtime?.targets || []).map((item: any) => [item.id, {
-        container: item.variables,
-        entries: new Map(Object.entries(item.variables || {}).map(([id, variable]: [string, any]) => [id, {
-          variable,
-          value: variable?.value,
-          internalValue: variable?._value,
-          monitorUpToDate: variable?._monitorUpToDate,
-        }])),
-      }])),
-    };
+    const { restore } = createTargetSnapshot(vm, target);
     let committed = false;
-    const restore = async () => {
-      target.blocks._blocks = before.blocks;
-      target.blocks._scripts = before.scripts;
-      target.comments = before.comments;
-      before.variablesByTarget.forEach((state: any, id) => {
-        const previousTarget = vm.runtime?.getTargetById?.(id);
-        if (!previousTarget) return;
-        previousTarget.variables = state.container;
-        Object.keys(previousTarget.variables || {}).forEach((variableId) => {
-          if (!state.entries.has(variableId)) delete previousTarget.variables[variableId];
-        });
-        state.entries.forEach((entry: any, variableId: string) => {
-          previousTarget.variables[variableId] = entry.variable;
-          if (entry.variable) {
-            entry.variable.value = entry.value;
-            if ("_value" in entry.variable) entry.variable._value = entry.internalValue;
-            if ("_monitorUpToDate" in entry.variable) entry.variable._monitorUpToDate = entry.monitorUpToDate;
-          }
-        });
-      });
-      target.blocks.resetCache?.();
-      target.blocks.updateTargetSpecificBlocks?.(Boolean(target.isStage));
-      await refreshWorkspaceAfterRuntimeWrite(vm, target);
-    };
 
     if (options.canCommit && !options.canCommit()) {
       return buildFailureResult("PROJECT_SWITCHING: project changed before the candidate graph could be committed", "project_switching", { targetId: target.id });
@@ -1259,7 +1393,7 @@ export const insertScriptByUCF = async (
   let switchedTarget = false;
   if (vm.editingTarget?.id !== target.id) {
     vm.setEditingTarget(target.id);
-    await new Promise((resolve) => window.setTimeout(resolve, 60));
+    await waitForCondition(() => vm.editingTarget?.id === target.id);
     switchedTarget = true;
   }
 
@@ -1309,11 +1443,8 @@ export const insertScriptByUCF = async (
     applyBlockCommentsToWorkspace(workspace, newBlocksState);
     repairListVariableValues(vm, target.id);
 
-    let insertedBlock = workspace.getBlockById(topLevelBlocks[0].id) as Blockly.BlockSvg | null;
-    if (!insertedBlock) {
-      await new Promise((resolve) => window.setTimeout(resolve, 60));
-      insertedBlock = workspace.getBlockById(topLevelBlocks[0].id) as Blockly.BlockSvg | null;
-    }
+    let insertedBlock = (await waitForWorkspaceSync(
+      () => workspace.getBlockById(topLevelBlocks[0].id)) as Blockly.BlockSvg | null) || null;
     if (!insertedBlock) {
       return buildFailureResult("Inserted top-level block not found in workspace", "locate_inserted_block", {
         targetId: target.id,
@@ -1376,7 +1507,7 @@ export const deleteScriptById = async (
   let switchedTarget = false;
   if (vm.editingTarget?.id !== target.id) {
     vm.setEditingTarget(target.id);
-    await new Promise((resolve) => window.setTimeout(resolve, 60));
+    await waitForCondition(() => vm.editingTarget?.id === target.id);
     switchedTarget = true;
   }
 

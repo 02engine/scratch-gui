@@ -367,9 +367,28 @@ class OpenAICompatibleAdapter implements ProviderAdapter {
               toolCalls[index].id = toolCallDelta.id;
               toolCallsChanged = true;
             }
-            if (toolCallDelta.function?.name) {
-              toolCalls[index].function.name += toolCallDelta.function.name;
-              toolCallsChanged = true;
+            // Gateways disagree about tool-call name deltas: OpenAI sends the full
+            // name once in the first delta, but some compatible backends (vLLM/
+            // ollama) resend the COMPLETE name in every chunk, while true
+            // incremental streams may split it. Detect which and avoid producing
+            // "readFilereadFile".
+            const existingName = toolCalls[index].function.name;
+            const incomingName = toolCallDelta.function?.name;
+            if (incomingName) {
+              if (!existingName) {
+                toolCalls[index].function.name = incomingName;
+                toolCallsChanged = true;
+              } else if (incomingName === existingName || existingName.startsWith(incomingName)) {
+                // Duplicate full-name resend or stale prefix: keep what we have.
+              } else if (incomingName.startsWith(existingName)) {
+                // Resend of the accumulated name from scratch: replace.
+                toolCalls[index].function.name = incomingName;
+                toolCallsChanged = true;
+              } else {
+                // True incremental name delta: append.
+                toolCalls[index].function.name += incomingName;
+                toolCallsChanged = true;
+              }
             }
             if (argumentDelta) {
               toolCalls[index].function.arguments += argumentDelta;

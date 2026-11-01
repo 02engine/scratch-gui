@@ -55,6 +55,7 @@ export function useAgents() {
         displayName: model.name,
         maxTokens: model.maxTokens,
         contextWindow: model.contextWindow || PROVIDER_DEFAULT_CONTEXT_WINDOWS[agent.provider],
+        imageModel: model.imageModel,
       }));
     });
   }, [agents]);

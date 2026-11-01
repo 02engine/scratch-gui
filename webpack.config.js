@@ -39,6 +39,13 @@ const base = {
         disableHostCheck: true,
         compress: true,
         port: process.env.PORT || 8601,
+        before(app) {
+            // Register the same-origin server-side relay (/api/fetch) BEFORE webpack's
+            // own middlewares so our route wins. Same-origin: no CORS, and outbound
+            // happens on this host (which has working internet) instead of the browser.
+            app.use(require('express').json({ limit: '50mb' }));
+            require('./dev-server-relay')(app);
+        },
         historyApiFallback: {
             rewrites: [
                 { from: /^\/\d+\/?$/, to: '/indexold.html' },

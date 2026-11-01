@@ -173,6 +173,39 @@
     color: var(--ai-text-primary);
 }
 
+/* Second-level navigation: sections inside the active group. */
+.subTabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 20px 10px;
+    border-bottom: 1px solid var(--ai-border-subtle);
+}
+
+.subTabItem {
+    min-height: 30px;
+    padding: 0 12px;
+    border: 1px solid var(--ai-border-subtle);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ai-text-secondary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+
+    &:hover {
+        color: var(--ai-text-primary);
+        background: color-mix(in srgb, var(--ai-accent-bg), transparent 50%);
+    }
+}
+
+.subTabItemActive {
+    background: var(--ai-bg-surface-active);
+    border-color: transparent;
+    color: var(--ai-text-primary);
+    font-weight: 600;
+}
+
 
 .navFooter {
     margin-top: auto;
@@ -604,4 +637,273 @@
     .actions>button {
         flex: 1 1 0;
     }
+}
+/* --- MCP / Tools / Skills sections --- */
+.checkLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ai-text-secondary);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.checkLabel input {
+    accent-color: var(--ai-accent, #4f8cff);
+    cursor: pointer;
+}
+
+.checkRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--ai-border-subtle);
+    border-radius: 6px;
+    background: var(--ai-bg-raised, transparent);
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkRow:hover {
+    border-color: var(--ai-border);
+}
+
+.checkRow input {
+    accent-color: var(--ai-accent, #4f8cff);
+    cursor: pointer;
+    flex: none;
+}
+
+.checkRow code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--ai-text-primary);
+    flex: none;
+}
+
+.toolGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.toolList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 320px;
+    overflow: auto;
+    width: 100%;
+}
+
+.toolDesc {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--ai-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.toolBadge {
+    flex: none;
+    padding: 1px 6px;
+    border: 1px solid var(--ai-border);
+    border-radius: 999px;
+    font-size: 10px;
+    line-height: 16px;
+    color: var(--ai-text-secondary);
+    background: var(--ai-bg-surface);
+}
+
+.textarea {
+    display: block;
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    tab-size: 2;
+}
+
+
+.permissionChoices {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.permissionChoice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--ai-border);
+    border-radius: 8px;
+    background: var(--ai-bg-surface);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.permissionChoice:hover {
+    border-color: var(--ai-accent, #4c97ff);
+}
+
+.permissionChoiceActive {
+    border-color: var(--ai-accent, #4c97ff);
+    background: var(--ai-bg-input, rgba(76, 151, 255, 0.08));
+}
+
+.permissionChoice input[type="radio"] {
+    margin-top: 3px;
+    flex: none;
+}
+
+.permissionChoiceBody {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.permissionChoiceTitle {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.permissionChoiceDesc {
+    font-size: 12px;
+    line-height: 1.5;
+    opacity: 0.78;
+}
+
+.memoryList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.memoryMessage {
+    padding: 6px 12px;
+    margin: 0 12px;
+    border-radius: 8px;
+    background: var(--ai-accent-weak, rgba(76, 151, 255, 0.12));
+    color: var(--ai-accent, #4c97ff);
+    font-size: 12px;
+}
+
+.memoryEmpty {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.memoryGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.memoryGroupLabel {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.75;
+}
+
+.memoryRow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--ai-border);
+    border-radius: 10px;
+    background: var(--ai-bg-surface);
+}
+
+.memoryText {
+    font-size: 12px;
+    line-height: 1.5;
+    word-break: break-word;
+    white-space: pre-wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.memoryTitle {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.memoryActions {
+    display: flex;
+    gap: 6px;
+    flex: none;
+}
+
+.memoryEditor,
+.memoryEditorInline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px dashed var(--ai-border);
+    border-radius: 10px;
+}
+
+.memoryEditorRow {
+    display: flex;
+    gap: 8px;
+}
+
+.memoryEditorRow input {
+    flex: 1;
+    min-width: 0;
+}
+
+.memoryTextarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid var(--ai-border);
+    border-radius: 8px;
+    background: var(--ai-bg-input, rgba(128, 128, 128, 0.08));
+    color: inherit;
+    font-size: 12px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+}
+
+.memoryTextarea:focus {
+    border-color: var(--ai-accent, #4c97ff);
+}
+
+.toolGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 0;
+    border-top: 1px solid var(--ai-border);
+}
+
+.toolGroup:first-child {
+    border-top: none;
+}
+
+.toolGroupLabel {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.75;
 }
